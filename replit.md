@@ -1,0 +1,122 @@
+# SPANNER - Tamil Nadu Blue-Collar Service Marketplace
+
+## Overview
+
+SPANNER is a comprehensive web application designed to connect blue-collar service workers with clients across all 38 districts of Tamil Nadu. The platform provides a marketplace for various services including plumbing, electrical work, painting, mechanics, and other skilled trades. The application supports multiple user types (clients, workers, admins, and super admins) with role-based dashboards and functionality.
+
+## User Preferences
+
+Preferred communication style: Simple, everyday language.
+
+## System Architecture
+
+### Frontend Architecture
+- **Framework**: React with TypeScript using Vite as the build tool
+- **UI Components**: Shadcn/ui component library with Radix UI primitives
+- **Styling**: Tailwind CSS with CSS variables for theming
+- **State Management**: React Query (@tanstack/react-query) for server state
+- **Routing**: Wouter for client-side routing
+- **Forms**: React Hook Form with Zod validation
+- **Authentication**: Context-based auth provider with JWT-like session management
+
+### Backend Architecture
+- **Runtime**: Node.js with Express.js server
+- **Database**: PostgreSQL with Drizzle ORM
+- **Database Provider**: Neon (serverless PostgreSQL)
+- **API Design**: RESTful endpoints with JSON responses
+- **Development**: ESM modules with tsx for TypeScript execution
+
+### Key Design Decisions
+
+**Monorepo Structure**: The application uses a monorepo approach with shared schema and types between client and server, reducing code duplication and ensuring type safety across the full stack.
+
+**Component-First UI**: Leverages Radix UI primitives wrapped in Shadcn/ui components for accessibility and consistency while maintaining customization flexibility.
+
+**Type-Safe Database**: Drizzle ORM provides full TypeScript integration with the database schema, ensuring compile-time safety for database operations.
+
+## Key Components
+
+### Database Schema
+Located in `shared/schema.ts`, the database includes:
+- **Users**: Core user information with role-based access (client, worker, admin, super_admin)
+- **Worker Profiles**: Extended information for service providers including skills, rates, and verification status
+- **Districts**: Complete coverage of Tamil Nadu's 38 districts with Tamil names
+- **Service Categories**: Dynamic service types that workers can offer
+- **Bookings**: Complete booking workflow from request to completion
+- **OTP Verifications**: Secure authentication via mobile OTP
+
+### Authentication System
+- Mobile-based authentication with OTP verification
+- Role-based routing and access control
+- Super admin capabilities for creating admin accounts
+- Support for both email and mobile login options
+
+### User Interfaces
+- **Home Page**: Service discovery with search and filters
+- **Client Dashboard**: Booking management and service requests
+- **Worker Dashboard**: Job management, earnings tracking, and availability control
+- **Admin Dashboard**: Platform oversight, user management, and analytics
+
+### Multi-language Support
+- Bilingual interface supporting English and Tamil
+- District names and service categories available in both languages
+- Context-based language provider for seamless switching
+
+## Data Flow
+
+### Authentication Flow
+1. User initiates login with mobile number and user type
+2. System generates and stores OTP (development returns fixed "123456")
+3. OTP verification creates/updates user session
+4. Role-based redirection to appropriate dashboard
+
+### Service Discovery Flow
+1. Client searches for services by category, location, or keywords
+2. System filters available workers based on location and service type
+3. Client can view worker profiles, ratings, and availability
+4. Booking requests are created and managed through the platform
+
+### Booking Management Flow
+1. Client selects worker and creates booking request
+2. Worker receives notification and can accept/decline
+3. Service completion and payment processing
+4. Review and rating system for quality assurance
+
+## External Dependencies
+
+### UI and Styling
+- **@radix-ui/***: Accessible component primitives
+- **class-variance-authority**: Type-safe variant styling
+- **tailwindcss**: Utility-first CSS framework
+- **lucide-react**: Icon library
+
+### Backend Services
+- **@neondatabase/serverless**: Serverless PostgreSQL connection
+- **drizzle-orm**: TypeScript ORM for database operations
+- **express**: Web application framework
+
+### Development Tools
+- **vite**: Fast build tool and development server
+- **tsx**: TypeScript execution for Node.js
+- **@replit/vite-plugin-runtime-error-modal**: Development error handling
+
+## Deployment Strategy
+
+### Development Environment
+- Vite development server with HMR for frontend
+- Express server with TypeScript compilation via tsx
+- Database migrations managed through Drizzle Kit
+- Environment variables for database configuration
+
+### Production Build
+- Frontend built with Vite to static assets
+- Backend bundled with esbuild for Node.js execution
+- Single deployment artifact with both client and server code
+- PostgreSQL database connection via environment variables
+
+### Key Environment Requirements
+- `DATABASE_URL`: PostgreSQL connection string (required)
+- Node.js environment with ESM support
+- Static file serving for frontend assets
+
+The architecture prioritizes developer experience with TypeScript throughout, component reusability, and scalable database design while maintaining simplicity in deployment and development workflows.
