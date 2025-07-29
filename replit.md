@@ -46,11 +46,12 @@ Located in `shared/schema.ts`, the database includes:
 - **OTP Verifications**: Secure authentication via mobile OTP
 
 ### Authentication System
-- Mobile-based authentication with OTP verification
+- Mobile-based authentication with OTP verification (currently mock OTP "123456" for development)
 - Role-based routing and access control with automatic dashboard redirection
 - Super admin capabilities for creating admin accounts
 - Support for both email and mobile login options
 - Profile picture upload functionality (optional for clients, mandatory for workers)
+- Real SMS OTP integration ready for Twilio implementation when needed
 
 ### User Interfaces
 - **Home Page**: Service discovery with search and filters
