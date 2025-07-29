@@ -121,19 +121,23 @@ export function Navbar() {
                   </Button>
                 </div>
               ) : (
-                <div className="hidden md:flex items-center space-x-2">
+                <div className="hidden md:flex items-center space-x-3">
                   <Button
-                    variant="ghost"
+                    variant="outline"
                     size="sm"
-                    onClick={() => setShowLoginModal(true)}
+                    onClick={() => setShowSignupModal(true)}
+                    className="bg-white text-primary border-primary hover:bg-primary hover:text-white"
                   >
-                    {t("nav.login")}
+                    <span className="mr-2">👤</span>
+                    Sign Up as Client
                   </Button>
                   <Button
                     size="sm"
-                    onClick={() => setShowSignupModal(true)}
+                    onClick={() => setShowLoginModal(true)}
+                    className="bg-yellow-500 hover:bg-yellow-600 text-black font-medium"
                   >
-                    {t("nav.joinNow")}
+                    <span className="mr-2">🔧</span>
+                    Join as Worker
                   </Button>
                 </div>
               )}
@@ -232,25 +236,27 @@ export function Navbar() {
               ) : (
                 <div className="px-4 py-2 space-y-2">
                   <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      setShowLoginModal(true);
-                      setMobileMenuOpen(false);
-                    }}
-                    className="w-full"
-                  >
-                    {t("nav.login")}
-                  </Button>
-                  <Button
+                    variant="outline"
                     size="sm"
                     onClick={() => {
                       setShowSignupModal(true);
                       setMobileMenuOpen(false);
                     }}
-                    className="w-full"
+                    className="w-full bg-white text-primary border-primary"
                   >
-                    {t("nav.joinNow")}
+                    <span className="mr-2">👤</span>
+                    Sign Up as Client
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      setShowLoginModal(true);
+                      setMobileMenuOpen(false);
+                    }}
+                    className="w-full bg-yellow-500 hover:bg-yellow-600 text-black font-medium"
+                  >
+                    <span className="mr-2">🔧</span>
+                    Join as Worker
                   </Button>
                 </div>
               )}
