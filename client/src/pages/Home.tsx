@@ -501,7 +501,7 @@ export default function Home() {
                               className="w-full justify-between"
                             >
                               {searchForm.district
-                                ? allTamilNaduDistricts.find((district) => district.id === searchForm.district)?.name
+                                ? (districts as any)?.find((district: any) => district.id === searchForm.district)?.name
                                 : "Select District"}
                               <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                             </Button>
@@ -512,7 +512,7 @@ export default function Home() {
                               <CommandList>
                                 <CommandEmpty>No district found.</CommandEmpty>
                                 <CommandGroup>
-                                  {allTamilNaduDistricts.map((district) => (
+                                  {(districts as any)?.map((district: any) => (
                                     <CommandItem
                                       key={district.id}
                                       value={district.name}
