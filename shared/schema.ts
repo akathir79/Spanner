@@ -22,7 +22,6 @@ export const users = pgTable("users", {
   lastName: text("last_name").notNull(),
   role: text("role").notNull().default("client"), // client, worker, admin, super_admin
   districtId: varchar("district_id").references(() => districts.id),
-  profilePicture: text("profile_picture"), // Base64 encoded image data
   isVerified: boolean("is_verified").default(false),
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow().notNull(),
