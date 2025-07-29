@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -36,6 +36,234 @@ import {
 } from "lucide-react";
 import { useLocation } from "wouter";
 import { TAMIL_NADU_DISTRICTS, SERVICE_CATEGORIES } from "@/lib/constants";
+
+// Job posting form component
+const JobPostingForm = () => {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  
+  const [formData, setFormData] = useState({
+    title: "",
+    description: "",
+    serviceCategory: "",
+    districtId: "",
+    budgetMin: "",
+    budgetMax: "",
+    deadline: "",
+    requirements: [] as string[],
+  });
+  const [newRequirement, setNewRequirement] = useState("");
+
+  // Fetch services and districts
+  const { data: services = [] } = useQuery({
+    queryKey: ["/api/services"],
+  });
+
+  const { data: districts = [] } = useQuery({
+    queryKey: ["/api/districts"],
+  });
+
+  const createJobMutation = useMutation({
+    mutationFn: (data: any) => 
+      fetch("/api/job-postings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      }).then(res => res.json()),
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Job posted successfully! Workers can now bid on your job.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/job-postings"] });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to post job. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!user?.id || !formData.title || !formData.description || !formData.serviceCategory || !formData.districtId) {
+      toast({
+        title: "Validation Error",
+        description: "Please fill in all required fields.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const jobData = {
+      clientId: user.id,
+      title: formData.title,
+      description: formData.description,
+      serviceCategory: formData.serviceCategory,
+      districtId: formData.districtId,
+      budgetMin: formData.budgetMin ? parseFloat(formData.budgetMin) : null,
+      budgetMax: formData.budgetMax ? parseFloat(formData.budgetMax) : null,
+      deadline: formData.deadline ? new Date(formData.deadline) : null,
+      requirements: formData.requirements,
+    };
+
+    createJobMutation.mutate(jobData);
+  };
+
+  const addRequirement = () => {
+    if (newRequirement.trim()) {
+      setFormData({
+        ...formData,
+        requirements: [...formData.requirements, newRequirement.trim()]
+      });
+      setNewRequirement("");
+    }
+  };
+
+  const removeRequirement = (index: number) => {
+    setFormData({
+      ...formData,
+      requirements: formData.requirements.filter((_, i) => i !== index)
+    });
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="space-y-2">
+        <Label htmlFor="title">Job Title *</Label>
+        <Input
+          id="title"
+          value={formData.title}
+          onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+          placeholder="e.g., Fix kitchen plumbing leak"
+          required
+        />
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="serviceCategory">Service Type *</Label>
+          <Select
+            value={formData.serviceCategory}
+            onValueChange={(value) => setFormData({ ...formData, serviceCategory: value })}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select service" />
+            </SelectTrigger>
+            <SelectContent>
+              {(services as any).map((service: any) => (
+                <SelectItem key={service.id} value={service.name}>
+                  {service.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="district">District *</Label>
+          <Select
+            value={formData.districtId}
+            onValueChange={(value) => setFormData({ ...formData, districtId: value })}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select district" />
+            </SelectTrigger>
+            <SelectContent>
+              {(districts as any).map((district: any) => (
+                <SelectItem key={district.id} value={district.id}>
+                  {district.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="description">Job Description *</Label>
+        <Textarea
+          id="description"
+          value={formData.description}
+          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+          placeholder="Describe the work needed..."
+          rows={3}
+          required
+        />
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="budgetMin">Min Budget (₹)</Label>
+          <Input
+            id="budgetMin"
+            type="number"
+            value={formData.budgetMin}
+            onChange={(e) => setFormData({ ...formData, budgetMin: e.target.value })}
+            placeholder="500"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="budgetMax">Max Budget (₹)</Label>
+          <Input
+            id="budgetMax"
+            type="number"
+            value={formData.budgetMax}
+            onChange={(e) => setFormData({ ...formData, budgetMax: e.target.value })}
+            placeholder="2000"
+          />
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="deadline">Deadline (Optional)</Label>
+        <Input
+          id="deadline"
+          type="date"
+          value={formData.deadline}
+          onChange={(e) => setFormData({ ...formData, deadline: e.target.value })}
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label>Requirements (Optional)</Label>
+        <div className="flex gap-2">
+          <Input
+            value={newRequirement}
+            onChange={(e) => setNewRequirement(e.target.value)}
+            placeholder="Add a requirement..."
+            onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addRequirement())}
+          />
+          <Button type="button" onClick={addRequirement} size="sm">
+            Add
+          </Button>
+        </div>
+        {formData.requirements.length > 0 && (
+          <div className="flex flex-wrap gap-2 mt-2">
+            {formData.requirements.map((req, index) => (
+              <Badge 
+                key={index} 
+                variant="secondary" 
+                className="cursor-pointer"
+                onClick={() => removeRequirement(index)}
+              >
+                {req} ×
+              </Badge>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <Button type="submit" className="w-full" disabled={createJobMutation.isPending}>
+        {createJobMutation.isPending ? "Posting..." : "Post Job"}
+      </Button>
+    </form>
+  );
+};
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -301,9 +529,10 @@ export default function Dashboard() {
         </div>
 
         <Tabs defaultValue="bookings" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="bookings">My Bookings</TabsTrigger>
             <TabsTrigger value="search">Find Workers</TabsTrigger>
+            <TabsTrigger value="jobs">Post Job</TabsTrigger>
             <TabsTrigger value="profile">Profile</TabsTrigger>
           </TabsList>
 
@@ -706,6 +935,68 @@ export default function Dashboard() {
               </CardContent>
             </Card>
           </TabsContent>
+
+          {/* Post Job Tab */}
+          <TabsContent value="jobs" className="space-y-6">
+            <div className="grid gap-6 md:grid-cols-2">
+              {/* Job Posting Form */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Plus className="h-5 w-5" />
+                    Post a New Job
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-center py-8">
+                    <div className="mb-4">
+                      <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
+                        <Plus className="h-8 w-8 text-primary" />
+                      </div>
+                    </div>
+                    <h3 className="text-lg font-semibold mb-2">Get Competitive Bids</h3>
+                    <p className="text-muted-foreground mb-4">
+                      Post your job requirements and receive bids from qualified workers across Tamil Nadu.
+                    </p>
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button className="w-full">
+                          <Plus className="h-4 w-4 mr-2" />
+                          Create Job Posting
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+                        <DialogHeader>
+                          <DialogTitle>Post a New Job</DialogTitle>
+                        </DialogHeader>
+                        <JobPostingForm />
+                      </DialogContent>
+                    </Dialog>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* My Job Postings */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Calendar className="h-5 w-5" />
+                    My Job Postings
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-center py-8">
+                    <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold mb-2">No job postings yet</h3>
+                    <p className="text-muted-foreground">
+                      Your posted jobs and received bids will appear here.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
         </Tabs>
       </div>
 

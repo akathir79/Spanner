@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { z } from "zod";
-import { insertUserSchema, insertWorkerProfileSchema, insertBookingSchema } from "@shared/schema";
+import { insertUserSchema, insertWorkerProfileSchema, insertBookingSchema, insertJobPostingSchema, insertBidSchema } from "@shared/schema";
 
 // Validation schemas
 const loginSchema = z.object({
@@ -311,6 +311,107 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Get admin bookings error:", error);
       res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Job postings routes
+  app.get("/api/job-postings", async (req, res) => {
+    try {
+      const jobs = await storage.getAllJobPostings();
+      res.json(jobs);
+    } catch (error) {
+      console.error("Error fetching job postings:", error);
+      res.status(500).json({ message: "Failed to fetch job postings" });
+    }
+  });
+
+  app.get("/api/job-postings/client/:clientId", async (req, res) => {
+    try {
+      const { clientId } = req.params;
+      const jobs = await storage.getJobPostingsByClient(clientId);
+      res.json(jobs);
+    } catch (error) {
+      console.error("Error fetching client job postings:", error);
+      res.status(500).json({ message: "Failed to fetch job postings" });
+    }
+  });
+
+  app.post("/api/job-postings", async (req, res) => {
+    try {
+      const jobData = insertJobPostingSchema.parse(req.body);
+      const job = await storage.createJobPosting(jobData);
+      res.status(201).json(job);
+    } catch (error) {
+      console.error("Error creating job posting:", error);
+      res.status(500).json({ message: "Failed to create job posting" });
+    }
+  });
+
+  app.put("/api/job-postings/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const jobData = insertJobPostingSchema.partial().parse(req.body);
+      const job = await storage.updateJobPosting(id, jobData);
+      res.json(job);
+    } catch (error) {
+      console.error("Error updating job posting:", error);
+      res.status(500).json({ message: "Failed to update job posting" });
+    }
+  });
+
+  // Bidding routes
+  app.get("/api/job-postings/:jobId/bids", async (req, res) => {
+    try {
+      const { jobId } = req.params;
+      const bids = await storage.getBidsByJobPosting(jobId);
+      res.json(bids);
+    } catch (error) {
+      console.error("Error fetching bids:", error);
+      res.status(500).json({ message: "Failed to fetch bids" });
+    }
+  });
+
+  app.get("/api/bids/worker/:workerId", async (req, res) => {
+    try {
+      const { workerId } = req.params;
+      const bids = await storage.getBidsByWorker(workerId);
+      res.json(bids);
+    } catch (error) {
+      console.error("Error fetching worker bids:", error);
+      res.status(500).json({ message: "Failed to fetch bids" });
+    }
+  });
+
+  app.post("/api/bids", async (req, res) => {
+    try {
+      const bidData = insertBidSchema.parse(req.body);
+      const bid = await storage.createBid(bidData);
+      res.status(201).json(bid);
+    } catch (error) {
+      console.error("Error creating bid:", error);
+      res.status(500).json({ message: "Failed to create bid" });
+    }
+  });
+
+  app.put("/api/bids/:id/accept", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const result = await storage.acceptBid(id);
+      res.json(result);
+    } catch (error) {
+      console.error("Error accepting bid:", error);
+      res.status(500).json({ message: "Failed to accept bid" });
+    }
+  });
+
+  app.put("/api/bids/:id/reject", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const result = await storage.rejectBid(id);
+      res.json(result);
+    } catch (error) {
+      console.error("Error rejecting bid:", error);
+      res.status(500).json({ message: "Failed to reject bid" });
     }
   });
 

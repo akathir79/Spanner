@@ -2,6 +2,8 @@ import {
   users, 
   workerProfiles, 
   bookings, 
+  jobPostings,
+  bids,
   districts, 
   serviceCategories,
   otpVerifications,
@@ -11,6 +13,10 @@ import {
   type InsertWorkerProfile,
   type Booking,
   type InsertBooking,
+  type JobPosting,
+  type InsertJobPosting,
+  type Bid,
+  type InsertBid,
   type District,
   type ServiceCategory,
   type OtpVerification,
@@ -53,6 +59,19 @@ export interface IStorage {
   getValidOtp(mobile: string, otp: string, purpose: string): Promise<OtpVerification | undefined>;
   markOtpAsUsed(id: string): Promise<void>;
   
+  // Job postings
+  getAllJobPostings(): Promise<(JobPosting & { client: User; district: District; bids?: Bid[] })[]>;
+  getJobPostingsByClient(clientId: string): Promise<(JobPosting & { district: District; bids?: Bid[] })[]>;
+  createJobPosting(jobPosting: InsertJobPosting): Promise<JobPosting>;
+  updateJobPosting(id: string, updates: Partial<JobPosting>): Promise<JobPosting | undefined>;
+  
+  // Bidding
+  getBidsByJobPosting(jobPostingId: string): Promise<(Bid & { worker: User & { workerProfile?: WorkerProfile } })[]>;
+  getBidsByWorker(workerId: string): Promise<(Bid & { jobPosting: JobPosting & { client: User } })[]>;
+  createBid(bid: InsertBid): Promise<Bid>;
+  acceptBid(bidId: string): Promise<Bid | undefined>;
+  rejectBid(bidId: string): Promise<Bid | undefined>;
+
   // Admin functions
   getAllUsers(): Promise<User[]>;
   getUsersWithProfiles(): Promise<(User & { workerProfile?: WorkerProfile })[]>;
@@ -257,6 +276,124 @@ export class DatabaseStorage implements IStorage {
       worker: result.users,
       district: result.districts
     }));
+  }
+  // Job posting methods
+  async getAllJobPostings(): Promise<(JobPosting & { client: User; district: District; bids?: Bid[] })[]> {
+    const result = await db.select()
+      .from(jobPostings)
+      .leftJoin(users, eq(jobPostings.clientId, users.id))
+      .leftJoin(districts, eq(jobPostings.districtId, districts.id))
+      .orderBy(desc(jobPostings.createdAt));
+    
+    return result.map(row => ({
+      ...row.job_postings,
+      client: row.users!,
+      district: row.districts!
+    }));
+  }
+
+  async getJobPostingsByClient(clientId: string): Promise<(JobPosting & { district: District; bids?: Bid[] })[]> {
+    const result = await db.select()
+      .from(jobPostings)
+      .leftJoin(districts, eq(jobPostings.districtId, districts.id))
+      .where(eq(jobPostings.clientId, clientId))
+      .orderBy(desc(jobPostings.createdAt));
+    
+    return result.map(row => ({
+      ...row.job_postings,
+      district: row.districts!
+    }));
+  }
+
+  async createJobPosting(jobPosting: InsertJobPosting): Promise<JobPosting> {
+    const [job] = await db.insert(jobPostings).values(jobPosting).returning();
+    return job;
+  }
+
+  async updateJobPosting(id: string, updates: Partial<JobPosting>): Promise<JobPosting | undefined> {
+    const [job] = await db.update(jobPostings)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(jobPostings.id, id))
+      .returning();
+    return job || undefined;
+  }
+
+  // Bidding methods
+  async getBidsByJobPosting(jobPostingId: string): Promise<(Bid & { worker: User & { workerProfile?: WorkerProfile } })[]> {
+    const result = await db.select()
+      .from(bids)
+      .leftJoin(users, eq(bids.workerId, users.id))
+      .leftJoin(workerProfiles, eq(users.id, workerProfiles.userId))
+      .where(eq(bids.jobPostingId, jobPostingId))
+      .orderBy(desc(bids.createdAt));
+    
+    return result.map(row => ({
+      ...row.bids,
+      worker: {
+        ...row.users!,
+        workerProfile: row.worker_profiles || undefined
+      }
+    }));
+  }
+
+  async getBidsByWorker(workerId: string): Promise<(Bid & { jobPosting: JobPosting & { client: User } })[]> {
+    const result = await db.select()
+      .from(bids)
+      .leftJoin(jobPostings, eq(bids.jobPostingId, jobPostings.id))
+      .leftJoin(users, eq(jobPostings.clientId, users.id))
+      .where(eq(bids.workerId, workerId))
+      .orderBy(desc(bids.createdAt));
+    
+    return result.map(row => ({
+      ...row.bids,
+      jobPosting: {
+        ...row.job_postings!,
+        client: row.users!
+      }
+    }));
+  }
+
+  async createBid(bid: InsertBid): Promise<Bid> {
+    const [newBid] = await db.insert(bids).values(bid).returning();
+    return newBid;
+  }
+
+  async acceptBid(bidId: string): Promise<Bid | undefined> {
+    const [bid] = await db.select().from(bids).where(eq(bids.id, bidId));
+    if (!bid) return undefined;
+
+    // Update bid status to accepted
+    const [updatedBid] = await db.update(bids)
+      .set({ status: "accepted", updatedAt: new Date() })
+      .where(eq(bids.id, bidId))
+      .returning();
+
+    // Update job posting status and selected bid
+    await db.update(jobPostings)
+      .set({ 
+        status: "in_progress", 
+        selectedBidId: bidId,
+        updatedAt: new Date()
+      })
+      .where(eq(jobPostings.id, bid.jobPostingId));
+
+    // Reject all other bids for this job
+    await db.update(bids)
+      .set({ status: "rejected", updatedAt: new Date() })
+      .where(and(
+        eq(bids.jobPostingId, bid.jobPostingId),
+        sql`${bids.id} != ${bidId}`
+      ));
+
+    return updatedBid || undefined;
+  }
+
+  async rejectBid(bidId: string): Promise<Bid | undefined> {
+    const [bid] = await db.update(bids)
+      .set({ status: "rejected", updatedAt: new Date() })
+      .where(eq(bids.id, bidId))
+      .returning();
+    return bid || undefined;
   }
 }
 

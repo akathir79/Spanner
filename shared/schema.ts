@@ -21,6 +21,7 @@ export const users = pgTable("users", {
   firstName: text("first_name").notNull(),
   lastName: text("last_name").notNull(),
   role: text("role").notNull().default("client"), // client, worker, admin, super_admin
+  profilePicture: text("profile_picture"), // Base64 encoded image
   districtId: varchar("district_id").references(() => districts.id),
   isVerified: boolean("is_verified").default(false),
   isActive: boolean("is_active").default(true),
@@ -78,6 +79,39 @@ export const bookings = pgTable("bookings", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+// Job postings for bidding system
+export const jobPostings = pgTable("job_postings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  clientId: varchar("client_id").references(() => users.id).notNull(),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  serviceCategory: text("service_category").notNull(),
+  districtId: varchar("district_id").references(() => districts.id).notNull(),
+  budgetMin: decimal("budget_min", { precision: 10, scale: 2 }),
+  budgetMax: decimal("budget_max", { precision: 10, scale: 2 }),
+  deadline: timestamp("deadline"),
+  requirements: jsonb("requirements"), // Array of specific requirements
+  attachments: jsonb("attachments"), // Array of file URLs
+  status: text("status").notNull().default("open"), // open, in_progress, completed, cancelled
+  selectedBidId: varchar("selected_bid_id"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Bids on job postings
+export const bids = pgTable("bids", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  jobPostingId: varchar("job_posting_id").references(() => jobPostings.id).notNull(),
+  workerId: varchar("worker_id").references(() => users.id).notNull(),
+  proposedAmount: decimal("proposed_amount", { precision: 10, scale: 2 }).notNull(),
+  estimatedDuration: text("estimated_duration"), // e.g., "2-3 days", "1 week"
+  proposal: text("proposal").notNull(),
+  attachments: jsonb("attachments"), // Array of file URLs
+  status: text("status").notNull().default("pending"), // pending, accepted, rejected, withdrawn
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 // OTP verification
 export const otpVerifications = pgTable("otp_verifications", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -101,6 +135,8 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   }),
   clientBookings: many(bookings, { relationName: "clientBookings" }),
   workerBookings: many(bookings, { relationName: "workerBookings" }),
+  jobPostings: many(jobPostings),
+  bids: many(bids),
 }));
 
 export const districtsRelations = relations(districts, ({ many }) => ({
@@ -132,6 +168,29 @@ export const bookingsRelations = relations(bookings, ({ one }) => ({
   }),
 }));
 
+export const jobPostingsRelations = relations(jobPostings, ({ one, many }) => ({
+  client: one(users, {
+    fields: [jobPostings.clientId],
+    references: [users.id],
+  }),
+  district: one(districts, {
+    fields: [jobPostings.districtId],
+    references: [districts.id],
+  }),
+  bids: many(bids),
+}));
+
+export const bidsRelations = relations(bids, ({ one }) => ({
+  jobPosting: one(jobPostings, {
+    fields: [bids.jobPostingId],
+    references: [jobPostings.id],
+  }),
+  worker: one(users, {
+    fields: [bids.workerId],
+    references: [users.id],
+  }),
+}));
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
@@ -151,6 +210,23 @@ export const insertBookingSchema = createInsertSchema(bookings).omit({
   updatedAt: true,
 });
 
+export const insertJobPostingSchema = createInsertSchema(jobPostings).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  budgetMin: z.number().nullable().optional(),
+  budgetMax: z.number().nullable().optional(),
+});
+
+export const insertBidSchema = createInsertSchema(bids).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  proposedAmount: z.number(),
+});
+
 export const insertOtpSchema = createInsertSchema(otpVerifications).omit({
   id: true,
   createdAt: true,
@@ -163,6 +239,10 @@ export type WorkerProfile = typeof workerProfiles.$inferSelect;
 export type InsertWorkerProfile = z.infer<typeof insertWorkerProfileSchema>;
 export type Booking = typeof bookings.$inferSelect;
 export type InsertBooking = z.infer<typeof insertBookingSchema>;
+export type JobPosting = typeof jobPostings.$inferSelect;
+export type InsertJobPosting = z.infer<typeof insertJobPostingSchema>;
+export type Bid = typeof bids.$inferSelect;
+export type InsertBid = z.infer<typeof insertBidSchema>;
 export type District = typeof districts.$inferSelect;
 export type ServiceCategory = typeof serviceCategories.$inferSelect;
 export type OtpVerification = typeof otpVerifications.$inferSelect;
