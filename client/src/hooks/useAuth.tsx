@@ -176,11 +176,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const logout = () => {
-    // Clear user data first
-    setUser(null);
+    // Clear local storage and navigate directly without state updates
     localStorage.removeItem("user");
-    
-    // Force immediate page reload to home to prevent router conflicts
+    // Direct navigation to home page with complete page replacement
     window.location.replace("/");
   };
 
