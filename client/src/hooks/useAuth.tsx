@@ -182,6 +182,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       title: "Logged Out",
       description: "You have been logged out successfully.",
     });
+    
+    // Redirect to home page after logout
+    setTimeout(() => {
+      window.location.href = "/";
+    }, 500);
   };
 
   const value = {

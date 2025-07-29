@@ -187,15 +187,20 @@ export default function Home() {
 
   // Redirect logged-in users to their dashboards
   useEffect(() => {
-    if (user) {
-      if (user.role === "super_admin" || user.role === "admin") {
-        window.location.href = "/admin-dashboard";
-      } else if (user.role === "worker") {
-        window.location.href = "/worker-dashboard";
-      } else {
-        window.location.href = "/dashboard";
+    // Add a small delay to prevent conflicts during logout/login transitions
+    const timer = setTimeout(() => {
+      if (user) {
+        if (user.role === "super_admin" || user.role === "admin") {
+          window.location.href = "/admin-dashboard";
+        } else if (user.role === "worker") {
+          window.location.href = "/worker-dashboard";
+        } else {
+          window.location.href = "/dashboard";
+        }
       }
-    }
+    }, 100);
+
+    return () => clearTimeout(timer);
   }, [user]);
   const [searchForm, setSearchForm] = useState({
     service: "",
