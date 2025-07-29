@@ -5,11 +5,13 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ServiceCard } from "@/components/ServiceCard";
 import { WorkerCard } from "@/components/WorkerCard";
 import { useLanguage } from "@/components/LanguageProvider";
 import { useAuth } from "@/hooks/useAuth";
-import { Search, CheckCircle, Shield, Clock, Users, MapPin, Star, Handshake } from "lucide-react";
+import { Search, CheckCircle, Shield, Clock, Users, MapPin, Star, Handshake, ChevronDown, X, MapPinIcon } from "lucide-react";
 
 // Mock data for demonstration
 const mockServices = [
@@ -108,19 +110,46 @@ const mockWorkers = [
   }
 ];
 
-const mockDistricts = [
-  { name: "Chennai", workers: 2450 },
-  { name: "Coimbatore", workers: 1890 },
-  { name: "Madurai", workers: 1234 },
-  { name: "Tiruchirappalli", workers: 998 },
-  { name: "Salem", workers: 876 },
-  { name: "Tirunelveli", workers: 723 },
-  { name: "Vellore", workers: 654 },
-  { name: "Erode", workers: 589 },
-  { name: "Tiruppur", workers: 512 },
-  { name: "Thanjavur", workers: 467 },
-  { name: "Dindigul", workers: 423 },
-  { name: "Cuddalore", workers: 398 }
+// All 38 Tamil Nadu Districts
+const allTamilNaduDistricts = [
+  { id: "ariyalur", name: "Ariyalur", tamilName: "அரியலூர்" },
+  { id: "chengalpattu", name: "Chengalpattu", tamilName: "செங்கல்பட்டு" },
+  { id: "chennai", name: "Chennai", tamilName: "சென்னை" },
+  { id: "coimbatore", name: "Coimbatore", tamilName: "கோயம்புத்தூர்" },
+  { id: "cuddalore", name: "Cuddalore", tamilName: "கடலூர்" },
+  { id: "dharmapuri", name: "Dharmapuri", tamilName: "தர்மபுரி" },
+  { id: "dindigul", name: "Dindigul", tamilName: "திண்டுக்கல்" },
+  { id: "erode", name: "Erode", tamilName: "ஈரோடு" },
+  { id: "kallakurichi", name: "Kallakurichi", tamilName: "கள்ளக்குறிச்சி" },
+  { id: "kanchipuram", name: "Kanchipuram", tamilName: "காஞ்சிபுரம்" },
+  { id: "kanyakumari", name: "Kanyakumari", tamilName: "கன்யாகுமரி" },
+  { id: "karur", name: "Karur", tamilName: "கரூர்" },
+  { id: "krishnagiri", name: "Krishnagiri", tamilName: "கிருஷ்ணகிரி" },
+  { id: "madurai", name: "Madurai", tamilName: "மதுரை" },
+  { id: "mayiladuthurai", name: "Mayiladuthurai", tamilName: "மயிலாடுதுறை" },
+  { id: "nagapattinam", name: "Nagapattinam", tamilName: "நாகப்பட்டினம்" },
+  { id: "namakkal", name: "Namakkal", tamilName: "நாமக்கல்" },
+  { id: "nilgiris", name: "Nilgiris", tamilName: "நீலகிரி" },
+  { id: "perambalur", name: "Perambalur", tamilName: "பெரம்பலூர்" },
+  { id: "pudukkottai", name: "Pudukkottai", tamilName: "புதுக்கோட்டை" },
+  { id: "ramanathapuram", name: "Ramanathapuram", tamilName: "இராமநாதபுரம்" },
+  { id: "ranipet", name: "Ranipet", tamilName: "ராணிப்பேட்டை" },
+  { id: "salem", name: "Salem", tamilName: "சேலம்" },
+  { id: "sivaganga", name: "Sivaganga", tamilName: "சிவகங்கை" },
+  { id: "tenkasi", name: "Tenkasi", tamilName: "தென்காசி" },
+  { id: "thanjavur", name: "Thanjavur", tamilName: "தஞ்சாவூர்" },
+  { id: "theni", name: "Theni", tamilName: "தேனி" },
+  { id: "thoothukudi", name: "Thoothukudi", tamilName: "தூத்துக்குடி" },
+  { id: "tiruchirappalli", name: "Tiruchirappalli", tamilName: "திருச்சிராப்பள்ளி" },
+  { id: "tirunelveli", name: "Tirunelveli", tamilName: "திருநெல்வேலி" },
+  { id: "tirupattur", name: "Tirupattur", tamilName: "திருப்பத்தூர்" },
+  { id: "tiruppur", name: "Tiruppur", tamilName: "திருப்பூர்" },
+  { id: "tiruvallur", name: "Tiruvallur", tamilName: "திருவள்ளூர்" },
+  { id: "tiruvannamalai", name: "Tiruvannamalai", tamilName: "திருவண்ணாமலை" },
+  { id: "tiruvarur", name: "Tiruvarur", tamilName: "திருவாரூர்" },
+  { id: "vellore", name: "Vellore", tamilName: "வேலூர்" },
+  { id: "viluppuram", name: "Viluppuram", tamilName: "விழுப்புரம்" },
+  { id: "virudhunagar", name: "Virudhunagar", tamilName: "விருதுநகர்" }
 ];
 
 const testimonials = [
@@ -158,6 +187,9 @@ export default function Home() {
     district: "",
     description: ""
   });
+  const [serviceOpen, setServiceOpen] = useState(false);
+  const [districtOpen, setDistrictOpen] = useState(false);
+  const [isLocationLoading, setIsLocationLoading] = useState(false);
 
   const { data: districts } = useQuery({
     queryKey: ["/api/districts"],
@@ -173,6 +205,40 @@ export default function Home() {
     e.preventDefault();
     // Implement search functionality
     console.log("Search:", searchForm);
+  };
+
+  const handleLocationFinder = () => {
+    setIsLocationLoading(true);
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          // Use reverse geocoding to find the nearest district
+          // For demo, we'll simulate finding Chennai based on coordinates
+          const nearestDistrict = allTamilNaduDistricts.find(d => d.name === "Chennai");
+          if (nearestDistrict) {
+            setSearchForm(prev => ({ ...prev, district: nearestDistrict.id }));
+          }
+          setIsLocationLoading(false);
+        },
+        (error) => {
+          console.error("Geolocation error:", error);
+          setIsLocationLoading(false);
+          // Fallback: show all districts
+        }
+      );
+    } else {
+      setIsLocationLoading(false);
+      alert("Geolocation is not supported by this browser.");
+    }
+  };
+
+  const resetForm = () => {
+    setSearchForm({
+      service: "",
+      district: "",
+      description: ""
+    });
   };
 
   const handleServiceClick = (serviceId: string) => {
@@ -263,42 +329,122 @@ export default function Home() {
                         <label className="block text-sm font-medium mb-1 text-foreground">
                           Service Type
                         </label>
-                        <Select
-                          value={searchForm.service}
-                          onValueChange={(value) => setSearchForm(prev => ({ ...prev, service: value }))}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select Service" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {mockServices.map((service) => (
-                              <SelectItem key={service.id} value={service.id}>
-                                {service.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <Popover open={serviceOpen} onOpenChange={setServiceOpen}>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              role="combobox"
+                              aria-expanded={serviceOpen}
+                              className="w-full justify-between"
+                            >
+                              {searchForm.service
+                                ? (services as any)?.find((service: any) => service.id === searchForm.service)?.name || 
+                                  mockServices.find((service) => service.id === searchForm.service)?.name
+                                : "Select Service"}
+                              <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-full p-0">
+                            <Command>
+                              <CommandInput placeholder="Search services..." />
+                              <CommandList>
+                                <CommandEmpty>No service found.</CommandEmpty>
+                                <CommandGroup>
+                                  {((services as any) || mockServices)?.map((service: any) => (
+                                    <CommandItem
+                                      key={service.id}
+                                      value={service.name}
+                                      onSelect={() => {
+                                        setSearchForm(prev => ({ ...prev, service: service.id }));
+                                        setServiceOpen(false);
+                                      }}
+                                    >
+                                      {service.name}
+                                    </CommandItem>
+                                  ))}
+                                </CommandGroup>
+                              </CommandList>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
+                        {searchForm.service && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="mt-1 h-6 px-2 text-xs"
+                            onClick={() => setSearchForm(prev => ({ ...prev, service: "" }))}
+                          >
+                            <X className="h-3 w-3 mr-1" />
+                            Clear
+                          </Button>
+                        )}
                       </div>
                       
                       <div>
-                        <label className="block text-sm font-medium mb-1 text-foreground">
-                          District
-                        </label>
-                        <Select
-                          value={searchForm.district}
-                          onValueChange={(value) => setSearchForm(prev => ({ ...prev, district: value }))}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select District" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {mockDistricts.map((district) => (
-                              <SelectItem key={district.name} value={district.name.toLowerCase()}>
-                                {district.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <div className="flex items-center justify-between mb-1">
+                          <label className="block text-sm font-medium text-foreground">
+                            District
+                          </label>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 px-2 text-xs"
+                            onClick={handleLocationFinder}
+                            disabled={isLocationLoading}
+                          >
+                            <MapPinIcon className="h-3 w-3 mr-1" />
+                            {isLocationLoading ? "Finding..." : "Use Location"}
+                          </Button>
+                        </div>
+                        <Popover open={districtOpen} onOpenChange={setDistrictOpen}>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              role="combobox"
+                              aria-expanded={districtOpen}
+                              className="w-full justify-between"
+                            >
+                              {searchForm.district
+                                ? allTamilNaduDistricts.find((district) => district.id === searchForm.district)?.name
+                                : "Select District"}
+                              <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-full p-0">
+                            <Command>
+                              <CommandInput placeholder="Search districts..." />
+                              <CommandList>
+                                <CommandEmpty>No district found.</CommandEmpty>
+                                <CommandGroup>
+                                  {allTamilNaduDistricts.map((district) => (
+                                    <CommandItem
+                                      key={district.id}
+                                      value={district.name}
+                                      onSelect={() => {
+                                        setSearchForm(prev => ({ ...prev, district: district.id }));
+                                        setDistrictOpen(false);
+                                      }}
+                                    >
+                                      {district.name} ({district.tamilName})
+                                    </CommandItem>
+                                  ))}
+                                </CommandGroup>
+                              </CommandList>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
+                        {searchForm.district && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="mt-1 h-6 px-2 text-xs"
+                            onClick={() => setSearchForm(prev => ({ ...prev, district: "" }))}
+                          >
+                            <X className="h-3 w-3 mr-1" />
+                            Clear
+                          </Button>
+                        )}
                       </div>
                     </div>
                     
@@ -313,10 +459,20 @@ export default function Home() {
                       />
                     </div>
                     
-                    <Button type="submit" className="w-full">
-                      <Search className="h-4 w-4 mr-2" />
-                      Search Workers
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button type="submit" className="flex-1">
+                        <Search className="h-4 w-4 mr-2" />
+                        Search Workers
+                      </Button>
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        onClick={resetForm}
+                        className="px-4"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </form>
                 </CardContent>
               </Card>
@@ -412,8 +568,8 @@ export default function Home() {
           </div>
           
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            {mockDistricts.map((district) => (
-              <div key={district.name} className="text-center">
+            {allTamilNaduDistricts.slice(0, 12).map((district) => (
+              <div key={district.id} className="text-center">
                 <Button
                   variant="outline"
                   className="w-full mb-2 bg-gradient-to-r from-yellow-500 to-orange-500 text-white border-none hover:from-yellow-600 hover:to-orange-600"
@@ -422,7 +578,7 @@ export default function Home() {
                   {district.name}
                 </Button>
                 <small className="text-muted-foreground">
-                  {district.workers.toLocaleString()} workers
+                  {district.tamilName}
                 </small>
               </div>
             ))}
