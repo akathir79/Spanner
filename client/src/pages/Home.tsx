@@ -215,6 +215,36 @@ export default function Home() {
                   <span>24/7 Support</span>
                 </div>
               </div>
+              
+              {!user && (
+                <div className="flex flex-col sm:flex-row gap-4 mt-8">
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    className="bg-white text-primary border-primary hover:bg-primary hover:text-white"
+                    onClick={() => {
+                      // This will trigger the register modal
+                      const event = new CustomEvent('openRegisterModal');
+                      window.dispatchEvent(event);
+                    }}
+                  >
+                    <span className="mr-2">👤</span>
+                    Sign Up as Client
+                  </Button>
+                  <Button
+                    size="lg"
+                    className="bg-yellow-500 hover:bg-yellow-600 text-black font-medium"
+                    onClick={() => {
+                      // This will trigger the register modal
+                      const event = new CustomEvent('openRegisterModal');
+                      window.dispatchEvent(event);
+                    }}
+                  >
+                    <span className="mr-2">🔧</span>
+                    Join as Worker
+                  </Button>
+                </div>
+              )}
             </div>
             
             <div>

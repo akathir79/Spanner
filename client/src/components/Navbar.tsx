@@ -4,7 +4,7 @@ import { useTheme } from "@/components/ThemeProvider";
 import { useLanguage } from "@/components/LanguageProvider";
 import { useAuth } from "@/hooks/useAuth";
 import { AuthModal } from "@/components/AuthModal";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Menu, Moon, Sun, Wrench } from "lucide-react";
 
 export function Navbar() {
@@ -25,6 +25,18 @@ export function Navbar() {
       window.location.href = "/dashboard";
     }
   };
+
+  useEffect(() => {
+    const handleOpenRegisterModal = () => {
+      setShowSignupModal(true);
+    };
+
+    window.addEventListener('openRegisterModal', handleOpenRegisterModal);
+    
+    return () => {
+      window.removeEventListener('openRegisterModal', handleOpenRegisterModal);
+    };
+  }, []);
 
   return (
     <>
@@ -121,23 +133,19 @@ export function Navbar() {
                   </Button>
                 </div>
               ) : (
-                <div className="hidden md:flex items-center space-x-3">
+                <div className="hidden md:flex items-center space-x-2">
                   <Button
-                    variant="outline"
+                    variant="ghost"
                     size="sm"
-                    onClick={() => setShowSignupModal(true)}
-                    className="bg-white text-primary border-primary hover:bg-primary hover:text-white"
+                    onClick={() => setShowLoginModal(true)}
                   >
-                    <span className="mr-2">👤</span>
-                    Sign Up as Client
+                    Login
                   </Button>
                   <Button
                     size="sm"
-                    onClick={() => setShowLoginModal(true)}
-                    className="bg-yellow-500 hover:bg-yellow-600 text-black font-medium"
+                    onClick={() => setShowSignupModal(true)}
                   >
-                    <span className="mr-2">🔧</span>
-                    Join as Worker
+                    Register
                   </Button>
                 </div>
               )}
@@ -236,27 +244,25 @@ export function Navbar() {
               ) : (
                 <div className="px-4 py-2 space-y-2">
                   <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      setShowSignupModal(true);
-                      setMobileMenuOpen(false);
-                    }}
-                    className="w-full bg-white text-primary border-primary"
-                  >
-                    <span className="mr-2">👤</span>
-                    Sign Up as Client
-                  </Button>
-                  <Button
+                    variant="ghost"
                     size="sm"
                     onClick={() => {
                       setShowLoginModal(true);
                       setMobileMenuOpen(false);
                     }}
-                    className="w-full bg-yellow-500 hover:bg-yellow-600 text-black font-medium"
+                    className="w-full"
                   >
-                    <span className="mr-2">🔧</span>
-                    Join as Worker
+                    Login
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      setShowSignupModal(true);
+                      setMobileMenuOpen(false);
+                    }}
+                    className="w-full"
+                  >
+                    Register
                   </Button>
                 </div>
               )}
