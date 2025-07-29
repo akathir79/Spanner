@@ -44,11 +44,21 @@ export function WorkerCard({
       
       <CardContent className="p-6">
         <div className="text-center mb-4">
-          <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900 dark:to-blue-800 rounded-full flex items-center justify-center mx-auto mb-3">
-            <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center">
-              <span className="text-white font-bold text-lg">{name.charAt(0)}</span>
+          {avatar ? (
+            <div className="w-16 h-16 rounded-full overflow-hidden mx-auto mb-3 border-2 border-gray-200">
+              <img 
+                src={avatar} 
+                alt={name}
+                className="w-full h-full object-cover"
+              />
             </div>
-          </div>
+          ) : (
+            <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900 dark:to-blue-800 rounded-full flex items-center justify-center mx-auto mb-3">
+              <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center">
+                <span className="text-white font-bold text-lg">{name.charAt(0)}</span>
+              </div>
+            </div>
+          )}
           <div className="flex justify-between items-center mb-2">
             <h5 className="font-semibold text-lg">{name}</h5>
             {isAvailable && (

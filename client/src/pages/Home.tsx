@@ -79,7 +79,8 @@ const mockWorkers = [
     reviews: 156,
     hourlyRate: "₹299/hour",
     experience: "5+ years exp",
-    isAvailable: true
+    isAvailable: true,
+    avatar: "https://images.unsplash.com/photo-1582233479366-6d38bc390a08?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&h=400"
   },
   {
     id: "worker2",
@@ -90,7 +91,8 @@ const mockWorkers = [
     reviews: 203,
     hourlyRate: "₹399/hour",
     experience: "7+ years exp",
-    isAvailable: true
+    isAvailable: true,
+    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&h=400"
   },
   {
     id: "worker3",
@@ -101,7 +103,8 @@ const mockWorkers = [
     reviews: 89,
     hourlyRate: "₹349/hour",
     experience: "4+ years exp",
-    isAvailable: true
+    isAvailable: true,
+    avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&h=400"
   }
 ];
 
@@ -127,7 +130,7 @@ const testimonials = [
     location: "Chennai",
     rating: 5,
     text: "Found an excellent plumber through SPANNER. The booking process was simple, and the worker arrived on time. Very professional service!",
-    avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b1e8?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=60&h=60"
+    avatar: "https://images.unsplash.com/photo-1551601651-2a8555f1a136?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&h=400"
   },
   {
     id: 2,
@@ -135,7 +138,7 @@ const testimonials = [
     location: "Coimbatore",
     rating: 5,
     text: "As a worker, SPANNER has helped me connect with more customers. The platform is easy to use and payments are always secure.",
-    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=60&h=60"
+    avatar: "https://images.unsplash.com/photo-1582233479366-6d38bc390a08?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&h=400"
   },
   {
     id: 3,
@@ -143,7 +146,7 @@ const testimonials = [
     location: "Madurai",
     rating: 5,
     text: "Excellent platform! Found a skilled electrician quickly. The Tamil language support made it very convenient for me to use.",
-    avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=60&h=60"
+    avatar: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&h=400"
   }
 ];
 
@@ -383,7 +386,7 @@ export default function Home() {
                 hourlyRate={worker.hourlyRate}
                 experience={worker.experience}
                 isAvailable={worker.isAvailable}
-
+                avatar={worker.avatar}
                 onContact={handleWorkerContact}
               />
             ))}
