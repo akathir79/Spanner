@@ -146,31 +146,48 @@ const JobPostingForm = () => {
 
     setIsLocationLoading(true);
     navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const { latitude, longitude } = position.coords;
-        
-        // Simple district detection based on coordinates
-        const nearbyDistrict = findNearestDistrict(latitude, longitude, districts as any);
-        if (nearbyDistrict) {
-          setFormData({ ...formData, districtId: nearbyDistrict.id });
+      async (position) => {
+        try {
+          const { latitude, longitude } = position.coords;
+          
+          // Use real-time district detection
+          const nearbyDistrict = await findNearestDistrict(latitude, longitude, districts as any);
+          
+          if (nearbyDistrict) {
+            setFormData(prev => ({ ...prev, districtId: nearbyDistrict.id }));
+            toast({
+              title: "Location detected",
+              description: `Set district to ${nearbyDistrict.name}`,
+            });
+          } else {
+            toast({
+              title: "Location outside Tamil Nadu",
+              description: "Please select a district manually.",
+              variant: "destructive",
+            });
+          }
+        } catch (error) {
+          console.error('Location processing error:', error);
           toast({
-            title: "Location detected",
-            description: `Set district to ${nearbyDistrict.name}`,
+            title: "Location processing failed",
+            description: "Please select a district manually.",
+            variant: "destructive",
           });
+        } finally {
+          setIsLocationLoading(false);
         }
-        setIsLocationLoading(false);
       },
       (error) => {
         let errorMessage = "Could not detect your location.";
         switch (error.code) {
           case error.PERMISSION_DENIED:
-            errorMessage = "Location access denied. Please enable location access.";
+            errorMessage = "Location access denied. Please enable location permissions in your browser.";
             break;
           case error.POSITION_UNAVAILABLE:
-            errorMessage = "Location information unavailable.";
+            errorMessage = "Location information unavailable. Please try again.";
             break;
           case error.TIMEOUT:
-            errorMessage = "Location request timed out.";
+            errorMessage = "Location request timed out. Please try again.";
             break;
         }
         
@@ -189,13 +206,88 @@ const JobPostingForm = () => {
     );
   };
 
-  const findNearestDistrict = (lat: number, lng: number, districts: any[]) => {
-    // Simple implementation - in reality you'd use proper geolocation APIs
-    // For demo, we'll just return Chennai if coordinates are in Tamil Nadu area
-    if (lat >= 8.0 && lat <= 13.5 && lng >= 76.0 && lng <= 80.5) {
-      return districts.find(d => d.name === "Chennai") || districts[0];
+  const findNearestDistrict = async (lat: number, lng: number, districts: any[]) => {
+    // Use coordinate-based matching for immediate, reliable results
+    return findDistrictByCoordinates(lat, lng, districts);
+  };
+
+  const findDistrictByCoordinates = (lat: number, lng: number, districts: any[]) => {
+    // Tamil Nadu boundary check
+    if (lat < 8.0 || lat > 13.5 || lng < 76.0 || lng > 80.5) {
+      return null; // Outside Tamil Nadu
     }
-    return districts[0];
+    
+    // Precise district coordinate boundaries for accurate detection
+    const districtBounds: { [key: string]: { 
+      latMin: number; latMax: number; lngMin: number; lngMax: number; center: { lat: number; lng: number } 
+    } } = {
+      'Chennai': { latMin: 12.74, latMax: 13.35, lngMin: 80.12, lngMax: 80.32, center: { lat: 13.0827, lng: 80.2707 } },
+      'Coimbatore': { latMin: 10.75, latMax: 11.40, lngMin: 76.85, lngMax: 77.25, center: { lat: 11.0168, lng: 76.9558 } },
+      'Madurai': { latMin: 9.70, latMax: 10.25, lngMin: 77.85, lngMax: 78.35, center: { lat: 9.9252, lng: 78.1198 } },
+      'Tiruchirappalli': { latMin: 10.55, latMax: 11.05, lngMin: 78.45, lngMax: 78.95, center: { lat: 10.7905, lng: 78.7047 } },
+      'Salem': { latMin: 11.45, latMax: 11.90, lngMin: 77.95, lngMax: 78.35, center: { lat: 11.6643, lng: 78.1460 } },
+      'Tirunelveli': { latMin: 8.45, latMax: 8.95, lngMin: 77.45, lngMax: 77.95, center: { lat: 8.7139, lng: 77.7567 } },
+      'Vellore': { latMin: 12.65, latMax: 13.15, lngMin: 78.95, lngMax: 79.35, center: { lat: 12.9165, lng: 79.1325 } },
+      'Erode': { latMin: 11.15, latMax: 11.55, lngMin: 77.45, lngMax: 77.95, center: { lat: 11.3410, lng: 77.7172 } },
+      'Dindigul': { latMin: 10.15, latMax: 10.65, lngMin: 77.75, lngMax: 78.25, center: { lat: 10.3673, lng: 77.9803 } },
+      'Thanjavur': { latMin: 10.55, latMax: 11.05, lngMin: 79.05, lngMax: 79.45, center: { lat: 10.7870, lng: 79.1378 } },
+      'Kanchipuram': { latMin: 12.55, latMax: 13.05, lngMin: 79.45, lngMax: 79.95, center: { lat: 12.8185, lng: 79.7053 } },
+      'Cuddalore': { latMin: 11.45, latMax: 11.95, lngMin: 79.45, lngMax: 79.95, center: { lat: 11.7480, lng: 79.7714 } },
+      'Tiruvannamalai': { latMin: 12.05, latMax: 12.45, lngMin: 78.85, lngMax: 79.35, center: { lat: 12.2253, lng: 79.0747 } },
+      'Villupuram': { latMin: 11.70, latMax: 12.20, lngMin: 79.25, lngMax: 79.75, center: { lat: 11.9401, lng: 79.4861 } },
+      'Karur': { latMin: 10.80, latMax: 11.20, lngMin: 77.85, lngMax: 78.25, center: { lat: 10.9571, lng: 78.0766 } },
+      'Sivaganga': { latMin: 9.65, latMax: 10.05, lngMin: 78.25, lngMax: 78.75, center: { lat: 9.8433, lng: 78.4747 } },
+      'Virudhunagar': { latMin: 9.35, latMax: 9.85, lngMin: 77.75, lngMax: 78.25, center: { lat: 9.5881, lng: 77.9624 } },
+      'Thoothukkudi': { latMin: 8.45, latMax: 8.95, lngMin: 77.95, lngMax: 78.45, center: { lat: 8.7642, lng: 78.1348 } },
+      'Nagapattinam': { latMin: 10.45, latMax: 10.95, lngMin: 79.65, lngMax: 80.15, center: { lat: 10.7660, lng: 79.8420 } },
+      'Pudukkottai': { latMin: 10.15, latMax: 10.65, lngMin: 78.55, lngMax: 79.05, center: { lat: 10.3833, lng: 78.8200 } },
+      'Ramanathapuram': { latMin: 9.15, latMax: 9.65, lngMin: 78.55, lngMax: 79.15, center: { lat: 9.3636, lng: 78.8370 } },
+      'Dharmapuri': { latMin: 11.95, latMax: 12.35, lngMin: 77.95, lngMax: 78.35, center: { lat: 12.1357, lng: 78.1580 } },
+      'Krishnagiri': { latMin: 12.25, latMax: 12.75, lngMin: 77.95, lngMax: 78.45, center: { lat: 12.5186, lng: 78.2137 } },
+      'Ariyalur': { latMin: 10.95, latMax: 11.35, lngMin: 78.85, lngMax: 79.25, center: { lat: 11.1401, lng: 79.0784 } },
+      'Namakkal': { latMin: 10.95, latMax: 11.45, lngMin: 77.95, lngMax: 78.35, center: { lat: 11.2189, lng: 78.1677 } },
+      'Perambalur': { latMin: 11.05, latMax: 11.45, lngMin: 78.65, lngMax: 79.05, center: { lat: 11.2342, lng: 78.8809 } },
+      'Nilgiris': { latMin: 11.15, latMax: 11.65, lngMin: 76.45, lngMax: 76.95, center: { lat: 11.4064, lng: 76.6932 } },
+      'Kanyakumari': { latMin: 7.95, latMax: 8.35, lngMin: 77.25, lngMax: 77.75, center: { lat: 8.0883, lng: 77.5385 } },
+      'Tiruvallur': { latMin: 12.95, latMax: 13.45, lngMin: 79.65, lngMax: 80.15, center: { lat: 13.1439, lng: 79.9094 } },
+      'Tirupur': { latMin: 10.95, latMax: 11.35, lngMin: 77.15, lngMax: 77.55, center: { lat: 11.1085, lng: 77.3411 } },
+      'Chengalpattu': { latMin: 12.45, latMax: 12.95, lngMin: 79.75, lngMax: 80.25, center: { lat: 12.6819, lng: 79.9865 } },
+      'Tenkasi': { latMin: 8.75, latMax: 9.15, lngMin: 77.05, lngMax: 77.55, center: { lat: 8.9589, lng: 77.3152 } },
+      'Tirupathur': { latMin: 12.25, latMax: 12.75, lngMin: 78.35, lngMax: 78.85, center: { lat: 12.4951, lng: 78.5675 } },
+      'Ranipet': { latMin: 12.75, latMax: 13.15, lngMin: 79.15, lngMax: 79.55, center: { lat: 12.9249, lng: 79.3389 } },
+      'Kallakurichi': { latMin: 11.55, latMax: 11.95, lngMin: 78.75, lngMax: 79.15, center: { lat: 11.7401, lng: 78.9597 } },
+      'Mayiladuthurai': { latMin: 10.95, latMax: 11.35, lngMin: 79.45, lngMax: 79.85, center: { lat: 11.1021, lng: 79.6565 } }
+    };
+    
+    // Check if coordinates fall within any district boundary
+    for (const district of districts) {
+      const bounds = districtBounds[district.name];
+      if (bounds && 
+          lat >= bounds.latMin && lat <= bounds.latMax && 
+          lng >= bounds.lngMin && lng <= bounds.lngMax) {
+        return district;
+      }
+    }
+    
+    // If no exact match, find nearest district center
+    let closestDistrict = null;
+    let minDistance = Infinity;
+    
+    for (const district of districts) {
+      const bounds = districtBounds[district.name];
+      if (bounds) {
+        const distance = Math.sqrt(
+          Math.pow(lat - bounds.center.lat, 2) + Math.pow(lng - bounds.center.lng, 2)
+        );
+        
+        if (distance < minDistance) {
+          minDistance = distance;
+          closestDistrict = district;
+        }
+      }
+    }
+    
+    return closestDistrict;
   };
 
   return (
