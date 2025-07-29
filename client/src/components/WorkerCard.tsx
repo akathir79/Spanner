@@ -42,14 +42,21 @@ export function WorkerCard({
         </div>
       )}
       
-      <CardContent className="p-4">
-        <div className="flex justify-between items-start mb-2">
-          <h5 className="font-semibold text-lg">{name}</h5>
-          {isAvailable && (
-            <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100">
-              Available
-            </Badge>
-          )}
+      <CardContent className="p-6">
+        <div className="text-center mb-4">
+          <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900 dark:to-blue-800 rounded-full flex items-center justify-center mx-auto mb-3">
+            <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center">
+              <span className="text-white font-bold text-lg">{name.charAt(0)}</span>
+            </div>
+          </div>
+          <div className="flex justify-between items-center mb-2">
+            <h5 className="font-semibold text-lg">{name}</h5>
+            {isAvailable && (
+              <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100">
+                Available
+              </Badge>
+            )}
+          </div>
         </div>
         
         <p className="text-sm text-muted-foreground mb-2">{service}</p>

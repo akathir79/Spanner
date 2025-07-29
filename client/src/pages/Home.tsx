@@ -20,8 +20,7 @@ const mockServices = [
     icon: "fas fa-wrench",
     price: "₹299/hour",
     rating: 4.8,
-    reviews: 2340,
-    image: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=400&h=250"
+    reviews: 2340
   },
   {
     id: "electrician",
@@ -30,8 +29,7 @@ const mockServices = [
     icon: "fas fa-bolt",
     price: "₹399/hour",
     rating: 4.7,
-    reviews: 1890,
-    image: "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=400&h=250"
+    reviews: 1890
   },
   {
     id: "painter",
@@ -40,8 +38,7 @@ const mockServices = [
     icon: "fas fa-paint-roller",
     price: "₹349/hour",
     rating: 4.9,
-    reviews: 3210,
-    image: "https://images.unsplash.com/photo-1589939705384-5185137a7f0f?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=400&h=250"
+    reviews: 3210
   },
   {
     id: "mechanic",
@@ -50,8 +47,7 @@ const mockServices = [
     icon: "fas fa-tools",
     price: "₹449/hour", 
     rating: 4.6,
-    reviews: 1560,
-    image: "https://images.unsplash.com/photo-1487754180451-c456f719a1fc?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=400&h=250"
+    reviews: 1560
   },
   {
     id: "septic_cleaner",
@@ -60,8 +56,7 @@ const mockServices = [
     icon: "fas fa-recycle",
     price: "₹199/hour",
     rating: 4.5,
-    reviews: 890,
-    image: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=400&h=250"
+    reviews: 890
   },
   {
     id: "general_repairs",
@@ -70,8 +65,7 @@ const mockServices = [
     icon: "fas fa-hammer",
     price: "₹249/hour",
     rating: 4.7,
-    reviews: 2100,
-    image: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=400&h=250"
+    reviews: 2100
   }
 ];
 
@@ -85,8 +79,7 @@ const mockWorkers = [
     reviews: 156,
     hourlyRate: "₹299/hour",
     experience: "5+ years exp",
-    isAvailable: true,
-    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=300&h=250"
+    isAvailable: true
   },
   {
     id: "worker2",
@@ -97,8 +90,7 @@ const mockWorkers = [
     reviews: 203,
     hourlyRate: "₹399/hour",
     experience: "7+ years exp",
-    isAvailable: true,
-    avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=300&h=250"
+    isAvailable: true
   },
   {
     id: "worker3",
@@ -109,8 +101,7 @@ const mockWorkers = [
     reviews: 89,
     hourlyRate: "₹349/hour",
     experience: "4+ years exp",
-    isAvailable: true,
-    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=300&h=250"
+    isAvailable: true
   }
 ];
 
@@ -357,7 +348,7 @@ export default function Home() {
                 price={service.price}
                 rating={service.rating}
                 reviews={service.reviews}
-                image={service.image}
+
                 onClick={() => handleServiceClick(service.id)}
               />
             ))}
@@ -388,7 +379,7 @@ export default function Home() {
                 hourlyRate={worker.hourlyRate}
                 experience={worker.experience}
                 isAvailable={worker.isAvailable}
-                avatar={worker.avatar}
+
                 onContact={handleWorkerContact}
               />
             ))}

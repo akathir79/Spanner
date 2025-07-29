@@ -38,9 +38,11 @@ export function ServiceCard({
         </div>
       )}
       
-      <CardContent className="p-4">
-        <div className="flex items-center space-x-2 mb-3">
-          <i className={`${icon} text-primary text-xl`} />
+      <CardContent className="p-6">
+        <div className="text-center mb-4">
+          <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3">
+            <i className={`${icon} text-primary text-2xl`} />
+          </div>
           <h5 className="font-semibold text-lg">{name}</h5>
         </div>
         
