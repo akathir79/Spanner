@@ -645,6 +645,51 @@ export default function Dashboard() {
     },
   });
 
+  // Accept bid mutation
+  const acceptBidMutation = useMutation({
+    mutationFn: async (bidId: string) => {
+      const response = await apiRequest("PUT", `/api/bids/${bidId}/accept`);
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Bid Accepted",
+        description: "The worker has been notified and can now start the job.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/bids/job", selectedJobPosting?.id] });
+      queryClient.invalidateQueries({ queryKey: ["/api/job-postings/client", user.id] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Accept Failed",
+        description: error.message || "Failed to accept bid",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Reject bid mutation
+  const rejectBidMutation = useMutation({
+    mutationFn: async (bidId: string) => {
+      const response = await apiRequest("PUT", `/api/bids/${bidId}/reject`);
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Bid Rejected",
+        description: "The worker has been notified that their bid was not selected.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/bids/job", selectedJobPosting?.id] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Rejection Failed",
+        description: error.message || "Failed to reject bid",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Location detection function
   const handleLocationFinder = () => {
     if (!navigator.geolocation) {
@@ -1397,9 +1442,9 @@ export default function Dashboard() {
                               </p>
                             </div>
                             <div className="text-right">
-                              <p className="font-semibold text-green-600">₹{bid.bidAmount}</p>
+                              <p className="font-semibold text-green-600">₹{bid.proposedAmount}</p>
                               <p className="text-xs text-muted-foreground">
-                                {bid.proposedDuration} days
+                                {bid.estimatedDuration}
                               </p>
                             </div>
                           </div>
@@ -1423,11 +1468,31 @@ export default function Dashboard() {
                           
                           {bid.status === "pending" && (
                             <div className="flex gap-2 mt-3">
-                              <Button size="sm" className="flex-1">
-                                Accept Bid
+                              <Button 
+                                size="sm" 
+                                className="flex-1"
+                                onClick={() => acceptBidMutation.mutate(bid.id)}
+                                disabled={acceptBidMutation.isPending}
+                              >
+                                {acceptBidMutation.isPending ? "Accepting..." : "Accept Bid"}
                               </Button>
-                              <Button size="sm" variant="outline" className="flex-1">
-                                Contact Worker
+                              <Button 
+                                size="sm" 
+                                variant="destructive" 
+                                className="flex-1"
+                                onClick={() => rejectBidMutation.mutate(bid.id)}
+                                disabled={rejectBidMutation.isPending}
+                              >
+                                {rejectBidMutation.isPending ? "Rejecting..." : "Reject Bid"}
+                              </Button>
+                            </div>
+                          )}
+                          
+                          {bid.status === "accepted" && (
+                            <div className="mt-3">
+                              <Button size="sm" variant="outline" className="w-full">
+                                <Phone className="h-4 w-4 mr-2" />
+                                Contact Worker: {bid.worker?.mobile}
                               </Button>
                             </div>
                           )}
