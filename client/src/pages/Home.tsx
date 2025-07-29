@@ -189,17 +189,14 @@ export default function Home() {
   useEffect(() => {
     // Only redirect if user is definitively logged in (has complete user object)
     if (user && user.id && user.role) {
-      const timer = setTimeout(() => {
-        if (user.role === "super_admin" || user.role === "admin") {
-          window.location.href = "/admin-dashboard";
-        } else if (user.role === "worker") {
-          window.location.href = "/worker-dashboard";
-        } else {
-          window.location.href = "/dashboard";
-        }
-      }, 200);
-
-      return () => clearTimeout(timer);
+      // Use a more immediate redirect to prevent multiple refreshes
+      if (user.role === "super_admin" || user.role === "admin") {
+        window.location.replace("/admin-dashboard");
+      } else if (user.role === "worker") {
+        window.location.replace("/worker-dashboard");
+      } else {
+        window.location.replace("/dashboard");
+      }
     }
   }, [user]);
   const [searchForm, setSearchForm] = useState({

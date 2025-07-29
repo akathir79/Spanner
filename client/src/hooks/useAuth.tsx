@@ -87,17 +87,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         description: "Welcome to SPANNER!",
       });
       
-      // Redirect to appropriate dashboard based on user role
-      setTimeout(() => {
-        if (data.user.role === "super_admin" || data.user.role === "admin") {
-          window.location.href = "/admin-dashboard";
-        } else if (data.user.role === "worker") {
-          window.location.href = "/worker-dashboard";
-        } else {
-          window.location.href = "/dashboard";
-        }
-      }, 1000);
-      
       return true;
     } catch (error: any) {
       toast({
