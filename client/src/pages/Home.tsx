@@ -328,33 +328,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Popular Services Section */}
-      <section className="py-16" id="services">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">{t("services.title")}</h2>
-            <p className="text-xl text-muted-foreground">
-              Professional blue-collar services across Tamil Nadu
-            </p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {mockServices.map((service) => (
-              <ServiceCard
-                key={service.id}
-                name={service.name}
-                description={service.description}
-                icon={service.icon}
-                price={service.price}
-                rating={service.rating}
-                reviews={service.reviews}
 
-                onClick={() => handleServiceClick(service.id)}
-              />
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* Featured Workers Section */}
       <section className="py-16 bg-muted/30" id="workers">
