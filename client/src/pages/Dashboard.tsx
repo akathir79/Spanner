@@ -10,6 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/components/LanguageProvider";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -27,7 +29,10 @@ import {
   Filter,
   CheckCircle,
   XCircle,
-  AlertCircle
+  AlertCircle,
+  ChevronDown,
+  X,
+  MapPin as MapPinIcon
 } from "lucide-react";
 import { useLocation } from "wouter";
 import { TAMIL_NADU_DISTRICTS, SERVICE_CATEGORIES } from "@/lib/constants";
@@ -42,8 +47,12 @@ export default function Dashboard() {
   const [searchFilters, setSearchFilters] = useState({
     service: "",
     district: "",
-    search: ""
+    search: "",
+    description: ""
   });
+  const [serviceOpen, setServiceOpen] = useState(false);
+  const [districtOpen, setDistrictOpen] = useState(false);
+  const [isLocationLoading, setIsLocationLoading] = useState(false);
 
   // Redirect if not authenticated or wrong role
   if (!user) {
@@ -72,10 +81,16 @@ export default function Dashboard() {
     queryFn: () => fetch("/api/districts").then(res => res.json())
   });
 
-  const { data: services = [] } = useQuery({
+  const { data: rawServices = [] } = useQuery({
     queryKey: ["/api/services"],
     queryFn: () => fetch("/api/services").then(res => res.json())
   });
+
+  // Remove duplicate services by name
+  const services = rawServices ? 
+    (rawServices as any[]).filter((service, index, arr) => 
+      arr.findIndex(s => s.name === service.name) === index
+    ) : [];
 
   // Search workers
   const { data: workers = [], isLoading: workersLoading } = useQuery({
@@ -112,6 +127,126 @@ export default function Dashboard() {
       });
     },
   });
+
+  // Location detection function
+  const handleLocationFinder = () => {
+    if (!navigator.geolocation) {
+      toast({
+        title: "Location not supported",
+        description: "Your browser doesn't support location detection",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLocationLoading(true);
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const { latitude, longitude } = position.coords;
+          
+          const response = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1&accept-language=en`
+          );
+          
+          if (!response.ok) {
+            throw new Error('Failed to get location data');
+          }
+          
+          const data = await response.json();
+          
+          if (data && data.address) {
+            const locationData = data.address;
+            const detectedLocation = locationData.state_district || 
+                                   locationData.county || 
+                                   locationData.city || 
+                                   locationData.town ||
+                                   locationData.village;
+            
+            const matchingDistrict = (districts as any)?.find((district: any) => {
+              const districtName = district.name.toLowerCase();
+              const detectedName = detectedLocation?.toLowerCase() || '';
+              return districtName.includes(detectedName) || 
+                     detectedName.includes(districtName) ||
+                     district.tamilName.includes(detectedLocation);
+            });
+            
+            if (matchingDistrict) {
+              setSearchFilters(prev => ({ ...prev, district: matchingDistrict.id }));
+              toast({
+                title: "Location detected",
+                description: `Your district has been set to ${matchingDistrict.name}`,
+              });
+            } else {
+              const chennaiDistrict = (districts as any)?.find((district: any) => 
+                district.name.toLowerCase() === "chennai"
+              );
+              if (chennaiDistrict) {
+                setSearchFilters(prev => ({ ...prev, district: chennaiDistrict.id }));
+                toast({
+                  title: "Location detected",
+                  description: "Set to Chennai (nearest major district)",
+                });
+              } else {
+                toast({
+                  title: "District not found",
+                  description: "Please select your district manually",
+                  variant: "destructive",
+                });
+              }
+            }
+          }
+        } catch (error) {
+          console.error('Error getting location:', error);
+          toast({
+            title: "Location detection failed",
+            description: "Please select your district manually",
+            variant: "destructive",
+          });
+        } finally {
+          setIsLocationLoading(false);
+        }
+      },
+      (error) => {
+        console.error('Geolocation error:', error);
+        let errorMessage = "Please enable location access and try again";
+        
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            errorMessage = "Location access denied. Please enable location permissions.";
+            break;
+          case error.POSITION_UNAVAILABLE:
+            errorMessage = "Location information unavailable.";
+            break;
+          case error.TIMEOUT:
+            errorMessage = "Location request timed out.";
+            break;
+        }
+        
+        toast({
+          title: "Location Error",
+          description: errorMessage,
+          variant: "destructive",
+        });
+        setIsLocationLoading(false);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 15000,
+        maximumAge: 300000 // 5 minutes
+      }
+    );
+  };
+
+  const resetSearchForm = () => {
+    setSearchFilters({
+      service: "",
+      district: "",
+      search: "",
+      description: ""
+    });
+  };
 
   const handleCreateBooking = (data: any) => {
     if (!selectedWorker) return;
@@ -197,7 +332,10 @@ export default function Dashboard() {
                     <p className="text-muted-foreground mb-4">
                       Start by searching for workers and booking your first service.
                     </p>
-                    <Button onClick={() => document.querySelector('[value="search"]')?.click()}>
+                    <Button onClick={() => {
+                      const searchTab = document.querySelector('[data-state="inactive"][value="search"]') as HTMLElement;
+                      if (searchTab) searchTab.click();
+                    }}>
                       <Search className="h-4 w-4 mr-2" />
                       Find Workers
                     </Button>
@@ -271,55 +409,156 @@ export default function Dashboard() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                  <div>
-                    <Label htmlFor="service-filter">Service Type</Label>
-                    <Select
-                      value={searchFilters.service}
-                      onValueChange={(value) => setSearchFilters(prev => ({ ...prev, service: value }))}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select service" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {SERVICE_CATEGORIES.map((service) => (
-                          <SelectItem key={service.id} value={service.id}>
-                            {service.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                <form onSubmit={(e) => e.preventDefault()} className="space-y-4 mb-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-1">
+                        Service Type
+                      </label>
+                      <Popover open={serviceOpen} onOpenChange={setServiceOpen}>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            role="combobox"
+                            aria-expanded={serviceOpen}
+                            className="w-full justify-between"
+                          >
+                            {searchFilters.service
+                              ? (services as any)?.find((service: any) => service.id === searchFilters.service)?.name
+                              : "Select Service"}
+                            <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-full p-0">
+                          <Command>
+                            <CommandInput placeholder="Search services..." />
+                            <CommandList>
+                              <CommandEmpty>No service found.</CommandEmpty>
+                              <CommandGroup>
+                                {(services as any)?.map((service: any) => (
+                                  <CommandItem
+                                    key={service.id}
+                                    value={service.name}
+                                    onSelect={() => {
+                                      setSearchFilters(prev => ({ ...prev, service: service.id }));
+                                      setServiceOpen(false);
+                                    }}
+                                  >
+                                    {service.name}
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
+                            </CommandList>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
+                      {searchFilters.service && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="mt-1 h-6 px-2 text-xs"
+                          onClick={() => setSearchFilters(prev => ({ ...prev, service: "" }))}
+                        >
+                          <X className="h-3 w-3 mr-1" />
+                          Clear
+                        </Button>
+                      )}
+                    </div>
+                    
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="block text-sm font-medium">
+                          District
+                        </label>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 px-2 text-xs"
+                          onClick={handleLocationFinder}
+                          disabled={isLocationLoading}
+                        >
+                          <MapPinIcon className="h-3 w-3 mr-1" />
+                          {isLocationLoading ? "Finding..." : "Use Location"}
+                        </Button>
+                      </div>
+                      <Popover open={districtOpen} onOpenChange={setDistrictOpen}>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            role="combobox"
+                            aria-expanded={districtOpen}
+                            className="w-full justify-between"
+                          >
+                            {searchFilters.district
+                              ? (districts as any)?.find((district: any) => district.id === searchFilters.district)?.name
+                              : "Select District"}
+                            <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-full p-0">
+                          <Command>
+                            <CommandInput placeholder="Search districts..." />
+                            <CommandList>
+                              <CommandEmpty>No district found.</CommandEmpty>
+                              <CommandGroup>
+                                {(districts as any)?.map((district: any) => (
+                                  <CommandItem
+                                    key={district.id}
+                                    value={district.name}
+                                    onSelect={() => {
+                                      setSearchFilters(prev => ({ ...prev, district: district.id }));
+                                      setDistrictOpen(false);
+                                    }}
+                                  >
+                                    {district.name} ({district.tamilName})
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
+                            </CommandList>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
+                      {searchFilters.district && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="mt-1 h-6 px-2 text-xs"
+                          onClick={() => setSearchFilters(prev => ({ ...prev, district: "" }))}
+                        >
+                          <X className="h-3 w-3 mr-1" />
+                          Clear
+                        </Button>
+                      )}
+                    </div>
                   </div>
                   
                   <div>
-                    <Label htmlFor="district-filter">District</Label>
-                    <Select
-                      value={searchFilters.district}
-                      onValueChange={(value) => setSearchFilters(prev => ({ ...prev, district: value }))}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select district" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {TAMIL_NADU_DISTRICTS.map((district) => (
-                          <SelectItem key={district.id} value={district.id}>
-                            {district.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="search-input">Search</Label>
+                    <label className="block text-sm font-medium mb-1">
+                      Description
+                    </label>
                     <Input
-                      id="search-input"
-                      placeholder="Search workers..."
-                      value={searchFilters.search}
-                      onChange={(e) => setSearchFilters(prev => ({ ...prev, search: e.target.value }))}
+                      placeholder="Describe your service requirement..."
+                      value={searchFilters.description}
+                      onChange={(e) => setSearchFilters(prev => ({ ...prev, description: e.target.value }))}
                     />
                   </div>
-                </div>
+                  
+                  <div className="flex gap-2">
+                    <Button type="submit" className="flex-1">
+                      <Search className="h-4 w-4 mr-2" />
+                      Search Workers
+                    </Button>
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      onClick={resetSearchForm}
+                      className="px-4"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </form>
 
                 {workersLoading ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
