@@ -314,6 +314,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update user profile picture
+  app.patch("/api/users/:id/profile-picture", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { profilePicture } = req.body;
+      
+      const user = await storage.updateUserProfilePicture(id, profilePicture);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      res.json({
+        message: "Profile picture updated successfully",
+        user
+      });
+    } catch (error) {
+      console.error("Update profile picture error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

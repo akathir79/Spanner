@@ -27,8 +27,11 @@ import {
   Filter,
   CheckCircle,
   XCircle,
-  AlertCircle
+  AlertCircle,
+  Upload,
+  X
 } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useLocation } from "wouter";
 import { TAMIL_NADU_DISTRICTS, SERVICE_CATEGORIES } from "@/lib/constants";
 
@@ -44,6 +47,45 @@ export default function Dashboard() {
     district: "",
     search: ""
   });
+  const [profilePicturePreview, setProfilePicturePreview] = useState<string>("");
+
+  // Profile picture upload handlers
+  const handleProfilePictureUpload = (file: File | null) => {
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Invalid file type",
+        description: "Please select an image file (JPG, PNG, etc.)",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "Please select an image smaller than 5MB",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const base64String = e.target?.result as string;
+      setProfilePicturePreview(base64String);
+      updateProfilePicture.mutate(base64String);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const removeProfilePicture = () => {
+    setProfilePicturePreview("");
+    updateProfilePicture.mutate("");
+  };
 
   // Redirect if not authenticated or wrong role
   if (!user) {
@@ -110,6 +152,34 @@ export default function Dashboard() {
         description: error.message || "Failed to create booking",
         variant: "destructive",
       });
+    },
+  });
+
+  // Update profile picture mutation
+  const updateProfilePicture = useMutation({
+    mutationFn: async (profilePicture: string) => {
+      const response = await apiRequest("PATCH", `/api/users/${user.id}/profile-picture`, {
+        profilePicture,
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Profile Picture Updated",
+        description: "Your profile picture has been updated successfully.",
+      });
+      // Update the user in localStorage and force re-fetch
+      const updatedUser = { ...user, profilePicture: profilePicturePreview || "" };
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+      window.location.reload(); // Force navbar to update
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Update Failed",
+        description: error.message || "Failed to update profile picture",
+        variant: "destructive",
+      });
+      setProfilePicturePreview(""); // Reset on error
     },
   });
 
@@ -197,7 +267,7 @@ export default function Dashboard() {
                     <p className="text-muted-foreground mb-4">
                       Start by searching for workers and booking your first service.
                     </p>
-                    <Button onClick={() => document.querySelector('[value="search"]')?.click()}>
+                    <Button onClick={() => (document.querySelector('[value="search"]') as HTMLElement)?.click()}>
                       <Search className="h-4 w-4 mr-2" />
                       Find Workers
                     </Button>
@@ -409,6 +479,74 @@ export default function Dashboard() {
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-4">
+                    {/* Profile Picture Section */}
+                    <div>
+                      <Label>Profile Picture</Label>
+                      <div className="mt-2">
+                        {profilePicturePreview || (user as any)?.profilePicture ? (
+                          <div className="flex items-center space-x-4">
+                            <div className="relative">
+                              <Avatar className="w-20 h-20">
+                                <AvatarImage 
+                                  src={profilePicturePreview || (user as any)?.profilePicture} 
+                                  alt={`${user.firstName} ${user.lastName}`} 
+                                />
+                                <AvatarFallback className="bg-primary text-primary-foreground text-lg">
+                                  {user.firstName[0]}{user.lastName[0]}
+                                </AvatarFallback>
+                              </Avatar>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-destructive text-destructive-foreground hover:bg-destructive/80"
+                                onClick={removeProfilePicture}
+                                disabled={updateProfilePicture.isPending}
+                              >
+                                <X className="h-3 w-3" />
+                              </Button>
+                            </div>
+                            <div className="text-sm text-muted-foreground">
+                              Profile picture uploaded successfully
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="flex items-center space-x-4">
+                            <Avatar className="w-20 h-20 border-2 border-dashed border-border">
+                              <AvatarFallback className="bg-muted text-muted-foreground">
+                                <User className="h-10 w-10" />
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1">
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                className="relative"
+                                asChild
+                                disabled={updateProfilePicture.isPending}
+                              >
+                                <label htmlFor="profilePictureInput" className="cursor-pointer">
+                                  <Upload className="h-4 w-4 mr-2" />
+                                  {updateProfilePicture.isPending ? "Uploading..." : "Upload Photo"}
+                                </label>
+                              </Button>
+                              <input
+                                id="profilePictureInput"
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={(e) => handleProfilePictureUpload(e.target.files?.[0] || null)}
+                              />
+                              <p className="text-xs text-muted-foreground mt-1">
+                                JPG, PNG up to 5MB
+                              </p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
                     <div>
                       <Label>Full Name</Label>
                       <p className="text-lg font-medium">
