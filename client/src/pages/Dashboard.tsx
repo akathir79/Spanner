@@ -533,6 +533,7 @@ export default function Dashboard() {
   const [serviceOpen, setServiceOpen] = useState(false);
   const [districtOpen, setDistrictOpen] = useState(false);
   const [isLocationLoading, setIsLocationLoading] = useState(false);
+  const [selectedJobPosting, setSelectedJobPosting] = useState<any>(null);
 
   // Redirect if not authenticated or wrong role
   if (!user) {
@@ -559,6 +560,13 @@ export default function Dashboard() {
   const { data: jobPostings = [], isLoading: jobPostingsLoading } = useQuery({
     queryKey: ["/api/job-postings/client", user.id],
     queryFn: () => fetch(`/api/job-postings/client/${user.id}`).then(res => res.json())
+  });
+
+  // Fetch bids for selected job posting
+  const { data: jobBids = [], isLoading: bidsLoading } = useQuery({
+    queryKey: ["/api/bids/job", selectedJobPosting?.id],
+    queryFn: () => fetch(`/api/bids/job/${selectedJobPosting.id}`).then(res => res.json()),
+    enabled: !!selectedJobPosting?.id
   });
 
   // Fetch districts and services
@@ -609,6 +617,29 @@ export default function Dashboard() {
       toast({
         title: "Booking Failed",
         description: error.message || "Failed to create booking",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Delete job posting mutation
+  const deleteJobMutation = useMutation({
+    mutationFn: async (jobId: string) => {
+      const response = await apiRequest("DELETE", `/api/job-postings/${jobId}`);
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Job Deleted",
+        description: "Your job posting has been removed.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/job-postings/client", user.id] });
+      setSelectedJobPosting(null);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Delete Failed",
+        description: error.message || "Failed to delete job posting",
         variant: "destructive",
       });
     },
@@ -786,11 +817,32 @@ export default function Dashboard() {
           </p>
         </div>
 
+        {/* Post a New Job Button */}
+        <div className="mb-6">
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button size="lg" className="w-full sm:w-auto">
+                <Plus className="h-5 w-5 mr-2" />
+                Post a New Job
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Post a New Job</DialogTitle>
+                <p className="text-muted-foreground">
+                  Get competitive bids from qualified workers across Tamil Nadu
+                </p>
+              </DialogHeader>
+              <JobPostingForm />
+            </DialogContent>
+          </Dialog>
+        </div>
+
         <Tabs defaultValue="bookings" className="space-y-6">
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="bookings">My Bookings</TabsTrigger>
             <TabsTrigger value="search">Find Workers</TabsTrigger>
-            <TabsTrigger value="jobs">Post Job</TabsTrigger>
+            <TabsTrigger value="jobs">My Jobs/Bids</TabsTrigger>
             <TabsTrigger value="profile">Profile</TabsTrigger>
           </TabsList>
 
@@ -1194,47 +1246,10 @@ export default function Dashboard() {
             </Card>
           </TabsContent>
 
-          {/* Post Job Tab */}
+          {/* My Jobs/Bids Tab */}
           <TabsContent value="jobs" className="space-y-6">
-            <div className="grid gap-6 md:grid-cols-2">
-              {/* Job Posting Form */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Plus className="h-5 w-5" />
-                    Post a New Job
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-center py-8">
-                    <div className="mb-4">
-                      <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
-                        <Plus className="h-8 w-8 text-primary" />
-                      </div>
-                    </div>
-                    <h3 className="text-lg font-semibold mb-2">Get Competitive Bids</h3>
-                    <p className="text-muted-foreground mb-4">
-                      Post your job requirements and receive bids from qualified workers across Tamil Nadu.
-                    </p>
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button className="w-full">
-                          <Plus className="h-4 w-4 mr-2" />
-                          Create Job Posting
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
-                        <DialogHeader>
-                          <DialogTitle>Post a New Job</DialogTitle>
-                        </DialogHeader>
-                        <JobPostingForm />
-                      </DialogContent>
-                    </Dialog>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* My Job Postings */}
+            <div className="grid gap-6 lg:grid-cols-2">
+              {/* Left Side - My Job Postings */}
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -1245,7 +1260,7 @@ export default function Dashboard() {
                 <CardContent>
                   {jobPostingsLoading ? (
                     <div className="space-y-4">
-                      {[...Array(2)].map((_, i) => (
+                      {[...Array(3)].map((_, i) => (
                         <div key={i} className="animate-pulse">
                           <div className="h-24 bg-muted rounded-lg"></div>
                         </div>
@@ -1255,14 +1270,20 @@ export default function Dashboard() {
                     <div className="text-center py-8">
                       <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                       <h3 className="text-lg font-semibold mb-2">No job postings yet</h3>
-                      <p className="text-muted-foreground">
-                        Your posted jobs and received bids will appear here.
+                      <p className="text-muted-foreground mb-4">
+                        Use the "Post a New Job" button above to get started.
                       </p>
                     </div>
                   ) : (
-                    <div className="space-y-4 max-h-[400px] overflow-y-auto">
+                    <div className="space-y-4 max-h-[600px] overflow-y-auto">
                       {jobPostings.map((job: any) => (
-                        <div key={job.id} className="border rounded-lg p-4 space-y-3">
+                        <div 
+                          key={job.id} 
+                          className={`border rounded-lg p-4 space-y-3 cursor-pointer transition-all hover:shadow-md ${
+                            selectedJobPosting?.id === job.id ? 'border-primary ring-2 ring-primary/20' : ''
+                          }`}
+                          onClick={() => setSelectedJobPosting(job)}
+                        >
                           <div className="flex items-start justify-between">
                             <div className="flex-1">
                               <h3 className="font-semibold">{job.title}</h3>
@@ -1270,13 +1291,29 @@ export default function Dashboard() {
                                 {job.serviceCategory} • {job.district?.name}
                               </p>
                             </div>
-                            <Badge 
-                              className={job.status === "open" ? "bg-green-100 text-green-800" : 
-                                        job.status === "closed" ? "bg-gray-100 text-gray-800" : 
-                                        "bg-blue-100 text-blue-800"}
-                            >
-                              {job.status}
-                            </Badge>
+                            <div className="flex items-center gap-2">
+                              <Badge 
+                                className={job.status === "open" ? "bg-green-100 text-green-800" : 
+                                          job.status === "closed" ? "bg-gray-100 text-gray-800" : 
+                                          job.status === "in_progress" ? "bg-blue-100 text-blue-800" :
+                                          job.status === "completed" ? "bg-green-100 text-green-800" :
+                                          "bg-gray-100 text-gray-800"}
+                              >
+                                {job.status}
+                              </Badge>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  deleteJobMutation.mutate(job.id);
+                                }}
+                                disabled={deleteJobMutation.isPending}
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
                           </div>
                           
                           <p className="text-sm text-muted-foreground line-clamp-2">
@@ -1304,6 +1341,94 @@ export default function Dashboard() {
                                   +{job.requirements.length - 2} more
                                 </Badge>
                               )}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Right Side - Job Bids */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <DollarSign className="h-5 w-5" />
+                    {selectedJobPosting ? `Bids for "${selectedJobPosting.title}"` : 'Select a Job to View Bids'}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {!selectedJobPosting ? (
+                    <div className="text-center py-12">
+                      <DollarSign className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                      <h3 className="text-lg font-semibold mb-2">Select a Job Posting</h3>
+                      <p className="text-muted-foreground">
+                        Click on any job posting from the left to view worker bids.
+                      </p>
+                    </div>
+                  ) : bidsLoading ? (
+                    <div className="space-y-4">
+                      {[...Array(3)].map((_, i) => (
+                        <div key={i} className="animate-pulse">
+                          <div className="h-20 bg-muted rounded-lg"></div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : !jobBids || jobBids.length === 0 ? (
+                    <div className="text-center py-12">
+                      <DollarSign className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                      <h3 className="text-lg font-semibold mb-2">No bids yet</h3>
+                      <p className="text-muted-foreground">
+                        Workers will submit bids for this job soon. Check back later!
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4 max-h-[600px] overflow-y-auto">
+                      {jobBids.map((bid: any) => (
+                        <div key={bid.id} className="border rounded-lg p-4 space-y-3">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <h4 className="font-semibold">
+                                {bid.worker?.firstName} {bid.worker?.lastName}
+                              </h4>
+                              <p className="text-sm text-muted-foreground">
+                                {bid.worker?.workerProfile?.primaryService}
+                              </p>
+                            </div>
+                            <div className="text-right">
+                              <p className="font-semibold text-green-600">₹{bid.bidAmount}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {bid.proposedDuration} days
+                              </p>
+                            </div>
+                          </div>
+                          
+                          <p className="text-sm text-muted-foreground">
+                            {bid.proposal}
+                          </p>
+                          
+                          <div className="flex items-center justify-between text-xs text-muted-foreground">
+                            <span>
+                              Submitted {new Date(bid.createdAt).toLocaleDateString()}
+                            </span>
+                            <Badge 
+                              className={bid.status === "pending" ? "bg-yellow-100 text-yellow-800" :
+                                        bid.status === "accepted" ? "bg-green-100 text-green-800" :
+                                        "bg-gray-100 text-gray-800"}
+                            >
+                              {bid.status}
+                            </Badge>
+                          </div>
+                          
+                          {bid.status === "pending" && (
+                            <div className="flex gap-2 mt-3">
+                              <Button size="sm" className="flex-1">
+                                Accept Bid
+                              </Button>
+                              <Button size="sm" variant="outline" className="flex-1">
+                                Contact Worker
+                              </Button>
                             </div>
                           )}
                         </div>

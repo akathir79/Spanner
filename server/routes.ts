@@ -338,7 +338,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/job-postings", async (req, res) => {
     try {
-      const jobData = insertJobPostingSchema.parse(req.body);
+      // Convert budget numbers to strings for database compatibility
+      const { budgetMin, budgetMax, ...rest } = req.body;
+      const jobData = {
+        ...rest,
+        budgetMin: budgetMin !== undefined && budgetMin !== null ? budgetMin.toString() : null,
+        budgetMax: budgetMax !== undefined && budgetMax !== null ? budgetMax.toString() : null,
+      };
       const job = await storage.createJobPosting(jobData);
       res.status(201).json(job);
     } catch (error) {
@@ -350,7 +356,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/job-postings/:id", async (req, res) => {
     try {
       const { id } = req.params;
-      const jobData = insertJobPostingSchema.partial().parse(req.body);
+      // Convert budget numbers to strings for database compatibility
+      const { budgetMin, budgetMax, ...rest } = req.body;
+      const jobData = {
+        ...rest,
+        budgetMin: budgetMin !== undefined ? budgetMin?.toString() : undefined,
+        budgetMax: budgetMax !== undefined ? budgetMax?.toString() : undefined,
+      };
       const job = await storage.updateJobPosting(id, jobData);
       res.json(job);
     } catch (error) {
@@ -359,8 +371,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.delete("/api/job-postings/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteJobPosting(id);
+      res.json({ message: "Job posting deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting job posting:", error);
+      res.status(500).json({ message: "Failed to delete job posting" });
+    }
+  });
+
   // Bidding routes
-  app.get("/api/job-postings/:jobId/bids", async (req, res) => {
+  app.get("/api/bids/job/:jobId", async (req, res) => {
     try {
       const { jobId } = req.params;
       const bids = await storage.getBidsByJobPosting(jobId);

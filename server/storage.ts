@@ -64,6 +64,7 @@ export interface IStorage {
   getJobPostingsByClient(clientId: string): Promise<(JobPosting & { district: District; bids?: Bid[] })[]>;
   createJobPosting(jobPosting: InsertJobPosting): Promise<JobPosting>;
   updateJobPosting(id: string, updates: Partial<JobPosting>): Promise<JobPosting | undefined>;
+  deleteJobPosting(id: string): Promise<void>;
   
   // Bidding
   getBidsByJobPosting(jobPostingId: string): Promise<(Bid & { worker: User & { workerProfile?: WorkerProfile } })[]>;
@@ -306,7 +307,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createJobPosting(jobPosting: InsertJobPosting): Promise<JobPosting> {
-    const [job] = await db.insert(jobPostings).values(jobPosting).returning();
+    // Convert numeric fields to strings for database compatibility
+    const dbJobPosting = {
+      ...jobPosting,
+      budgetMin: jobPosting.budgetMin !== undefined && jobPosting.budgetMin !== null ? jobPosting.budgetMin.toString() : null,
+      budgetMax: jobPosting.budgetMax !== undefined && jobPosting.budgetMax !== null ? jobPosting.budgetMax.toString() : null,
+    };
+    const [job] = await db.insert(jobPostings).values([dbJobPosting]).returning();
     return job;
   }
 
@@ -316,6 +323,14 @@ export class DatabaseStorage implements IStorage {
       .where(eq(jobPostings.id, id))
       .returning();
     return job || undefined;
+  }
+
+  async deleteJobPosting(id: string): Promise<void> {
+    // First delete all related bids
+    await db.delete(bids).where(eq(bids.jobPostingId, id));
+    
+    // Then delete the job posting
+    await db.delete(jobPostings).where(eq(jobPostings.id, id));
   }
 
   // Bidding methods
@@ -354,7 +369,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createBid(bid: InsertBid): Promise<Bid> {
-    const [newBid] = await db.insert(bids).values(bid).returning();
+    // Convert numeric fields to strings for database compatibility
+    const dbBid = {
+      ...bid,
+      proposedAmount: bid.proposedAmount !== undefined ? bid.proposedAmount.toString() : '',
+    };
+    const [newBid] = await db.insert(bids).values([dbBid]).returning();
     return newBid;
   }
 
