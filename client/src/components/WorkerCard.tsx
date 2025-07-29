@@ -32,16 +32,6 @@ export function WorkerCard({
 }: WorkerCardProps) {
   return (
     <Card className="group hover:shadow-lg transition-all duration-300">
-      {avatar && (
-        <div className="aspect-square w-full overflow-hidden rounded-t-lg">
-          <img 
-            src={avatar} 
-            alt={name}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-          />
-        </div>
-      )}
-      
       <CardContent className="p-6">
         <div className="text-center mb-4">
           {avatar ? (
