@@ -11,6 +11,7 @@ import { ServiceCard } from "@/components/ServiceCard";
 import { WorkerCard } from "@/components/WorkerCard";
 import { useLanguage } from "@/components/LanguageProvider";
 import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
 import { Search, CheckCircle, Shield, Clock, Users, MapPin, Star, Handshake, ChevronDown, X, MapPinIcon } from "lucide-react";
 
 // Mock data for demonstration
@@ -182,6 +183,7 @@ const testimonials = [
 export default function Home() {
   const { t } = useLanguage();
   const { user } = useAuth();
+  const { toast } = useToast();
   const [searchForm, setSearchForm] = useState({
     service: "",
     district: "",
@@ -214,29 +216,117 @@ export default function Home() {
   };
 
   const handleLocationFinder = () => {
-    setIsLocationLoading(true);
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          // Use reverse geocoding to find the nearest district
-          // For demo, we'll simulate finding Chennai based on coordinates
-          const nearestDistrict = allTamilNaduDistricts.find(d => d.name === "Chennai");
-          if (nearestDistrict) {
-            setSearchForm(prev => ({ ...prev, district: nearestDistrict.id }));
-          }
-          setIsLocationLoading(false);
-        },
-        (error) => {
-          console.error("Geolocation error:", error);
-          setIsLocationLoading(false);
-          // Fallback: show all districts
-        }
-      );
-    } else {
-      setIsLocationLoading(false);
-      alert("Geolocation is not supported by this browser.");
+    if (!navigator.geolocation) {
+      toast({
+        title: "Location not supported",
+        description: "Your browser doesn't support location detection",
+        variant: "destructive",
+      });
+      return;
     }
+
+    setIsLocationLoading(true);
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const { latitude, longitude } = position.coords;
+          
+          // Use a free reverse geocoding service (nominatim)
+          const response = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1&accept-language=en`
+          );
+          
+          if (!response.ok) {
+            throw new Error('Failed to get location data');
+          }
+          
+          const data = await response.json();
+          
+          if (data && data.address) {
+            const locationData = data.address;
+            // Try to extract district/state information
+            const detectedLocation = locationData.state_district || 
+                                   locationData.county || 
+                                   locationData.city || 
+                                   locationData.town ||
+                                   locationData.village;
+            
+            // Find matching district in our database
+            const matchingDistrict = (districts as any)?.find((district: any) => {
+              const districtName = district.name.toLowerCase();
+              const detectedName = detectedLocation?.toLowerCase() || '';
+              return districtName.includes(detectedName) || 
+                     detectedName.includes(districtName) ||
+                     district.tamilName.includes(detectedLocation);
+            });
+            
+            if (matchingDistrict) {
+              setSearchForm(prev => ({ ...prev, district: matchingDistrict.id }));
+              toast({
+                title: "Location detected",
+                description: `Your district has been set to ${matchingDistrict.name}`,
+              });
+            } else {
+              // If location is outside Tamil Nadu, suggest nearest major district
+              const chennaiDistrict = (districts as any)?.find((district: any) => 
+                district.name.toLowerCase() === "chennai"
+              );
+              if (chennaiDistrict) {
+                setSearchForm(prev => ({ ...prev, district: chennaiDistrict.id }));
+                toast({
+                  title: "Location detected",
+                  description: "Set to Chennai (nearest major district)",
+                });
+              } else {
+                toast({
+                  title: "District not found",
+                  description: "Please select your district manually",
+                  variant: "destructive",
+                });
+              }
+            }
+          }
+        } catch (error) {
+          console.error('Error getting location:', error);
+          toast({
+            title: "Location detection failed",
+            description: "Please select your district manually",
+            variant: "destructive",
+          });
+        } finally {
+          setIsLocationLoading(false);
+        }
+      },
+      (error) => {
+        console.error('Geolocation error:', error);
+        let errorMessage = "Please enable location access and try again";
+        
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            errorMessage = "Location access denied. Please enable location permissions.";
+            break;
+          case error.POSITION_UNAVAILABLE:
+            errorMessage = "Location information unavailable.";
+            break;
+          case error.TIMEOUT:
+            errorMessage = "Location request timed out.";
+            break;
+        }
+        
+        toast({
+          title: "Location access required",
+          description: errorMessage,
+          variant: "destructive",
+        });
+        setIsLocationLoading(false);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 15000,
+        maximumAge: 300000, // 5 minutes
+      }
+    );
   };
 
   const resetForm = () => {
