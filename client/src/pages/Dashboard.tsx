@@ -54,6 +54,9 @@ const JobPostingForm = () => {
     requirements: [] as string[],
   });
   const [newRequirement, setNewRequirement] = useState("");
+  const [serviceOpen, setServiceOpen] = useState(false);
+  const [districtOpen, setDistrictOpen] = useState(false);
+  const [isLocationLoading, setIsLocationLoading] = useState(false);
 
   // Fetch services and districts
   const { data: services = [] } = useQuery({
@@ -131,6 +134,70 @@ const JobPostingForm = () => {
     });
   };
 
+  const handleLocationFinder = () => {
+    if (!navigator.geolocation) {
+      toast({
+        title: "Location not supported",
+        description: "Geolocation is not supported by this browser.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLocationLoading(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        
+        // Simple district detection based on coordinates
+        const nearbyDistrict = findNearestDistrict(latitude, longitude, districts as any);
+        if (nearbyDistrict) {
+          setFormData({ ...formData, districtId: nearbyDistrict.id });
+          toast({
+            title: "Location detected",
+            description: `Set district to ${nearbyDistrict.name}`,
+          });
+        }
+        setIsLocationLoading(false);
+      },
+      (error) => {
+        let errorMessage = "Could not detect your location.";
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            errorMessage = "Location access denied. Please enable location access.";
+            break;
+          case error.POSITION_UNAVAILABLE:
+            errorMessage = "Location information unavailable.";
+            break;
+          case error.TIMEOUT:
+            errorMessage = "Location request timed out.";
+            break;
+        }
+        
+        toast({
+          title: "Location access required",
+          description: errorMessage,
+          variant: "destructive",
+        });
+        setIsLocationLoading(false);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 15000,
+        maximumAge: 300000,
+      }
+    );
+  };
+
+  const findNearestDistrict = (lat: number, lng: number, districts: any[]) => {
+    // Simple implementation - in reality you'd use proper geolocation APIs
+    // For demo, we'll just return Chennai if coordinates are in Tamil Nadu area
+    if (lat >= 8.0 && lat <= 13.5 && lng >= 76.0 && lng <= 80.5) {
+      return districts.find(d => d.name === "Chennai") || districts[0];
+    }
+    return districts[0];
+  };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
@@ -146,41 +213,120 @@ const JobPostingForm = () => {
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="serviceCategory">Service Type *</Label>
-          <Select
-            value={formData.serviceCategory}
-            onValueChange={(value) => setFormData({ ...formData, serviceCategory: value })}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select service" />
-            </SelectTrigger>
-            <SelectContent>
-              {(services as any).map((service: any) => (
-                <SelectItem key={service.id} value={service.name}>
-                  {service.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Label>Service Type *</Label>
+          <Popover open={serviceOpen} onOpenChange={setServiceOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                role="combobox"
+                aria-expanded={serviceOpen}
+                className="w-full justify-between"
+              >
+                {formData.serviceCategory
+                  ? (services as any)?.find((service: any) => service.name === formData.serviceCategory)?.name
+                  : "Select service"}
+                <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-full p-0">
+              <Command>
+                <CommandInput placeholder="Search services..." />
+                <CommandList>
+                  <CommandEmpty>No service found.</CommandEmpty>
+                  <CommandGroup>
+                    {(services as any)?.map((service: any) => (
+                      <CommandItem
+                        key={service.id}
+                        value={service.name}
+                        onSelect={() => {
+                          setFormData(prev => ({ ...prev, serviceCategory: service.name }));
+                          setServiceOpen(false);
+                        }}
+                      >
+                        {service.name}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
+          {formData.serviceCategory && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="mt-1 h-6 px-2 text-xs"
+              onClick={() => setFormData(prev => ({ ...prev, serviceCategory: "" }))}
+            >
+              <X className="h-3 w-3 mr-1" />
+              Clear
+            </Button>
+          )}
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="district">District *</Label>
-          <Select
-            value={formData.districtId}
-            onValueChange={(value) => setFormData({ ...formData, districtId: value })}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select district" />
-            </SelectTrigger>
-            <SelectContent>
-              {(districts as any).map((district: any) => (
-                <SelectItem key={district.id} value={district.id}>
-                  {district.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="flex items-center justify-between">
+            <Label>District *</Label>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-6 px-2 text-xs"
+              onClick={handleLocationFinder}
+              disabled={isLocationLoading}
+            >
+              <MapPinIcon className="h-3 w-3 mr-1" />
+              {isLocationLoading ? "Finding..." : "Use Location"}
+            </Button>
+          </div>
+          <Popover open={districtOpen} onOpenChange={setDistrictOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                role="combobox"
+                aria-expanded={districtOpen}
+                className="w-full justify-between"
+              >
+                {formData.districtId
+                  ? (districts as any)?.find((district: any) => district.id === formData.districtId)?.name
+                  : "Select district"}
+                <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-full p-0">
+              <Command>
+                <CommandInput placeholder="Search districts..." />
+                <CommandList>
+                  <CommandEmpty>No district found.</CommandEmpty>
+                  <CommandGroup>
+                    {(districts as any)?.map((district: any) => (
+                      <CommandItem
+                        key={district.id}
+                        value={district.name}
+                        onSelect={() => {
+                          setFormData(prev => ({ ...prev, districtId: district.id }));
+                          setDistrictOpen(false);
+                        }}
+                      >
+                        {district.name} ({district.tamilName})
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
+          {formData.districtId && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="mt-1 h-6 px-2 text-xs"
+              onClick={() => setFormData(prev => ({ ...prev, districtId: "" }))}
+            >
+              <X className="h-3 w-3 mr-1" />
+              Clear
+            </Button>
+          )}
         </div>
       </div>
 
