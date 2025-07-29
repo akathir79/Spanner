@@ -338,8 +338,7 @@ export default function Home() {
                               className="w-full justify-between"
                             >
                               {searchForm.service
-                                ? (services as any)?.find((service: any) => service.id === searchForm.service)?.name || 
-                                  mockServices.find((service) => service.id === searchForm.service)?.name
+                                ? (services as any)?.find((service: any) => service.id === searchForm.service)?.name
                                 : "Select Service"}
                               <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                             </Button>
@@ -350,7 +349,7 @@ export default function Home() {
                               <CommandList>
                                 <CommandEmpty>No service found.</CommandEmpty>
                                 <CommandGroup>
-                                  {((services as any) || mockServices)?.map((service: any) => (
+                                  {(services as any)?.map((service: any) => (
                                     <CommandItem
                                       key={service.id}
                                       value={service.name}
