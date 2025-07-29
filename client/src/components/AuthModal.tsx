@@ -13,7 +13,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/components/LanguageProvider";
 import { TAMIL_NADU_DISTRICTS, SERVICE_CATEGORIES } from "@/lib/constants";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { UserPlus, LogIn, Smartphone, Info } from "lucide-react";
+import { UserPlus, LogIn, Smartphone, Info, MapPin } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { useQuery } from "@tanstack/react-query";
 
 const loginSchema = z.object({
   mobile: z.string().min(10, "Mobile number must be at least 10 digits"),
@@ -30,6 +32,8 @@ const clientSignupSchema = z.object({
   mobile: z.string().min(10, "Mobile number must be at least 10 digits"),
   email: z.string().email("Invalid email address").optional(),
   districtId: z.string().min(1, "District is required"),
+  address: z.string().min(5, "Address is required"),
+  pincode: z.string().length(6, "Pincode must be 6 digits"),
   termsAccepted: z.boolean().refine(val => val === true, "You must accept the terms"),
 });
 
@@ -44,6 +48,8 @@ const workerSignupSchema = z.object({
   hourlyRate: z.number().min(0, "Hourly rate must be positive"),
   serviceDistricts: z.array(z.string()).min(1, "Select at least one district"),
   skills: z.array(z.string()).min(1, "Add at least one skill"),
+  address: z.string().min(5, "Address is required"),
+  pincode: z.string().length(6, "Pincode must be 6 digits"),
   termsAccepted: z.boolean().refine(val => val === true, "You must accept the terms"),
 });
 
@@ -58,8 +64,16 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
   const [pendingLogin, setPendingLogin] = useState<{ mobile: string; userType: string } | null>(null);
   const [developmentOtp, setDevelopmentOtp] = useState<string>("");
   const [signupType, setSignupType] = useState<"client" | "worker">("client");
+  const [isLocationLoading, setIsLocationLoading] = useState(false);
   const { login, verifyOtp, signupClient, signupWorker, isLoading } = useAuth();
   const { t } = useLanguage();
+  const { toast } = useToast();
+
+  // Fetch districts from database
+  const { data: districts } = useQuery({
+    queryKey: ["/api/districts"],
+    staleTime: 1000 * 60 * 60, // 1 hour
+  });
 
   const loginForm = useForm({
     resolver: zodResolver(loginSchema),
@@ -84,6 +98,8 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
       mobile: "",
       email: "",
       districtId: "",
+      address: "",
+      pincode: "",
       termsAccepted: false,
     },
   });
@@ -99,11 +115,133 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
       primaryService: "",
       experienceYears: 1,
       hourlyRate: 300,
-      serviceDistricts: [],
-      skills: [],
+      serviceDistricts: [] as string[],
+      skills: [] as string[],
+      address: "",
+      pincode: "",
       termsAccepted: false,
     },
   });
+
+  const handleLocationDetection = async (formType: "client" | "worker") => {
+    if (!navigator.geolocation) {
+      toast({
+        title: "Location not supported",
+        description: "Your browser doesn't support location detection",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLocationLoading(true);
+    const currentForm = formType === "client" ? clientForm : workerForm;
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const { latitude, longitude } = position.coords;
+          
+          const response = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1&accept-language=en`
+          );
+          
+          if (!response.ok) throw new Error('Failed to get location data');
+          
+          const data = await response.json();
+          
+          if (data && data.address) {
+            const locationData = data.address;
+            const detectedLocation = locationData.state_district || 
+                                   locationData.county || 
+                                   locationData.city || 
+                                   locationData.town ||
+                                   locationData.village;
+            
+            const detectedAddress = `${locationData.house_number || ''} ${locationData.road || ''} ${locationData.suburb || ''} ${locationData.city || ''}`.trim();
+            const detectedPincode = locationData.postcode || '';
+            
+            // Find matching district
+            const matchingDistrict = (districts as any)?.find((district: any) => {
+              const districtName = district.name.toLowerCase();
+              const detectedName = detectedLocation?.toLowerCase() || '';
+              return districtName.includes(detectedName) || 
+                     detectedName.includes(districtName) ||
+                     district.tamilName.includes(detectedLocation);
+            });
+            
+            // Update form with detected data
+            if (detectedAddress) {
+              if (formType === "client") {
+                clientForm.setValue("address", detectedAddress);
+              } else {
+                workerForm.setValue("address", detectedAddress);
+              }
+            }
+            if (detectedPincode) {
+              if (formType === "client") {
+                clientForm.setValue("pincode", detectedPincode);
+              } else {
+                workerForm.setValue("pincode", detectedPincode);
+              }
+            }
+            if (matchingDistrict) {
+              if (formType === "client") {
+                clientForm.setValue("districtId", matchingDistrict.id);
+              } else {
+                // For worker form, add to service districts
+                const currentDistricts: string[] = workerForm.getValues("serviceDistricts") || [];
+                if (!currentDistricts.includes(matchingDistrict.id)) {
+                  workerForm.setValue("serviceDistricts", [...currentDistricts, matchingDistrict.id]);
+                }
+              }
+            }
+            
+            toast({
+              title: "Location detected",
+              description: `Address and district updated automatically`,
+            });
+          }
+        } catch (error) {
+          console.error('Error getting location:', error);
+          toast({
+            title: "Location detection failed",
+            description: "Please enter address manually",
+            variant: "destructive",
+          });
+        } finally {
+          setIsLocationLoading(false);
+        }
+      },
+      (error) => {
+        console.error('Geolocation error:', error);
+        let errorMessage = "Please enable location access and try again";
+        
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            errorMessage = "Location access denied. Please enable location permissions.";
+            break;
+          case error.POSITION_UNAVAILABLE:
+            errorMessage = "Location information unavailable.";
+            break;
+          case error.TIMEOUT:
+            errorMessage = "Location request timed out.";
+            break;
+        }
+        
+        toast({
+          title: "Location access required",
+          description: errorMessage,
+          variant: "destructive",
+        });
+        setIsLocationLoading(false);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 15000,
+        maximumAge: 300000,
+      }
+    );
+  };
 
   const handleLogin = async (data: z.infer<typeof loginSchema>) => {
     const result = await login(data.mobile, data.userType);
@@ -334,7 +472,20 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
                 </div>
 
                 <div>
-                  <Label htmlFor="district">District</Label>
+                  <div className="flex items-center justify-between mb-1">
+                    <Label htmlFor="district">District</Label>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 px-2 text-xs"
+                      onClick={() => handleLocationDetection("client")}
+                      disabled={isLocationLoading}
+                    >
+                      <MapPin className="h-3 w-3 mr-1" />
+                      {isLocationLoading ? "Finding..." : "Use Location"}
+                    </Button>
+                  </div>
                   <Select 
                     value={clientForm.watch("districtId")} 
                     onValueChange={(value) => clientForm.setValue("districtId", value)}
@@ -343,9 +494,9 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
                       <SelectValue placeholder="Select your district" />
                     </SelectTrigger>
                     <SelectContent>
-                      {TAMIL_NADU_DISTRICTS.map((district) => (
+                      {(districts as any)?.map((district: any) => (
                         <SelectItem key={district.id} value={district.id}>
-                          {district.name}
+                          {district.name} ({district.tamilName})
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -353,6 +504,35 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
                   {clientForm.formState.errors.districtId && (
                     <p className="text-sm text-destructive mt-1">
                       {clientForm.formState.errors.districtId.message}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <Label htmlFor="address">Full Address</Label>
+                  <Input
+                    id="address"
+                    placeholder="House/Building number, Street, Area"
+                    {...clientForm.register("address")}
+                  />
+                  {clientForm.formState.errors.address && (
+                    <p className="text-sm text-destructive mt-1">
+                      {clientForm.formState.errors.address.message}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <Label htmlFor="pincode">Pincode</Label>
+                  <Input
+                    id="pincode"
+                    placeholder="6-digit pincode"
+                    maxLength={6}
+                    {...clientForm.register("pincode")}
+                  />
+                  {clientForm.formState.errors.pincode && (
+                    <p className="text-sm text-destructive mt-1">
+                      {clientForm.formState.errors.pincode.message}
                     </p>
                   )}
                 </div>
@@ -506,6 +686,48 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
                   {workerForm.formState.errors.hourlyRate && (
                     <p className="text-sm text-destructive mt-1">
                       {workerForm.formState.errors.hourlyRate.message}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <Label htmlFor="workerAddress">Work Address/Location</Label>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 px-2 text-xs"
+                      onClick={() => handleLocationDetection("worker")}
+                      disabled={isLocationLoading}
+                    >
+                      <MapPin className="h-3 w-3 mr-1" />
+                      {isLocationLoading ? "Finding..." : "Use Location"}
+                    </Button>
+                  </div>
+                  <Input
+                    id="workerAddress"
+                    placeholder="House/Building number, Street, Area"
+                    {...workerForm.register("address")}
+                  />
+                  {workerForm.formState.errors.address && (
+                    <p className="text-sm text-destructive mt-1">
+                      {workerForm.formState.errors.address.message}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <Label htmlFor="workerPincode">Pincode</Label>
+                  <Input
+                    id="workerPincode"
+                    placeholder="6-digit pincode"
+                    maxLength={6}
+                    {...workerForm.register("pincode")}
+                  />
+                  {workerForm.formState.errors.pincode && (
+                    <p className="text-sm text-destructive mt-1">
+                      {workerForm.formState.errors.pincode.message}
                     </p>
                   )}
                 </div>
