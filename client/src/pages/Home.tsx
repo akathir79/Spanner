@@ -184,6 +184,19 @@ export default function Home() {
   const { t } = useLanguage();
   const { user } = useAuth();
   const { toast } = useToast();
+
+  // Redirect logged-in users to their dashboards
+  useEffect(() => {
+    if (user) {
+      if (user.role === "super_admin" || user.role === "admin") {
+        window.location.href = "/admin-dashboard";
+      } else if (user.role === "worker") {
+        window.location.href = "/worker-dashboard";
+      } else {
+        window.location.href = "/dashboard";
+      }
+    }
+  }, [user]);
   const [searchForm, setSearchForm] = useState({
     service: "",
     district: "",

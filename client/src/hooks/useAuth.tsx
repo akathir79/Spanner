@@ -87,6 +87,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         description: "Welcome to SPANNER!",
       });
       
+      // Redirect to appropriate dashboard based on user role
+      setTimeout(() => {
+        if (data.user.role === "super_admin" || data.user.role === "admin") {
+          window.location.href = "/admin-dashboard";
+        } else if (data.user.role === "worker") {
+          window.location.href = "/worker-dashboard";
+        } else {
+          window.location.href = "/dashboard";
+        }
+      }, 1000);
+      
       return true;
     } catch (error: any) {
       toast({
@@ -106,10 +117,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const response = await apiRequest("POST", "/api/auth/signup/client", data);
       const result = await response.json();
       
+      setUser(result.user);
+      localStorage.setItem("user", JSON.stringify(result.user));
+      
       toast({
         title: "Registration Successful",
         description: "Your account has been created successfully!",
       });
+      
+      // Redirect to client dashboard
+      setTimeout(() => {
+        window.location.href = "/dashboard";
+      }, 1000);
       
       return true;
     } catch (error: any) {
@@ -130,10 +149,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const response = await apiRequest("POST", "/api/auth/signup/worker", data);
       const result = await response.json();
       
+      setUser(result.user);
+      localStorage.setItem("user", JSON.stringify(result.user));
+      
       toast({
         title: "Application Submitted",
         description: "Your worker application is under review. You'll be notified once approved.",
       });
+      
+      // Redirect to worker dashboard
+      setTimeout(() => {
+        window.location.href = "/worker-dashboard";
+      }, 1000);
       
       return true;
     } catch (error: any) {

@@ -49,33 +49,7 @@ export function Navbar() {
               <span className="text-xl font-bold text-primary">SPANNER</span>
             </Link>
 
-            {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center space-x-8">
-              <Link 
-                href="/#services" 
-                className="text-sm font-medium hover:text-primary transition-colors"
-              >
-                {t("nav.services")}
-              </Link>
-              <Link 
-                href="/#workers" 
-                className="text-sm font-medium hover:text-primary transition-colors"
-              >
-                {t("nav.findWorkers")}
-              </Link>
-              <Link 
-                href="/#districts" 
-                className="text-sm font-medium hover:text-primary transition-colors"
-              >
-                {t("nav.districts")}
-              </Link>
-              <Link 
-                href="/#about" 
-                className="text-sm font-medium hover:text-primary transition-colors"
-              >
-                {t("nav.about")}
-              </Link>
-            </div>
+            {/* Desktop Navigation - Removed for cleaner UI */}
 
             {/* Controls */}
             <div className="flex items-center space-x-4">
@@ -165,34 +139,6 @@ export function Navbar() {
           {/* Mobile Menu */}
           {mobileMenuOpen && (
             <div className="md:hidden border-t py-4 space-y-2">
-              <Link 
-                href="/#services" 
-                className="block px-4 py-2 text-sm hover:bg-muted rounded-md"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                {t("nav.services")}
-              </Link>
-              <Link 
-                href="/#workers" 
-                className="block px-4 py-2 text-sm hover:bg-muted rounded-md"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                {t("nav.findWorkers")}
-              </Link>
-              <Link 
-                href="/#districts" 
-                className="block px-4 py-2 text-sm hover:bg-muted rounded-md"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                {t("nav.districts")}
-              </Link>
-              <Link 
-                href="/#about" 
-                className="block px-4 py-2 text-sm hover:bg-muted rounded-md"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                {t("nav.about")}
-              </Link>
               
               <div className="px-4 py-2 flex items-center justify-between">
                 <div className="flex border rounded-md">

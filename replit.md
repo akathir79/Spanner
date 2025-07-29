@@ -47,9 +47,10 @@ Located in `shared/schema.ts`, the database includes:
 
 ### Authentication System
 - Mobile-based authentication with OTP verification
-- Role-based routing and access control
+- Role-based routing and access control with automatic dashboard redirection
 - Super admin capabilities for creating admin accounts
 - Support for both email and mobile login options
+- Profile picture upload functionality (optional for clients, mandatory for workers)
 
 ### User Interfaces
 - **Home Page**: Service discovery with search and filters
@@ -68,7 +69,8 @@ Located in `shared/schema.ts`, the database includes:
 1. User initiates login with mobile number and user type
 2. System generates and stores OTP (development returns fixed "123456")
 3. OTP verification creates/updates user session
-4. Role-based redirection to appropriate dashboard
+4. Automatic redirection to role-specific dashboard (admin/worker/client)
+5. Home page redirects logged-in users to their dashboards
 
 ### Service Discovery Flow
 1. Client searches for services by category, location, or keywords
