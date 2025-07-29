@@ -4,8 +4,10 @@ import { useTheme } from "@/components/ThemeProvider";
 import { useLanguage } from "@/components/LanguageProvider";
 import { useAuth } from "@/hooks/useAuth";
 import { AuthModal } from "@/components/AuthModal";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useState, useEffect } from "react";
-import { Menu, Moon, Sun, Wrench } from "lucide-react";
+import { Menu, Moon, Sun, Wrench, User, LogOut, Settings } from "lucide-react";
 
 export function Navbar() {
   const [location] = useLocation();
@@ -85,26 +87,35 @@ export function Navbar() {
 
               {/* Auth Buttons */}
               {user ? (
-                <div className="flex items-center space-x-2">
-                  <span className="text-sm hidden md:block">
-                    {user.firstName} {user.lastName}
-                  </span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleDashboard}
-                    className="hidden md:flex"
-                  >
-                    Dashboard
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={logout}
-                    className="hidden md:flex"
-                  >
-                    Logout
-                  </Button>
+                <div className="flex items-center space-x-3">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" className="h-auto p-2 hover:bg-muted hidden md:flex items-center space-x-2">
+                        <Avatar className="h-8 w-8">
+                          <AvatarImage 
+                            src={(user as any)?.profilePicture || undefined} 
+                            alt={`${user.firstName} ${user.lastName}`} 
+                          />
+                          <AvatarFallback className="bg-primary text-primary-foreground text-sm">
+                            {user.firstName[0]}{user.lastName[0]}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span className="text-sm font-medium">
+                          {user.firstName} {user.lastName}
+                        </span>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-48">
+                      <DropdownMenuItem onClick={handleDashboard} className="cursor-pointer">
+                        <Settings className="mr-2 h-4 w-4" />
+                        Dashboard
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={logout} className="cursor-pointer">
+                        <LogOut className="mr-2 h-4 w-4" />
+                        Logout
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               ) : (
                 <div className="hidden md:flex items-center space-x-2">
@@ -167,8 +178,19 @@ export function Navbar() {
 
               {user ? (
                 <div className="px-4 py-2 space-y-2">
-                  <div className="text-sm font-medium">
-                    {user.firstName} {user.lastName}
+                  <div className="flex items-center space-x-3 pb-2">
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage 
+                        src={(user as any)?.profilePicture || undefined} 
+                        alt={`${user.firstName} ${user.lastName}`} 
+                      />
+                      <AvatarFallback className="bg-primary text-primary-foreground text-sm">
+                        {user.firstName[0]}{user.lastName[0]}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="text-sm font-medium">
+                      {user.firstName} {user.lastName}
+                    </div>
                   </div>
                   <Button
                     variant="outline"
