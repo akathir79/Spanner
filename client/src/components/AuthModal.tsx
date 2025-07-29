@@ -13,7 +13,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/components/LanguageProvider";
 import { TAMIL_NADU_DISTRICTS, SERVICE_CATEGORIES } from "@/lib/constants";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { UserPlus, LogIn, Smartphone, Info, MapPin } from "lucide-react";
+import { UserPlus, LogIn, Smartphone, Info, MapPin, Upload, User, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 
@@ -34,6 +34,7 @@ const clientSignupSchema = z.object({
   districtId: z.string().min(1, "District is required"),
   address: z.string().min(5, "Address is required"),
   pincode: z.string().length(6, "Pincode must be 6 digits"),
+  profilePicture: z.string().optional(),
   termsAccepted: z.boolean().refine(val => val === true, "You must accept the terms"),
 });
 
@@ -50,6 +51,7 @@ const workerSignupSchema = z.object({
   skills: z.array(z.string()).min(1, "Add at least one skill"),
   address: z.string().min(5, "Address is required"),
   pincode: z.string().length(6, "Pincode must be 6 digits"),
+  profilePicture: z.string().min(1, "Profile picture is required for workers"),
   termsAccepted: z.boolean().refine(val => val === true, "You must accept the terms"),
 });
 
@@ -65,6 +67,8 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
   const [developmentOtp, setDevelopmentOtp] = useState<string>("");
   const [signupType, setSignupType] = useState<"client" | "worker">("client");
   const [isLocationLoading, setIsLocationLoading] = useState(false);
+  const [clientProfilePreview, setClientProfilePreview] = useState<string>("");
+  const [workerProfilePreview, setWorkerProfilePreview] = useState<string>("");
   const { login, verifyOtp, signupClient, signupWorker, isLoading } = useAuth();
   const { t } = useLanguage();
   const { toast } = useToast();
@@ -100,6 +104,7 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
       districtId: "",
       address: "",
       pincode: "",
+      profilePicture: "",
       termsAccepted: false,
     },
   });
@@ -119,9 +124,58 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
       skills: [] as string[],
       address: "",
       pincode: "",
+      profilePicture: "",
       termsAccepted: false,
     },
   });
+
+  const handleProfilePictureUpload = (file: File | null, formType: "client" | "worker") => {
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Invalid file type",
+        description: "Please select an image file (JPG, PNG, etc.)",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "Please select an image smaller than 5MB",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const base64String = e.target?.result as string;
+      
+      if (formType === "client") {
+        setClientProfilePreview(base64String);
+        clientForm.setValue("profilePicture", base64String);
+      } else {
+        setWorkerProfilePreview(base64String);
+        workerForm.setValue("profilePicture", base64String);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const removeProfilePicture = (formType: "client" | "worker") => {
+    if (formType === "client") {
+      setClientProfilePreview("");
+      clientForm.setValue("profilePicture", "");
+    } else {
+      setWorkerProfilePreview("");
+      workerForm.setValue("profilePicture", "");
+    }
+  };
 
   const handleLocationDetection = async (formType: "client" | "worker") => {
     if (!navigator.geolocation) {
@@ -289,6 +343,8 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
     setStep(1);
     setPendingLogin(null);
     setDevelopmentOtp("");
+    setClientProfilePreview("");
+    setWorkerProfilePreview("");
     loginForm.reset();
     otpForm.reset();
     clientForm.reset();
@@ -472,6 +528,70 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
                 </div>
 
                 <div>
+                  <Label htmlFor="clientProfilePicture">Profile Picture (Optional)</Label>
+                  <div className="mt-2">
+                    {clientProfilePreview ? (
+                      <div className="flex items-center space-x-4">
+                        <div className="relative">
+                          <img
+                            src={clientProfilePreview}
+                            alt="Profile preview"
+                            className="w-16 h-16 rounded-full object-cover border-2 border-border"
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-destructive text-destructive-foreground hover:bg-destructive/80"
+                            onClick={() => removeProfilePicture("client")}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          Profile picture uploaded successfully
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex items-center space-x-4">
+                        <div className="w-16 h-16 rounded-full bg-muted border-2 border-dashed border-border flex items-center justify-center">
+                          <User className="h-8 w-8 text-muted-foreground" />
+                        </div>
+                        <div className="flex-1">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="relative"
+                            asChild
+                          >
+                            <label htmlFor="clientProfilePictureInput" className="cursor-pointer">
+                              <Upload className="h-4 w-4 mr-2" />
+                              Upload Photo
+                            </label>
+                          </Button>
+                          <input
+                            id="clientProfilePictureInput"
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => handleProfilePictureUpload(e.target.files?.[0] || null, "client")}
+                          />
+                          <p className="text-xs text-muted-foreground mt-1">
+                            JPG, PNG up to 5MB
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  {clientForm.formState.errors.profilePicture && (
+                    <p className="text-sm text-destructive mt-1">
+                      {clientForm.formState.errors.profilePicture.message}
+                    </p>
+                  )}
+                </div>
+
+                <div>
                   <div className="flex items-center justify-between mb-1">
                     <Label htmlFor="district">District</Label>
                     <Button
@@ -629,6 +749,70 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
                   {workerForm.formState.errors.aadhaarNumber && (
                     <p className="text-sm text-destructive mt-1">
                       {workerForm.formState.errors.aadhaarNumber.message}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <Label htmlFor="workerProfilePicture">Profile Picture *</Label>
+                  <div className="mt-2">
+                    {workerProfilePreview ? (
+                      <div className="flex items-center space-x-4">
+                        <div className="relative">
+                          <img
+                            src={workerProfilePreview}
+                            alt="Profile preview"
+                            className="w-16 h-16 rounded-full object-cover border-2 border-border"
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-destructive text-destructive-foreground hover:bg-destructive/80"
+                            onClick={() => removeProfilePicture("worker")}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          Profile picture uploaded successfully
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex items-center space-x-4">
+                        <div className="w-16 h-16 rounded-full bg-muted border-2 border-dashed border-border flex items-center justify-center">
+                          <User className="h-8 w-8 text-muted-foreground" />
+                        </div>
+                        <div className="flex-1">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="relative"
+                            asChild
+                          >
+                            <label htmlFor="workerProfilePictureInput" className="cursor-pointer">
+                              <Upload className="h-4 w-4 mr-2" />
+                              Upload Photo
+                            </label>
+                          </Button>
+                          <input
+                            id="workerProfilePictureInput"
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => handleProfilePictureUpload(e.target.files?.[0] || null, "worker")}
+                          />
+                          <p className="text-xs text-muted-foreground mt-1">
+                            JPG, PNG up to 5MB (Required for verification)
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  {workerForm.formState.errors.profilePicture && (
+                    <p className="text-sm text-destructive mt-1">
+                      {workerForm.formState.errors.profilePicture.message}
                     </p>
                   )}
                 </div>
