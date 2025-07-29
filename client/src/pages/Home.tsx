@@ -196,10 +196,16 @@ export default function Home() {
     staleTime: 1000 * 60 * 60, // 1 hour
   });
 
-  const { data: services } = useQuery({
+  const { data: rawServices } = useQuery({
     queryKey: ["/api/services"],
     staleTime: 1000 * 60 * 60, // 1 hour
   });
+
+  // Remove duplicate services by name
+  const services = rawServices ? 
+    (rawServices as any[]).filter((service, index, arr) => 
+      arr.findIndex(s => s.name === service.name) === index
+    ) : null;
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -338,7 +344,7 @@ export default function Home() {
                               className="w-full justify-between"
                             >
                               {searchForm.service
-                                ? (services as any)?.find((service: any) => service.id === searchForm.service)?.name
+                                ? services?.find((service: any) => service.id === searchForm.service)?.name
                                 : "Select Service"}
                               <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                             </Button>
@@ -349,7 +355,7 @@ export default function Home() {
                               <CommandList>
                                 <CommandEmpty>No service found.</CommandEmpty>
                                 <CommandGroup>
-                                  {(services as any)?.map((service: any) => (
+                                  {services?.map((service: any) => (
                                     <CommandItem
                                       key={service.id}
                                       value={service.name}
