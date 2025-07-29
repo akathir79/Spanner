@@ -176,17 +176,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const logout = () => {
+    // Clear user data first
     setUser(null);
     localStorage.removeItem("user");
-    toast({
-      title: "Logged Out",
-      description: "You have been logged out successfully.",
-    });
     
-    // Redirect to home page after logout
-    setTimeout(() => {
-      window.location.href = "/";
-    }, 500);
+    // Force immediate page reload to home to prevent router conflicts
+    window.location.replace("/");
   };
 
   const value = {

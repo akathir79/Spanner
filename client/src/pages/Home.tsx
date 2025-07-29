@@ -187,9 +187,9 @@ export default function Home() {
 
   // Redirect logged-in users to their dashboards
   useEffect(() => {
-    // Add a small delay to prevent conflicts during logout/login transitions
-    const timer = setTimeout(() => {
-      if (user) {
+    // Only redirect if user is definitively logged in (has complete user object)
+    if (user && user.id && user.role) {
+      const timer = setTimeout(() => {
         if (user.role === "super_admin" || user.role === "admin") {
           window.location.href = "/admin-dashboard";
         } else if (user.role === "worker") {
@@ -197,10 +197,10 @@ export default function Home() {
         } else {
           window.location.href = "/dashboard";
         }
-      }
-    }, 100);
+      }, 200);
 
-    return () => clearTimeout(timer);
+      return () => clearTimeout(timer);
+    }
   }, [user]);
   const [searchForm, setSearchForm] = useState({
     service: "",
