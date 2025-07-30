@@ -234,15 +234,15 @@ export default function WorkerApprovalSection() {
                                 </div>
                                 <div>
                                   <label className="text-sm font-medium text-muted-foreground">Address</label>
-                                  <p className="font-medium">{selectedWorker.address || "Not provided"}</p>
+                                  <p className="font-medium">{selectedWorker.address || selectedWorker.workerProfile?.address || "Not provided"}</p>
                                 </div>
                                 <div>
                                   <label className="text-sm font-medium text-muted-foreground">Pincode</label>
-                                  <p className="font-medium">{selectedWorker.pincode || "Not provided"}</p>
+                                  <p className="font-medium">{selectedWorker.pincode || selectedWorker.workerProfile?.pincode || "Not provided"}</p>
                                 </div>
                                 <div className="col-span-2">
                                   <label className="text-sm font-medium text-muted-foreground">Bio</label>
-                                  <p className="font-medium">{selectedWorker.workerProfile.bio || "No bio provided"}</p>
+                                  <p className="font-medium">{selectedWorker.workerProfile?.bio || "No bio provided"}</p>
                                 </div>
                                 <div className="col-span-2">
                                   <label className="text-sm font-medium text-muted-foreground">Service Districts</label>
@@ -262,7 +262,7 @@ export default function WorkerApprovalSection() {
                                 </div>
                                 
                                 {/* Service Areas */}
-                                {selectedWorker.workerProfile.serviceAreas?.length > 0 && (
+                                {selectedWorker.workerProfile?.serviceAreas?.length > 0 && (
                                   <div className="col-span-2">
                                     <label className="text-sm font-medium text-muted-foreground">Service Areas</label>
                                     <div className="flex flex-wrap gap-1 mt-1">
@@ -277,13 +277,13 @@ export default function WorkerApprovalSection() {
                                 <div className="col-span-2">
                                   <label className="text-sm font-medium text-muted-foreground">Skills</label>
                                   <div className="flex flex-wrap gap-1 mt-1">
-                                    {selectedWorker.workerProfile.skills?.map((skill: string, index: number) => (
+                                    {selectedWorker.workerProfile?.skills?.map((skill: string, index: number) => (
                                       <Badge key={index} variant="outline">{skill}</Badge>
                                     ))}
                                   </div>
                                 </div>
                                 
-                                {selectedWorker.workerProfile.bioDataDocument && (
+                                {selectedWorker.workerProfile?.bioDataDocument && (
                                   <div className="col-span-2">
                                     <label className="text-sm font-medium text-muted-foreground">Bio Data Document</label>
                                     <div className="flex items-center gap-2 mt-1">

@@ -251,9 +251,14 @@ export class DatabaseStorage implements IStorage {
           experienceYears: workerProfiles.experienceYears,
           hourlyRate: workerProfiles.hourlyRate,
           aadhaarNumber: workerProfiles.aadhaarNumber,
+          aadhaarVerified: workerProfiles.aadhaarVerified,
           bio: workerProfiles.bio,
           skills: workerProfiles.skills,
           serviceDistricts: workerProfiles.serviceDistricts,
+          serviceAreas: workerProfiles.serviceAreas,
+          bioDataDocument: workerProfiles.bioDataDocument,
+          address: users.address,
+          pincode: users.pincode,
         },
       })
       .from(users)
