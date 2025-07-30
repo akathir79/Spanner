@@ -48,20 +48,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { mobile, userType } = loginSchema.parse(req.body);
       
-      // Check if user exists first
+      // For admin mobile, always send OTP
+      if (mobile === "9000000001") {
+        const otp = generateOTP();
+        const expiresAt = addMinutes(new Date(), 10);
+        
+        await storage.createOtp({
+          mobile,
+          otp,
+          purpose: "login",
+          expiresAt,
+        });
+        
+        console.log(`OTP for ${mobile}: ${otp}`);
+        
+        return res.json({ 
+          message: "OTP sent successfully", 
+          otp: otp,
+          userRole: "admin"
+        });
+      }
+      
+      // For super admin mobiles, always send OTP
+      if (["9000000002"].includes(mobile)) {
+        const otp = generateOTP();
+        const expiresAt = addMinutes(new Date(), 10);
+        
+        await storage.createOtp({
+          mobile,
+          otp,
+          purpose: "login",
+          expiresAt,
+        });
+        
+        console.log(`OTP for ${mobile}: ${otp}`);
+        
+        return res.json({ 
+          message: "OTP sent successfully", 
+          otp: otp,
+          userRole: "super_admin"
+        });
+      }
+      
+      // Check if user exists for regular users
       const user = await storage.getUserByMobile(mobile);
       if (!user) {
         return res.status(404).json({ message: "User not found. Please sign up first." });
-      }
-      
-      // For super admin, verify mobile numbers
-      if (user.role === "super_admin" && !["9000000001", "9000000002"].includes(mobile)) {
-        return res.status(401).json({ message: "Invalid super admin credentials" });
-      }
-      
-      // For admin, verify mobile number
-      if (user.role === "admin" && mobile !== "9000000001") {
-        return res.status(401).json({ message: "Invalid admin credentials" });
       }
 
       // If userType is provided and not "auto", verify it matches
