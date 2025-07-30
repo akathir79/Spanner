@@ -71,6 +71,7 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
   const [showNewServiceInput, setShowNewServiceInput] = useState(false);
   const [newServiceName, setNewServiceName] = useState("");
   const [newSkillInput, setNewSkillInput] = useState("");
+  const [districtSearchInput, setDistrictSearchInput] = useState("");
   const [aadhaarVerificationStep, setAadhaarVerificationStep] = useState<"input" | "verify" | "verified">("input");
   const [aadhaarOtp, setAadhaarOtp] = useState("");
   const [generatedAadhaarOtp, setGeneratedAadhaarOtp] = useState("");
@@ -499,6 +500,7 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
     setShowNewServiceInput(false);
     setNewServiceName("");
     setNewSkillInput("");
+    setDistrictSearchInput("");
     setAadhaarVerificationStep("input");
     setAadhaarOtp("");
     setGeneratedAadhaarOtp("");
@@ -1202,26 +1204,96 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
 
                 <div>
                   <Label htmlFor="serviceDistricts">Service Districts *</Label>
-                  <Select 
-                    value=""
-                    onValueChange={(value) => {
-                      const currentDistricts = workerForm.getValues("serviceDistricts") || [];
-                      if (!currentDistricts.includes(value)) {
-                        workerForm.setValue("serviceDistricts", [...currentDistricts, value]);
-                      }
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Add districts you can serve" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {districts && Array.isArray(districts) ? districts.map((district: any) => (
-                        <SelectItem key={district.id} value={district.id}>
-                          {district.name} ({district.tamilName})
-                        </SelectItem>
-                      )) : null}
-                    </SelectContent>
-                  </Select>
+                  <div className="space-y-2">
+                    <div className="flex gap-2">
+                      <Select 
+                        value=""
+                        onValueChange={(value) => {
+                          const currentDistricts = workerForm.getValues("serviceDistricts") || [];
+                          if (!currentDistricts.includes(value)) {
+                            workerForm.setValue("serviceDistricts", [...currentDistricts, value]);
+                          }
+                        }}
+                      >
+                        <SelectTrigger className="flex-1">
+                          <SelectValue placeholder="Select from dropdown" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {districts && Array.isArray(districts) ? districts.map((district: any) => (
+                            <SelectItem key={district.id} value={district.id}>
+                              {district.name} ({district.tamilName})
+                            </SelectItem>
+                          )) : null}
+                        </SelectContent>
+                      </Select>
+                      <span className="text-muted-foreground self-center text-sm">OR</span>
+                      <div className="flex gap-1 flex-1">
+                        <Input
+                          placeholder="Type district name"
+                          value={districtSearchInput}
+                          onChange={(e) => setDistrictSearchInput(e.target.value)}
+                          onKeyPress={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              if (districtSearchInput.trim()) {
+                                // Find district by name (case insensitive)
+                                const matchedDistrict = districts?.find((d: any) => 
+                                  d.name.toLowerCase().includes(districtSearchInput.trim().toLowerCase()) ||
+                                  d.tamilName.toLowerCase().includes(districtSearchInput.trim().toLowerCase())
+                                );
+                                
+                                if (matchedDistrict) {
+                                  const currentDistricts = workerForm.getValues("serviceDistricts") || [];
+                                  if (!currentDistricts.includes(matchedDistrict.id)) {
+                                    workerForm.setValue("serviceDistricts", [...currentDistricts, matchedDistrict.id]);
+                                  }
+                                  setDistrictSearchInput("");
+                                } else {
+                                  toast({
+                                    title: "District not found",
+                                    description: "Please select from the dropdown or type a valid Tamil Nadu district name",
+                                    variant: "destructive",
+                                  });
+                                }
+                              }
+                            }
+                          }}
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            if (districtSearchInput.trim()) {
+                              const matchedDistrict = districts?.find((d: any) => 
+                                d.name.toLowerCase().includes(districtSearchInput.trim().toLowerCase()) ||
+                                d.tamilName.toLowerCase().includes(districtSearchInput.trim().toLowerCase())
+                              );
+                              
+                              if (matchedDistrict) {
+                                const currentDistricts = workerForm.getValues("serviceDistricts") || [];
+                                if (!currentDistricts.includes(matchedDistrict.id)) {
+                                  workerForm.setValue("serviceDistricts", [...currentDistricts, matchedDistrict.id]);
+                                }
+                                setDistrictSearchInput("");
+                              } else {
+                                toast({
+                                  title: "District not found",
+                                  description: "Please select from the dropdown or type a valid Tamil Nadu district name",
+                                  variant: "destructive",
+                                });
+                              }
+                            }
+                          }}
+                        >
+                          Add
+                        </Button>
+                      </div>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Select districts from dropdown or type to search (e.g., Chennai, Coimbatore, Salem)
+                    </p>
+                  </div>
                   <div className="flex flex-wrap gap-1 mt-2">
                     {workerForm.watch("serviceDistricts")?.map((districtId: string) => {
                       const district = districts && Array.isArray(districts) ? districts.find((d: any) => d.id === districtId) : null;
