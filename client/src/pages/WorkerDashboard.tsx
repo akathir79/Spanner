@@ -352,6 +352,9 @@ export default function WorkerDashboard() {
   const { user } = useAuth();
   const { t } = useLanguage();
   const { toast } = useToast();
+
+  // Check if worker is approved
+  const isWorkerApproved = user?.status === "approved";
   const [, setLocation] = useLocation();
 
   // Redirect if not authenticated or wrong role
@@ -451,6 +454,35 @@ export default function WorkerDashboard() {
             Manage your services, bookings, and track your earnings.
           </p>
         </div>
+
+        {/* Verification Status Alert */}
+        {!isWorkerApproved && (
+          <Card className="mb-8 border-yellow-200 bg-yellow-50 dark:border-yellow-800 dark:bg-yellow-900/20">
+            <CardContent className="p-6">
+              <div className="flex items-start gap-4">
+                <AlertCircle className="h-6 w-6 text-yellow-600 mt-0.5" />
+                <div className="flex-1">
+                  <h3 className="font-semibold text-yellow-800 dark:text-yellow-200 mb-2">
+                    Verification Pending
+                  </h3>
+                  <p className="text-yellow-700 dark:text-yellow-300 mb-4">
+                    Your worker application is currently under review by our admin team. You can view your profile and dashboard, but you won't be able to receive bookings or post bids until your account is approved.
+                  </p>
+                  <div className="flex items-center gap-4 text-sm text-yellow-600 dark:text-yellow-400">
+                    <div className="flex items-center gap-2">
+                      <Clock className="h-4 w-4" />
+                      <span>Status: {user?.status || 'Pending'}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4" />
+                      <span>Applied: {new Date(user?.createdAt || '').toLocaleDateString()}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Stats Overview */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">

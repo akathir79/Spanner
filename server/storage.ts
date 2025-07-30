@@ -48,6 +48,11 @@ export interface IStorage {
   getAllServiceCategories(): Promise<ServiceCategory[]>;
   createServiceCategory(serviceCategory: any): Promise<ServiceCategory>;
   
+  // Worker approval methods
+  getPendingWorkers(): Promise<any[]>;
+  approveWorker(workerId: string): Promise<User>;
+  rejectWorker(workerId: string): Promise<void>;
+  
   // Bookings
   createBooking(booking: InsertBooking): Promise<Booking>;
   getBookingById(id: string): Promise<Booking | undefined>;
@@ -186,6 +191,60 @@ export class DatabaseStorage implements IStorage {
   async createServiceCategory(serviceCategory: any): Promise<ServiceCategory> {
     const [newService] = await db.insert(serviceCategories).values(serviceCategory).returning();
     return newService;
+  }
+
+  async getPendingWorkers(): Promise<any[]> {
+    return db
+      .select({
+        id: users.id,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        mobile: users.mobile,
+        email: users.email,
+        profilePicture: users.profilePicture,
+        status: users.status,
+        createdAt: users.createdAt,
+        district: {
+          id: districts.id,
+          name: districts.name,
+          tamilName: districts.tamilName,
+        },
+        workerProfile: {
+          id: workerProfiles.id,
+          primaryService: workerProfiles.primaryService,
+          experienceYears: workerProfiles.experienceYears,
+          hourlyRate: workerProfiles.hourlyRate,
+          aadhaarNumber: workerProfiles.aadhaarNumber,
+          bio: workerProfiles.bio,
+          skills: workerProfiles.skills,
+          serviceDistricts: workerProfiles.serviceDistricts,
+        },
+      })
+      .from(users)
+      .leftJoin(districts, eq(users.districtId, districts.id))
+      .leftJoin(workerProfiles, eq(users.id, workerProfiles.userId))
+      .where(and(eq(users.role, "worker"), eq(users.status, "pending")))
+      .orderBy(users.createdAt);
+  }
+
+  async approveWorker(workerId: string): Promise<User> {
+    const [updatedUser] = await db
+      .update(users)
+      .set({ 
+        status: "approved",
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, workerId))
+      .returning();
+    return updatedUser;
+  }
+
+  async rejectWorker(workerId: string): Promise<void> {
+    // Delete worker profile first (due to foreign key constraint)
+    await db.delete(workerProfiles).where(eq(workerProfiles.userId, workerId));
+    
+    // Delete user
+    await db.delete(users).where(eq(users.id, workerId));
   }
 
   async createBooking(booking: InsertBooking): Promise<Booking> {

@@ -25,6 +25,7 @@ export const users = pgTable("users", {
   districtId: varchar("district_id").references(() => districts.id),
   isVerified: boolean("is_verified").default(false),
   isActive: boolean("is_active").default(true),
+  status: text("status").default("pending"), // pending, approved, rejected (for worker approval workflow)
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });

@@ -11,6 +11,8 @@ interface User {
   role: "client" | "worker" | "admin" | "super_admin";
   districtId?: string;
   isVerified: boolean;
+  status?: string; // pending, approved, rejected
+  createdAt?: string;
 }
 
 interface AuthContextType {

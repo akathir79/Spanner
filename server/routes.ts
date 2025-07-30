@@ -112,6 +112,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           role: user.role,
           districtId: user.districtId,
           isVerified: user.isVerified,
+          status: user.status,
+          createdAt: user.createdAt,
         }
       });
     } catch (error) {
@@ -182,6 +184,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           firstName: user.firstName,
           lastName: user.lastName,
           role: user.role,
+          status: user.status,
+          createdAt: user.createdAt,
         },
         workerProfile
       });
@@ -346,6 +350,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Get admin bookings error:", error);
       res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/admin/pending-workers", async (req, res) => {
+    try {
+      const pendingWorkers = await storage.getPendingWorkers();
+      res.json(pendingWorkers);
+    } catch (error) {
+      console.error("Error fetching pending workers:", error);
+      res.status(500).json({ error: "Failed to fetch pending workers" });
+    }
+  });
+
+  app.post("/api/admin/approve-worker/:workerId", async (req, res) => {
+    try {
+      const { workerId } = req.params;
+      const updatedWorker = await storage.approveWorker(workerId);
+      res.json(updatedWorker);
+    } catch (error) {
+      console.error("Error approving worker:", error);
+      res.status(500).json({ error: "Failed to approve worker" });
+    }
+  });
+
+  app.delete("/api/admin/reject-worker/:workerId", async (req, res) => {
+    try {
+      const { workerId } = req.params;
+      await storage.rejectWorker(workerId);
+      res.json({ message: "Worker rejected and deleted successfully" });
+    } catch (error) {
+      console.error("Error rejecting worker:", error);
+      res.status(500).json({ error: "Failed to reject worker" });
     }
   });
 
