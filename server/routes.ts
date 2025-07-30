@@ -136,21 +136,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       await storage.markOtpAsUsed(otpRecord.id);
       
-      // Find or create user based on mobile
+      // Find user based on mobile
       let user = await storage.getUserByMobile(mobile);
       
-      if (!user) {
+      // For admin mobile, ensure user exists or create if needed
+      if (mobile === "9000000001") {
+        if (!user) {
+          // Create admin user if doesn't exist
+          user = await storage.createUser({
+            mobile: "9000000001",
+            email: "admin@spanner.com",
+            firstName: "Admin",
+            lastName: "User",
+            role: "admin",
+            districtId: "76a03385-6ce1-4749-9ae5-67f192b1db7f",
+            address: "Admin Office",
+            pincode: "600001",
+            isVerified: true,
+            status: "approved"
+          });
+        }
+      }
+      // For super admin mobile, ensure user exists or create if needed
+      else if (mobile === "9000000002") {
+        if (!user) {
+          // Create super admin user if doesn't exist
+          user = await storage.createUser({
+            mobile: "9000000002",
+            email: "superadmin@spanner.com",
+            firstName: "Super",
+            lastName: "Admin",
+            role: "super_admin",
+            districtId: "76a03385-6ce1-4749-9ae5-67f192b1db7f",
+            address: "Super Admin Office",
+            pincode: "600001",
+            isVerified: true,
+            status: "approved"
+          });
+        }
+      }
+      // For regular users, they must exist
+      else if (!user) {
         return res.status(404).json({ message: "User not found. Please sign up first." });
-      }
-      
-      // For super admin, verify mobile numbers
-      if (user.role === "super_admin" && !["9000000001", "9000000002"].includes(mobile)) {
-        return res.status(401).json({ message: "Invalid super admin credentials" });
-      }
-      
-      // For admin, verify mobile number
-      if (user.role === "admin" && mobile !== "9000000001") {
-        return res.status(401).json({ message: "Invalid admin credentials" });
       }
       
       res.json({
