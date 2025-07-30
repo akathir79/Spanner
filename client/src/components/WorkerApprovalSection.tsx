@@ -483,43 +483,43 @@ export default function WorkerApprovalSection() {
                                       )}
                                     </div>
                                   </div>
-                                  <div className="space-y-2">
-                                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Address</label>
-                                    {isEditing ? (
-                                      <Input
-                                        value={editData.address || ''}
-                                        onChange={(e) => setEditData({
-                                          ...editData,
-                                          address: e.target.value
-                                        })}
-                                        className="border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-                                        placeholder="Enter full address"
-                                      />
-                                    ) : (
-                                      <p className="font-medium text-gray-900 dark:text-gray-100 bg-gray-50 dark:bg-gray-700 px-3 py-2 rounded-md min-h-[40px] flex items-center">
-                                        {selectedWorker.address || "Not provided"}
-                                      </p>
-                                    )}
+
+                                  <div className="md:col-span-2 space-y-2">
+                                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-1">
+                                      Background Verification
+                                      <span className="text-blue-500 text-xs">(Optional)</span>
+                                    </label>
+                                    <div className="flex items-center gap-4">
+                                      {isEditing ? (
+                                        <div className="flex items-center gap-3 bg-gray-50 dark:bg-gray-700 px-4 py-2 rounded-lg">
+                                          <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Verified:</label>
+                                          <Switch
+                                            checked={editData.workerProfile?.isBackgroundVerified || false}
+                                            onCheckedChange={(checked) => setEditData({
+                                              ...editData,
+                                              workerProfile: {
+                                                ...editData.workerProfile,
+                                                isBackgroundVerified: checked
+                                              }
+                                            })}
+                                          />
+                                        </div>
+                                      ) : (
+                                        selectedWorker.workerProfile?.isBackgroundVerified ? (
+                                          <Badge variant="default" className="bg-green-100 text-green-700 border-green-200 px-3 py-1">
+                                            <CheckCircle className="h-4 w-4 mr-1" />
+                                            Verified
+                                          </Badge>
+                                        ) : (
+                                          <Badge variant="secondary" className="bg-gray-100 text-gray-700 border-gray-200 px-3 py-1">
+                                            <Clock className="h-4 w-4 mr-1" />
+                                            Pending
+                                          </Badge>
+                                        )
+                                      )}
+                                    </div>
                                   </div>
-                                  <div className="space-y-2">
-                                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Pincode</label>
-                                    {isEditing ? (
-                                      <Input
-                                        value={editData.pincode || ''}
-                                        onChange={(e) => setEditData({
-                                          ...editData,
-                                          pincode: e.target.value
-                                        })}
-                                        className="border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-                                        placeholder="e.g., 636004"
-                                        maxLength={6}
-                                      />
-                                    ) : (
-                                      <p className="font-medium text-gray-900 dark:text-gray-100 bg-gray-50 dark:bg-gray-700 px-3 py-2 rounded-md">
-                                        {selectedWorker.pincode || "Not provided"}
-                                      </p>
-                                    )}
-                                  </div>
+                                  
                                   <div className="md:col-span-2 space-y-2">
                                     <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Bio</label>
                                     {isEditing ? (
@@ -545,6 +545,59 @@ export default function WorkerApprovalSection() {
                                 </div>
                               </div>
                             )}
+
+                            {/* Address/Location Information */}
+                            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+                              <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-6 flex items-center gap-2">
+                                <MapPin className="h-5 w-5 text-orange-600" />
+                                Address/Location Information
+                              </h4>
+                              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <div className="space-y-2">
+                                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Address</label>
+                                  {isEditing ? (
+                                    <Input
+                                      value={editData.address || ''}
+                                      onChange={(e) => setEditData({
+                                        ...editData,
+                                        address: e.target.value
+                                      })}
+                                      className="border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                                      placeholder="Enter full address"
+                                    />
+                                  ) : (
+                                    <p className="font-medium text-gray-900 dark:text-gray-100 bg-gray-50 dark:bg-gray-700 px-3 py-2 rounded-md min-h-[40px] flex items-center">
+                                      {selectedWorker.address || "Not provided"}
+                                    </p>
+                                  )}
+                                </div>
+                                <div className="space-y-2">
+                                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">District</label>
+                                  <p className="font-medium text-gray-900 dark:text-gray-100 bg-blue-50 dark:bg-blue-900/20 px-3 py-2 rounded-md min-h-[40px] flex items-center">
+                                    {selectedWorker.district?.name || "Not specified"}
+                                  </p>
+                                </div>
+                                <div className="space-y-2">
+                                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Pincode</label>
+                                  {isEditing ? (
+                                    <Input
+                                      value={editData.pincode || ''}
+                                      onChange={(e) => setEditData({
+                                        ...editData,
+                                        pincode: e.target.value
+                                      })}
+                                      className="border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                                      placeholder="e.g., 636004"
+                                      maxLength={6}
+                                    />
+                                  ) : (
+                                    <p className="font-medium text-gray-900 dark:text-gray-100 bg-gray-50 dark:bg-gray-700 px-3 py-2 rounded-md">
+                                      {selectedWorker.pincode || "Not provided"}
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
                             
                             {/* Service Coverage */}
                             <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">

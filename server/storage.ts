@@ -240,6 +240,8 @@ export class DatabaseStorage implements IStorage {
         email: users.email,
         profilePicture: users.profilePicture,
         status: users.status,
+        address: users.address,
+        pincode: users.pincode,
         createdAt: users.createdAt,
         district: {
           id: districts.id,
@@ -253,13 +255,13 @@ export class DatabaseStorage implements IStorage {
           hourlyRate: workerProfiles.hourlyRate,
           aadhaarNumber: workerProfiles.aadhaarNumber,
           aadhaarVerified: workerProfiles.aadhaarVerified,
+          isBackgroundVerified: workerProfiles.isBackgroundVerified,
           bio: workerProfiles.bio,
           skills: workerProfiles.skills,
           serviceDistricts: workerProfiles.serviceDistricts,
           serviceAreas: workerProfiles.serviceAreas,
+          serviceAllAreas: workerProfiles.serviceAllAreas,
           bioDataDocument: workerProfiles.bioDataDocument,
-          address: users.address,
-          pincode: users.pincode,
         },
       })
       .from(users)
