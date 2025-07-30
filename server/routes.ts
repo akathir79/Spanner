@@ -23,11 +23,15 @@ const clientSignupSchema = insertUserSchema.extend({
 const workerSignupSchema = insertUserSchema.extend({
   role: z.literal("worker"),
   aadhaarNumber: z.string().length(12),
+  aadhaarVerified: z.boolean().optional(),
   primaryService: z.string().min(1),
   experienceYears: z.number().min(0).max(50),
   hourlyRate: z.number().min(0),
   serviceDistricts: z.array(z.string()),
+  serviceAreas: z.array(z.string()).optional(),
   skills: z.array(z.string()),
+  bio: z.string().optional(),
+  bioDataDocument: z.string().optional(),
 });
 
 // Helper function to generate OTP
@@ -257,7 +261,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Worker signup
   app.post("/api/auth/signup/worker", async (req, res) => {
     try {
-      const { aadhaarNumber, aadhaarVerified, primaryService, experienceYears, hourlyRate, serviceDistricts, serviceAreas, skills, bioDataDocument, ...userData } = workerSignupSchema.parse(req.body);
+      const { aadhaarNumber, aadhaarVerified, primaryService, experienceYears, hourlyRate, serviceDistricts, serviceAreas, skills, bio, bioDataDocument, ...userData } = workerSignupSchema.parse(req.body);
       
       // Check if user already exists
       const existingUser = await storage.getUserByMobile(userData.mobile);
@@ -277,6 +281,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         serviceDistricts,
         serviceAreas: serviceAreas || [],
         skills,
+        bio: bio || null,
         bioDataDocument: bioDataDocument || null,
       });
       

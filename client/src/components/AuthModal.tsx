@@ -53,6 +53,8 @@ const workerSignupSchema = z.object({
   skills: z.array(z.string()).min(1, "Add at least one skill"),
   address: z.string().min(5, "Address is required"),
   pincode: z.string().length(6, "Pincode must be 6 digits"),
+  districtId: z.string().min(1, "District is required"),
+  bio: z.string().optional(),
   profilePicture: z.string().min(1, "Profile picture is required for workers"),
   bioDataDocument: z.string().optional(),
   termsAccepted: z.boolean().refine(val => val === true, "You must accept the terms"),
@@ -251,6 +253,8 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
       skills: [] as string[],
       address: "",
       pincode: "",
+      districtId: "",
+      bio: "",
       profilePicture: "",
       termsAccepted: false,
     },
@@ -1468,17 +1472,57 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
                   )}
                 </div>
 
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="workerPincode">Pincode</Label>
+                    <Input
+                      id="workerPincode"
+                      placeholder="6-digit pincode"
+                      maxLength={6}
+                      {...workerForm.register("pincode")}
+                    />
+                    {workerForm.formState.errors.pincode && (
+                      <p className="text-sm text-destructive mt-1">
+                        {workerForm.formState.errors.pincode.message}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <Label htmlFor="workerDistrict">District</Label>
+                    <Select 
+                      value={workerForm.watch("districtId")} 
+                      onValueChange={(value) => workerForm.setValue("districtId", value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select district" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {districts?.map((district: any) => (
+                          <SelectItem key={district.id} value={district.id}>
+                            {district.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {workerForm.formState.errors.districtId && (
+                      <p className="text-sm text-destructive mt-1">
+                        {workerForm.formState.errors.districtId.message}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
                 <div>
-                  <Label htmlFor="workerPincode">Pincode</Label>
-                  <Input
-                    id="workerPincode"
-                    placeholder="6-digit pincode"
-                    maxLength={6}
-                    {...workerForm.register("pincode")}
+                  <Label htmlFor="bio">Bio/Description (Optional)</Label>
+                  <textarea
+                    id="bio"
+                    placeholder="Tell clients about your experience, specialties, and why they should choose you..."
+                    className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    {...workerForm.register("bio")}
                   />
-                  {workerForm.formState.errors.pincode && (
+                  {workerForm.formState.errors.bio && (
                     <p className="text-sm text-destructive mt-1">
-                      {workerForm.formState.errors.pincode.message}
+                      {workerForm.formState.errors.bio.message}
                     </p>
                   )}
                 </div>
