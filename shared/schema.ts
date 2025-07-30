@@ -56,6 +56,7 @@ export const workerProfiles = pgTable("worker_profiles", {
   hourlyRate: decimal("hourly_rate", { precision: 10, scale: 2 }).notNull(),
   serviceDistricts: jsonb("service_districts").notNull(), // Array of district IDs
   serviceAreas: jsonb("service_areas"), // Array of area IDs within service districts
+  serviceAllAreas: boolean("service_all_areas").default(false), // Whether worker serves all areas in selected districts
   bio: text("bio"),
   skills: jsonb("skills").notNull(), // Array of skills
   bioDataDocument: text("bio_data_document"), // Base64 encoded document

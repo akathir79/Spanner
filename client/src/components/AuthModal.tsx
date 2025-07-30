@@ -50,6 +50,7 @@ const workerSignupSchema = z.object({
   hourlyRate: z.number().min(0, "Hourly rate must be positive"),
   serviceDistricts: z.array(z.string()).min(1, "Select at least one district"),
   serviceAreas: z.array(z.string()).optional(),
+  serviceAllAreas: z.boolean().default(false),
   skills: z.array(z.string()).min(1, "Add at least one skill"),
   address: z.string().min(5, "Address is required"),
   pincode: z.string().length(6, "Pincode must be 6 digits"),
@@ -82,6 +83,7 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
   const [selectedDistrictForAreas, setSelectedDistrictForAreas] = useState<string>("");
   const [areasPopoverOpen, setAreasPopoverOpen] = useState(false);
   const [homeDistrictPopoverOpen, setHomeDistrictPopoverOpen] = useState(false);
+  const [serviceAllAreas, setServiceAllAreas] = useState(false);
   const [aadhaarVerificationStep, setAadhaarVerificationStep] = useState<"input" | "verify" | "verified">("input");
   const [aadhaarOtp, setAadhaarOtp] = useState("");
   const [generatedAadhaarOtp, setGeneratedAadhaarOtp] = useState("");
@@ -251,6 +253,7 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
       hourlyRate: 300,
       serviceDistricts: [] as string[],
       serviceAreas: [] as string[],
+      serviceAllAreas: false,
       skills: [] as string[],
       address: "",
       pincode: "",
@@ -1362,7 +1365,27 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
                 {/* Service Areas - only show if districts are selected */}
                 {workerForm.watch("serviceDistricts")?.length > 0 && (
                   <div>
-                    <Label htmlFor="serviceAreas">Service Areas (Optional)</Label>
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="serviceAreas">Service Areas (Optional)</Label>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox 
+                          id="serviceAllAreas"
+                          checked={serviceAllAreas}
+                          onCheckedChange={(checked) => {
+                            const isChecked = checked === true;
+                            setServiceAllAreas(isChecked);
+                            workerForm.setValue("serviceAllAreas", isChecked);
+                            if (isChecked) {
+                              // Clear specific areas when "All Areas" is selected
+                              workerForm.setValue("serviceAreas", []);
+                            }
+                          }}
+                        />
+                        <Label htmlFor="serviceAllAreas" className="text-sm font-normal cursor-pointer">
+                          All Areas
+                        </Label>
+                      </div>
+                    </div>
                     <div className="space-y-2">
                       <Popover open={areasPopoverOpen} onOpenChange={setAreasPopoverOpen}>
                         <PopoverTrigger asChild>
@@ -1371,8 +1394,9 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
                             role="combobox"
                             aria-expanded={areasPopoverOpen}
                             className="w-full justify-between"
+                            disabled={serviceAllAreas}
                           >
-                            Select specific areas
+                            {serviceAllAreas ? "All areas selected" : "Select specific areas"}
                             <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                           </Button>
                         </PopoverTrigger>
@@ -1390,6 +1414,9 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
                                       const currentAreas = workerForm.getValues("serviceAreas") || [];
                                       if (!currentAreas.includes(area.id)) {
                                         workerForm.setValue("serviceAreas", [...currentAreas, area.id]);
+                                        // Clear "All Areas" checkbox when specific area is selected
+                                        setServiceAllAreas(false);
+                                        workerForm.setValue("serviceAllAreas", false);
                                       }
                                       setAreasPopoverOpen(false);
                                     }}
@@ -1403,12 +1430,15 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
                         </PopoverContent>
                       </Popover>
                       <p className="text-xs text-muted-foreground">
-                        Select specific areas within your service districts. Leave empty to serve all areas.
+                        {serviceAllAreas 
+                          ? "You will serve all areas within your selected districts."
+                          : "Select specific areas within your service districts, or check 'All Areas' to serve everywhere in your districts."
+                        }
                       </p>
                     </div>
                     <div className="flex flex-wrap gap-1 mt-2">
                       {workerForm.watch("serviceAreas")?.map((areaId: string) => {
-                        const area = allAreas.find((a: any) => a.id === areaId);
+                        const area = (allAreas as any[]).find((a: any) => a.id === areaId);
                         return area ? (
                           <div key={areaId} className="flex items-center gap-1 bg-secondary text-secondary-foreground px-2 py-1 rounded-md text-xs">
                             <span>{area.name}</span>
@@ -1420,6 +1450,11 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
                               onClick={() => {
                                 const currentAreas = workerForm.getValues("serviceAreas") || [];
                                 workerForm.setValue("serviceAreas", currentAreas.filter(id => id !== areaId));
+                                // Check if we need to show "All Areas" again after removing specific area
+                                const remainingAreas = currentAreas.filter(id => id !== areaId);
+                                if (remainingAreas.length === 0 && !serviceAllAreas) {
+                                  // Could auto-check "All Areas" if no specific areas are selected
+                                }
                               }}
                             >
                               <X className="h-3 w-3" />
