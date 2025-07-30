@@ -552,10 +552,10 @@ export default function WorkerApprovalSection() {
                                 <MapPin className="h-5 w-5 text-orange-600" />
                                 Address/Location Information
                               </h4>
-                              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                <div className="space-y-2">
-                                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Address</label>
-                                  {isEditing ? (
+                              {isEditing ? (
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                  <div className="space-y-2">
+                                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Address</label>
                                     <Input
                                       value={editData.address || ''}
                                       onChange={(e) => setEditData({
@@ -565,21 +565,15 @@ export default function WorkerApprovalSection() {
                                       className="border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                                       placeholder="Enter full address"
                                     />
-                                  ) : (
-                                    <p className="font-medium text-gray-900 dark:text-gray-100 bg-gray-50 dark:bg-gray-700 px-3 py-2 rounded-md min-h-[40px] flex items-center">
-                                      {selectedWorker.address || "Not provided"}
+                                  </div>
+                                  <div className="space-y-2">
+                                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">District</label>
+                                    <p className="font-medium text-gray-900 dark:text-gray-100 bg-blue-50 dark:bg-blue-900/20 px-3 py-2 rounded-md min-h-[40px] flex items-center">
+                                      {selectedWorker.district?.name || "Not specified"}
                                     </p>
-                                  )}
-                                </div>
-                                <div className="space-y-2">
-                                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">District</label>
-                                  <p className="font-medium text-gray-900 dark:text-gray-100 bg-blue-50 dark:bg-blue-900/20 px-3 py-2 rounded-md min-h-[40px] flex items-center">
-                                    {selectedWorker.district?.name || "Not specified"}
-                                  </p>
-                                </div>
-                                <div className="space-y-2">
-                                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Pincode</label>
-                                  {isEditing ? (
+                                  </div>
+                                  <div className="space-y-2">
+                                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Pincode</label>
                                     <Input
                                       value={editData.pincode || ''}
                                       onChange={(e) => setEditData({
@@ -590,13 +584,26 @@ export default function WorkerApprovalSection() {
                                       placeholder="e.g., 636004"
                                       maxLength={6}
                                     />
-                                  ) : (
-                                    <p className="font-medium text-gray-900 dark:text-gray-100 bg-gray-50 dark:bg-gray-700 px-3 py-2 rounded-md">
-                                      {selectedWorker.pincode || "Not provided"}
-                                    </p>
-                                  )}
+                                  </div>
                                 </div>
-                              </div>
+                              ) : (
+                                <div className="bg-gradient-to-r from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 border border-orange-200 dark:border-orange-800 rounded-lg p-4">
+                                  <div className="flex items-start gap-3">
+                                    <MapPin className="h-5 w-5 text-orange-600 mt-1 flex-shrink-0" />
+                                    <div className="space-y-1">
+                                      <div className="text-base font-medium text-gray-900 dark:text-gray-100">
+                                        {selectedWorker.address || "Address not provided"}
+                                      </div>
+                                      <div className="text-base font-medium text-blue-700 dark:text-blue-300">
+                                        {selectedWorker.district?.name || "District not specified"}
+                                      </div>
+                                      <div className="text-base font-medium text-gray-700 dark:text-gray-300">
+                                        {selectedWorker.pincode || "Pincode not provided"}
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
                             </div>
                             
                             {/* Service Coverage */}
