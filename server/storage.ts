@@ -5,6 +5,7 @@ import {
   jobPostings,
   bids,
   districts, 
+  areas,
   serviceCategories,
   otpVerifications,
   type User, 
@@ -18,6 +19,8 @@ import {
   type Bid,
   type InsertBid,
   type District,
+  type Area,
+  type InsertArea,
   type ServiceCategory,
   type OtpVerification,
   type InsertOtp
@@ -43,6 +46,12 @@ export interface IStorage {
   getAllDistricts(): Promise<District[]>;
   getDistrictById(id: string): Promise<District | undefined>;
   getDistrictByCode(code: string): Promise<District | undefined>;
+  
+  // Areas
+  getAreasByDistrict(districtId: string): Promise<Area[]>;
+  getAllAreas(): Promise<Area[]>;
+  createArea(area: InsertArea): Promise<Area>;
+  getAreaById(id: string): Promise<Area | undefined>;
   
   // Service categories
   getAllServiceCategories(): Promise<ServiceCategory[]>;
@@ -191,6 +200,33 @@ export class DatabaseStorage implements IStorage {
   async createServiceCategory(serviceCategory: any): Promise<ServiceCategory> {
     const [newService] = await db.insert(serviceCategories).values(serviceCategory).returning();
     return newService;
+  }
+
+  // Area management
+  async getAreasByDistrict(districtId: string): Promise<Area[]> {
+    return db
+      .select()
+      .from(areas)
+      .where(and(eq(areas.districtId, districtId), eq(areas.isActive, true)))
+      .orderBy(areas.name);
+  }
+
+  async getAllAreas(): Promise<Area[]> {
+    return db
+      .select()
+      .from(areas)
+      .where(eq(areas.isActive, true))
+      .orderBy(areas.name);
+  }
+
+  async createArea(area: InsertArea): Promise<Area> {
+    const [newArea] = await db.insert(areas).values(area).returning();
+    return newArea;
+  }
+
+  async getAreaById(id: string): Promise<Area | undefined> {
+    const [area] = await db.select().from(areas).where(eq(areas.id, id));
+    return area || undefined;
   }
 
   async getPendingWorkers(): Promise<any[]> {

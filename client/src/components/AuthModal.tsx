@@ -44,10 +44,12 @@ const workerSignupSchema = z.object({
   mobile: z.string().min(10, "Mobile number must be at least 10 digits"),
   email: z.string().email("Invalid email address").optional(),
   aadhaarNumber: z.string().length(12, "Aadhaar number must be 12 digits"),
+  aadhaarVerified: z.boolean().optional(),
   primaryService: z.string().min(1, "Primary service is required"),
   experienceYears: z.number().min(0).max(50),
   hourlyRate: z.number().min(0, "Hourly rate must be positive"),
   serviceDistricts: z.array(z.string()).min(1, "Select at least one district"),
+  serviceAreas: z.array(z.string()).optional(),
   skills: z.array(z.string()).min(1, "Add at least one skill"),
   address: z.string().min(5, "Address is required"),
   pincode: z.string().length(6, "Pincode must be 6 digits"),
@@ -75,6 +77,8 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
   const [newSkillInput, setNewSkillInput] = useState("");
   const [districtSearchInput, setDistrictSearchInput] = useState("");
   const [districtPopoverOpen, setDistrictPopoverOpen] = useState(false);
+  const [selectedDistrictForAreas, setSelectedDistrictForAreas] = useState<string>("");
+  const [areasPopoverOpen, setAreasPopoverOpen] = useState(false);
   const [aadhaarVerificationStep, setAadhaarVerificationStep] = useState<"input" | "verify" | "verified">("input");
   const [aadhaarOtp, setAadhaarOtp] = useState("");
   const [generatedAadhaarOtp, setGeneratedAadhaarOtp] = useState("");
@@ -93,6 +97,12 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
   const { data: rawServices = [] } = useQuery({
     queryKey: ["/api/services"],
     staleTime: 1000 * 60 * 60, // 1 hour
+  });
+
+  // Fetch areas for selected districts
+  const { data: allAreas = [] } = useQuery({
+    queryKey: ["/api/areas"],
+    staleTime: 1000 * 60 * 30, // 30 minutes
   });
 
   // Remove duplicate services by name
@@ -136,6 +146,17 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
       });
     },
   });
+
+  // Get available areas for selected districts
+  const getAvailableAreas = () => {
+    const selectedDistricts = workerForm.watch("serviceDistricts");
+    if (!selectedDistricts || selectedDistricts.length === 0 || !allAreas) {
+      return [];
+    }
+    return allAreas.filter((area: any) => 
+      selectedDistricts.includes(area.districtId)
+    );
+  };
 
   // Handler for adding new service
   const handleAddNewService = async () => {
@@ -221,10 +242,12 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
       mobile: "",
       email: "",
       aadhaarNumber: "",
+      aadhaarVerified: false,
       primaryService: "",
       experienceYears: 1,
       hourlyRate: 300,
       serviceDistricts: [] as string[],
+      serviceAreas: [] as string[],
       skills: [] as string[],
       address: "",
       pincode: "",
@@ -1279,6 +1302,78 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
                     </p>
                   )}
                 </div>
+
+                {/* Service Areas - only show if districts are selected */}
+                {workerForm.watch("serviceDistricts")?.length > 0 && (
+                  <div>
+                    <Label htmlFor="serviceAreas">Service Areas (Optional)</Label>
+                    <div className="space-y-2">
+                      <Popover open={areasPopoverOpen} onOpenChange={setAreasPopoverOpen}>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            role="combobox"
+                            aria-expanded={areasPopoverOpen}
+                            className="w-full justify-between"
+                          >
+                            Select specific areas
+                            <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-full p-0">
+                          <Command>
+                            <CommandInput placeholder="Search areas..." />
+                            <CommandList>
+                              <CommandEmpty>No area found.</CommandEmpty>
+                              <CommandGroup>
+                                {getAvailableAreas().map((area: any) => (
+                                  <CommandItem
+                                    key={area.id}
+                                    value={area.name}
+                                    onSelect={() => {
+                                      const currentAreas = workerForm.getValues("serviceAreas") || [];
+                                      if (!currentAreas.includes(area.id)) {
+                                        workerForm.setValue("serviceAreas", [...currentAreas, area.id]);
+                                      }
+                                      setAreasPopoverOpen(false);
+                                    }}
+                                  >
+                                    {area.name} {area.tamilName && `(${area.tamilName})`}
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
+                            </CommandList>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
+                      <p className="text-xs text-muted-foreground">
+                        Select specific areas within your service districts. Leave empty to serve all areas.
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap gap-1 mt-2">
+                      {workerForm.watch("serviceAreas")?.map((areaId: string) => {
+                        const area = allAreas.find((a: any) => a.id === areaId);
+                        return area ? (
+                          <div key={areaId} className="flex items-center gap-1 bg-secondary text-secondary-foreground px-2 py-1 rounded-md text-xs">
+                            <span>{area.name}</span>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="h-4 w-4 p-0"
+                              onClick={() => {
+                                const currentAreas = workerForm.getValues("serviceAreas") || [];
+                                workerForm.setValue("serviceAreas", currentAreas.filter(id => id !== areaId));
+                              }}
+                            >
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        ) : null;
+                      })}
+                    </div>
+                  </div>
+                )}
 
                 <div>
                   <Label htmlFor="skills">Skills & Expertise *</Label>

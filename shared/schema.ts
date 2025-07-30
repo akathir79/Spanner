@@ -13,6 +13,19 @@ export const districts = pgTable("districts", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// Areas within districts
+export const areas = pgTable("areas", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  tamilName: text("tamil_name"),
+  districtId: varchar("district_id").references(() => districts.id).notNull(),
+  pincode: text("pincode"),
+  latitude: decimal("latitude", { precision: 10, scale: 7 }),
+  longitude: decimal("longitude", { precision: 10, scale: 7 }),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 // User roles: client, worker, admin, super_admin
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -42,6 +55,7 @@ export const workerProfiles = pgTable("worker_profiles", {
   experienceYears: integer("experience_years").notNull(),
   hourlyRate: decimal("hourly_rate", { precision: 10, scale: 2 }).notNull(),
   serviceDistricts: jsonb("service_districts").notNull(), // Array of district IDs
+  serviceAreas: jsonb("service_areas"), // Array of area IDs within service districts
   bio: text("bio"),
   skills: jsonb("skills").notNull(), // Array of skills
   bioDataDocument: text("bio_data_document"), // Base64 encoded document
@@ -147,6 +161,14 @@ export const usersRelations = relations(users, ({ one, many }) => ({
 export const districtsRelations = relations(districts, ({ many }) => ({
   users: many(users),
   bookings: many(bookings),
+  areas: many(areas),
+}));
+
+export const areasRelations = relations(areas, ({ one }) => ({
+  district: one(districts, {
+    fields: [areas.districtId],
+    references: [districts.id],
+  }),
 }));
 
 export const workerProfilesRelations = relations(workerProfiles, ({ one }) => ({
@@ -242,6 +264,11 @@ export const insertServiceCategorySchema = createInsertSchema(serviceCategories)
   createdAt: true,
 });
 
+export const insertAreaSchema = createInsertSchema(areas).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -256,5 +283,7 @@ export type InsertBid = z.infer<typeof insertBidSchema>;
 export type District = typeof districts.$inferSelect;
 export type ServiceCategory = typeof serviceCategories.$inferSelect;
 export type InsertServiceCategory = z.infer<typeof insertServiceCategorySchema>;
+export type Area = typeof areas.$inferSelect;
+export type InsertArea = z.infer<typeof insertAreaSchema>;
 export type OtpVerification = typeof otpVerifications.$inferSelect;
 export type InsertOtp = z.infer<typeof insertOtpSchema>;

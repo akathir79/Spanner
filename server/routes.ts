@@ -257,7 +257,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Worker signup
   app.post("/api/auth/signup/worker", async (req, res) => {
     try {
-      const { aadhaarNumber, aadhaarVerified, primaryService, experienceYears, hourlyRate, serviceDistricts, skills, bioDataDocument, ...userData } = workerSignupSchema.parse(req.body);
+      const { aadhaarNumber, aadhaarVerified, primaryService, experienceYears, hourlyRate, serviceDistricts, serviceAreas, skills, bioDataDocument, ...userData } = workerSignupSchema.parse(req.body);
       
       // Check if user already exists
       const existingUser = await storage.getUserByMobile(userData.mobile);
@@ -275,6 +275,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         experienceYears,
         hourlyRate: hourlyRate.toString(),
         serviceDistricts,
+        serviceAreas: serviceAreas || [],
         skills,
         bioDataDocument: bioDataDocument || null,
       });
@@ -317,6 +318,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(services);
     } catch (error) {
       console.error("Get services error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Get areas by district
+  app.get("/api/districts/:districtId/areas", async (req, res) => {
+    try {
+      const { districtId } = req.params;
+      const areas = await storage.getAreasByDistrict(districtId);
+      res.json(areas);
+    } catch (error) {
+      console.error("Get areas error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Get all areas
+  app.get("/api/areas", async (req, res) => {
+    try {
+      const areas = await storage.getAllAreas();
+      res.json(areas);
+    } catch (error) {
+      console.error("Get all areas error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Create new area
+  app.post("/api/areas", async (req, res) => {
+    try {
+      const areaData = req.body;
+      const area = await storage.createArea(areaData);
+      res.json(area);
+    } catch (error) {
+      console.error("Create area error:", error);
       res.status(500).json({ message: "Internal server error" });
     }
   });

@@ -202,10 +202,12 @@ export default function Home() {
   const [searchForm, setSearchForm] = useState({
     service: "",
     district: "",
+    area: "",
     description: ""
   });
   const [serviceOpen, setServiceOpen] = useState(false);
   const [districtOpen, setDistrictOpen] = useState(false);
+  const [areaOpen, setAreaOpen] = useState(false);
   const [isLocationLoading, setIsLocationLoading] = useState(false);
 
   const { data: districts } = useQuery({
@@ -218,11 +220,25 @@ export default function Home() {
     staleTime: 1000 * 60 * 60, // 1 hour
   });
 
+  // Fetch areas for selected district
+  const { data: allAreas = [] } = useQuery({
+    queryKey: ["/api/areas"],
+    staleTime: 1000 * 60 * 30, // 30 minutes
+  });
+
   // Remove duplicate services by name
   const services = rawServices ? 
     (rawServices as any[]).filter((service, index, arr) => 
       arr.findIndex(s => s.name === service.name) === index
     ) : null;
+
+  // Get available areas for selected district
+  const getAvailableAreasForSearch = () => {
+    if (!searchForm.district || !allAreas) {
+      return [];
+    }
+    return (allAreas as any[]).filter((area: any) => area.districtId === searchForm.district);
+  };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -348,6 +364,7 @@ export default function Home() {
     setSearchForm({
       service: "",
       district: "",
+      area: "",
       description: ""
     });
   };
@@ -549,13 +566,70 @@ export default function Home() {
                             variant="ghost"
                             size="sm"
                             className="mt-1 h-6 px-2 text-xs"
-                            onClick={() => setSearchForm(prev => ({ ...prev, district: "" }))}
+                            onClick={() => setSearchForm(prev => ({ ...prev, district: "", area: "" }))}
                           >
                             <X className="h-3 w-3 mr-1" />
                             Clear
                           </Button>
                         )}
                       </div>
+                      
+                      {/* Area Selection - only show if district is selected */}
+                      {searchForm.district && (
+                        <div>
+                          <label className="block text-sm font-medium mb-1 text-foreground">
+                            Area (Optional)
+                          </label>
+                          <Popover open={areaOpen} onOpenChange={setAreaOpen}>
+                            <PopoverTrigger asChild>
+                              <Button
+                                variant="outline"
+                                role="combobox"
+                                aria-expanded={areaOpen}
+                                className="w-full justify-between"
+                              >
+                                {searchForm.area
+                                  ? (getAvailableAreasForSearch() as any[])?.find((area: any) => area.id === searchForm.area)?.name
+                                  : "Select Area"}
+                                <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-full p-0">
+                              <Command>
+                                <CommandInput placeholder="Search areas..." />
+                                <CommandList>
+                                  <CommandEmpty>No area found.</CommandEmpty>
+                                  <CommandGroup>
+                                    {getAvailableAreasForSearch().map((area: any) => (
+                                      <CommandItem
+                                        key={area.id}
+                                        value={area.name}
+                                        onSelect={() => {
+                                          setSearchForm(prev => ({ ...prev, area: area.id }));
+                                          setAreaOpen(false);
+                                        }}
+                                      >
+                                        {area.name} {area.tamilName && `(${area.tamilName})`}
+                                      </CommandItem>
+                                    ))}
+                                  </CommandGroup>
+                                </CommandList>
+                              </Command>
+                            </PopoverContent>
+                          </Popover>
+                          {searchForm.area && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="mt-1 h-6 px-2 text-xs"
+                              onClick={() => setSearchForm(prev => ({ ...prev, area: "" }))}
+                            >
+                              <X className="h-3 w-3 mr-1" />
+                              Clear
+                            </Button>
+                          )}
+                        </div>
+                      )}
                     </div>
                     
                     <div>

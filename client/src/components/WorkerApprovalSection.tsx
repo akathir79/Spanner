@@ -260,6 +260,20 @@ export default function WorkerApprovalSection() {
                                     }
                                   </div>
                                 </div>
+                                
+                                {/* Service Areas */}
+                                {selectedWorker.workerProfile.serviceAreas?.length > 0 && (
+                                  <div className="col-span-2">
+                                    <label className="text-sm font-medium text-muted-foreground">Service Areas</label>
+                                    <div className="flex flex-wrap gap-1 mt-1">
+                                      {selectedWorker.workerProfile.serviceAreas.map((areaId: string, index: number) => (
+                                        <Badge key={index} variant="outline" className="text-xs">
+                                          {areaId}
+                                        </Badge>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
                                 <div className="col-span-2">
                                   <label className="text-sm font-medium text-muted-foreground">Skills</label>
                                   <div className="flex flex-wrap gap-1 mt-1">
