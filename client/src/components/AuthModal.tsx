@@ -81,6 +81,7 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
   const [districtPopoverOpen, setDistrictPopoverOpen] = useState(false);
   const [selectedDistrictForAreas, setSelectedDistrictForAreas] = useState<string>("");
   const [areasPopoverOpen, setAreasPopoverOpen] = useState(false);
+  const [homeDistrictPopoverOpen, setHomeDistrictPopoverOpen] = useState(false);
   const [aadhaarVerificationStep, setAadhaarVerificationStep] = useState<"input" | "verify" | "verified">("input");
   const [aadhaarOtp, setAadhaarOtp] = useState("");
   const [generatedAadhaarOtp, setGeneratedAadhaarOtp] = useState("");
@@ -397,6 +398,7 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
               } else {
                 // For worker form, set both home district and add to service districts
                 workerForm.setValue("districtId", matchingDistrict.id);
+                setHomeDistrictPopoverOpen(false); // Close the popover
                 const currentDistricts: string[] = workerForm.getValues("serviceDistricts") || [];
                 if (!currentDistricts.includes(matchingDistrict.id)) {
                   workerForm.setValue("serviceDistricts", [...currentDistricts, matchingDistrict.id]);
@@ -1522,21 +1524,47 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
                   </div>
                   <div>
                     <Label htmlFor="workerDistrict">District</Label>
-                    <Select 
-                      value={workerForm.watch("districtId")} 
-                      onValueChange={(value) => workerForm.setValue("districtId", value)}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select district" />
-                      </SelectTrigger>
-                      <SelectContent className="max-h-[200px] overflow-y-auto">
-                        {districts?.map((district: any) => (
-                          <SelectItem key={district.id} value={district.id}>
-                            {district.name} ({district.tamilName})
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <Popover open={homeDistrictPopoverOpen} onOpenChange={setHomeDistrictPopoverOpen}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          aria-expanded={homeDistrictPopoverOpen}
+                          className="w-full justify-between"
+                        >
+                          {workerForm.watch("districtId") 
+                            ? districts?.find((d: any) => d.id === workerForm.watch("districtId"))?.name || "Select District"
+                            : "Select District"
+                          }
+                          <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-full p-0">
+                        <Command>
+                          <CommandInput placeholder="Search districts..." />
+                          <CommandList>
+                            <CommandEmpty>No district found.</CommandEmpty>
+                            <CommandGroup>
+                              {districts && Array.isArray(districts) ? districts.map((district: any) => (
+                                <CommandItem
+                                  key={district.id}
+                                  value={district.name}
+                                  onSelect={() => {
+                                    workerForm.setValue("districtId", district.id);
+                                    setHomeDistrictPopoverOpen(false);
+                                  }}
+                                >
+                                  <div className="flex flex-col">
+                                    <span className="font-medium">{district.name}</span>
+                                    <span className="text-sm text-muted-foreground">({district.tamilName})</span>
+                                  </div>
+                                </CommandItem>
+                              )) : null}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
                     <p className="text-xs text-muted-foreground mt-1">
                       Your home district. Use "Use Location" button above to auto-detect.
                     </p>
