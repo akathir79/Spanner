@@ -44,6 +44,12 @@ export const workerProfiles = pgTable("worker_profiles", {
   isAvailable: boolean("is_available").default(true),
   rating: decimal("rating", { precision: 3, scale: 2 }).default("0.00"),
   totalJobs: integer("total_jobs").default(0),
+  approvalStatus: text("approval_status").notNull().default("pending"), // pending, approved, rejected
+  approvedBy: varchar("approved_by").references(() => users.id),
+  approvedAt: timestamp("approved_at"),
+  rejectionReason: text("rejection_reason"),
+  workAddress: text("work_address"),
+  pincode: text("pincode"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });

@@ -29,6 +29,7 @@ import {
   Search
 } from "lucide-react";
 import { useLocation } from "wouter";
+import { WorkerApprovalSection } from "@/components/WorkerApprovalSection";
 
 export default function AdminDashboard() {
   const { user } = useAuth();
@@ -230,13 +231,19 @@ export default function AdminDashboard() {
           </Card>
         </div>
 
-        <Tabs defaultValue="users" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+        <Tabs defaultValue="approvals" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-5">
+            <TabsTrigger value="approvals">Worker Approvals</TabsTrigger>
             <TabsTrigger value="users">User Management</TabsTrigger>
             <TabsTrigger value="bookings">Booking Management</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
             <TabsTrigger value="settings">Platform Settings</TabsTrigger>
           </TabsList>
+
+          {/* Worker Approval Tab */}
+          <TabsContent value="approvals" className="space-y-6">
+            <WorkerApprovalSection />
+          </TabsContent>
 
           {/* User Management Tab */}
           <TabsContent value="users" className="space-y-6">

@@ -425,10 +425,12 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
   };
 
   const handleWorkerSignup = async (data: z.infer<typeof workerSignupSchema>) => {
-    const { termsAccepted, ...signupData } = data;
+    const { termsAccepted, address, pincode, ...signupData } = data;
     const result = await signupWorker({
       ...signupData,
       role: "worker",
+      workAddress: address,
+      pincode: pincode,
     });
     if (result) {
       onClose();

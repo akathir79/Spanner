@@ -39,6 +39,11 @@ export interface IStorage {
   getWorkersByDistrict(districtId: string): Promise<(User & { workerProfile: WorkerProfile })[]>;
   getWorkersByService(service: string): Promise<(User & { workerProfile: WorkerProfile })[]>;
   
+  // Worker approval
+  getPendingWorkerApplications(): Promise<(User & { workerProfile: WorkerProfile })[]>;
+  approveWorkerApplication(userId: string, adminId: string): Promise<WorkerProfile | undefined>;
+  rejectWorkerApplication(userId: string, adminId: string, reason: string): Promise<WorkerProfile | undefined>;
+  
   // Districts
   getAllDistricts(): Promise<District[]>;
   getDistrictById(id: string): Promise<District | undefined>;
@@ -155,7 +160,8 @@ export class DatabaseStorage implements IStorage {
         and(
           eq(users.role, "worker"),
           eq(users.isActive, true),
-          eq(workerProfiles.primaryService, service)
+          eq(workerProfiles.primaryService, service),
+          eq(workerProfiles.approvalStatus, "approved")
         )
       );
     
@@ -163,6 +169,55 @@ export class DatabaseStorage implements IStorage {
       ...result.users,
       workerProfile: result.worker_profiles
     }));
+  }
+
+  async getPendingWorkerApplications(): Promise<(User & { workerProfile: WorkerProfile })[]> {
+    const results = await db
+      .select()
+      .from(users)
+      .innerJoin(workerProfiles, eq(users.id, workerProfiles.userId))
+      .where(
+        and(
+          eq(users.role, "worker"),
+          eq(workerProfiles.approvalStatus, "pending")
+        )
+      )
+      .orderBy(desc(workerProfiles.createdAt));
+    
+    return results.map(result => ({
+      ...result.users,
+      workerProfile: result.worker_profiles
+    }));
+  }
+
+  async approveWorkerApplication(userId: string, adminId: string): Promise<WorkerProfile | undefined> {
+    const [updatedProfile] = await db
+      .update(workerProfiles)
+      .set({
+        approvalStatus: "approved",
+        approvedBy: adminId,
+        approvedAt: new Date(),
+        updatedAt: new Date()
+      })
+      .where(eq(workerProfiles.userId, userId))
+      .returning();
+    
+    return updatedProfile || undefined;
+  }
+
+  async rejectWorkerApplication(userId: string, adminId: string, reason: string): Promise<WorkerProfile | undefined> {
+    const [updatedProfile] = await db
+      .update(workerProfiles)
+      .set({
+        approvalStatus: "rejected",
+        approvedBy: adminId,
+        rejectionReason: reason,
+        updatedAt: new Date()
+      })
+      .where(eq(workerProfiles.userId, userId))
+      .returning();
+    
+    return updatedProfile || undefined;
   }
 
   async getAllDistricts(): Promise<District[]> {

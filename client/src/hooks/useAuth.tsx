@@ -89,11 +89,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       return true;
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Invalid OTP",
-        variant: "destructive",
-      });
+      // Handle worker approval pending case
+      if (error.status === 403 && error.message?.includes("under review")) {
+        toast({
+          title: "Application Under Review",
+          description: "Your worker application is being reviewed by our admin team. Please wait for approval.",
+          variant: "default",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: error.message || "Invalid OTP",
+          variant: "destructive",
+        });
+      }
       return false;
     } finally {
       setIsLoading(false);
@@ -142,14 +151,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       localStorage.setItem("user", JSON.stringify(result.user));
       
       toast({
-        title: "Application Submitted",
-        description: "Your worker application is under review. You'll be notified once approved.",
+        title: "Application Submitted Successfully",
+        description: "Your worker application is under admin review. You will be notified once approved and can then login.",
       });
       
-      // Redirect to worker dashboard
-      setTimeout(() => {
-        window.location.href = "/worker-dashboard";
-      }, 1000);
+      // Don't redirect, just close the modal
+      // Workers can't access dashboard until approved
       
       return true;
     } catch (error: any) {
