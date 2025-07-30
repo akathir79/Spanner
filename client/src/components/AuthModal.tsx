@@ -156,7 +156,7 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
     if (!selectedDistricts || selectedDistricts.length === 0 || !allAreas) {
       return [];
     }
-    return allAreas.filter((area: any) => 
+    return (allAreas as any[]).filter((area: any) => 
       selectedDistricts.includes(area.districtId)
     );
   };
@@ -351,23 +351,38 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
               const districtName = district.name.toLowerCase();
               const detectedName = detectedLocation?.toLowerCase() || '';
               const detectedCity = locationData.city?.toLowerCase() || '';
+              const detectedCounty = locationData.county?.toLowerCase() || '';
+              const detectedStateDistrict = locationData.state_district?.toLowerCase() || '';
               
-              // Check various location fields for district match
-              return districtName.includes(detectedName) || 
-                     detectedName.includes(districtName) ||
-                     districtName.includes(detectedCity) || 
-                     detectedCity.includes(districtName) ||
-                     district.tamilName?.toLowerCase().includes(detectedName) ||
-                     district.tamilName?.toLowerCase().includes(detectedCity) ||
-                     // Special cases for common district variations
-                     (districtName === 'chennai' && (detectedCity.includes('chennai') || detectedName.includes('chennai'))) ||
-                     (districtName === 'coimbatore' && (detectedCity.includes('coimbatore') || detectedName.includes('coimbatore'))) ||
-                     (districtName === 'salem' && (detectedCity.includes('salem') || detectedName.includes('salem')));
+              // Check for exact matches first (most reliable)
+              if (districtName === detectedStateDistrict || 
+                  districtName === detectedCounty ||
+                  districtName === detectedCity ||
+                  districtName === detectedName) {
+                return true;
+              }
+              
+              // Check if detected location contains the district name
+              if (detectedStateDistrict.includes(districtName) ||
+                  detectedCounty.includes(districtName) ||
+                  detectedCity.includes(districtName) ||
+                  detectedName.includes(districtName)) {
+                return true;
+              }
+              
+              // Check Tamil name matches
+              if (district.tamilName?.toLowerCase().includes(detectedName) ||
+                  district.tamilName?.toLowerCase().includes(detectedStateDistrict) ||
+                  district.tamilName?.toLowerCase().includes(detectedCounty)) {
+                return true;
+              }
+              
+              return false;
             });
             
             // If no district match found, try to find by pincode from areas
-            if (!matchingDistrict && detectedPincode && areas) {
-              const matchingArea = (areas as any)?.find((area: any) => 
+            if (!matchingDistrict && detectedPincode && allAreas) {
+              const matchingArea = (allAreas as any)?.find((area: any) => 
                 area.pincode === detectedPincode
               );
               if (matchingArea) {
@@ -416,6 +431,8 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
             console.log('Location detection results:', {
               detectedLocation,
               detectedCity: locationData.city,
+              detectedCounty: locationData.county,
+              detectedStateDistrict: locationData.state_district,
               detectedPincode,
               matchingDistrict: matchingDistrict?.name,
               allLocationData: locationData
@@ -1533,7 +1550,7 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
                           className="w-full justify-between"
                         >
                           {workerForm.watch("districtId") 
-                            ? districts?.find((d: any) => d.id === workerForm.watch("districtId"))?.name || "Select District"
+                            ? (districts as any[])?.find((d: any) => d.id === workerForm.watch("districtId"))?.name || "Select District"
                             : "Select District"
                           }
                           <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
