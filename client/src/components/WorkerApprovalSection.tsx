@@ -265,39 +265,23 @@ export default function WorkerApprovalSection() {
                                 {isEditing ? "Edit worker's profile and credentials" : "Review the worker's profile and credentials"}
                               </DialogDescription>
                             </div>
-                            <div className="flex items-center gap-3">
-                              {!isEditing ? (
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => handleEdit(selectedWorker)}
-                                  className="flex items-center gap-2 hover:bg-blue-50 hover:border-blue-200 transition-colors"
-                                >
-                                  <Edit className="h-4 w-4" />
-                                  Edit
-                                </Button>
-                              ) : (
-                                <div className="flex items-center gap-2">
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={handleCancel}
-                                    className="flex items-center gap-2 hover:bg-red-50 hover:border-red-200 transition-colors"
-                                  >
-                                    <X className="h-4 w-4" />
-                                    Cancel
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    onClick={handleSave}
-                                    disabled={updateWorkerMutation.isPending}
-                                    className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 transition-colors"
-                                  >
-                                    <Save className="h-4 w-4" />
-                                    {updateWorkerMutation.isPending ? "Saving..." : "Save"}
-                                  </Button>
-                                </div>
-                              )}
+                            <div className="flex items-center gap-2">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 w-8 p-0 hover:bg-gray-100 dark:hover:bg-gray-700"
+                                title="Minimize"
+                              >
+                                <span className="text-lg leading-none">−</span>
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 w-8 p-0 hover:bg-gray-100 dark:hover:bg-gray-700"
+                                title="Maximize"
+                              >
+                                <span className="text-lg leading-none">□</span>
+                              </Button>
                             </div>
                           </div>
                         </DialogHeader>
@@ -719,6 +703,42 @@ export default function WorkerApprovalSection() {
                                   )}
                                 </div>
                               </div>
+                            </div>
+
+                            {/* Action Buttons - Centered */}
+                            <div className="flex justify-center items-center gap-4 pt-8 border-t border-gray-200 dark:border-gray-700">
+                              {!isEditing ? (
+                                <Button
+                                  variant="outline"
+                                  size="lg"
+                                  onClick={() => handleEdit(selectedWorker)}
+                                  className="flex items-center gap-2 px-8 py-3 text-base font-medium hover:bg-blue-50 hover:border-blue-200 transition-colors"
+                                >
+                                  <Edit className="h-5 w-5" />
+                                  Edit Worker Details
+                                </Button>
+                              ) : (
+                                <div className="flex items-center gap-4">
+                                  <Button
+                                    variant="outline"
+                                    size="lg"
+                                    onClick={handleCancel}
+                                    className="flex items-center gap-2 px-8 py-3 text-base font-medium hover:bg-red-50 hover:border-red-200 transition-colors"
+                                  >
+                                    <X className="h-5 w-5" />
+                                    Cancel Changes
+                                  </Button>
+                                  <Button
+                                    size="lg"
+                                    onClick={handleSave}
+                                    disabled={updateWorkerMutation.isPending}
+                                    className="flex items-center gap-2 px-8 py-3 text-base font-medium bg-blue-600 hover:bg-blue-700 transition-colors"
+                                  >
+                                    <Save className="h-5 w-5" />
+                                    {updateWorkerMutation.isPending ? "Saving Changes..." : "Save Changes"}
+                                  </Button>
+                                </div>
+                              )}
                             </div>
                           </div>
                         )}
