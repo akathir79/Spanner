@@ -24,9 +24,14 @@ export default function WorkerApprovalSection() {
   const { toast } = useToast();
   const [selectedWorker, setSelectedWorker] = useState<any>(null);
 
-  // Fetch pending workers
+  // Fetch pending workers and districts
   const { data: pendingWorkers = [], isLoading } = useQuery<any[]>({
     queryKey: ["/api/admin/pending-workers"],
+  });
+
+  const { data: districts = [] } = useQuery<any[]>({
+    queryKey: ["/api/districts"],
+    staleTime: 1000 * 60 * 60, // 1 hour
   });
 
   // Approve worker mutation
@@ -214,9 +219,33 @@ export default function WorkerApprovalSection() {
                                   <label className="text-sm font-medium text-muted-foreground">Aadhaar Number</label>
                                   <p className="font-medium">{selectedWorker.workerProfile.aadhaarNumber}</p>
                                 </div>
+                                <div>
+                                  <label className="text-sm font-medium text-muted-foreground">Address</label>
+                                  <p className="font-medium">{selectedWorker.address || "Not provided"}</p>
+                                </div>
+                                <div>
+                                  <label className="text-sm font-medium text-muted-foreground">Pincode</label>
+                                  <p className="font-medium">{selectedWorker.pincode || "Not provided"}</p>
+                                </div>
                                 <div className="col-span-2">
                                   <label className="text-sm font-medium text-muted-foreground">Bio</label>
                                   <p className="font-medium">{selectedWorker.workerProfile.bio || "No bio provided"}</p>
+                                </div>
+                                <div className="col-span-2">
+                                  <label className="text-sm font-medium text-muted-foreground">Service Districts</label>
+                                  <div className="flex flex-wrap gap-1 mt-1">
+                                    {selectedWorker.workerProfile.serviceDistricts?.length > 0 ? 
+                                      selectedWorker.workerProfile.serviceDistricts.map((districtId: string, index: number) => {
+                                        const district = districts.find((d: any) => d.id === districtId);
+                                        return (
+                                          <Badge key={index} variant="secondary">
+                                            {district ? district.name : districtId}
+                                          </Badge>
+                                        );
+                                      }) : 
+                                      <span className="text-muted-foreground">No districts specified</span>
+                                    }
+                                  </div>
                                 </div>
                                 <div className="col-span-2">
                                   <label className="text-sm font-medium text-muted-foreground">Skills</label>
