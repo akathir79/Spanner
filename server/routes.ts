@@ -101,6 +101,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Invalid super admin credentials" });
       }
       
+      // For admin, verify mobile number
+      if (user.role === "admin" && mobile !== "9000000001") {
+        return res.status(401).json({ message: "Invalid admin credentials" });
+      }
+      
       res.json({
         message: "Login successful",
         user: {
