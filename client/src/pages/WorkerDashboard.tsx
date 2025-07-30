@@ -869,20 +869,20 @@ export default function WorkerDashboard() {
                       <div>
                         <Label className="text-sm text-muted-foreground">Address</Label>
                         <p className="font-medium">
-                          {user.address || 'Not provided'}
+                          {workerProfile.address || user.address || 'Not provided'}
                         </p>
                       </div>
                       <div>
                         <Label className="text-sm text-muted-foreground">Pincode</Label>
                         <p className="font-medium">
-                          {user.pincode || 'Not provided'}
+                          {workerProfile.pincode || user.pincode || 'Not provided'}
                         </p>
                       </div>
                       <div>
                         <Label className="text-sm text-muted-foreground">District</Label>
                         <p className="font-medium flex items-center space-x-2">
                           <MapPin className="h-4 w-4" />
-                          <span>{user.district?.name || 'Not specified'}</span>
+                          <span>{workerProfile.district?.name || user.district?.name || 'Not specified'}</span>
                         </p>
                       </div>
                     </div>
@@ -895,31 +895,31 @@ export default function WorkerDashboard() {
                       <div>
                         <Label className="text-sm text-muted-foreground">Primary Service</Label>
                         <p className="font-medium capitalize">
-                          {workerProfile?.primaryService?.replace('_', ' ') || 'Not specified'}
+                          {workerProfile?.workerProfile?.primaryService?.replace('_', ' ') || 'Not specified'}
                         </p>
                       </div>
                       <div>
                         <Label className="text-sm text-muted-foreground">Experience</Label>
                         <p className="font-medium">
-                          {workerProfile?.experienceYears || 0} years
+                          {workerProfile?.workerProfile?.experienceYears || 0} years
                         </p>
                       </div>
                       <div>
                         <Label className="text-sm text-muted-foreground">Hourly Rate</Label>
                         <p className="font-medium text-green-600">
-                          ₹{workerProfile?.hourlyRate || 0}/hour
+                          ₹{workerProfile?.workerProfile?.hourlyRate || 0}/hour
                         </p>
                       </div>
                       <div>
                         <Label className="text-sm text-muted-foreground">Aadhaar Number</Label>
                         <p className="font-medium">
-                          {workerProfile?.aadhaarNumber ? `****-****-${workerProfile.aadhaarNumber.slice(-4)}` : 'Not provided'}
+                          {workerProfile?.workerProfile?.aadhaarNumber ? `****-****-${workerProfile.workerProfile.aadhaarNumber.slice(-4)}` : 'Not provided'}
                         </p>
                       </div>
                       <div>
                         <Label className="text-sm text-muted-foreground">Bio</Label>
                         <p className="font-medium text-sm">
-                          {workerProfile?.bio || 'No bio provided'}
+                          {workerProfile?.workerProfile?.bio || 'No bio provided'}
                         </p>
                       </div>
                       <div>
@@ -936,7 +936,7 @@ export default function WorkerDashboard() {
                               Pending Approval
                             </Badge>
                           )}
-                          {workerProfile?.aadhaarVerified ? (
+                          {workerProfile?.workerProfile?.aadhaarVerified ? (
                             <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100">
                               <CheckCircle className="h-3 w-3 mr-1" />
                               Aadhaar Verified
@@ -947,7 +947,7 @@ export default function WorkerDashboard() {
                               Aadhaar Pending
                             </Badge>
                           )}
-                          {workerProfile?.isBackgroundVerified ? (
+                          {workerProfile?.workerProfile?.isBackgroundVerified ? (
                             <Badge className="bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-100">
                               <CheckCircle className="h-3 w-3 mr-1" />
                               Background Verified
@@ -960,11 +960,11 @@ export default function WorkerDashboard() {
                           )}
                         </div>
                       </div>
-                      {workerProfile?.skills && workerProfile.skills.length > 0 && (
+                      {workerProfile?.workerProfile?.skills && workerProfile.workerProfile.skills.length > 0 && (
                         <div>
                           <Label className="text-sm text-muted-foreground">Skills</Label>
                           <div className="flex flex-wrap gap-2 mt-1">
-                            {workerProfile.skills.map((skill: string, index: number) => (
+                            {(workerProfile.workerProfile.skills || []).map((skill: string, index: number) => (
                               <Badge key={index} variant="outline" className="text-xs">
                                 {skill}
                               </Badge>
@@ -972,14 +972,14 @@ export default function WorkerDashboard() {
                           </div>
                         </div>
                       )}
-                      {workerProfile?.serviceDistricts && workerProfile.serviceDistricts.length > 0 && (
+                      {workerProfile?.workerProfile?.serviceDistricts && workerProfile.workerProfile.serviceDistricts.length > 0 && (
                         <div>
                           <Label className="text-sm text-muted-foreground">Service Areas</Label>
                           <div className="flex flex-wrap gap-2 mt-1">
-                            {workerProfile.serviceDistricts.map((districtId: string, index: number) => (
+                            {(workerProfile.workerProfile.serviceDistricts || []).map((districtId: string, index: number) => (
                               <Badge key={index} variant="secondary" className="text-xs">
                                 {/* TODO: Map district ID to name */}
-                                District {districtId}
+                                District {index + 1}
                               </Badge>
                             ))}
                           </div>
@@ -1011,7 +1011,7 @@ export default function WorkerDashboard() {
                       </p>
                     </div>
                     <Switch
-                      checked={workerProfile?.isAvailable || false}
+                      checked={workerProfile?.workerProfile?.isAvailable || false}
                       onCheckedChange={(checked) => {
                         // TODO: Implement availability toggle
                         toast({

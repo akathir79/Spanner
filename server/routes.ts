@@ -397,6 +397,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get worker profile with user data
+  app.get("/api/worker/profile/:userId", async (req, res) => {
+    try {
+      const { userId } = req.params;
+      
+      // Get user data
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Get worker profile
+      const workerProfile = await storage.getWorkerProfile(userId);
+      
+      // Get district name if districtId exists
+      let district = null;
+      if (user.districtId) {
+        const districts = await storage.getAllDistricts();
+        district = districts.find((d: any) => d.id === user.districtId);
+      }
+      
+      // Combine user and worker profile data
+      const completeProfile = {
+        ...user,
+        workerProfile,
+        district
+      };
+      
+      res.json(completeProfile);
+    } catch (error) {
+      console.error("Get worker profile error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // Search workers
   app.get("/api/workers/search", async (req, res) => {
     try {
