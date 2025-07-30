@@ -12,7 +12,7 @@ import { z } from "zod";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/components/LanguageProvider";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { UserPlus, LogIn, Smartphone, Info, MapPin, Upload, User, X, Plus } from "lucide-react";
+import { UserPlus, LogIn, Smartphone, Info, MapPin, Upload, User, X, Plus, CheckCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 
@@ -70,6 +70,9 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
   const [showNewServiceInput, setShowNewServiceInput] = useState(false);
   const [newServiceName, setNewServiceName] = useState("");
   const [newSkillInput, setNewSkillInput] = useState("");
+  const [aadhaarVerificationStep, setAadhaarVerificationStep] = useState<"input" | "verify" | "verified">("input");
+  const [aadhaarOtp, setAadhaarOtp] = useState("");
+  const [generatedAadhaarOtp, setGeneratedAadhaarOtp] = useState("");
   const { login, verifyOtp, signupClient, signupWorker, isLoading } = useAuth();
   const { t } = useLanguage();
   const { toast } = useToast();
@@ -424,6 +427,16 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
   };
 
   const handleWorkerSignup = async (data: z.infer<typeof workerSignupSchema>) => {
+    // Check if Aadhaar is verified before proceeding
+    if (aadhaarVerificationStep !== "verified") {
+      toast({
+        title: "Aadhaar Verification Required",
+        description: "Please verify your Aadhaar number before submitting the application.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const { termsAccepted, ...signupData } = data;
     const result = await signupWorker({
       ...signupData,
@@ -431,6 +444,45 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
     });
     if (result) {
       onClose();
+    }
+  };
+
+  const handleAadhaarVerificationRequest = () => {
+    const aadhaarNumber = workerForm.getValues("aadhaarNumber");
+    
+    if (!aadhaarNumber || aadhaarNumber.length !== 12) {
+      toast({
+        title: "Invalid Aadhaar Number",
+        description: "Please enter a valid 12-digit Aadhaar number.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Generate mock OTP for Aadhaar verification
+    const mockOtp = Math.floor(100000 + Math.random() * 900000).toString();
+    setGeneratedAadhaarOtp(mockOtp);
+    setAadhaarVerificationStep("verify");
+    
+    toast({
+      title: "Aadhaar OTP Sent",
+      description: "Please check your registered mobile number for the OTP.",
+    });
+  };
+
+  const handleAadhaarOtpVerification = () => {
+    if (aadhaarOtp === generatedAadhaarOtp) {
+      setAadhaarVerificationStep("verified");
+      toast({
+        title: "Aadhaar Verified",
+        description: "Your Aadhaar number has been successfully verified.",
+      });
+    } else {
+      toast({
+        title: "Invalid OTP",
+        description: "Please enter the correct OTP sent to your registered mobile number.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -443,6 +495,9 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
     setShowNewServiceInput(false);
     setNewServiceName("");
     setNewSkillInput("");
+    setAadhaarVerificationStep("input");
+    setAadhaarOtp("");
+    setGeneratedAadhaarOtp("");
     loginForm.reset();
     otpForm.reset();
     clientForm.reset();
@@ -841,12 +896,91 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
 
                 <div>
                   <Label htmlFor="aadhaar">Aadhaar Number</Label>
-                  <Input
-                    id="aadhaar"
-                    placeholder="XXXX XXXX XXXX"
-                    maxLength={12}
-                    {...workerForm.register("aadhaarNumber")}
-                  />
+                  <div className="space-y-2">
+                    <div className="flex gap-2">
+                      <Input
+                        id="aadhaar"
+                        placeholder="XXXX XXXX XXXX"
+                        maxLength={12}
+                        {...workerForm.register("aadhaarNumber")}
+                        disabled={aadhaarVerificationStep === "verified"}
+                        className={aadhaarVerificationStep === "verified" ? "bg-green-50 border-green-200" : ""}
+                      />
+                      {aadhaarVerificationStep === "input" && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={handleAadhaarVerificationRequest}
+                          disabled={!workerForm.watch("aadhaarNumber") || workerForm.watch("aadhaarNumber").length !== 12}
+                        >
+                          Verify
+                        </Button>
+                      )}
+                      {aadhaarVerificationStep === "verified" && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="bg-green-100 text-green-700 border-green-200"
+                          disabled
+                        >
+                          <CheckCircle className="h-4 w-4 mr-1" />
+                          Verified
+                        </Button>
+                      )}
+                    </div>
+                    
+                    {aadhaarVerificationStep === "verify" && (
+                      <div className="space-y-2 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                        <div className="flex items-center gap-2">
+                          <Info className="h-4 w-4 text-blue-600" />
+                          <span className="text-sm font-medium text-blue-800">Aadhaar OTP Verification</span>
+                        </div>
+                        <div className="flex gap-2">
+                          <Input
+                            placeholder="Enter 6-digit OTP"
+                            maxLength={6}
+                            value={aadhaarOtp}
+                            onChange={(e) => setAadhaarOtp(e.target.value)}
+                            className="flex-1"
+                          />
+                          <Button
+                            type="button"
+                            size="sm"
+                            onClick={handleAadhaarOtpVerification}
+                            disabled={aadhaarOtp.length !== 6}
+                          >
+                            Verify OTP
+                          </Button>
+                        </div>
+                        {generatedAadhaarOtp && (
+                          <Alert>
+                            <Info className="h-4 w-4" />
+                            <AlertDescription>
+                              Development OTP: <strong>{generatedAadhaarOtp}</strong>
+                            </AlertDescription>
+                          </Alert>
+                        )}
+                        <Button
+                          type="button"
+                          variant="link"
+                          size="sm"
+                          className="p-0 h-auto text-blue-600"
+                          onClick={handleAadhaarVerificationRequest}
+                        >
+                          Resend OTP
+                        </Button>
+                      </div>
+                    )}
+                    
+                    {aadhaarVerificationStep === "verified" && (
+                      <div className="flex items-center gap-2 text-sm text-green-600">
+                        <CheckCircle className="h-4 w-4" />
+                        <span>Aadhaar number verified successfully</span>
+                      </div>
+                    )}
+                  </div>
                   <p className="text-xs text-muted-foreground mt-1">Required for identity verification</p>
                   {workerForm.formState.errors.aadhaarNumber && (
                     <p className="text-sm text-destructive mt-1">
