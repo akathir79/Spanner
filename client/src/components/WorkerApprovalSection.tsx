@@ -217,7 +217,20 @@ export default function WorkerApprovalSection() {
                                 </div>
                                 <div>
                                   <label className="text-sm font-medium text-muted-foreground">Aadhaar Number</label>
-                                  <p className="font-medium">{selectedWorker.workerProfile.aadhaarNumber}</p>
+                                  <div className="flex items-center gap-2">
+                                    <p className="font-medium">{selectedWorker.workerProfile.aadhaarNumber}</p>
+                                    {selectedWorker.workerProfile.aadhaarVerified ? (
+                                      <Badge variant="default" className="bg-green-100 text-green-700 border-green-200">
+                                        <CheckCircle className="h-3 w-3 mr-1" />
+                                        Verified
+                                      </Badge>
+                                    ) : (
+                                      <Badge variant="destructive" className="bg-red-100 text-red-700 border-red-200">
+                                        <AlertTriangle className="h-3 w-3 mr-1" />
+                                        Not Verified
+                                      </Badge>
+                                    )}
+                                  </div>
                                 </div>
                                 <div>
                                   <label className="text-sm font-medium text-muted-foreground">Address</label>
@@ -255,6 +268,32 @@ export default function WorkerApprovalSection() {
                                     ))}
                                   </div>
                                 </div>
+                                
+                                {selectedWorker.workerProfile.bioDataDocument && (
+                                  <div className="col-span-2">
+                                    <label className="text-sm font-medium text-muted-foreground">Bio Data Document</label>
+                                    <div className="flex items-center gap-2 mt-1">
+                                      <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => {
+                                          // Create a temporary link to download/view the document
+                                          const link = document.createElement('a');
+                                          link.href = selectedWorker.workerProfile.bioDataDocument;
+                                          link.download = `biodata_${selectedWorker.firstName}_${selectedWorker.lastName}`;
+                                          link.click();
+                                        }}
+                                      >
+                                        <User className="h-4 w-4 mr-1" />
+                                        View Document
+                                      </Button>
+                                      <Badge variant="secondary" className="bg-blue-100 text-blue-700">
+                                        Document Attached
+                                      </Badge>
+                                    </div>
+                                  </div>
+                                )}
                               </div>
                             )}
                           </div>

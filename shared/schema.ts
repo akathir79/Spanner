@@ -23,6 +23,8 @@ export const users = pgTable("users", {
   role: text("role").notNull().default("client"), // client, worker, admin, super_admin
   profilePicture: text("profile_picture"), // Base64 encoded image
   districtId: varchar("district_id").references(() => districts.id),
+  address: text("address"), // Physical address
+  pincode: text("pincode"), // Area pincode
   isVerified: boolean("is_verified").default(false),
   isActive: boolean("is_active").default(true),
   status: text("status").default("pending"), // pending, approved, rejected (for worker approval workflow)
@@ -35,12 +37,14 @@ export const workerProfiles = pgTable("worker_profiles", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").references(() => users.id).notNull(),
   aadhaarNumber: text("aadhaar_number").notNull(),
+  aadhaarVerified: boolean("aadhaar_verified").default(false), // Aadhaar verification status
   primaryService: text("primary_service").notNull(),
   experienceYears: integer("experience_years").notNull(),
   hourlyRate: decimal("hourly_rate", { precision: 10, scale: 2 }).notNull(),
   serviceDistricts: jsonb("service_districts").notNull(), // Array of district IDs
   bio: text("bio"),
   skills: jsonb("skills").notNull(), // Array of skills
+  bioDataDocument: text("bio_data_document"), // Base64 encoded document
   isBackgroundVerified: boolean("is_background_verified").default(false),
   isAvailable: boolean("is_available").default(true),
   rating: decimal("rating", { precision: 3, scale: 2 }).default("0.00"),

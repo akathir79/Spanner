@@ -257,7 +257,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Worker signup
   app.post("/api/auth/signup/worker", async (req, res) => {
     try {
-      const { aadhaarNumber, primaryService, experienceYears, hourlyRate, serviceDistricts, skills, ...userData } = workerSignupSchema.parse(req.body);
+      const { aadhaarNumber, aadhaarVerified, primaryService, experienceYears, hourlyRate, serviceDistricts, skills, bioDataDocument, ...userData } = workerSignupSchema.parse(req.body);
       
       // Check if user already exists
       const existingUser = await storage.getUserByMobile(userData.mobile);
@@ -270,11 +270,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const workerProfile = await storage.createWorkerProfile({
         userId: user.id,
         aadhaarNumber,
+        aadhaarVerified: aadhaarVerified || false,
         primaryService,
         experienceYears,
         hourlyRate: hourlyRate.toString(),
         serviceDistricts,
         skills,
+        bioDataDocument: bioDataDocument || null,
       });
       
       res.json({

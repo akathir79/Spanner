@@ -50,6 +50,7 @@ const workerSignupSchema = z.object({
   address: z.string().min(5, "Address is required"),
   pincode: z.string().length(6, "Pincode must be 6 digits"),
   profilePicture: z.string().min(1, "Profile picture is required for workers"),
+  bioDataDocument: z.string().optional(),
   termsAccepted: z.boolean().refine(val => val === true, "You must accept the terms"),
 });
 
@@ -73,6 +74,7 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
   const [aadhaarVerificationStep, setAadhaarVerificationStep] = useState<"input" | "verify" | "verified">("input");
   const [aadhaarOtp, setAadhaarOtp] = useState("");
   const [generatedAadhaarOtp, setGeneratedAadhaarOtp] = useState("");
+  const [bioDataPreview, setBioDataPreview] = useState<string>("");
   const { login, verifyOtp, signupClient, signupWorker, isLoading } = useAuth();
   const { t } = useLanguage();
   const { toast } = useToast();
@@ -441,6 +443,8 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
     const result = await signupWorker({
       ...signupData,
       role: "worker",
+      aadhaarVerified: true, // Mark as verified since they completed the process
+      bioDataDocument: bioDataPreview, // Add the bio data document from state
     });
     if (result) {
       onClose();
@@ -498,10 +502,45 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
     setAadhaarVerificationStep("input");
     setAadhaarOtp("");
     setGeneratedAadhaarOtp("");
+    setBioDataPreview("");
     loginForm.reset();
     otpForm.reset();
     clientForm.reset();
     workerForm.reset();
+  };
+
+  const handleBioDataUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+        toast({
+          title: "File too large",
+          description: "Bio data document must be less than 5MB",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (!file.type.includes('pdf') && !file.type.includes('image')) {
+        toast({
+          title: "Invalid file type",
+          description: "Please upload a PDF or image file",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const result = e.target?.result as string;
+        setBioDataPreview(result);
+        toast({
+          title: "Bio data uploaded",
+          description: "Document attached successfully",
+        });
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const handleClose = () => {
@@ -1176,16 +1215,16 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
                       <SelectValue placeholder="Add districts you can serve" />
                     </SelectTrigger>
                     <SelectContent>
-                      {districts?.map((district: any) => (
+                      {districts && Array.isArray(districts) ? districts.map((district: any) => (
                         <SelectItem key={district.id} value={district.id}>
                           {district.name} ({district.tamilName})
                         </SelectItem>
-                      ))}
+                      )) : null}
                     </SelectContent>
                   </Select>
                   <div className="flex flex-wrap gap-1 mt-2">
                     {workerForm.watch("serviceDistricts")?.map((districtId: string) => {
-                      const district = districts?.find((d: any) => d.id === districtId);
+                      const district = districts && Array.isArray(districts) ? districts.find((d: any) => d.id === districtId) : null;
                       return district ? (
                         <div key={districtId} className="flex items-center gap-1 bg-secondary text-secondary-foreground px-2 py-1 rounded-md text-xs">
                           <span>{district.name}</span>
@@ -1318,6 +1357,36 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
                       {workerForm.formState.errors.pincode.message}
                     </p>
                   )}
+                </div>
+
+                <div>
+                  <Label htmlFor="bioData">Bio Data Document (Optional)</Label>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Input
+                        id="bioData"
+                        type="file"
+                        accept=".pdf,.png,.jpg,.jpeg"
+                        onChange={handleBioDataUpload}
+                        className="cursor-pointer"
+                      />
+                      {bioDataPreview && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="bg-green-100 text-green-700 border-green-200"
+                          disabled
+                        >
+                          <CheckCircle className="h-4 w-4 mr-1" />
+                          Attached
+                        </Button>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Upload your resume, certificates, or ID documents (PDF, PNG, JPG up to 5MB)
+                    </p>
+                  </div>
                 </div>
 
                 <div className="flex items-center space-x-2">
