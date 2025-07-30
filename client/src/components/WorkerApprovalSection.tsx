@@ -31,6 +31,8 @@ export default function WorkerApprovalSection() {
   const [selectedWorker, setSelectedWorker] = useState<any>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState<any>({});
+  const [isMinimized, setIsMinimized] = useState(false);
+  const [isMaximized, setIsMaximized] = useState(false);
 
   // Fetch pending workers and districts
   const { data: pendingWorkers = [], isLoading } = useQuery<any[]>({
@@ -254,22 +256,22 @@ export default function WorkerApprovalSection() {
                           View Details
                         </Button>
                       </DialogTrigger>
-                      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                      <DialogContent className={`${isMaximized ? 'max-w-full max-h-full w-screen h-screen' : 'max-w-4xl max-h-[90vh]'} overflow-y-auto transition-all duration-300 ${isMinimized ? 'opacity-30 pointer-events-none' : ''}`}>
                         {/* Custom Window Controls */}
                         <div className="absolute top-4 right-12 flex items-center gap-1 z-10">
                           <button
                             className="w-4 h-4 rounded-full bg-yellow-500 hover:bg-yellow-600 flex items-center justify-center text-xs text-white font-bold transition-colors"
                             title="Minimize"
-                            onClick={() => console.log('Minimize clicked')}
+                            onClick={() => setIsMinimized(!isMinimized)}
                           >
                             −
                           </button>
                           <button
                             className="w-4 h-4 rounded-full bg-green-500 hover:bg-green-600 flex items-center justify-center text-xs text-white font-bold transition-colors"
-                            title="Maximize/Restore"
-                            onClick={() => console.log('Maximize clicked')}
+                            title={isMaximized ? "Restore" : "Maximize"}
+                            onClick={() => setIsMaximized(!isMaximized)}
                           >
-                            □
+                            {isMaximized ? '❐' : '□'}
                           </button>
                         </div>
                         
