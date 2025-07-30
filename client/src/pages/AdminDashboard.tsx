@@ -119,23 +119,23 @@ export default function AdminDashboard() {
     }
   };
 
-  // Calculate stats
+  // Calculate stats - ensure arrays before filtering
   const stats = {
-    totalUsers: users?.length || 0,
-    totalClients: users?.filter((u: any) => u.role === "client").length || 0,
-    totalWorkers: users?.filter((u: any) => u.role === "worker").length || 0,
-    pendingVerifications: users?.filter((u: any) => u.role === "worker" && u.workerProfile && !u.workerProfile.isBackgroundVerified).length || 0,
-    totalBookings: bookings?.length || 0,
-    pendingBookings: bookings?.filter((b: any) => b.status === "pending").length || 0,
-    completedBookings: bookings?.filter((b: any) => b.status === "completed").length || 0,
-    totalRevenue: bookings?.filter((b: any) => b.status === "completed")
-      .reduce((sum: number, b: any) => sum + (parseFloat(b.totalAmount) || 0), 0) || 0,
+    totalUsers: Array.isArray(users) ? users.length : 0,
+    totalClients: Array.isArray(users) ? users.filter((u: any) => u.role === "client").length : 0,
+    totalWorkers: Array.isArray(users) ? users.filter((u: any) => u.role === "worker").length : 0,
+    pendingVerifications: Array.isArray(users) ? users.filter((u: any) => u.role === "worker" && u.workerProfile && !u.workerProfile.isBackgroundVerified).length : 0,
+    totalBookings: Array.isArray(bookings) ? bookings.length : 0,
+    pendingBookings: Array.isArray(bookings) ? bookings.filter((b: any) => b.status === "pending").length : 0,
+    completedBookings: Array.isArray(bookings) ? bookings.filter((b: any) => b.status === "completed").length : 0,
+    totalRevenue: Array.isArray(bookings) ? bookings.filter((b: any) => b.status === "completed")
+      .reduce((sum: number, b: any) => sum + (parseFloat(b.totalAmount) || 0), 0) : 0,
   };
 
   const platformFee = stats.totalRevenue * 0.15;
 
-  // Filter users
-  const filteredUsers = users?.filter((user: any) => {
+  // Filter users - ensure users is an array before filtering
+  const filteredUsers = (Array.isArray(users) ? users : [])?.filter((user: any) => {
     if (!userFilter) return true;
     const searchLower = userFilter.toLowerCase();
     return (
@@ -147,8 +147,8 @@ export default function AdminDashboard() {
     );
   }) || [];
 
-  // Filter bookings
-  const filteredBookings = bookings?.filter((booking: any) => {
+  // Filter bookings - ensure bookings is an array before filtering
+  const filteredBookings = (Array.isArray(bookings) ? bookings : [])?.filter((booking: any) => {
     if (!bookingFilter) return true;
     const searchLower = bookingFilter.toLowerCase();
     return (

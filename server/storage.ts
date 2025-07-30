@@ -328,20 +328,29 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getBookingsWithDetails(): Promise<(Booking & { client: User; worker: User; district: District })[]> {
-    const results = await db
+    // Get all bookings first
+    const allBookings = await db
       .select()
       .from(bookings)
-      .innerJoin(users, eq(bookings.clientId, users.id))
-      .innerJoin(users, eq(bookings.workerId, users.id))
-      .innerJoin(districts, eq(bookings.districtId, districts.id))
       .orderBy(desc(bookings.createdAt));
     
-    return results.map(result => ({
-      ...result.bookings,
-      client: result.users,
-      worker: result.users,
-      district: result.districts
-    }));
+    // Fetch related data for each booking
+    const enrichedBookings = await Promise.all(
+      allBookings.map(async (booking) => {
+        const [client] = await db.select().from(users).where(eq(users.id, booking.clientId));
+        const [worker] = await db.select().from(users).where(eq(users.id, booking.workerId));
+        const [district] = await db.select().from(districts).where(eq(districts.id, booking.districtId));
+        
+        return {
+          ...booking,
+          client: client!,
+          worker: worker!,
+          district: district!
+        };
+      })
+    );
+    
+    return enrichedBookings;
   }
   // Job posting methods
   async getAllJobPostings(): Promise<(JobPosting & { client: User; district: District; bids?: Bid[] })[]> {
