@@ -276,13 +276,53 @@ export default function WorkerApprovalSection() {
                         </div>
                         
                         <DialogHeader className="pb-6 border-b">
-                          <div className="space-y-1 pr-16">
-                            <DialogTitle className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
-                              Worker Application Details
-                            </DialogTitle>
-                            <DialogDescription className="text-sm text-muted-foreground">
-                              {isEditing ? "Edit worker's profile and credentials" : "Review the worker's profile and credentials"}
-                            </DialogDescription>
+                          <div className="space-y-4 pr-16">
+                            <div>
+                              <DialogTitle className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
+                                Worker Application Details
+                              </DialogTitle>
+                              <DialogDescription className="text-sm text-muted-foreground">
+                                {isEditing ? "Edit worker's profile and credentials" : "Review the worker's profile and credentials"}
+                              </DialogDescription>
+                            </div>
+                            
+                            {/* Action Buttons - Top Center */}
+                            {selectedWorker && (
+                              <div className="flex justify-center items-center gap-4 pt-4">
+                                {!isEditing ? (
+                                  <Button
+                                    variant="outline"
+                                    size="lg"
+                                    onClick={() => handleEdit(selectedWorker)}
+                                    className="flex items-center gap-2 px-8 py-3 text-base font-medium hover:bg-blue-50 hover:border-blue-200 transition-colors"
+                                  >
+                                    <Edit className="h-5 w-5" />
+                                    Edit Worker Details
+                                  </Button>
+                                ) : (
+                                  <div className="flex items-center gap-4">
+                                    <Button
+                                      variant="outline"
+                                      size="lg"
+                                      onClick={handleCancel}
+                                      className="flex items-center gap-2 px-8 py-3 text-base font-medium hover:bg-red-50 hover:border-red-200 transition-colors"
+                                    >
+                                      <X className="h-5 w-5" />
+                                      Cancel Changes
+                                    </Button>
+                                    <Button
+                                      size="lg"
+                                      onClick={handleSave}
+                                      disabled={updateWorkerMutation.isPending}
+                                      className="flex items-center gap-2 px-8 py-3 text-base font-medium bg-blue-600 hover:bg-blue-700 transition-colors"
+                                    >
+                                      <Save className="h-5 w-5" />
+                                      {updateWorkerMutation.isPending ? "Saving Changes..." : "Save Changes"}
+                                    </Button>
+                                  </div>
+                                )}
+                              </div>
+                            )}
                           </div>
                         </DialogHeader>
                         {selectedWorker && (
@@ -705,41 +745,7 @@ export default function WorkerApprovalSection() {
                               </div>
                             </div>
 
-                            {/* Action Buttons - Centered at Bottom */}
-                            <div className="flex justify-center items-center gap-4 pt-8 mt-auto border-t border-gray-200 dark:border-gray-700">
-                              {!isEditing ? (
-                                <Button
-                                  variant="outline"
-                                  size="lg"
-                                  onClick={() => handleEdit(selectedWorker)}
-                                  className="flex items-center gap-2 px-8 py-3 text-base font-medium hover:bg-blue-50 hover:border-blue-200 transition-colors"
-                                >
-                                  <Edit className="h-5 w-5" />
-                                  Edit Worker Details
-                                </Button>
-                              ) : (
-                                <div className="flex items-center gap-4">
-                                  <Button
-                                    variant="outline"
-                                    size="lg"
-                                    onClick={handleCancel}
-                                    className="flex items-center gap-2 px-8 py-3 text-base font-medium hover:bg-red-50 hover:border-red-200 transition-colors"
-                                  >
-                                    <X className="h-5 w-5" />
-                                    Cancel Changes
-                                  </Button>
-                                  <Button
-                                    size="lg"
-                                    onClick={handleSave}
-                                    disabled={updateWorkerMutation.isPending}
-                                    className="flex items-center gap-2 px-8 py-3 text-base font-medium bg-blue-600 hover:bg-blue-700 transition-colors"
-                                  >
-                                    <Save className="h-5 w-5" />
-                                    {updateWorkerMutation.isPending ? "Saving Changes..." : "Save Changes"}
-                                  </Button>
-                                </div>
-                              )}
-                            </div>
+
                           </div>
                         )}
                       </DialogContent>
