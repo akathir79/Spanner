@@ -37,7 +37,7 @@ import {
   DollarSign
 } from "lucide-react";
 import { useLocation } from "wouter";
-import { TAMIL_NADU_DISTRICTS, SERVICE_CATEGORIES } from "@/lib/constants";
+// Services and districts are now fetched dynamically from database
 
 // Job posting form component
 const JobPostingForm = () => {

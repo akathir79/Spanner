@@ -11,7 +11,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/components/LanguageProvider";
-import { TAMIL_NADU_DISTRICTS, SERVICE_CATEGORIES } from "@/lib/constants";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UserPlus, LogIn, Smartphone, Info, MapPin, Upload, User, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -73,11 +72,22 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
   const { t } = useLanguage();
   const { toast } = useToast();
 
-  // Fetch districts from database
+  // Fetch districts and services from database
   const { data: districts } = useQuery({
     queryKey: ["/api/districts"],
     staleTime: 1000 * 60 * 60, // 1 hour
   });
+
+  const { data: rawServices = [] } = useQuery({
+    queryKey: ["/api/services"],
+    staleTime: 1000 * 60 * 60, // 1 hour
+  });
+
+  // Remove duplicate services by name
+  const dynamicServices = rawServices ? 
+    (rawServices as any[]).filter((service, index, arr) => 
+      arr.findIndex(s => s.name === service.name) === index
+    ) : [];
 
   const loginForm = useForm({
     resolver: zodResolver(loginSchema),
@@ -828,8 +838,8 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
                         <SelectValue placeholder="Select primary service" />
                       </SelectTrigger>
                       <SelectContent>
-                        {SERVICE_CATEGORIES.map((service) => (
-                          <SelectItem key={service.id} value={service.id}>
+                        {dynamicServices.map((service: any) => (
+                          <SelectItem key={service.id} value={service.name}>
                             {service.name}
                           </SelectItem>
                         ))}

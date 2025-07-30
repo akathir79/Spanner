@@ -38,9 +38,15 @@ const PostJob = () => {
     queryKey: ["/api/districts"],
   });
 
-  const { data: services = [] } = useQuery<ServiceCategory[]>({
+  const { data: rawServices = [] } = useQuery<ServiceCategory[]>({
     queryKey: ["/api/services"],
   });
+
+  // Remove duplicate services by name
+  const services = rawServices ? 
+    (rawServices as any[]).filter((service, index, arr) => 
+      arr.findIndex(s => s.name === service.name) === index
+    ) : [];
 
   // Fetch client's job postings
   const { data: jobPostings = [] } = useQuery<JobPosting[]>({
