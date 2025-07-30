@@ -816,7 +816,7 @@ export default function WorkerDashboard() {
                     <div className="flex flex-col items-center space-y-4">
                       <Avatar className="h-32 w-32">
                         <AvatarImage 
-                          src={user?.profilePicture || undefined} 
+                          src={workerProfile?.profilePicture || user?.profilePicture || undefined} 
                           alt={`${user.firstName} ${user.lastName}`} 
                         />
                         <AvatarFallback className="bg-primary text-primary-foreground text-3xl">
@@ -922,6 +922,31 @@ export default function WorkerDashboard() {
                           {workerProfile?.workerProfile?.bio || 'No bio provided'}
                         </p>
                       </div>
+                      {workerProfile?.workerProfile?.bioDataDocument && (
+                        <div>
+                          <Label className="text-sm text-muted-foreground">Bio Data Document</Label>
+                          <div className="mt-1">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                // Create a download link for the PDF
+                                const link = document.createElement('a');
+                                link.href = workerProfile.workerProfile.bioDataDocument;
+                                link.download = `${user.firstName}_${user.lastName}_BioData.pdf`;
+                                link.target = '_blank';
+                                document.body.appendChild(link);
+                                link.click();
+                                document.body.removeChild(link);
+                              }}
+                              className="flex items-center space-x-2"
+                            >
+                              <Briefcase className="h-4 w-4" />
+                              <span>View/Download Bio Data</span>
+                            </Button>
+                          </div>
+                        </div>
+                      )}
                       <div>
                         <Label className="text-sm text-muted-foreground">Verification Status</Label>
                         <div className="flex flex-wrap gap-2 mt-1">
@@ -972,19 +997,28 @@ export default function WorkerDashboard() {
                           </div>
                         </div>
                       )}
-                      {workerProfile?.workerProfile?.serviceDistricts && workerProfile.workerProfile.serviceDistricts.length > 0 && (
-                        <div>
-                          <Label className="text-sm text-muted-foreground">Service Areas</Label>
-                          <div className="flex flex-wrap gap-2 mt-1">
-                            {(workerProfile.workerProfile.serviceDistricts || []).map((districtId: string, index: number) => (
-                              <Badge key={index} variant="secondary" className="text-xs">
-                                {/* TODO: Map district ID to name */}
-                                District {index + 1}
+                      <div>
+                        <Label className="text-sm text-muted-foreground">Service Areas</Label>
+                        <div className="flex flex-wrap gap-2 mt-1">
+                          {workerProfile?.workerProfile?.serviceAllAreas ? (
+                            <Badge variant="secondary" className="text-xs bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100">
+                              All Areas
+                            </Badge>
+                          ) : (
+                            workerProfile?.workerProfile?.serviceAreas && workerProfile.workerProfile.serviceAreas.length > 0 ? (
+                              (workerProfile.workerProfile.serviceAreas || []).map((areaId: string, index: number) => (
+                                <Badge key={index} variant="secondary" className="text-xs">
+                                  Area {index + 1}
+                                </Badge>
+                              ))
+                            ) : (
+                              <Badge variant="outline" className="text-xs">
+                                No specific areas selected
                               </Badge>
-                            ))}
-                          </div>
+                            )
+                          )}
                         </div>
-                      )}
+                      </div>
                     </div>
                   </div>
                 </div>
