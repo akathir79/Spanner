@@ -254,7 +254,7 @@ export default function WorkerApprovalSection() {
                           View Details
                         </Button>
                       </DialogTrigger>
-                      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto relative">
+                      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
                         {/* Custom Window Controls */}
                         <div className="absolute top-4 right-12 flex items-center gap-1 z-10">
                           <button
