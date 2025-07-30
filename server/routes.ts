@@ -6,8 +6,8 @@ import { insertUserSchema, insertWorkerProfileSchema, insertBookingSchema, inser
 
 // Validation schemas
 const loginSchema = z.object({
-  mobile: z.string().min(10).max(15),
-  userType: z.enum(["client", "worker", "admin", "super_admin"]),
+  mobile: z.string().min(1),
+  userType: z.enum(["client", "worker", "admin", "super_admin", "auto"]).optional(),
 });
 
 const verifyOtpSchema = z.object({
@@ -48,11 +48,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { mobile, userType } = loginSchema.parse(req.body);
       
-      // Check if user exists for super admin
-      if (userType === "super_admin") {
-        if (!["9000000001", "9000000002"].includes(mobile)) {
-          return res.status(401).json({ message: "Invalid super admin mobile number" });
-        }
+      // Check if user exists first
+      const user = await storage.getUserByMobile(mobile);
+      if (!user) {
+        return res.status(404).json({ message: "User not found. Please sign up first." });
+      }
+      
+      // For super admin, verify mobile numbers
+      if (user.role === "super_admin" && !["9000000001", "9000000002"].includes(mobile)) {
+        return res.status(401).json({ message: "Invalid super admin credentials" });
+      }
+      
+      // For admin, verify mobile number
+      if (user.role === "admin" && mobile !== "9000000001") {
+        return res.status(401).json({ message: "Invalid admin credentials" });
+      }
+
+      // If userType is provided and not "auto", verify it matches
+      if (userType && userType !== "auto" && user.role !== userType) {
+        return res.status(403).json({ message: `User role mismatch. Expected: ${user.role}` });
       }
       
       const otp = generateOTP();
@@ -70,7 +84,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json({ 
         message: "OTP sent successfully", 
-        otp: otp // Only for development
+        otp: otp, // Only for development
+        userRole: user.role // Send back detected role
       });
     } catch (error) {
       console.error("Send OTP error:", error);

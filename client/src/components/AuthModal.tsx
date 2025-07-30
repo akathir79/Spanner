@@ -17,8 +17,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 
 const loginSchema = z.object({
-  mobile: z.string().min(10, "Mobile number must be at least 10 digits"),
-  userType: z.enum(["client", "worker", "admin", "super_admin"]),
+  mobile: z.string().min(1, "Mobile number or email is required"),
 });
 
 const otpSchema = z.object({
@@ -62,7 +61,7 @@ interface AuthModalProps {
 
 export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
   const [step, setStep] = useState(1);
-  const [pendingLogin, setPendingLogin] = useState<{ mobile: string; userType: string } | null>(null);
+  const [pendingLogin, setPendingLogin] = useState<{ mobile: string } | null>(null);
   const [developmentOtp, setDevelopmentOtp] = useState<string>("");
   const [signupType, setSignupType] = useState<"client" | "worker">("client");
   const [isLocationLoading, setIsLocationLoading] = useState(false);
@@ -179,7 +178,6 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
     resolver: zodResolver(loginSchema),
     defaultValues: {
       mobile: "",
-      userType: "client" as const,
     },
   });
 
@@ -394,9 +392,9 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
   };
 
   const handleLogin = async (data: z.infer<typeof loginSchema>) => {
-    const result = await login(data.mobile, data.userType);
+    const result = await login(data.mobile, "auto"); // Let backend detect user type
     if (result.success) {
-      setPendingLogin({ mobile: data.mobile, userType: data.userType });
+      setPendingLogin({ mobile: data.mobile });
       setDevelopmentOtp(result.otp || "");
       setStep(2);
     }
@@ -474,48 +472,52 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
         {mode === "login" ? (
           <>
             {step === 1 && (
-              <form onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-4">
-                <div>
-                  <Label htmlFor="mobile">Mobile Number / Email</Label>
-                  <Input
-                    id="mobile"
-                    placeholder="Enter mobile number or email"
-                    {...loginForm.register("mobile")}
-                  />
-                  {loginForm.formState.errors.mobile && (
-                    <p className="text-sm text-destructive mt-1">
-                      {loginForm.formState.errors.mobile.message}
-                    </p>
-                  )}
-                </div>
+              <div className="space-y-4">
+                <form onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-4">
+                  <div>
+                    <Label htmlFor="mobile">Mobile Number / Email</Label>
+                    <Input
+                      id="mobile"
+                      placeholder="Enter mobile number or email"
+                      {...loginForm.register("mobile")}
+                    />
+                    {loginForm.formState.errors.mobile && (
+                      <p className="text-sm text-destructive mt-1">
+                        {loginForm.formState.errors.mobile.message}
+                      </p>
+                    )}
+                  </div>
 
-                <div>
-                  <Label htmlFor="userType">User Type</Label>
-                  <Select 
-                    value={loginForm.watch("userType")} 
-                    onValueChange={(value) => loginForm.setValue("userType", value as any)}
+                  <Button type="submit" className="w-full" disabled={isLoading}>
+                    <Smartphone className="h-4 w-4 mr-2" />
+                    {isLoading ? "Sending..." : "Send OTP"}
+                  </Button>
+                </form>
+                
+                <div className="flex items-center justify-between pt-4 border-t">
+                  <Button 
+                    type="button" 
+                    variant="link" 
+                    className="text-sm p-0 h-auto text-muted-foreground hover:text-foreground"
+                    onClick={handleClose}
                   >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select User Type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="client">Client</SelectItem>
-                      <SelectItem value="worker">Worker</SelectItem>
-                      <SelectItem value="super_admin">Super Admin</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  {loginForm.formState.errors.userType && (
-                    <p className="text-sm text-destructive mt-1">
-                      {loginForm.formState.errors.userType.message}
-                    </p>
-                  )}
+                    Sign Up
+                  </Button>
+                  <Button 
+                    type="button" 
+                    variant="link" 
+                    className="text-sm p-0 h-auto text-muted-foreground hover:text-foreground"
+                    onClick={() => {
+                      toast({
+                        title: "Contact Support",
+                        description: "For account recovery, please contact our support team.",
+                      });
+                    }}
+                  >
+                    Forgot ID/Password
+                  </Button>
                 </div>
-
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  <Smartphone className="h-4 w-4 mr-2" />
-                  {isLoading ? "Sending..." : "Send OTP"}
-                </Button>
-              </form>
+              </div>
             )}
 
             {step === 2 && (
