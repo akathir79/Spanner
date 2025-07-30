@@ -940,11 +940,12 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
                       </Select>
                     ) : (
                       <div className="space-y-2">
-                        <div className="flex gap-2">
+                        <div className="space-y-2">
                           <Input
                             value={newServiceName}
                             onChange={(e) => setNewServiceName(e.target.value)}
-                            placeholder="Enter new service name"
+                            placeholder="Enter new service name (e.g., Home Repair, HVAC Service)"
+                            className="w-full"
                             onKeyPress={(e) => {
                               if (e.key === 'Enter') {
                                 e.preventDefault();
@@ -952,25 +953,29 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
                               }
                             }}
                           />
-                          <Button
-                            type="button"
-                            size="sm"
-                            onClick={handleAddNewService}
-                            disabled={createServiceMutation.isPending || !newServiceName.trim()}
-                          >
-                            {createServiceMutation.isPending ? "Adding..." : "Add"}
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setShowNewServiceInput(false);
-                              setNewServiceName("");
-                            }}
-                          >
-                            Cancel
-                          </Button>
+                          <div className="flex gap-2">
+                            <Button
+                              type="button"
+                              size="sm"
+                              onClick={handleAddNewService}
+                              disabled={createServiceMutation.isPending || !newServiceName.trim()}
+                              className="flex-1"
+                            >
+                              {createServiceMutation.isPending ? "Adding..." : "Add Service"}
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setShowNewServiceInput(false);
+                                setNewServiceName("");
+                              }}
+                              className="flex-1"
+                            >
+                              Cancel
+                            </Button>
+                          </div>
                         </div>
                         <p className="text-xs text-muted-foreground">
                           Add a new service that doesn't exist in the current list
