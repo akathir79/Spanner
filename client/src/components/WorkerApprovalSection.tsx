@@ -34,6 +34,11 @@ export default function WorkerApprovalSection() {
     staleTime: 1000 * 60 * 60, // 1 hour
   });
 
+  const { data: areas = [] } = useQuery<any[]>({
+    queryKey: ["/api/areas"],
+    staleTime: 1000 * 60 * 60, // 1 hour
+  });
+
   // Approve worker mutation
   const approveWorkerMutation = useMutation({
     mutationFn: (workerId: string) => 
@@ -264,18 +269,27 @@ export default function WorkerApprovalSection() {
                                 </div>
                                 
                                 {/* Service Areas */}
-                                {selectedWorker.workerProfile?.serviceAreas?.length > 0 && (
-                                  <div className="col-span-2">
-                                    <label className="text-sm font-medium text-muted-foreground">Service Areas</label>
-                                    <div className="flex flex-wrap gap-1 mt-1">
-                                      {selectedWorker.workerProfile.serviceAreas.map((areaId: string, index: number) => (
-                                        <Badge key={index} variant="outline" className="text-xs">
-                                          {areaId}
-                                        </Badge>
-                                      ))}
-                                    </div>
+                                <div className="col-span-2">
+                                  <label className="text-sm font-medium text-muted-foreground">Service Areas</label>
+                                  <div className="flex flex-wrap gap-1 mt-1">
+                                    {selectedWorker.workerProfile?.serviceAllAreas ? (
+                                      <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
+                                        All Areas
+                                      </Badge>
+                                    ) : selectedWorker.workerProfile?.serviceAreas?.length > 0 ? (
+                                      selectedWorker.workerProfile.serviceAreas.map((areaId: string, index: number) => {
+                                        const area = areas.find((a: any) => a.id === areaId);
+                                        return (
+                                          <Badge key={index} variant="outline" className="text-xs">
+                                            {area ? area.name : areaId}
+                                          </Badge>
+                                        );
+                                      })
+                                    ) : (
+                                      <span className="text-muted-foreground text-sm">No specific areas selected</span>
+                                    )}
                                   </div>
-                                )}
+                                </div>
                                 <div className="col-span-2">
                                   <label className="text-sm font-medium text-muted-foreground">Skills</label>
                                   <div className="flex flex-wrap gap-1 mt-1">
