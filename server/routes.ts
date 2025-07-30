@@ -177,7 +177,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
             lastName: "User",
             role: "admin",
             districtId: "76a03385-6ce1-4749-9ae5-67f192b1db7f",
-            pincode: "600001",
             isVerified: true,
             status: "approved"
           });
@@ -194,7 +193,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
             lastName: "Admin",
             role: "super_admin",
             districtId: "76a03385-6ce1-4749-9ae5-67f192b1db7f",
-            pincode: "600001",
             isVerified: true,
             status: "approved"
           });
