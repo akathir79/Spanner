@@ -28,8 +28,6 @@ const workerSignupSchema = insertUserSchema.extend({
   hourlyRate: z.number().min(0),
   serviceDistricts: z.array(z.string()),
   skills: z.array(z.string()),
-  workAddress: z.string().min(1),
-  pincode: z.string().min(5).max(10),
 });
 
 // Helper function to generate OTP
@@ -103,17 +101,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Invalid super admin credentials" });
       }
       
-      // For workers, check approval status
-      if (user.role === "worker") {
-        const workerProfile = await storage.getWorkerProfile(user.id);
-        if (!workerProfile || workerProfile.approvalStatus !== "approved") {
-          return res.status(403).json({ 
-            message: "Your application is under review. Please wait for admin approval.",
-            approvalStatus: workerProfile?.approvalStatus || "pending"
-          });
-        }
-      }
-      
       res.json({
         message: "Login successful",
         user: {
@@ -166,7 +153,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Worker signup
   app.post("/api/auth/signup/worker", async (req, res) => {
     try {
-      const { aadhaarNumber, primaryService, experienceYears, hourlyRate, serviceDistricts, skills, workAddress, pincode, ...userData } = workerSignupSchema.parse(req.body);
+      const { aadhaarNumber, primaryService, experienceYears, hourlyRate, serviceDistricts, skills, ...userData } = workerSignupSchema.parse(req.body);
       
       // Check if user already exists
       const existingUser = await storage.getUserByMobile(userData.mobile);
@@ -184,12 +171,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         hourlyRate: hourlyRate.toString(),
         serviceDistricts,
         skills,
-        workAddress,
-        pincode,
       });
       
       res.json({
-        message: "Worker application submitted successfully. Your application is under admin review. You will be notified once approved.",
+        message: "Worker registered successfully. Application under review.",
         user: {
           id: user.id,
           mobile: user.mobile,
@@ -198,8 +183,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           lastName: user.lastName,
           role: user.role,
         },
-        workerProfile,
-        requiresApproval: true
+        workerProfile
       });
     } catch (error) {
       console.error("Worker signup error:", error);
@@ -486,51 +470,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error rejecting bid:", error);
       res.status(500).json({ message: "Failed to reject bid" });
-    }
-  });
-
-  // Admin routes for worker approval
-  app.get("/api/admin/pending-applications", async (req, res) => {
-    try {
-      const applications = await storage.getPendingWorkerApplications();
-      res.json(applications);
-    } catch (error) {
-      console.error("Error fetching pending applications:", error);
-      res.status(500).json({ message: "Failed to fetch pending applications" });
-    }
-  });
-
-  app.post("/api/admin/approve-worker/:userId", async (req, res) => {
-    try {
-      const { userId } = req.params;
-      const { adminId } = req.body;
-      
-      const result = await storage.approveWorkerApplication(userId, adminId);
-      if (!result) {
-        return res.status(404).json({ message: "Worker application not found" });
-      }
-      
-      res.json({ message: "Worker application approved successfully", workerProfile: result });
-    } catch (error) {
-      console.error("Error approving worker:", error);
-      res.status(500).json({ message: "Failed to approve worker application" });
-    }
-  });
-
-  app.post("/api/admin/reject-worker/:userId", async (req, res) => {
-    try {
-      const { userId } = req.params;
-      const { adminId, reason } = req.body;
-      
-      const result = await storage.rejectWorkerApplication(userId, adminId, reason);
-      if (!result) {
-        return res.status(404).json({ message: "Worker application not found" });
-      }
-      
-      res.json({ message: "Worker application rejected", workerProfile: result });
-    } catch (error) {
-      console.error("Error rejecting worker:", error);
-      res.status(500).json({ message: "Failed to reject worker application" });
     }
   });
 

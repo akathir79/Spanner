@@ -52,16 +52,6 @@ Located in `shared/schema.ts`, the database includes:
 - Support for both email and mobile login options
 - Profile picture upload functionality (optional for clients, mandatory for workers)
 - Real SMS OTP integration ready for Twilio implementation when needed
-- Worker approval workflow: Workers submit applications which require admin approval before login access
-
-### Worker Approval Workflow
-- Workers submit complete applications with profile information, documents, and work details
-- Applications include personal details, Aadhaar verification, service categories, experience, rates, and work location
-- All worker applications have "pending" status by default and require admin approval
-- Admin dashboard includes dedicated Worker Approvals section with pending applications management
-- Admins can approve or reject applications with rejection reasons
-- Workers cannot login until their application is approved by an admin
-- Approved workers can access the full worker dashboard and receive job notifications
 
 ### User Interfaces
 - **Home Page**: Service discovery with search and filters
