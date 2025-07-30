@@ -1005,10 +1005,10 @@ export default function WorkerDashboard() {
                               All Areas
                             </Badge>
                           ) : (
-                            workerProfile?.workerProfile?.serviceAreas && workerProfile.workerProfile.serviceAreas.length > 0 ? (
-                              (workerProfile.workerProfile.serviceAreas || []).map((areaId: string, index: number) => (
+                            workerProfile?.workerProfile?.serviceAreaNames && workerProfile.workerProfile.serviceAreaNames.length > 0 ? (
+                              workerProfile.workerProfile.serviceAreaNames.map((areaName: string, index: number) => (
                                 <Badge key={index} variant="secondary" className="text-xs">
-                                  Area {index + 1}
+                                  {areaName}
                                 </Badge>
                               ))
                             ) : (

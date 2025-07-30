@@ -418,10 +418,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         district = districts.find((d: any) => d.id === user.districtId);
       }
       
+      // Get area names for service areas if they exist
+      let serviceAreaNames = [];
+      if (workerProfile && workerProfile.serviceAreas && !workerProfile.serviceAllAreas) {
+        const allAreas = await storage.getAllAreas();
+        serviceAreaNames = workerProfile.serviceAreas.map((areaId: string) => {
+          const area = allAreas.find((a: any) => a.id === areaId);
+          return area ? area.name : `Area ${areaId}`;
+        });
+      }
+      
       // Combine user and worker profile data
       const completeProfile = {
         ...user,
-        workerProfile,
+        workerProfile: workerProfile ? {
+          ...workerProfile,
+          serviceAreaNames
+        } : null,
         district
       };
       
