@@ -32,8 +32,29 @@ const workerSignupSchema = insertUserSchema.extend({
 
 // Helper function to generate OTP
 function generateOTP(): string {
-  // For development, return fixed OTP
-  return "123456";
+  // Generate random 6-digit OTP
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+  return otp;
+}
+
+// Helper function to send SMS (ready for Twilio integration)
+async function sendSMS(mobile: string, message: string): Promise<boolean> {
+  try {
+    // When Twilio credentials are available, replace this with actual Twilio SMS
+    // const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
+    // await client.messages.create({
+    //   body: message,
+    //   from: process.env.TWILIO_PHONE_NUMBER,
+    //   to: `+91${mobile}`
+    // });
+    
+    // For now, just log the SMS (development mode)
+    console.log(`SMS to ${mobile}: ${message}`);
+    return true;
+  } catch (error) {
+    console.error("SMS sending failed:", error);
+    return false;
+  }
 }
 
 // Helper function to add minutes to date
@@ -60,6 +81,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           expiresAt,
         });
         
+        const smsMessage = `Your SPANNER admin login OTP is: ${otp}. Valid for 10 minutes.`;
+        await sendSMS(mobile, smsMessage);
         console.log(`OTP for ${mobile}: ${otp}`);
         
         return res.json({ 
@@ -81,6 +104,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           expiresAt,
         });
         
+        const smsMessage = `Your SPANNER super admin login OTP is: ${otp}. Valid for 10 minutes.`;
+        await sendSMS(mobile, smsMessage);
         console.log(`OTP for ${mobile}: ${otp}`);
         
         return res.json({ 
@@ -111,7 +136,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         expiresAt,
       });
       
-      // In production, send actual SMS here
+      // Send SMS with OTP
+      const smsMessage = `Your SPANNER login OTP is: ${otp}. Valid for 10 minutes. Do not share this code.`;
+      await sendSMS(mobile, smsMessage);
       console.log(`OTP for ${mobile}: ${otp}`);
       
       res.json({ 
@@ -150,7 +177,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
             lastName: "User",
             role: "admin",
             districtId: "76a03385-6ce1-4749-9ae5-67f192b1db7f",
-            address: "Admin Office",
             pincode: "600001",
             isVerified: true,
             status: "approved"
@@ -168,7 +194,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
             lastName: "Admin",
             role: "super_admin",
             districtId: "76a03385-6ce1-4749-9ae5-67f192b1db7f",
-            address: "Super Admin Office",
             pincode: "600001",
             isVerified: true,
             status: "approved"
