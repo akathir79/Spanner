@@ -255,14 +255,32 @@ export default function WorkerApprovalSection() {
                         </Button>
                       </DialogTrigger>
                       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-                        <DialogHeader className="pb-6 border-b">
-                          <div className="space-y-1">
+                        <DialogHeader className="pb-6 border-b relative">
+                          <div className="space-y-1 pr-20">
                             <DialogTitle className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
                               Worker Application Details
                             </DialogTitle>
                             <DialogDescription className="text-sm text-muted-foreground">
                               {isEditing ? "Edit worker's profile and credentials" : "Review the worker's profile and credentials"}
                             </DialogDescription>
+                          </div>
+                          <div className="absolute top-0 right-0 flex items-center space-x-1">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 w-6 p-0 hover:bg-gray-100 dark:hover:bg-gray-700"
+                              title="Minimize"
+                            >
+                              <span className="text-xs">−</span>
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 w-6 p-0 hover:bg-gray-100 dark:hover:bg-gray-700"
+                              title="Maximize"
+                            >
+                              <span className="text-xs">□</span>
+                            </Button>
                           </div>
                         </DialogHeader>
                         {selectedWorker && (
