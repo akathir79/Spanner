@@ -265,22 +265,22 @@ export default function WorkerApprovalSection() {
                                 {isEditing ? "Edit worker's profile and credentials" : "Review the worker's profile and credentials"}
                               </DialogDescription>
                             </div>
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-1">
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                className="h-8 w-8 p-0 hover:bg-gray-100 dark:hover:bg-gray-700"
+                                className="h-7 w-7 p-0 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-center"
                                 title="Minimize"
                               >
-                                <span className="text-lg leading-none">−</span>
+                                <span className="text-sm font-bold leading-none">−</span>
                               </Button>
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                className="h-8 w-8 p-0 hover:bg-gray-100 dark:hover:bg-gray-700"
+                                className="h-7 w-7 p-0 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-center"
                                 title="Maximize"
                               >
-                                <span className="text-lg leading-none">□</span>
+                                <span className="text-sm font-bold leading-none">□</span>
                               </Button>
                             </div>
                           </div>
