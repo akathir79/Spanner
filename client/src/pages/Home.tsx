@@ -13,6 +13,9 @@ import { useLanguage } from "@/components/LanguageProvider";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Search, CheckCircle, Shield, Clock, Users, MapPin, Star, Handshake, ChevronDown, X, MapPinIcon } from "lucide-react";
+import rajeshAvatar from "@assets/Babu_1753861985304.png";
+import arjunAvatar from "@assets/krishnan_1753861985304.png";
+import sureshAvatar from "@assets/veni_1753861985304.png";
 
 // Mock data for demonstration
 const mockServices = [
@@ -83,7 +86,7 @@ const mockWorkers = [
     hourlyRate: "₹299/hour",
     experience: "5+ years exp",
     isAvailable: true,
-    avatar: "https://images.unsplash.com/photo-1582233479366-6d38bc390a08?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&h=400"
+    avatar: rajeshAvatar
   },
   {
     id: "worker2",
@@ -95,7 +98,7 @@ const mockWorkers = [
     hourlyRate: "₹399/hour",
     experience: "7+ years exp",
     isAvailable: true,
-    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&h=400"
+    avatar: arjunAvatar
   },
   {
     id: "worker3",
@@ -107,7 +110,7 @@ const mockWorkers = [
     hourlyRate: "₹349/hour",
     experience: "4+ years exp",
     isAvailable: true,
-    avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&h=400"
+    avatar: sureshAvatar
   }
 ];
 
@@ -160,7 +163,7 @@ const testimonials = [
     location: "Chennai",
     rating: 5,
     text: "Found an excellent plumber through SPANNER. The booking process was simple, and the worker arrived on time. Very professional service!",
-    avatar: "https://images.unsplash.com/photo-1551601651-2a8555f1a136?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&h=400"
+    avatar: sureshAvatar
   },
   {
     id: 2,
@@ -168,7 +171,7 @@ const testimonials = [
     location: "Coimbatore",
     rating: 5,
     text: "As a worker, SPANNER has helped me connect with more customers. The platform is easy to use and payments are always secure.",
-    avatar: "https://images.unsplash.com/photo-1582233479366-6d38bc390a08?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&h=400"
+    avatar: arjunAvatar
   },
   {
     id: 3,
@@ -176,7 +179,7 @@ const testimonials = [
     location: "Madurai",
     rating: 5,
     text: "Excellent platform! Found a skilled electrician quickly. The Tamil language support made it very convenient for me to use.",
-    avatar: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&h=400"
+    avatar: rajeshAvatar
   }
 ];
 
