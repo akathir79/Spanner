@@ -254,22 +254,24 @@ export default function WorkerApprovalSection() {
                           View Details
                         </Button>
                       </DialogTrigger>
-                      <DialogContent className="max-w-2xl">
-                        <DialogHeader>
+                      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                        <DialogHeader className="pb-6 border-b">
                           <div className="flex items-center justify-between">
-                            <div>
-                              <DialogTitle>Worker Application Details</DialogTitle>
-                              <DialogDescription>
+                            <div className="space-y-1">
+                              <DialogTitle className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
+                                Worker Application Details
+                              </DialogTitle>
+                              <DialogDescription className="text-sm text-muted-foreground">
                                 {isEditing ? "Edit worker's profile and credentials" : "Review the worker's profile and credentials"}
                               </DialogDescription>
                             </div>
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-3">
                               {!isEditing ? (
                                 <Button
                                   variant="outline"
                                   size="sm"
                                   onClick={() => handleEdit(selectedWorker)}
-                                  className="flex items-center gap-2"
+                                  className="flex items-center gap-2 hover:bg-blue-50 hover:border-blue-200 transition-colors"
                                 >
                                   <Edit className="h-4 w-4" />
                                   Edit
@@ -280,7 +282,7 @@ export default function WorkerApprovalSection() {
                                     variant="outline"
                                     size="sm"
                                     onClick={handleCancel}
-                                    className="flex items-center gap-2"
+                                    className="flex items-center gap-2 hover:bg-red-50 hover:border-red-200 transition-colors"
                                   >
                                     <X className="h-4 w-4" />
                                     Cancel
@@ -289,7 +291,7 @@ export default function WorkerApprovalSection() {
                                     size="sm"
                                     onClick={handleSave}
                                     disabled={updateWorkerMutation.isPending}
-                                    className="flex items-center gap-2"
+                                    className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 transition-colors"
                                   >
                                     <Save className="h-4 w-4" />
                                     {updateWorkerMutation.isPending ? "Saving..." : "Save"}
@@ -300,252 +302,364 @@ export default function WorkerApprovalSection() {
                           </div>
                         </DialogHeader>
                         {selectedWorker && (
-                          <div className="space-y-6">
-                            <div className="flex items-start gap-4">
-                              <Avatar className="h-16 w-16">
-                                <AvatarImage src={selectedWorker.profilePicture} />
-                                <AvatarFallback className="text-lg">
-                                  {selectedWorker.firstName[0]}{selectedWorker.lastName[0]}
-                                </AvatarFallback>
-                              </Avatar>
-                              <div>
-                                <h3 className="text-xl font-semibold">
-                                  {selectedWorker.firstName} {selectedWorker.lastName}
-                                </h3>
-                                <p className="text-muted-foreground">{selectedWorker.mobile}</p>
-                                <p className="text-muted-foreground">{selectedWorker.district?.name}</p>
+                          <div className="space-y-8 pt-6">
+                            {/* Profile Header */}
+                            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-6">
+                              <div className="flex items-start gap-6">
+                                <Avatar className="h-20 w-20 ring-4 ring-white dark:ring-gray-800 shadow-lg">
+                                  <AvatarImage src={selectedWorker.profilePicture} />
+                                  <AvatarFallback className="text-xl font-semibold bg-gradient-to-br from-blue-500 to-purple-600 text-white">
+                                    {selectedWorker.firstName[0]}{selectedWorker.lastName[0]}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <div className="flex-1 space-y-2">
+                                  <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                                    {selectedWorker.firstName} {selectedWorker.lastName}
+                                  </h3>
+                                  <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
+                                    <div className="flex items-center gap-2">
+                                      <Phone className="h-4 w-4" />
+                                      <span className="font-medium">{selectedWorker.mobile}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      <MapPin className="h-4 w-4" />
+                                      <span className="font-medium">{selectedWorker.district?.name}</span>
+                                    </div>
+                                  </div>
+                                  {selectedWorker.workerProfile && (
+                                    <div className="flex items-center gap-3 pt-2">
+                                      <Badge variant="secondary" className="bg-blue-100 text-blue-800 border-blue-200">
+                                        <Briefcase className="h-3 w-3 mr-1" />
+                                        {selectedWorker.workerProfile.primaryService}
+                                      </Badge>
+                                      <span className="text-sm text-gray-500">
+                                        {selectedWorker.workerProfile.experienceYears} years experience
+                                      </span>
+                                      <span className="text-sm font-semibold text-green-600">
+                                        ₹{selectedWorker.workerProfile.hourlyRate}/hour
+                                      </span>
+                                    </div>
+                                  )}
+                                </div>
                               </div>
                             </div>
                             
                             {selectedWorker.workerProfile && (
-                              <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                  <label className="text-sm font-medium text-muted-foreground">Primary Service</label>
-                                  {isEditing ? (
-                                    <Input
-                                      value={editData.workerProfile?.primaryService || ''}
-                                      onChange={(e) => setEditData({
-                                        ...editData,
-                                        workerProfile: {
-                                          ...editData.workerProfile,
-                                          primaryService: e.target.value
-                                        }
-                                      })}
-                                      className="mt-1"
-                                    />
-                                  ) : (
-                                    <p className="font-medium">{selectedWorker.workerProfile.primaryService}</p>
-                                  )}
-                                </div>
-                                <div>
-                                  <label className="text-sm font-medium text-muted-foreground">Experience (Years)</label>
-                                  {isEditing ? (
-                                    <Input
-                                      type="number"
-                                      value={editData.workerProfile?.experienceYears || 0}
-                                      onChange={(e) => setEditData({
-                                        ...editData,
-                                        workerProfile: {
-                                          ...editData.workerProfile,
-                                          experienceYears: parseInt(e.target.value) || 0
-                                        }
-                                      })}
-                                      className="mt-1"
-                                    />
-                                  ) : (
-                                    <p className="font-medium">{selectedWorker.workerProfile.experienceYears} years</p>
-                                  )}
-                                </div>
-                                <div>
-                                  <label className="text-sm font-medium text-muted-foreground">Hourly Rate (₹)</label>
-                                  {isEditing ? (
-                                    <Input
-                                      type="number"
-                                      value={editData.workerProfile?.hourlyRate || 0}
-                                      onChange={(e) => setEditData({
-                                        ...editData,
-                                        workerProfile: {
-                                          ...editData.workerProfile,
-                                          hourlyRate: parseFloat(e.target.value) || 0
-                                        }
-                                      })}
-                                      className="mt-1"
-                                    />
-                                  ) : (
-                                    <p className="font-medium">₹{selectedWorker.workerProfile.hourlyRate}</p>
-                                  )}
-                                </div>
-                                <div>
-                                  <label className="text-sm font-medium text-muted-foreground">Aadhaar Number</label>
-                                  <div className="flex items-center gap-2 mt-1">
+                              <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+                                <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-6 flex items-center gap-2">
+                                  <Briefcase className="h-5 w-5 text-blue-600" />
+                                  Professional Information
+                                </h4>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                  <div className="space-y-2">
+                                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-1">
+                                      Primary Service
+                                      <span className="text-red-500">*</span>
+                                    </label>
                                     {isEditing ? (
                                       <Input
-                                        value={editData.workerProfile?.aadhaarNumber || ''}
+                                        value={editData.workerProfile?.primaryService || ''}
                                         onChange={(e) => setEditData({
                                           ...editData,
                                           workerProfile: {
                                             ...editData.workerProfile,
-                                            aadhaarNumber: e.target.value
+                                            primaryService: e.target.value
                                           }
                                         })}
-                                        className="flex-1"
+                                        className="border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                                        placeholder="e.g., Home car wash"
                                       />
                                     ) : (
-                                      <p className="font-medium flex-1">{selectedWorker.workerProfile.aadhaarNumber}</p>
+                                      <p className="font-medium text-gray-900 dark:text-gray-100 bg-gray-50 dark:bg-gray-700 px-3 py-2 rounded-md">
+                                        {selectedWorker.workerProfile.primaryService}
+                                      </p>
                                     )}
+                                  </div>
+                                  <div className="space-y-2">
+                                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-1">
+                                      Experience (Years)
+                                      <span className="text-red-500">*</span>
+                                    </label>
                                     {isEditing ? (
-                                      <div className="flex items-center gap-2">
-                                        <label className="text-sm">Verified:</label>
-                                        <Switch
-                                          checked={editData.workerProfile?.aadhaarVerified || false}
-                                          onCheckedChange={(checked) => setEditData({
+                                      <Input
+                                        type="number"
+                                        min="0"
+                                        max="50"
+                                        value={editData.workerProfile?.experienceYears || 0}
+                                        onChange={(e) => setEditData({
+                                          ...editData,
+                                          workerProfile: {
+                                            ...editData.workerProfile,
+                                            experienceYears: parseInt(e.target.value) || 0
+                                          }
+                                        })}
+                                        className="border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                                        placeholder="e.g., 5"
+                                      />
+                                    ) : (
+                                      <p className="font-medium text-gray-900 dark:text-gray-100 bg-gray-50 dark:bg-gray-700 px-3 py-2 rounded-md">
+                                        {selectedWorker.workerProfile.experienceYears} years
+                                      </p>
+                                    )}
+                                  </div>
+                                  <div className="space-y-2">
+                                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-1">
+                                      Hourly Rate (₹)
+                                      <span className="text-red-500">*</span>
+                                    </label>
+                                    {isEditing ? (
+                                      <Input
+                                        type="number"
+                                        min="0"
+                                        step="0.01"
+                                        value={editData.workerProfile?.hourlyRate || 0}
+                                        onChange={(e) => setEditData({
+                                          ...editData,
+                                          workerProfile: {
+                                            ...editData.workerProfile,
+                                            hourlyRate: parseFloat(e.target.value) || 0
+                                          }
+                                        })}
+                                        className="border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                                        placeholder="e.g., 300.00"
+                                      />
+                                    ) : (
+                                      <p className="font-medium text-green-600 bg-green-50 dark:bg-green-900/20 px-3 py-2 rounded-md">
+                                        ₹{selectedWorker.workerProfile.hourlyRate}
+                                      </p>
+                                    )}
+                                  </div>
+                                  <div className="md:col-span-2 space-y-2">
+                                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-1">
+                                      Aadhaar Number
+                                      <span className="text-red-500">*</span>
+                                    </label>
+                                    <div className="flex items-center gap-4">
+                                      {isEditing ? (
+                                        <Input
+                                          value={editData.workerProfile?.aadhaarNumber || ''}
+                                          onChange={(e) => setEditData({
                                             ...editData,
                                             workerProfile: {
                                               ...editData.workerProfile,
-                                              aadhaarVerified: checked
+                                              aadhaarNumber: e.target.value
                                             }
                                           })}
+                                          className="flex-1 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                                          placeholder="e.g., 123456789000"
+                                          maxLength={12}
                                         />
-                                      </div>
-                                    ) : (
-                                      selectedWorker.workerProfile.aadhaarVerified ? (
-                                        <Badge variant="default" className="bg-green-100 text-green-700 border-green-200">
-                                          <CheckCircle className="h-3 w-3 mr-1" />
-                                          Verified
-                                        </Badge>
                                       ) : (
-                                        <Badge variant="destructive" className="bg-red-100 text-red-700 border-red-200">
-                                          <AlertTriangle className="h-3 w-3 mr-1" />
-                                          Not Verified
-                                        </Badge>
-                                      )
+                                        <p className="font-medium text-gray-900 dark:text-gray-100 bg-gray-50 dark:bg-gray-700 px-3 py-2 rounded-md flex-1">
+                                          {selectedWorker.workerProfile.aadhaarNumber}
+                                        </p>
+                                      )}
+                                      {isEditing ? (
+                                        <div className="flex items-center gap-3 bg-gray-50 dark:bg-gray-700 px-4 py-2 rounded-lg">
+                                          <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Verified:</label>
+                                          <Switch
+                                            checked={editData.workerProfile?.aadhaarVerified || false}
+                                            onCheckedChange={(checked) => setEditData({
+                                              ...editData,
+                                              workerProfile: {
+                                                ...editData.workerProfile,
+                                                aadhaarVerified: checked
+                                              }
+                                            })}
+                                          />
+                                        </div>
+                                      ) : (
+                                        selectedWorker.workerProfile.aadhaarVerified ? (
+                                          <Badge variant="default" className="bg-green-100 text-green-700 border-green-200 px-3 py-1">
+                                            <CheckCircle className="h-4 w-4 mr-1" />
+                                            Verified
+                                          </Badge>
+                                        ) : (
+                                          <Badge variant="destructive" className="bg-red-100 text-red-700 border-red-200 px-3 py-1">
+                                            <AlertTriangle className="h-4 w-4 mr-1" />
+                                            Not Verified
+                                          </Badge>
+                                        )
+                                      )}
+                                    </div>
+                                  </div>
+                                  <div className="space-y-2">
+                                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Address</label>
+                                    {isEditing ? (
+                                      <Input
+                                        value={editData.address || ''}
+                                        onChange={(e) => setEditData({
+                                          ...editData,
+                                          address: e.target.value
+                                        })}
+                                        className="border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                                        placeholder="Enter full address"
+                                      />
+                                    ) : (
+                                      <p className="font-medium text-gray-900 dark:text-gray-100 bg-gray-50 dark:bg-gray-700 px-3 py-2 rounded-md min-h-[40px] flex items-center">
+                                        {selectedWorker.address || "Not provided"}
+                                      </p>
+                                    )}
+                                  </div>
+                                  <div className="space-y-2">
+                                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Pincode</label>
+                                    {isEditing ? (
+                                      <Input
+                                        value={editData.pincode || ''}
+                                        onChange={(e) => setEditData({
+                                          ...editData,
+                                          pincode: e.target.value
+                                        })}
+                                        className="border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                                        placeholder="e.g., 636004"
+                                        maxLength={6}
+                                      />
+                                    ) : (
+                                      <p className="font-medium text-gray-900 dark:text-gray-100 bg-gray-50 dark:bg-gray-700 px-3 py-2 rounded-md">
+                                        {selectedWorker.pincode || "Not provided"}
+                                      </p>
+                                    )}
+                                  </div>
+                                  <div className="md:col-span-2 space-y-2">
+                                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Bio</label>
+                                    {isEditing ? (
+                                      <Textarea
+                                        value={editData.workerProfile?.bio || ''}
+                                        onChange={(e) => setEditData({
+                                          ...editData,
+                                          workerProfile: {
+                                            ...editData.workerProfile,
+                                            bio: e.target.value
+                                          }
+                                        })}
+                                        className="border-gray-300 focus:border-blue-500 focus:ring-blue-500 min-h-[80px]"
+                                        rows={3}
+                                        placeholder="Brief description of work experience and skills..."
+                                      />
+                                    ) : (
+                                      <p className="font-medium text-gray-900 dark:text-gray-100 bg-gray-50 dark:bg-gray-700 px-3 py-2 rounded-md min-h-[80px] flex items-start">
+                                        {selectedWorker.workerProfile?.bio || "No bio provided"}
+                                      </p>
                                     )}
                                   </div>
                                 </div>
-                                <div>
-                                  <label className="text-sm font-medium text-muted-foreground">Address</label>
-                                  {isEditing ? (
-                                    <Input
-                                      value={editData.address || ''}
-                                      onChange={(e) => setEditData({
-                                        ...editData,
-                                        address: e.target.value
-                                      })}
-                                      className="mt-1"
-                                    />
-                                  ) : (
-                                    <p className="font-medium">{selectedWorker.address || "Not provided"}</p>
-                                  )}
-                                </div>
-                                <div>
-                                  <label className="text-sm font-medium text-muted-foreground">Pincode</label>
-                                  {isEditing ? (
-                                    <Input
-                                      value={editData.pincode || ''}
-                                      onChange={(e) => setEditData({
-                                        ...editData,
-                                        pincode: e.target.value
-                                      })}
-                                      className="mt-1"
-                                    />
-                                  ) : (
-                                    <p className="font-medium">{selectedWorker.pincode || "Not provided"}</p>
-                                  )}
-                                </div>
-                                <div className="col-span-2">
-                                  <label className="text-sm font-medium text-muted-foreground">Bio</label>
-                                  {isEditing ? (
-                                    <Textarea
-                                      value={editData.workerProfile?.bio || ''}
-                                      onChange={(e) => setEditData({
-                                        ...editData,
-                                        workerProfile: {
-                                          ...editData.workerProfile,
-                                          bio: e.target.value
-                                        }
-                                      })}
-                                      className="mt-1"
-                                      rows={3}
-                                    />
-                                  ) : (
-                                    <p className="font-medium">{selectedWorker.workerProfile?.bio || "No bio provided"}</p>
-                                  )}
-                                </div>
-                                <div className="col-span-2">
-                                  <label className="text-sm font-medium text-muted-foreground">Service Districts</label>
-                                  <div className="flex flex-wrap gap-1 mt-1">
+                              </div>
+                            )}
+                            
+                            {/* Service Coverage */}
+                            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+                              <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-6 flex items-center gap-2">
+                                <MapPin className="h-5 w-5 text-green-600" />
+                                Service Coverage
+                              </h4>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="space-y-3">
+                                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Service Districts</label>
+                                  <div className="flex flex-wrap gap-2">
                                     {selectedWorker.workerProfile.serviceDistricts?.length > 0 ? 
                                       selectedWorker.workerProfile.serviceDistricts.map((districtId: string, index: number) => {
                                         const district = districts.find((d: any) => d.id === districtId);
                                         return (
-                                          <Badge key={index} variant="secondary">
+                                          <Badge key={index} variant="secondary" className="bg-blue-100 text-blue-800 border-blue-200 px-3 py-1">
                                             {district ? district.name : districtId}
                                           </Badge>
                                         );
                                       }) : 
-                                      <span className="text-muted-foreground">No districts specified</span>
+                                      <span className="text-gray-500 italic bg-gray-50 dark:bg-gray-700 px-3 py-2 rounded-md">No districts specified</span>
                                     }
                                   </div>
                                 </div>
                                 
-                                {/* Service Areas */}
-                                <div className="col-span-2">
-                                  <label className="text-sm font-medium text-muted-foreground">Service Areas</label>
-                                  <div className="flex flex-wrap gap-1 mt-1">
+                                <div className="space-y-3">
+                                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Service Areas</label>
+                                  <div className="flex flex-wrap gap-2">
                                     {selectedWorker.workerProfile?.serviceAllAreas ? (
-                                      <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
+                                      <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 px-3 py-1">
                                         All Areas
                                       </Badge>
                                     ) : selectedWorker.workerProfile?.serviceAreas?.length > 0 ? (
                                       selectedWorker.workerProfile.serviceAreas.map((areaId: string, index: number) => {
                                         const area = areas.find((a: any) => a.id === areaId);
                                         return (
-                                          <Badge key={index} variant="outline" className="text-xs">
+                                          <Badge key={index} variant="outline" className="px-3 py-1">
                                             {area ? area.name : areaId}
                                           </Badge>
                                         );
                                       })
                                     ) : (
-                                      <span className="text-muted-foreground text-sm">No specific areas selected</span>
+                                      <span className="text-gray-500 italic bg-gray-50 dark:bg-gray-700 px-3 py-2 rounded-md">No specific areas selected</span>
                                     )}
                                   </div>
                                 </div>
-                                <div className="col-span-2">
-                                  <label className="text-sm font-medium text-muted-foreground">Skills</label>
-                                  <div className="flex flex-wrap gap-1 mt-1">
-                                    {selectedWorker.workerProfile?.skills?.map((skill: string, index: number) => (
-                                      <Badge key={index} variant="outline">{skill}</Badge>
-                                    ))}
+                              </div>
+                            </div>
+
+                            {/* Skills & Documents */}
+                            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+                              <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-6 flex items-center gap-2">
+                                <Star className="h-5 w-5 text-yellow-600" />
+                                Skills & Documents
+                              </h4>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="space-y-3">
+                                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Skills</label>
+                                  <div className="flex flex-wrap gap-2">
+                                    {selectedWorker.workerProfile?.skills?.length > 0 ? (
+                                      selectedWorker.workerProfile.skills.map((skill: string, index: number) => (
+                                        <Badge key={index} variant="outline" className="bg-purple-50 text-purple-700 border-purple-200 px-3 py-1">
+                                          {skill}
+                                        </Badge>
+                                      ))
+                                    ) : (
+                                      <span className="text-gray-500 italic bg-gray-50 dark:bg-gray-700 px-3 py-2 rounded-md">No skills listed</span>
+                                    )}
                                   </div>
                                 </div>
                                 
-                                {selectedWorker.workerProfile?.bioDataDocument && (
-                                  <div className="col-span-2">
-                                    <label className="text-sm font-medium text-muted-foreground">Bio Data Document</label>
-                                    <div className="flex items-center gap-2 mt-1">
-                                      <Button
-                                        type="button"
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => {
-                                          // Create a temporary link to download/view the document
-                                          const link = document.createElement('a');
-                                          link.href = selectedWorker.workerProfile.bioDataDocument;
-                                          link.download = `biodata_${selectedWorker.firstName}_${selectedWorker.lastName}`;
-                                          link.click();
-                                        }}
-                                      >
-                                        <User className="h-4 w-4 mr-1" />
-                                        View Document
-                                      </Button>
-                                      <Badge variant="secondary" className="bg-blue-100 text-blue-700">
-                                        Document Attached
-                                      </Badge>
+                                <div className="space-y-3">
+                                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Bio Data Document</label>
+                                  {selectedWorker.workerProfile?.bioDataDocument ? (
+                                    <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                                      <div className="flex items-center gap-3">
+                                        <div className="flex-shrink-0">
+                                          <User className="h-8 w-8 text-blue-600" />
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                          <p className="text-sm font-medium text-blue-900 dark:text-blue-100">
+                                            Bio Data Document
+                                          </p>
+                                          <p className="text-xs text-blue-700 dark:text-blue-300">
+                                            Click to view worker's resume/bio data
+                                          </p>
+                                        </div>
+                                        <Button
+                                          type="button"
+                                          variant="outline"
+                                          size="sm"
+                                          onClick={() => {
+                                            const link = document.createElement('a');
+                                            link.href = selectedWorker.workerProfile.bioDataDocument;
+                                            link.download = `biodata_${selectedWorker.firstName}_${selectedWorker.lastName}`;
+                                            link.click();
+                                          }}
+                                          className="border-blue-300 text-blue-700 hover:bg-blue-100"
+                                        >
+                                          <User className="h-4 w-4 mr-1" />
+                                          View Document
+                                        </Button>
+                                      </div>
                                     </div>
-                                  </div>
-                                )}
+                                  ) : (
+                                    <div className="bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg p-4">
+                                      <div className="text-center text-gray-500 dark:text-gray-400">
+                                        <User className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                                        <p className="text-sm">No document uploaded</p>
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
                               </div>
-                            )}
+                            </div>
                           </div>
                         )}
                       </DialogContent>
