@@ -286,7 +286,7 @@ export default function WorkerApprovalSection() {
                           </div>
                         </DialogHeader>
                         {selectedWorker && (
-                          <div className="space-y-8 pt-6">
+                          <div className="space-y-8 pt-6 min-h-full flex flex-col">
                             {/* Profile Header */}
                             <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-6">
                               <div className="flex items-start gap-6">
@@ -705,8 +705,8 @@ export default function WorkerApprovalSection() {
                               </div>
                             </div>
 
-                            {/* Action Buttons - Centered */}
-                            <div className="flex justify-center items-center gap-4 pt-8 border-t border-gray-200 dark:border-gray-700">
+                            {/* Action Buttons - Centered at Bottom */}
+                            <div className="flex justify-center items-center gap-4 pt-8 mt-auto border-t border-gray-200 dark:border-gray-700">
                               {!isEditing ? (
                                 <Button
                                   variant="outline"
