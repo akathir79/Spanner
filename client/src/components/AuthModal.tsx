@@ -69,6 +69,7 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
   const [workerProfilePreview, setWorkerProfilePreview] = useState<string>("");
   const [showNewServiceInput, setShowNewServiceInput] = useState(false);
   const [newServiceName, setNewServiceName] = useState("");
+  const [newSkillInput, setNewSkillInput] = useState("");
   const { login, verifyOtp, signupClient, signupWorker, isLoading } = useAuth();
   const { t } = useLanguage();
   const { toast } = useToast();
@@ -439,6 +440,9 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
     setDevelopmentOtp("");
     setClientProfilePreview("");
     setWorkerProfilePreview("");
+    setShowNewServiceInput(false);
+    setNewServiceName("");
+    setNewSkillInput("");
     loginForm.reset();
     otpForm.reset();
     clientForm.reset();
@@ -1019,6 +1023,123 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
                   {workerForm.formState.errors.hourlyRate && (
                     <p className="text-sm text-destructive mt-1">
                       {workerForm.formState.errors.hourlyRate.message}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <Label htmlFor="serviceDistricts">Service Districts *</Label>
+                  <Select 
+                    value=""
+                    onValueChange={(value) => {
+                      const currentDistricts = workerForm.getValues("serviceDistricts") || [];
+                      if (!currentDistricts.includes(value)) {
+                        workerForm.setValue("serviceDistricts", [...currentDistricts, value]);
+                      }
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Add districts you can serve" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {districts?.map((district: any) => (
+                        <SelectItem key={district.id} value={district.id}>
+                          {district.name} ({district.tamilName})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <div className="flex flex-wrap gap-1 mt-2">
+                    {workerForm.watch("serviceDistricts")?.map((districtId: string) => {
+                      const district = districts?.find((d: any) => d.id === districtId);
+                      return district ? (
+                        <div key={districtId} className="flex items-center gap-1 bg-secondary text-secondary-foreground px-2 py-1 rounded-md text-xs">
+                          <span>{district.name}</span>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="h-4 w-4 p-0"
+                            onClick={() => {
+                              const currentDistricts = workerForm.getValues("serviceDistricts") || [];
+                              workerForm.setValue("serviceDistricts", currentDistricts.filter(id => id !== districtId));
+                            }}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      ) : null;
+                    })}
+                  </div>
+                  {workerForm.formState.errors.serviceDistricts && (
+                    <p className="text-sm text-destructive mt-1">
+                      {workerForm.formState.errors.serviceDistricts.message}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <Label htmlFor="skills">Skills & Expertise *</Label>
+                  <div className="space-y-2">
+                    <div className="flex gap-2">
+                      <Input
+                        placeholder="Add a skill (e.g., Pipe Repair, Wiring, Painting)"
+                        value={newSkillInput}
+                        onChange={(e) => setNewSkillInput(e.target.value)}
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            if (newSkillInput.trim()) {
+                              const currentSkills = workerForm.getValues("skills") || [];
+                              if (!currentSkills.includes(newSkillInput.trim())) {
+                                workerForm.setValue("skills", [...currentSkills, newSkillInput.trim()]);
+                                setNewSkillInput("");
+                              }
+                            }
+                          }
+                        }}
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          if (newSkillInput.trim()) {
+                            const currentSkills = workerForm.getValues("skills") || [];
+                            if (!currentSkills.includes(newSkillInput.trim())) {
+                              workerForm.setValue("skills", [...currentSkills, newSkillInput.trim()]);
+                              setNewSkillInput("");
+                            }
+                          }
+                        }}
+                        disabled={!newSkillInput.trim()}
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <div className="flex flex-wrap gap-1">
+                      {workerForm.watch("skills")?.map((skill: string, index: number) => (
+                        <div key={index} className="flex items-center gap-1 bg-primary text-primary-foreground px-2 py-1 rounded-md text-xs">
+                          <span>{skill}</span>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="h-4 w-4 p-0 text-primary-foreground hover:text-primary-foreground"
+                            onClick={() => {
+                              const currentSkills = workerForm.getValues("skills") || [];
+                              workerForm.setValue("skills", currentSkills.filter((_, i) => i !== index));
+                            }}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  {workerForm.formState.errors.skills && (
+                    <p className="text-sm text-destructive mt-1">
+                      {workerForm.formState.errors.skills.message}
                     </p>
                   )}
                 </div>
