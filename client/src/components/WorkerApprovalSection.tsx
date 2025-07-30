@@ -254,35 +254,33 @@ export default function WorkerApprovalSection() {
                           View Details
                         </Button>
                       </DialogTrigger>
-                      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto relative">
+                        {/* Custom Window Controls */}
+                        <div className="absolute top-4 right-12 flex items-center gap-1 z-10">
+                          <button
+                            className="w-4 h-4 rounded-full bg-yellow-500 hover:bg-yellow-600 flex items-center justify-center text-xs text-white font-bold transition-colors"
+                            title="Minimize"
+                            onClick={() => console.log('Minimize clicked')}
+                          >
+                            −
+                          </button>
+                          <button
+                            className="w-4 h-4 rounded-full bg-green-500 hover:bg-green-600 flex items-center justify-center text-xs text-white font-bold transition-colors"
+                            title="Maximize/Restore"
+                            onClick={() => console.log('Maximize clicked')}
+                          >
+                            □
+                          </button>
+                        </div>
+                        
                         <DialogHeader className="pb-6 border-b">
-                          <div className="flex items-start justify-between">
-                            <div className="space-y-1">
-                              <DialogTitle className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
-                                Worker Application Details
-                              </DialogTitle>
-                              <DialogDescription className="text-sm text-muted-foreground">
-                                {isEditing ? "Edit worker's profile and credentials" : "Review the worker's profile and credentials"}
-                              </DialogDescription>
-                            </div>
-                            <div className="flex items-center gap-1 -mt-1">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-5 w-5 p-0 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-center"
-                                title="Minimize"
-                              >
-                                <span className="text-xs leading-none">−</span>
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-5 w-5 p-0 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-center"
-                                title="Maximize"
-                              >
-                                <span className="text-xs leading-none">□</span>
-                              </Button>
-                            </div>
+                          <div className="space-y-1 pr-16">
+                            <DialogTitle className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
+                              Worker Application Details
+                            </DialogTitle>
+                            <DialogDescription className="text-sm text-muted-foreground">
+                              {isEditing ? "Edit worker's profile and credentials" : "Review the worker's profile and credentials"}
+                            </DialogDescription>
                           </div>
                         </DialogHeader>
                         {selectedWorker && (
