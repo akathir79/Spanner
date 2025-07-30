@@ -33,6 +33,7 @@ import {
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 // Worker Jobs Component
 const WorkerJobsTab = () => {
@@ -787,84 +788,203 @@ export default function WorkerDashboard() {
           <TabsContent value="profile" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <User className="h-5 w-5" />
-                  <span>Worker Profile</span>
-                </CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center space-x-2">
+                    <User className="h-5 w-5" />
+                    <span>Worker Profile</span>
+                  </CardTitle>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    disabled={!isWorkerApproved}
+                    onClick={() => {
+                      toast({
+                        title: "Feature Coming Soon",
+                        description: "Profile editing will be available after approval.",
+                      });
+                    }}
+                  >
+                    <Settings className="h-4 w-4 mr-2" />
+                    Edit Profile
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  {/* Profile Picture and Basic Info */}
                   <div className="space-y-4">
-                    <div>
-                      <Label>Full Name</Label>
-                      <p className="text-lg font-medium">
-                        {user.firstName} {user.lastName}
-                      </p>
-                    </div>
-                    <div>
-                      <Label>Primary Service</Label>
-                      <p className="text-lg font-medium capitalize">
-                        {workerProfile?.primaryService?.replace('_', ' ') || 'Not specified'}
-                      </p>
-                    </div>
-                    <div>
-                      <Label>Experience</Label>
-                      <p className="text-lg font-medium">
-                        {workerProfile?.experienceYears || 0} years
-                      </p>
-                    </div>
-                    <div>
-                      <Label>Hourly Rate</Label>
-                      <p className="text-lg font-medium text-green-600">
-                        ₹{workerProfile?.hourlyRate || 0}/hour
-                      </p>
+                    <div className="flex flex-col items-center space-y-4">
+                      <Avatar className="h-32 w-32">
+                        <AvatarImage 
+                          src={user?.profilePicture || undefined} 
+                          alt={`${user.firstName} ${user.lastName}`} 
+                        />
+                        <AvatarFallback className="bg-primary text-primary-foreground text-3xl">
+                          {user.firstName?.[0]?.toUpperCase()}{user.lastName?.[0]?.toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="text-center">
+                        <h3 className="text-xl font-semibold">{user.firstName} {user.lastName}</h3>
+                        <p className="text-muted-foreground capitalize">
+                          {workerProfile?.primaryService?.replace('_', ' ') || 'Service Provider'}
+                        </p>
+                      </div>
+                      <div className="flex items-center space-x-4">
+                        <div className="flex items-center space-x-1">
+                          <Star className="h-4 w-4 text-yellow-500" />
+                          <span className="font-medium">{stats.rating}/5.0</span>
+                        </div>
+                        <div className="flex items-center space-x-1">
+                          <Award className="h-4 w-4 text-blue-600" />
+                          <span>{stats.totalJobs} Jobs</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                  
+
+                  {/* Personal Information */}
                   <div className="space-y-4">
-                    <div>
-                      <Label>Contact Information</Label>
-                      <div className="space-y-2 mt-2">
-                        <p className="flex items-center space-x-2">
+                    <h4 className="font-semibold text-lg">Personal Information</h4>
+                    <div className="space-y-3">
+                      <div>
+                        <Label className="text-sm text-muted-foreground">Full Name</Label>
+                        <p className="font-medium">{user.firstName} {user.lastName}</p>
+                      </div>
+                      <div>
+                        <Label className="text-sm text-muted-foreground">Mobile Number</Label>
+                        <p className="font-medium flex items-center space-x-2">
                           <Phone className="h-4 w-4" />
                           <span>{user.mobile}</span>
                         </p>
-                        {user.email && (
-                          <p className="flex items-center space-x-2">
+                      </div>
+                      {user.email && (
+                        <div>
+                          <Label className="text-sm text-muted-foreground">Email Address</Label>
+                          <p className="font-medium flex items-center space-x-2">
                             <Mail className="h-4 w-4" />
                             <span>{user.email}</span>
                           </p>
-                        )}
+                        </div>
+                      )}
+                      <div>
+                        <Label className="text-sm text-muted-foreground">Address</Label>
+                        <p className="font-medium">
+                          {user.address || 'Not provided'}
+                        </p>
+                      </div>
+                      <div>
+                        <Label className="text-sm text-muted-foreground">Pincode</Label>
+                        <p className="font-medium">
+                          {user.pincode || 'Not provided'}
+                        </p>
+                      </div>
+                      <div>
+                        <Label className="text-sm text-muted-foreground">District</Label>
+                        <p className="font-medium flex items-center space-x-2">
+                          <MapPin className="h-4 w-4" />
+                          <span>{user.district?.name || 'Not specified'}</span>
+                        </p>
                       </div>
                     </div>
-                    <div>
-                      <Label>Verification Status</Label>
-                      <div className="flex items-center space-x-2 mt-2">
-                        {workerProfile?.isBackgroundVerified ? (
-                          <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100">
-                            <CheckCircle className="h-3 w-3 mr-1" />
-                            Background Verified
-                          </Badge>
-                        ) : (
-                          <Badge variant="secondary">
-                            <AlertCircle className="h-3 w-3 mr-1" />
-                            Pending Verification
-                          </Badge>
-                        )}
+                  </div>
+
+                  {/* Professional Information */}
+                  <div className="space-y-4">
+                    <h4 className="font-semibold text-lg">Professional Details</h4>
+                    <div className="space-y-3">
+                      <div>
+                        <Label className="text-sm text-muted-foreground">Primary Service</Label>
+                        <p className="font-medium capitalize">
+                          {workerProfile?.primaryService?.replace('_', ' ') || 'Not specified'}
+                        </p>
                       </div>
-                    </div>
-                    <div>
-                      <Label>Performance</Label>
-                      <div className="space-y-2 mt-2">
-                        <div className="flex items-center space-x-2">
-                          <Star className="h-4 w-4 text-yellow-500" />
-                          <span>{stats.rating}/5.0 rating</span>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Award className="h-4 w-4 text-blue-600" />
-                          <span>{stats.totalJobs} jobs completed</span>
+                      <div>
+                        <Label className="text-sm text-muted-foreground">Experience</Label>
+                        <p className="font-medium">
+                          {workerProfile?.experienceYears || 0} years
+                        </p>
+                      </div>
+                      <div>
+                        <Label className="text-sm text-muted-foreground">Hourly Rate</Label>
+                        <p className="font-medium text-green-600">
+                          ₹{workerProfile?.hourlyRate || 0}/hour
+                        </p>
+                      </div>
+                      <div>
+                        <Label className="text-sm text-muted-foreground">Aadhaar Number</Label>
+                        <p className="font-medium">
+                          {workerProfile?.aadhaarNumber ? `****-****-${workerProfile.aadhaarNumber.slice(-4)}` : 'Not provided'}
+                        </p>
+                      </div>
+                      <div>
+                        <Label className="text-sm text-muted-foreground">Bio</Label>
+                        <p className="font-medium text-sm">
+                          {workerProfile?.bio || 'No bio provided'}
+                        </p>
+                      </div>
+                      <div>
+                        <Label className="text-sm text-muted-foreground">Verification Status</Label>
+                        <div className="flex flex-wrap gap-2 mt-1">
+                          {user.status === 'approved' ? (
+                            <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100">
+                              <CheckCircle className="h-3 w-3 mr-1" />
+                              Account Approved
+                            </Badge>
+                          ) : (
+                            <Badge variant="secondary">
+                              <AlertCircle className="h-3 w-3 mr-1" />
+                              Pending Approval
+                            </Badge>
+                          )}
+                          {workerProfile?.aadhaarVerified ? (
+                            <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100">
+                              <CheckCircle className="h-3 w-3 mr-1" />
+                              Aadhaar Verified
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline">
+                              <AlertCircle className="h-3 w-3 mr-1" />
+                              Aadhaar Pending
+                            </Badge>
+                          )}
+                          {workerProfile?.isBackgroundVerified ? (
+                            <Badge className="bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-100">
+                              <CheckCircle className="h-3 w-3 mr-1" />
+                              Background Verified
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline">
+                              <AlertCircle className="h-3 w-3 mr-1" />
+                              Background Pending
+                            </Badge>
+                          )}
                         </div>
                       </div>
+                      {workerProfile?.skills && workerProfile.skills.length > 0 && (
+                        <div>
+                          <Label className="text-sm text-muted-foreground">Skills</Label>
+                          <div className="flex flex-wrap gap-2 mt-1">
+                            {workerProfile.skills.map((skill: string, index: number) => (
+                              <Badge key={index} variant="outline" className="text-xs">
+                                {skill}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      {workerProfile?.serviceDistricts && workerProfile.serviceDistricts.length > 0 && (
+                        <div>
+                          <Label className="text-sm text-muted-foreground">Service Areas</Label>
+                          <div className="flex flex-wrap gap-2 mt-1">
+                            {workerProfile.serviceDistricts.map((districtId: string, index: number) => (
+                              <Badge key={index} variant="secondary" className="text-xs">
+                                {/* TODO: Map district ID to name */}
+                                District {districtId}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

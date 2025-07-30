@@ -97,7 +97,7 @@ export function Navbar() {
                             alt={`${user.firstName} ${user.lastName}`} 
                           />
                           <AvatarFallback className="bg-primary text-primary-foreground text-sm">
-                            {user.firstName[0]}{user.lastName[0]}
+                            {user.firstName?.[0]?.toUpperCase()}{user.lastName?.[0]?.toUpperCase()}
                           </AvatarFallback>
                         </Avatar>
                         <span className="text-sm font-medium">
