@@ -392,10 +392,10 @@ export default function Home() {
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
               <h1 className="text-4xl lg:text-5xl font-bold mb-6">
-                {t("hero.title")}
+                Tamil Nadu's Most Trusted Blue-Collar Service Platform
               </h1>
               <p className="text-xl mb-8 text-blue-100">
-                {t("hero.subtitle")}
+                Connect with verified skilled workers across all 38 districts. From plumbing to electrical work, find the right professional for your needs with transparent pricing and secure booking.
               </p>
               
               <div className="flex flex-wrap gap-6 mb-8">
@@ -448,11 +448,11 @@ export default function Home() {
               <Card className="bg-white/95 backdrop-blur text-foreground shadow-2xl">
                 <CardContent className="p-6">
                   <h3 className="text-xl font-bold mb-4 text-foreground">
-                    {t("hero.searchTitle")}
+                    Find Services Near You
                   </h3>
                   
                   <form onSubmit={handleSearch} className="space-y-4">
-                    <div className="grid md:grid-cols-2 gap-4">
+                    <div className="space-y-4">
                       <div>
                         <label className="block text-sm font-medium mb-1 text-foreground">
                           Service Type
@@ -467,7 +467,7 @@ export default function Home() {
                             >
                               {searchForm.service
                                 ? services?.find((service: any) => service.id === searchForm.service)?.name
-                                : "Select Service"}
+                                : "Plumbing"}
                               <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                             </Button>
                           </PopoverTrigger>
@@ -534,7 +534,7 @@ export default function Home() {
                             >
                               {searchForm.district
                                 ? (districts as any)?.find((district: any) => district.id === searchForm.district)?.name
-                                : "Select District"}
+                                : "Coimbatore"}
                               <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                             </Button>
                           </PopoverTrigger>
@@ -549,7 +549,7 @@ export default function Home() {
                                       key={district.id}
                                       value={district.name}
                                       onSelect={() => {
-                                        setSearchForm(prev => ({ ...prev, district: district.id }));
+                                        setSearchForm(prev => ({ ...prev, district: district.id, area: "" }));
                                         setDistrictOpen(false);
                                       }}
                                     >
@@ -630,17 +630,17 @@ export default function Home() {
                           )}
                         </div>
                       )}
-                    </div>
                     
-                    <div>
-                      <label className="block text-sm font-medium mb-1 text-foreground">
-                        Description
-                      </label>
-                      <Input
-                        placeholder="Describe your service requirement..."
-                        value={searchForm.description}
-                        onChange={(e) => setSearchForm(prev => ({ ...prev, description: e.target.value }))}
-                      />
+                      <div>
+                        <label className="block text-sm font-medium mb-1 text-foreground">
+                          Description
+                        </label>
+                        <Input
+                          placeholder="Describe your service requirement..."
+                          value={searchForm.description}
+                          onChange={(e) => setSearchForm(prev => ({ ...prev, description: e.target.value }))}
+                        />
+                      </div>
                     </div>
                     
                     <div className="flex gap-2">
