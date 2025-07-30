@@ -8,6 +8,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useState, useEffect } from "react";
 import { Menu, Moon, Sun, Wrench, User, LogOut, Settings } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 
 export function Navbar() {
   const [location] = useLocation();
@@ -17,6 +18,18 @@ export function Navbar() {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showSignupModal, setShowSignupModal] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Fetch worker profile if user is a worker
+  const { data: workerProfile } = useQuery({
+    queryKey: ["/api/worker/profile", user?.id],
+    queryFn: () => user?.role === "worker" ? fetch(`/api/worker/profile/${user.id}`).then(res => res.json()) : null,
+    enabled: user?.role === "worker",
+  });
+
+  // Get the appropriate profile picture
+  const profilePicture = user?.role === "worker" 
+    ? workerProfile?.profilePicture || user?.profilePicture 
+    : user?.profilePicture;
 
   const handleDashboard = () => {
     if (user?.role === "super_admin" || user?.role === "admin") {
@@ -93,7 +106,7 @@ export function Navbar() {
                       <Button variant="ghost" className="h-auto p-2 hover:bg-muted hidden md:flex items-center space-x-2">
                         <Avatar className="h-8 w-8">
                           <AvatarImage 
-                            src={(user as any)?.profilePicture || undefined} 
+                            src={profilePicture || undefined} 
                             alt={`${user.firstName} ${user.lastName}`} 
                           />
                           <AvatarFallback className="bg-primary text-primary-foreground text-sm">
@@ -181,7 +194,7 @@ export function Navbar() {
                   <div className="flex items-center space-x-3 pb-2">
                     <Avatar className="h-8 w-8">
                       <AvatarImage 
-                        src={(user as any)?.profilePicture || undefined} 
+                        src={profilePicture || undefined} 
                         alt={`${user.firstName} ${user.lastName}`} 
                       />
                       <AvatarFallback className="bg-primary text-primary-foreground text-sm">
