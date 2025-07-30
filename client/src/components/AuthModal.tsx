@@ -345,14 +345,36 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
             const detectedAddress = `${locationData.house_number || ''} ${locationData.road || ''} ${locationData.suburb || ''} ${locationData.city || ''}`.trim();
             const detectedPincode = locationData.postcode || '';
             
-            // Find matching district
-            const matchingDistrict = (districts as any)?.find((district: any) => {
+            // Find matching district with improved logic - including pincode area lookup
+            let matchingDistrict = (districts as any)?.find((district: any) => {
               const districtName = district.name.toLowerCase();
               const detectedName = detectedLocation?.toLowerCase() || '';
+              const detectedCity = locationData.city?.toLowerCase() || '';
+              
+              // Check various location fields for district match
               return districtName.includes(detectedName) || 
                      detectedName.includes(districtName) ||
-                     district.tamilName.includes(detectedLocation);
+                     districtName.includes(detectedCity) || 
+                     detectedCity.includes(districtName) ||
+                     district.tamilName?.toLowerCase().includes(detectedName) ||
+                     district.tamilName?.toLowerCase().includes(detectedCity) ||
+                     // Special cases for common district variations
+                     (districtName === 'chennai' && (detectedCity.includes('chennai') || detectedName.includes('chennai'))) ||
+                     (districtName === 'coimbatore' && (detectedCity.includes('coimbatore') || detectedName.includes('coimbatore'))) ||
+                     (districtName === 'salem' && (detectedCity.includes('salem') || detectedName.includes('salem')));
             });
+            
+            // If no district match found, try to find by pincode from areas
+            if (!matchingDistrict && detectedPincode && areas) {
+              const matchingArea = (areas as any)?.find((area: any) => 
+                area.pincode === detectedPincode
+              );
+              if (matchingArea) {
+                matchingDistrict = (districts as any)?.find((district: any) => 
+                  district.id === matchingArea.districtId
+                );
+              }
+            }
             
             // Update form with detected data
             if (detectedAddress) {
@@ -373,7 +395,8 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
               if (formType === "client") {
                 clientForm.setValue("districtId", matchingDistrict.id);
               } else {
-                // For worker form, add to service districts
+                // For worker form, set both home district and add to service districts
+                workerForm.setValue("districtId", matchingDistrict.id);
                 const currentDistricts: string[] = workerForm.getValues("serviceDistricts") || [];
                 if (!currentDistricts.includes(matchingDistrict.id)) {
                   workerForm.setValue("serviceDistricts", [...currentDistricts, matchingDistrict.id]);
@@ -383,7 +406,17 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
             
             toast({
               title: "Location detected",
-              description: `Address and district updated automatically`,
+              description: matchingDistrict 
+                ? `Address, pincode, and district (${matchingDistrict.name}) updated automatically`
+                : `Address and pincode updated. Please select district manually.`,
+            });
+            
+            console.log('Location detection results:', {
+              detectedLocation,
+              detectedCity: locationData.city,
+              detectedPincode,
+              matchingDistrict: matchingDistrict?.name,
+              allLocationData: locationData
             });
           }
         } catch (error) {
@@ -1496,14 +1529,17 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
                       <SelectTrigger>
                         <SelectValue placeholder="Select district" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="max-h-[200px] overflow-y-auto">
                         {districts?.map((district: any) => (
                           <SelectItem key={district.id} value={district.id}>
-                            {district.name}
+                            {district.name} ({district.tamilName})
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Your home district. Use "Use Location" button above to auto-detect.
+                    </p>
                     {workerForm.formState.errors.districtId && (
                       <p className="text-sm text-destructive mt-1">
                         {workerForm.formState.errors.districtId.message}
