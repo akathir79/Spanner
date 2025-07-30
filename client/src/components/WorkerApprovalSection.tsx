@@ -46,6 +46,7 @@ export default function WorkerApprovalSection() {
         description: "Worker has been approved and can now use the platform.",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/pending-workers"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
     },
     onError: () => {
       toast({
@@ -68,6 +69,7 @@ export default function WorkerApprovalSection() {
         description: "Worker application has been rejected and removed from the system.",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/pending-workers"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
     },
     onError: () => {
       toast({
