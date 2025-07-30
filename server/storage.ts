@@ -46,6 +46,7 @@ export interface IStorage {
   
   // Service categories
   getAllServiceCategories(): Promise<ServiceCategory[]>;
+  createServiceCategory(serviceCategory: any): Promise<ServiceCategory>;
   
   // Bookings
   createBooking(booking: InsertBooking): Promise<Booking>;
@@ -180,6 +181,11 @@ export class DatabaseStorage implements IStorage {
 
   async getAllServiceCategories(): Promise<ServiceCategory[]> {
     return db.select().from(serviceCategories).where(eq(serviceCategories.isActive, true));
+  }
+
+  async createServiceCategory(serviceCategory: any): Promise<ServiceCategory> {
+    const [newService] = await db.insert(serviceCategories).values(serviceCategory).returning();
+    return newService;
   }
 
   async createBooking(booking: InsertBooking): Promise<Booking> {

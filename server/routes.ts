@@ -213,6 +213,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Create new service category
+  app.post("/api/services", async (req, res) => {
+    try {
+      const { name, tamilName, description, icon, isActive } = req.body;
+      
+      // Validate required fields
+      if (!name) {
+        return res.status(400).json({ message: "Service name is required" });
+      }
+
+      // Check if service already exists
+      const existingServices = await storage.getAllServiceCategories();
+      const serviceExists = existingServices.some(
+        (service: any) => service.name.toLowerCase() === name.toLowerCase()
+      );
+
+      if (serviceExists) {
+        return res.status(409).json({ message: "Service already exists" });
+      }
+
+      const newService = await storage.createServiceCategory({
+        name: name.trim(),
+        tamilName: tamilName?.trim() || name.trim(),
+        description: description?.trim() || `${name.trim()} services`,
+        icon: icon || "wrench",
+        isActive: isActive !== false, // Default to true
+      });
+
+      res.status(201).json(newService);
+    } catch (error) {
+      console.error("Create service error:", error);
+      res.status(500).json({ message: "Failed to create service" });
+    }
+  });
+
   // Search workers
   app.get("/api/workers/search", async (req, res) => {
     try {

@@ -12,9 +12,9 @@ import { z } from "zod";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/components/LanguageProvider";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { UserPlus, LogIn, Smartphone, Info, MapPin, Upload, User, X } from "lucide-react";
+import { UserPlus, LogIn, Smartphone, Info, MapPin, Upload, User, X, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 
 const loginSchema = z.object({
   mobile: z.string().min(10, "Mobile number must be at least 10 digits"),
@@ -68,9 +68,12 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
   const [isLocationLoading, setIsLocationLoading] = useState(false);
   const [clientProfilePreview, setClientProfilePreview] = useState<string>("");
   const [workerProfilePreview, setWorkerProfilePreview] = useState<string>("");
+  const [showNewServiceInput, setShowNewServiceInput] = useState(false);
+  const [newServiceName, setNewServiceName] = useState("");
   const { login, verifyOtp, signupClient, signupWorker, isLoading } = useAuth();
   const { t } = useLanguage();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   // Fetch districts and services from database
   const { data: districts } = useQuery({
@@ -88,6 +91,89 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
     (rawServices as any[]).filter((service, index, arr) => 
       arr.findIndex(s => s.name === service.name) === index
     ) : [];
+
+  // Mutation to create new service
+  const createServiceMutation = useMutation({
+    mutationFn: async (serviceName: string) => {
+      const response = await fetch("/api/services", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: serviceName,
+          tamilName: serviceName, // For now, use the same name for Tamil
+          description: `${serviceName} services`,
+          icon: "wrench",
+          isActive: true
+        }),
+      });
+      if (!response.ok) {
+        throw new Error("Failed to create service");
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      // Invalidate and refetch services
+      queryClient.invalidateQueries({ queryKey: ["/api/services"] });
+      toast({
+        title: "Success",
+        description: "New service added successfully!",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to add new service. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Handler for adding new service
+  const handleAddNewService = async () => {
+    if (!newServiceName.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter a service name",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Check if service already exists
+    const serviceExists = dynamicServices.some(
+      service => service.name.toLowerCase() === newServiceName.trim().toLowerCase()
+    );
+
+    if (serviceExists) {
+      toast({
+        title: "Service exists",
+        description: "This service already exists. Please select it from the dropdown.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      await createServiceMutation.mutateAsync(newServiceName.trim());
+      // Set the newly created service as selected
+      workerForm.setValue("primaryService", newServiceName.trim());
+      // Reset the input and hide it
+      setNewServiceName("");
+      setShowNewServiceInput(false);
+    } catch (error) {
+      // Error is handled by the mutation's onError
+    }
+  };
+
+  // Handler for service selection
+  const handleServiceSelect = (value: string) => {
+    if (value === "ADD_NEW_SERVICE") {
+      setShowNewServiceInput(true);
+      return;
+    }
+    workerForm.setValue("primaryService", value);
+    setShowNewServiceInput(false);
+  };
 
   const loginForm = useForm({
     resolver: zodResolver(loginSchema),
@@ -830,21 +916,67 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="primaryService">Primary Service</Label>
-                    <Select 
-                      value={workerForm.watch("primaryService")} 
-                      onValueChange={(value) => workerForm.setValue("primaryService", value)}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select primary service" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {dynamicServices.map((service: any) => (
-                          <SelectItem key={service.id} value={service.name}>
-                            {service.name}
+                    {!showNewServiceInput ? (
+                      <Select 
+                        value={workerForm.watch("primaryService")} 
+                        onValueChange={handleServiceSelect}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select primary service" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {dynamicServices.map((service: any) => (
+                            <SelectItem key={service.id} value={service.name}>
+                              {service.name}
+                            </SelectItem>
+                          ))}
+                          <SelectItem value="ADD_NEW_SERVICE" className="text-blue-600 font-medium">
+                            <div className="flex items-center gap-2">
+                              <Plus className="h-4 w-4" />
+                              Add New Service
+                            </div>
                           </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <div className="space-y-2">
+                        <div className="flex gap-2">
+                          <Input
+                            value={newServiceName}
+                            onChange={(e) => setNewServiceName(e.target.value)}
+                            placeholder="Enter new service name"
+                            onKeyPress={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                                handleAddNewService();
+                              }
+                            }}
+                          />
+                          <Button
+                            type="button"
+                            size="sm"
+                            onClick={handleAddNewService}
+                            disabled={createServiceMutation.isPending || !newServiceName.trim()}
+                          >
+                            {createServiceMutation.isPending ? "Adding..." : "Add"}
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setShowNewServiceInput(false);
+                              setNewServiceName("");
+                            }}
+                          >
+                            Cancel
+                          </Button>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          Add a new service that doesn't exist in the current list
+                        </p>
+                      </div>
+                    )}
                     {workerForm.formState.errors.primaryService && (
                       <p className="text-sm text-destructive mt-1">
                         {workerForm.formState.errors.primaryService.message}
