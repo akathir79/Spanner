@@ -467,7 +467,7 @@ export default function Home() {
                             >
                               {searchForm.service
                                 ? services?.find((service: any) => service.id === searchForm.service)?.name
-                                : "Plumbing"}
+                                : "Select Service"}
                               <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                             </Button>
                           </PopoverTrigger>
@@ -534,7 +534,7 @@ export default function Home() {
                             >
                               {searchForm.district
                                 ? (districts as any)?.find((district: any) => district.id === searchForm.district)?.name
-                                : "Coimbatore"}
+                                : "Select District"}
                               <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                             </Button>
                           </PopoverTrigger>
