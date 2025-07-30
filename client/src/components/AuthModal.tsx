@@ -913,8 +913,8 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
                   )}
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="col-span-2">
                     <Label htmlFor="primaryService">Primary Service</Label>
                     {!showNewServiceInput ? (
                       <Select 
@@ -988,7 +988,7 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
                       </p>
                     )}
                   </div>
-                  <div>
+                  <div className="col-span-1">
                     <Label htmlFor="experience">Experience (Years)</Label>
                     <Input
                       id="experience"
