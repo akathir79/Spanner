@@ -42,9 +42,9 @@ const PostJob = () => {
     queryKey: ["/api/services"],
   });
 
-  // Remove duplicate services by name
-  const services = rawServices ? 
-    (rawServices as any[]).filter((service, index, arr) => 
+  // Remove duplicate services by name (fallback protection)
+  const services = rawServices && rawServices.length > 0 ? 
+    rawServices.filter((service, index, arr) => 
       arr.findIndex(s => s.name === service.name) === index
     ) : [];
 
@@ -180,8 +180,8 @@ const PostJob = () => {
                     <SelectValue placeholder="Select service type" />
                   </SelectTrigger>
                   <SelectContent>
-                    {services.map((service) => (
-                      <SelectItem key={service.id} value={service.name}>
+                    {services.map((service, index) => (
+                      <SelectItem key={`${service.name}-${index}`} value={service.name}>
                         {service.name}
                       </SelectItem>
                     ))}
