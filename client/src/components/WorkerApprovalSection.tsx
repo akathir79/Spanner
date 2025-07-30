@@ -6,6 +6,9 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { 
@@ -17,12 +20,17 @@ import {
   Briefcase,
   Star,
   Phone,
-  AlertTriangle
+  AlertTriangle,
+  Edit,
+  Save,
+  X
 } from "lucide-react";
 
 export default function WorkerApprovalSection() {
   const { toast } = useToast();
   const [selectedWorker, setSelectedWorker] = useState<any>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editData, setEditData] = useState<any>({});
 
   // Fetch pending workers and districts
   const { data: pendingWorkers = [], isLoading } = useQuery<any[]>({
@@ -85,6 +93,30 @@ export default function WorkerApprovalSection() {
     },
   });
 
+  // Update worker data mutation
+  const updateWorkerMutation = useMutation({
+    mutationFn: async ({ workerId, updates }: { workerId: string; updates: any }) => {
+      const response = await apiRequest("PATCH", `/api/admin/update-worker/${workerId}`, updates);
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Worker Updated",
+        description: "Worker information has been updated successfully.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/pending-workers"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      setIsEditing(false);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Update Failed",
+        description: error.message || "Failed to update worker information",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleApprove = (workerId: string) => {
     approveWorkerMutation.mutate(workerId);
   };
@@ -93,6 +125,42 @@ export default function WorkerApprovalSection() {
     if (confirm("Are you sure you want to reject this worker? This will permanently delete their account.")) {
       rejectWorkerMutation.mutate(workerId);
     }
+  };
+
+  const handleEdit = (worker: any) => {
+    setIsEditing(true);
+    setEditData({
+      firstName: worker.firstName,
+      lastName: worker.lastName,
+      mobile: worker.mobile,
+      email: worker.email,
+      address: worker.address,
+      pincode: worker.pincode,
+      workerProfile: {
+        primaryService: worker.workerProfile?.primaryService || '',
+        experienceYears: worker.workerProfile?.experienceYears || 0,
+        hourlyRate: worker.workerProfile?.hourlyRate || 0,
+        bio: worker.workerProfile?.bio || '',
+        skills: worker.workerProfile?.skills || [],
+        aadhaarNumber: worker.workerProfile?.aadhaarNumber || '',
+        aadhaarVerified: worker.workerProfile?.aadhaarVerified || false,
+        isBackgroundVerified: worker.workerProfile?.isBackgroundVerified || false,
+      }
+    });
+  };
+
+  const handleSave = () => {
+    if (selectedWorker) {
+      updateWorkerMutation.mutate({
+        workerId: selectedWorker.id,
+        updates: editData
+      });
+    }
+  };
+
+  const handleCancel = () => {
+    setIsEditing(false);
+    setEditData({});
   };
 
   if (isLoading) {
@@ -178,17 +246,58 @@ export default function WorkerApprovalSection() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => setSelectedWorker(worker)}
+                          onClick={() => {
+                            setSelectedWorker(worker);
+                            setIsEditing(false);
+                          }}
                         >
                           View Details
                         </Button>
                       </DialogTrigger>
                       <DialogContent className="max-w-2xl">
                         <DialogHeader>
-                          <DialogTitle>Worker Application Details</DialogTitle>
-                          <DialogDescription>
-                            Review the worker's profile and credentials
-                          </DialogDescription>
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <DialogTitle>Worker Application Details</DialogTitle>
+                              <DialogDescription>
+                                {isEditing ? "Edit worker's profile and credentials" : "Review the worker's profile and credentials"}
+                              </DialogDescription>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {!isEditing ? (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleEdit(selectedWorker)}
+                                  className="flex items-center gap-2"
+                                >
+                                  <Edit className="h-4 w-4" />
+                                  Edit
+                                </Button>
+                              ) : (
+                                <div className="flex items-center gap-2">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={handleCancel}
+                                    className="flex items-center gap-2"
+                                  >
+                                    <X className="h-4 w-4" />
+                                    Cancel
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    onClick={handleSave}
+                                    disabled={updateWorkerMutation.isPending}
+                                    className="flex items-center gap-2"
+                                  >
+                                    <Save className="h-4 w-4" />
+                                    {updateWorkerMutation.isPending ? "Saving..." : "Save"}
+                                  </Button>
+                                </div>
+                              )}
+                            </div>
+                          </div>
                         </DialogHeader>
                         {selectedWorker && (
                           <div className="space-y-6">
@@ -212,44 +321,155 @@ export default function WorkerApprovalSection() {
                               <div className="grid grid-cols-2 gap-4">
                                 <div>
                                   <label className="text-sm font-medium text-muted-foreground">Primary Service</label>
-                                  <p className="font-medium">{selectedWorker.workerProfile.primaryService}</p>
+                                  {isEditing ? (
+                                    <Input
+                                      value={editData.workerProfile?.primaryService || ''}
+                                      onChange={(e) => setEditData({
+                                        ...editData,
+                                        workerProfile: {
+                                          ...editData.workerProfile,
+                                          primaryService: e.target.value
+                                        }
+                                      })}
+                                      className="mt-1"
+                                    />
+                                  ) : (
+                                    <p className="font-medium">{selectedWorker.workerProfile.primaryService}</p>
+                                  )}
                                 </div>
                                 <div>
-                                  <label className="text-sm font-medium text-muted-foreground">Experience</label>
-                                  <p className="font-medium">{selectedWorker.workerProfile.experienceYears} years</p>
+                                  <label className="text-sm font-medium text-muted-foreground">Experience (Years)</label>
+                                  {isEditing ? (
+                                    <Input
+                                      type="number"
+                                      value={editData.workerProfile?.experienceYears || 0}
+                                      onChange={(e) => setEditData({
+                                        ...editData,
+                                        workerProfile: {
+                                          ...editData.workerProfile,
+                                          experienceYears: parseInt(e.target.value) || 0
+                                        }
+                                      })}
+                                      className="mt-1"
+                                    />
+                                  ) : (
+                                    <p className="font-medium">{selectedWorker.workerProfile.experienceYears} years</p>
+                                  )}
                                 </div>
                                 <div>
-                                  <label className="text-sm font-medium text-muted-foreground">Hourly Rate</label>
-                                  <p className="font-medium">₹{selectedWorker.workerProfile.hourlyRate}</p>
+                                  <label className="text-sm font-medium text-muted-foreground">Hourly Rate (₹)</label>
+                                  {isEditing ? (
+                                    <Input
+                                      type="number"
+                                      value={editData.workerProfile?.hourlyRate || 0}
+                                      onChange={(e) => setEditData({
+                                        ...editData,
+                                        workerProfile: {
+                                          ...editData.workerProfile,
+                                          hourlyRate: parseFloat(e.target.value) || 0
+                                        }
+                                      })}
+                                      className="mt-1"
+                                    />
+                                  ) : (
+                                    <p className="font-medium">₹{selectedWorker.workerProfile.hourlyRate}</p>
+                                  )}
                                 </div>
                                 <div>
                                   <label className="text-sm font-medium text-muted-foreground">Aadhaar Number</label>
-                                  <div className="flex items-center gap-2">
-                                    <p className="font-medium">{selectedWorker.workerProfile.aadhaarNumber}</p>
-                                    {selectedWorker.workerProfile.aadhaarVerified ? (
-                                      <Badge variant="default" className="bg-green-100 text-green-700 border-green-200">
-                                        <CheckCircle className="h-3 w-3 mr-1" />
-                                        Verified
-                                      </Badge>
+                                  <div className="flex items-center gap-2 mt-1">
+                                    {isEditing ? (
+                                      <Input
+                                        value={editData.workerProfile?.aadhaarNumber || ''}
+                                        onChange={(e) => setEditData({
+                                          ...editData,
+                                          workerProfile: {
+                                            ...editData.workerProfile,
+                                            aadhaarNumber: e.target.value
+                                          }
+                                        })}
+                                        className="flex-1"
+                                      />
                                     ) : (
-                                      <Badge variant="destructive" className="bg-red-100 text-red-700 border-red-200">
-                                        <AlertTriangle className="h-3 w-3 mr-1" />
-                                        Not Verified
-                                      </Badge>
+                                      <p className="font-medium flex-1">{selectedWorker.workerProfile.aadhaarNumber}</p>
+                                    )}
+                                    {isEditing ? (
+                                      <div className="flex items-center gap-2">
+                                        <label className="text-sm">Verified:</label>
+                                        <Switch
+                                          checked={editData.workerProfile?.aadhaarVerified || false}
+                                          onCheckedChange={(checked) => setEditData({
+                                            ...editData,
+                                            workerProfile: {
+                                              ...editData.workerProfile,
+                                              aadhaarVerified: checked
+                                            }
+                                          })}
+                                        />
+                                      </div>
+                                    ) : (
+                                      selectedWorker.workerProfile.aadhaarVerified ? (
+                                        <Badge variant="default" className="bg-green-100 text-green-700 border-green-200">
+                                          <CheckCircle className="h-3 w-3 mr-1" />
+                                          Verified
+                                        </Badge>
+                                      ) : (
+                                        <Badge variant="destructive" className="bg-red-100 text-red-700 border-red-200">
+                                          <AlertTriangle className="h-3 w-3 mr-1" />
+                                          Not Verified
+                                        </Badge>
+                                      )
                                     )}
                                   </div>
                                 </div>
                                 <div>
                                   <label className="text-sm font-medium text-muted-foreground">Address</label>
-                                  <p className="font-medium">{selectedWorker.address || selectedWorker.workerProfile?.address || "Not provided"}</p>
+                                  {isEditing ? (
+                                    <Input
+                                      value={editData.address || ''}
+                                      onChange={(e) => setEditData({
+                                        ...editData,
+                                        address: e.target.value
+                                      })}
+                                      className="mt-1"
+                                    />
+                                  ) : (
+                                    <p className="font-medium">{selectedWorker.address || "Not provided"}</p>
+                                  )}
                                 </div>
                                 <div>
                                   <label className="text-sm font-medium text-muted-foreground">Pincode</label>
-                                  <p className="font-medium">{selectedWorker.pincode || selectedWorker.workerProfile?.pincode || "Not provided"}</p>
+                                  {isEditing ? (
+                                    <Input
+                                      value={editData.pincode || ''}
+                                      onChange={(e) => setEditData({
+                                        ...editData,
+                                        pincode: e.target.value
+                                      })}
+                                      className="mt-1"
+                                    />
+                                  ) : (
+                                    <p className="font-medium">{selectedWorker.pincode || "Not provided"}</p>
+                                  )}
                                 </div>
                                 <div className="col-span-2">
                                   <label className="text-sm font-medium text-muted-foreground">Bio</label>
-                                  <p className="font-medium">{selectedWorker.workerProfile?.bio || "No bio provided"}</p>
+                                  {isEditing ? (
+                                    <Textarea
+                                      value={editData.workerProfile?.bio || ''}
+                                      onChange={(e) => setEditData({
+                                        ...editData,
+                                        workerProfile: {
+                                          ...editData.workerProfile,
+                                          bio: e.target.value
+                                        }
+                                      })}
+                                      className="mt-1"
+                                      rows={3}
+                                    />
+                                  ) : (
+                                    <p className="font-medium">{selectedWorker.workerProfile?.bio || "No bio provided"}</p>
+                                  )}
                                 </div>
                                 <div className="col-span-2">
                                   <label className="text-sm font-medium text-muted-foreground">Service Districts</label>

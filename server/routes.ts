@@ -420,7 +420,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Get area names for service areas if they exist
       let serviceAreaNames = [];
-      if (workerProfile && workerProfile.serviceAreas && !workerProfile.serviceAllAreas) {
+      if (workerProfile && workerProfile.serviceAreas && Array.isArray(workerProfile.serviceAreas) && !workerProfile.serviceAllAreas) {
         const allAreas = await storage.getAllAreas();
         serviceAreaNames = workerProfile.serviceAreas.map((areaId: string) => {
           const area = allAreas.find((a: any) => a.id === areaId);
@@ -575,6 +575,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error rejecting worker:", error);
       res.status(500).json({ error: "Failed to reject worker" });
+    }
+  });
+
+  app.patch("/api/admin/update-worker/:workerId", async (req, res) => {
+    try {
+      const { workerId } = req.params;
+      const updates = req.body;
+      const updatedWorker = await storage.updateWorker(workerId, updates);
+      res.json(updatedWorker);
+    } catch (error) {
+      console.error("Error updating worker:", error);
+      res.status(500).json({ error: "Failed to update worker" });
     }
   });
 

@@ -61,6 +61,7 @@ export interface IStorage {
   getPendingWorkers(): Promise<any[]>;
   approveWorker(workerId: string): Promise<User>;
   rejectWorker(workerId: string): Promise<void>;
+  updateWorker(workerId: string, updates: any): Promise<User>;
   
   // Bookings
   createBooking(booking: InsertBooking): Promise<Booking>;
@@ -286,6 +287,30 @@ export class DatabaseStorage implements IStorage {
     
     // Delete user
     await db.delete(users).where(eq(users.id, workerId));
+  }
+
+  async updateWorker(workerId: string, updates: any): Promise<User> {
+    const { workerProfile, ...userUpdates } = updates;
+
+    // Update user information
+    if (Object.keys(userUpdates).length > 0) {
+      await db
+        .update(users)
+        .set({ ...userUpdates, updatedAt: new Date() })
+        .where(eq(users.id, workerId));
+    }
+
+    // Update worker profile information
+    if (workerProfile && Object.keys(workerProfile).length > 0) {
+      await db
+        .update(workerProfiles)
+        .set({ ...workerProfile, updatedAt: new Date() })
+        .where(eq(workerProfiles.userId, workerId));
+    }
+
+    // Return updated user
+    const [updatedUser] = await db.select().from(users).where(eq(users.id, workerId));
+    return updatedUser;
   }
 
   async createBooking(booking: InsertBooking): Promise<Booking> {
