@@ -256,33 +256,13 @@ export default function WorkerApprovalSection() {
                       </DialogTrigger>
                       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
                         <DialogHeader className="pb-6 border-b">
-                          <div className="flex items-center justify-between">
-                            <div className="space-y-1">
-                              <DialogTitle className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
-                                Worker Application Details
-                              </DialogTitle>
-                              <DialogDescription className="text-sm text-muted-foreground">
-                                {isEditing ? "Edit worker's profile and credentials" : "Review the worker's profile and credentials"}
-                              </DialogDescription>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-7 w-7 p-0 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-center"
-                                title="Minimize"
-                              >
-                                <span className="text-sm font-bold leading-none">−</span>
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-7 w-7 p-0 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-center"
-                                title="Maximize"
-                              >
-                                <span className="text-sm font-bold leading-none">□</span>
-                              </Button>
-                            </div>
+                          <div className="space-y-1">
+                            <DialogTitle className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
+                              Worker Application Details
+                            </DialogTitle>
+                            <DialogDescription className="text-sm text-muted-foreground">
+                              {isEditing ? "Edit worker's profile and credentials" : "Review the worker's profile and credentials"}
+                            </DialogDescription>
                           </div>
                         </DialogHeader>
                         {selectedWorker && (
