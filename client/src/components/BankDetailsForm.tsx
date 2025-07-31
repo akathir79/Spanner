@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -73,7 +73,40 @@ export default function BankDetailsForm({
   // Optimized input handlers to prevent focus loss
   const handleInputChange = useCallback((field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-  }, []);
+    // Clear error for this field when user starts typing
+    if (errors[field]) {
+      setErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[field];
+        return newErrors;
+      });
+    }
+  }, [errors]);
+
+  // Memoized input handlers to prevent re-renders
+  const handleAccountHolderNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    handleInputChange('accountHolderName', e.target.value);
+  }, [handleInputChange]);
+
+  const handleAccountNumberChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    handleInputChange('accountNumber', e.target.value);
+  }, [handleInputChange]);
+
+  const handleIFSCCodeChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    handleInputChange('ifscCode', e.target.value.toUpperCase());
+  }, [handleInputChange]);
+
+  const handleBankNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    handleInputChange('bankName', e.target.value);
+  }, [handleInputChange]);
+
+  const handleBranchNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    handleInputChange('branchName', e.target.value);
+  }, [handleInputChange]);
+
+  const handleBankAddressChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    handleInputChange('bankAddress', e.target.value);
+  }, [handleInputChange]);
 
   // Mock IFSC lookup function (in production, this would call a real IFSC API)
   const lookupIFSC = async (ifscCode: string): Promise<BankInfo | null> => {
@@ -289,9 +322,10 @@ export default function BankDetailsForm({
               <Input
                 id="accountHolderName"
                 value={formData.accountHolderName}
-                onChange={(e) => handleInputChange('accountHolderName', e.target.value)}
+                onChange={handleAccountHolderNameChange}
                 placeholder="Enter full name as per bank records"
                 className={errors.accountHolderName ? 'border-red-500' : ''}
+                autoComplete="off"
               />
               {errors.accountHolderName && (
                 <p className="text-sm text-red-500 mt-1">{errors.accountHolderName}</p>
@@ -303,9 +337,10 @@ export default function BankDetailsForm({
               <Input
                 id="accountNumber"
                 value={formData.accountNumber}
-                onChange={(e) => handleInputChange('accountNumber', e.target.value)}
+                onChange={handleAccountNumberChange}
                 placeholder="Enter bank account number"
                 className={errors.accountNumber ? 'border-red-500' : ''}
+                autoComplete="off"
               />
               {errors.accountNumber && (
                 <p className="text-sm text-red-500 mt-1">{errors.accountNumber}</p>
@@ -341,10 +376,11 @@ export default function BankDetailsForm({
                     <Input
                       id="ifscCode"
                       value={formData.ifscCode}
-                      onChange={(e) => handleInputChange('ifscCode', e.target.value.toUpperCase())}
+                      onChange={handleIFSCCodeChange}
                       placeholder="Enter 11-character IFSC code"
                       maxLength={11}
                       className={errors.ifscCode ? 'border-red-500' : ''}
+                      autoComplete="off"
                     />
                     <Button
                       type="button"
@@ -403,9 +439,10 @@ export default function BankDetailsForm({
                   <Textarea
                     id="bankAddress"
                     value={formData.bankAddress}
-                    onChange={(e) => handleInputChange('bankAddress', e.target.value)}
+                    onChange={handleBankAddressChange}
                     placeholder="You can edit the address if needed"
                     rows={3}
+                    autoComplete="off"
                   />
                 </div>
               </>
@@ -417,10 +454,11 @@ export default function BankDetailsForm({
                   <Input
                     id="ifscCode"
                     value={formData.ifscCode}
-                    onChange={(e) => handleInputChange('ifscCode', e.target.value.toUpperCase())}
+                    onChange={handleIFSCCodeChange}
                     placeholder="Enter 11-character IFSC code"
                     maxLength={11}
                     className={errors.ifscCode ? 'border-red-500' : ''}
+                    autoComplete="off"
                   />
                   {errors.ifscCode && (
                     <p className="text-sm text-red-500 mt-1">{errors.ifscCode}</p>
@@ -432,9 +470,10 @@ export default function BankDetailsForm({
                   <Input
                     id="bankName"
                     value={formData.bankName}
-                    onChange={(e) => handleInputChange('bankName', e.target.value)}
+                    onChange={handleBankNameChange}
                     placeholder="Enter bank name"
                     className={errors.bankName ? 'border-red-500' : ''}
+                    autoComplete="off"
                   />
                   {errors.bankName && (
                     <p className="text-sm text-red-500 mt-1">{errors.bankName}</p>
@@ -446,9 +485,10 @@ export default function BankDetailsForm({
                   <Input
                     id="branchName"
                     value={formData.branchName}
-                    onChange={(e) => handleInputChange('branchName', e.target.value)}
+                    onChange={handleBranchNameChange}
                     placeholder="Enter branch name"
                     className={errors.branchName ? 'border-red-500' : ''}
+                    autoComplete="off"
                   />
                   {errors.branchName && (
                     <p className="text-sm text-red-500 mt-1">{errors.branchName}</p>
@@ -460,10 +500,11 @@ export default function BankDetailsForm({
                   <Textarea
                     id="bankAddress"
                     value={formData.bankAddress}
-                    onChange={(e) => handleInputChange('bankAddress', e.target.value)}
+                    onChange={handleBankAddressChange}
                     placeholder="Enter complete bank address"
                     rows={3}
                     className={errors.bankAddress ? 'border-red-500' : ''}
+                    autoComplete="off"
                   />
                   {errors.bankAddress && (
                     <p className="text-sm text-red-500 mt-1">{errors.bankAddress}</p>
