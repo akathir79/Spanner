@@ -13,7 +13,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/components/LanguageProvider";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UserPlus, LogIn, Smartphone, Info, MapPin, Upload, User, X, Plus, CheckCircle, AlertTriangle, Clock, ChevronDown, CreditCard } from "lucide-react";
-import BankDetailsForm from "@/components/BankDetailsForm";
+import BankDetailsFormNew from "@/components/BankDetailsFormNew";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useToast } from "@/hooks/use-toast";
@@ -1790,12 +1790,12 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
                 Add your bank details now or later from your dashboard to receive payments from completed jobs.
               </p>
               
-              <BankDetailsForm
+              <BankDetailsFormNew
                 workerId={registeredWorkerId}
                 isDialog={false}
                 onSuccess={() => {
                   toast({
-                    title: "Bank Details Added",
+                    title: "Bank Details Added", 
                     description: "Your bank details have been saved successfully.",
                   });
                 }}
