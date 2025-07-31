@@ -13,7 +13,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/components/LanguageProvider";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UserPlus, LogIn, Smartphone, Info, MapPin, Upload, User, X, Plus, CheckCircle, AlertTriangle, Clock, ChevronDown, CreditCard } from "lucide-react";
-import BankDetailsFormFixed from "@/components/BankDetailsFormFixed";
+import BankDetailsModal from "@/components/BankDetailsModal";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useToast } from "@/hooks/use-toast";
@@ -92,7 +92,7 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
   const [registrationCompleted, setRegistrationCompleted] = useState(false);
   const [registeredWorkerId, setRegisteredWorkerId] = useState<string>("");
   const [workerRegistrationStep, setWorkerRegistrationStep] = useState<"details" | "bank" | "complete">("details");
-  const [showBankDetailsForm, setShowBankDetailsForm] = useState(false);
+  const [showBankDetailsModal, setShowBankDetailsModal] = useState(false);
   const { login, verifyOtp, signupClient, signupWorker, isLoading } = useAuth();
   const { t } = useLanguage();
   const { toast } = useToast();
@@ -523,7 +523,7 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
   };
 
   const handleBankDetailsComplete = () => {
-    setShowBankDetailsForm(false);
+    setShowBankDetailsModal(false);
     setRegistrationCompleted(true);
     setWorkerRegistrationStep("details");
     toast({
@@ -1755,7 +1755,7 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
                   {isLoading ? "Submitting Application..." : "Submit Application"}
                 </Button>
               </form>
-              ) : workerRegistrationStep === "complete" && !showBankDetailsForm ? (
+              ) : workerRegistrationStep === "complete" ? (
                 <div className="space-y-6">
                   <div className="text-center">
                     <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
@@ -1771,7 +1771,7 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
                   <div className="flex space-x-3">
                     <Button
                       type="button"
-                      onClick={() => setShowBankDetailsForm(true)}
+                      onClick={() => setShowBankDetailsModal(true)}
                       className="flex-1"
                     >
                       <CreditCard className="h-4 w-4 mr-2" />
@@ -1793,54 +1793,7 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
                     </Button>
                   </div>
                 </div>
-              ) : workerRegistrationStep === "complete" && showBankDetailsForm ? (
-                <div className="space-y-6">
-                  <div className="text-center">
-                    <CreditCard className="h-12 w-12 text-blue-500 mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold mb-2">Add Bank Details</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Bank details are required to receive payments for completed jobs.
-                    </p>
-                  </div>
-
-                  <BankDetailsFormFixed
-                    workerId={registeredWorkerId}
-                    isDialog={false}
-                    showTitle={false}
-                    onSuccess={handleBankDetailsComplete}
-                    onCancel={() => setShowBankDetailsForm(false)}
-                  />
-                </div>
-              ) : (
-                <div className="space-y-6">
-                  <div className="text-center">
-                    <CreditCard className="h-12 w-12 text-blue-500 mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold mb-2">Add Bank Details (Required)</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Bank details are required to receive payments for completed jobs. This information is mandatory for worker registration.
-                    </p>
-                  </div>
-
-                  <BankDetailsFormFixed
-                    workerId={registeredWorkerId}
-                    isDialog={false}
-                    showTitle={false}
-                    onSuccess={handleBankDetailsComplete}
-                    onCancel={() => setWorkerRegistrationStep("details")}
-                  />
-
-                  <div className="flex space-x-3 pt-4">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setWorkerRegistrationStep("details")}
-                      className="flex-1"
-                    >
-                      Back to Details
-                    </Button>
-                  </div>
-                </div>
-              )}
+              ) : null}
             </TabsContent>
           </Tabs>
         )}
@@ -1862,19 +1815,7 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
                 Add your bank details now or later from your dashboard to receive payments from completed jobs.
               </p>
               
-              <BankDetailsFormFixed
-                workerId={registeredWorkerId}
-                isDialog={false}
-                onSuccess={() => {
-                  toast({
-                    title: "Bank Details Added", 
-                    description: "Your bank details have been saved successfully.",
-                  });
-                }}
-                onCancel={() => {
-                  // Do nothing for now, they can add later
-                }}
-              />
+
             </div>
 
             <div className="flex space-x-3 pt-4">
@@ -1902,6 +1843,14 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
             </div>
           </div>
         )}
+
+        {/* Bank Details Modal */}
+        <BankDetailsModal
+          isOpen={showBankDetailsModal}
+          onClose={() => setShowBankDetailsModal(false)}
+          workerId={registeredWorkerId}
+          onSuccess={handleBankDetailsComplete}
+        />
       </DialogContent>
     </Dialog>
   );
