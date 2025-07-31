@@ -51,8 +51,9 @@ Located in `shared/schema.ts`, the database includes:
 - Super admin capabilities for creating admin accounts
 - Support for both email and mobile login options
 - Profile picture upload functionality (optional for clients, mandatory for workers)
-- Multi-step worker registration: personal details → bank details → completion
-- Bank details integrated directly into registration flow with auto/manual IFSC lookup
+- Multi-step worker registration: personal details → mandatory bank details → completion
+- Bank details required and integrated directly into registration flow with auto/manual IFSC lookup
+- Workers cannot skip bank details during registration - must complete to proceed
 - Real SMS OTP integration ready for Twilio implementation when needed
 
 ### User Interfaces

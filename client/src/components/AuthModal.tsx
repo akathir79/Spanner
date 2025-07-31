@@ -565,17 +565,7 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
     }, 1500);
   };
 
-  const handleSkipBankDetails = () => {
-    toast({
-      title: "Registration Complete!",
-      description: "You can add bank details later from your dashboard. Redirecting...",
-    });
-    
-    // Redirect to worker dashboard when skipping bank details
-    setTimeout(() => {
-      window.location.href = "/worker-dashboard";
-    }, 1500);
-  };
+
 
   const handleAadhaarVerificationRequest = () => {
     const aadhaarNumber = workerForm.getValues("aadhaarNumber");
@@ -1741,9 +1731,9 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
                 <div className="space-y-6">
                   <div className="text-center">
                     <CreditCard className="h-12 w-12 text-blue-500 mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold mb-2">Add Bank Details</h3>
+                    <h3 className="text-lg font-semibold mb-2">Add Bank Details (Required)</h3>
                     <p className="text-sm text-muted-foreground">
-                      Please add your bank details to receive payments for completed jobs.
+                      Bank details are required to receive payments for completed jobs. This information is mandatory for worker registration.
                     </p>
                   </div>
 
@@ -1762,14 +1752,7 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
                       onClick={() => setWorkerRegistrationStep("details")}
                       className="flex-1"
                     >
-                      Back
-                    </Button>
-                    <Button
-                      type="button"
-                      onClick={handleSkipBankDetails}
-                      className="flex-1"
-                    >
-                      Skip for Now
+                      Back to Details
                     </Button>
                   </div>
                 </div>

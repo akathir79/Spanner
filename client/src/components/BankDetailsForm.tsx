@@ -203,10 +203,7 @@ export default function BankDetailsForm({
         ? `/api/worker-bank-details/${existingDetails.id}` 
         : '/api/worker-bank-details';
       
-      return apiRequest(url, {
-        method: existingDetails ? 'PUT' : 'POST',
-        body: JSON.stringify({ ...data, workerId }),
-      });
+      return apiRequest(existingDetails ? 'PUT' : 'POST', url, { ...data, workerId });
     },
     onSuccess: () => {
       toast({
