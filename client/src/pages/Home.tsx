@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -187,30 +188,44 @@ export default function Home() {
   const { t } = useLanguage();
   const { user } = useAuth();
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
 
   // Redirect logged-in users to their dashboards, unless completing bank details
   useEffect(() => {
     // Check localStorage directly to ensure we have the most current user data
     const storedUser = localStorage.getItem("user");
+    console.log("Home page - stored user:", storedUser); // Debug log
+    
     if (storedUser && !localStorage.getItem("pendingBankDetails")) {
       try {
         const userData = JSON.parse(storedUser);
+        console.log("Home page - parsed user data:", userData); // Debug log
+        
         if (userData && userData.id && userData.role) {
-          // Use a more immediate redirect to prevent multiple refreshes
+          console.log("Home page - redirecting user with role:", userData.role); // Debug log
+          
+          // Use router for immediate redirection
           if (userData.role === "super_admin" || userData.role === "admin") {
-            window.location.replace("/admin-dashboard");
+            console.log("Redirecting to admin dashboard");
+            setLocation("/admin-dashboard");
+            return;
           } else if (userData.role === "worker") {
-            window.location.replace("/worker-dashboard");
+            console.log("Redirecting to worker dashboard");
+            setLocation("/worker-dashboard");
+            return;
           } else {
-            window.location.replace("/dashboard");
+            console.log("Redirecting to client dashboard");
+            setLocation("/dashboard");
+            return;
           }
         }
       } catch (error) {
+        console.error("Error parsing stored user data:", error);
         // If stored user data is corrupted, clear it
         localStorage.removeItem("user");
       }
     }
-  }, [user]);
+  }, []);
   const [searchForm, setSearchForm] = useState({
     service: "",
     district: "",
