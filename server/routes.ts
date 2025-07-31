@@ -11,7 +11,8 @@ import {
   insertLocationTrackingSchema,
   insertLocationSharingSessionSchema,
   insertGeofenceSchema,
-  insertLocationEventSchema
+  insertLocationEventSchema,
+  insertWorkerBankDetailsSchema
 } from "@shared/schema";
 
 // Validation schemas
@@ -855,6 +856,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching location events:", error);
       res.status(500).json({ message: "Failed to fetch location events" });
+    }
+  });
+
+  // Worker Bank Details API Routes
+  
+  // Create worker bank details
+  app.post("/api/worker-bank-details", async (req, res) => {
+    try {
+      const bankDetailsData = insertWorkerBankDetailsSchema.parse(req.body);
+      const bankDetails = await storage.createWorkerBankDetails(bankDetailsData);
+      res.status(201).json(bankDetails);
+    } catch (error) {
+      console.error("Error creating bank details:", error);
+      res.status(500).json({ message: "Failed to create bank details" });
+    }
+  });
+
+  // Get worker bank details by worker ID
+  app.get("/api/worker-bank-details/:workerId", async (req, res) => {
+    try {
+      const { workerId } = req.params;
+      const bankDetails = await storage.getWorkerBankDetails(workerId);
+      if (!bankDetails) {
+        return res.status(404).json({ message: "Bank details not found" });
+      }
+      res.json(bankDetails);
+    } catch (error) {
+      console.error("Error fetching bank details:", error);
+      res.status(500).json({ message: "Failed to fetch bank details" });
+    }
+  });
+
+  // Update worker bank details
+  app.put("/api/worker-bank-details/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updateData = req.body;
+      const bankDetails = await storage.updateWorkerBankDetails(id, updateData);
+      if (!bankDetails) {
+        return res.status(404).json({ message: "Bank details not found" });
+      }
+      res.json(bankDetails);
+    } catch (error) {
+      console.error("Error updating bank details:", error);
+      res.status(500).json({ message: "Failed to update bank details" });
+    }
+  });
+
+  // Delete worker bank details
+  app.delete("/api/worker-bank-details/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteWorkerBankDetails(id);
+      res.json({ message: "Bank details deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting bank details:", error);
+      res.status(500).json({ message: "Failed to delete bank details" });
     }
   });
 

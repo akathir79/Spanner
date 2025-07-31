@@ -203,6 +203,22 @@ export const locationEvents = pgTable("location_events", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// Worker Bank Details
+export const workerBankDetails = pgTable("worker_bank_details", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  workerId: varchar("worker_id").references(() => users.id).notNull(),
+  accountHolderName: text("account_holder_name").notNull(),
+  accountNumber: text("account_number").notNull(),
+  ifscCode: text("ifsc_code").notNull(),
+  bankName: text("bank_name").notNull(),
+  branchName: text("branch_name").notNull(),
+  bankAddress: text("bank_address").notNull(),
+  accountType: text("account_type").default("savings"), // savings, current
+  isVerified: boolean("is_verified").default(false),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 // Relations
 export const usersRelations = relations(users, ({ one, many }) => ({
   district: one(districts, {
@@ -212,6 +228,10 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   workerProfile: one(workerProfiles, {
     fields: [users.id],
     references: [workerProfiles.userId],
+  }),
+  workerBankDetails: one(workerBankDetails, {
+    fields: [users.id],
+    references: [workerBankDetails.workerId],
   }),
   clientBookings: many(bookings, { relationName: "clientBookings" }),
   workerBookings: many(bookings, { relationName: "workerBookings" }),
@@ -408,6 +428,12 @@ export const insertLocationEventSchema = createInsertSchema(locationEvents).omit
   createdAt: true,
 });
 
+export const insertWorkerBankDetailsSchema = createInsertSchema(workerBankDetails).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -434,3 +460,5 @@ export type Geofence = typeof geofences.$inferSelect;
 export type InsertGeofence = z.infer<typeof insertGeofenceSchema>;
 export type LocationEvent = typeof locationEvents.$inferSelect;
 export type InsertLocationEvent = z.infer<typeof insertLocationEventSchema>;
+export type WorkerBankDetails = typeof workerBankDetails.$inferSelect;
+export type InsertWorkerBankDetails = z.infer<typeof insertWorkerBankDetailsSchema>;

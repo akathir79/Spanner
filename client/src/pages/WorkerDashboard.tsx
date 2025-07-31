@@ -35,6 +35,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import LocationTracker from "@/components/LocationTracker";
+import BankDetailsForm from "@/components/BankDetailsForm";
 
 // Worker Jobs Component
 const WorkerJobsTab = () => {
@@ -1035,6 +1036,22 @@ export default function WorkerDashboard() {
                     </div>
                   </div>
                 </div>
+              </CardContent>
+            </Card>
+
+            {/* Bank Details Section */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <DollarSign className="h-5 w-5" />
+                  <span>Bank Details</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <BankDetailsForm
+                  workerId={user?.id || ""}
+                  isDialog={true}
+                />
               </CardContent>
             </Card>
           </TabsContent>

@@ -12,7 +12,8 @@ import { z } from "zod";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/components/LanguageProvider";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { UserPlus, LogIn, Smartphone, Info, MapPin, Upload, User, X, Plus, CheckCircle, AlertTriangle, Clock, ChevronDown } from "lucide-react";
+import { UserPlus, LogIn, Smartphone, Info, MapPin, Upload, User, X, Plus, CheckCircle, AlertTriangle, Clock, ChevronDown, CreditCard } from "lucide-react";
+import BankDetailsForm from "@/components/BankDetailsForm";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useToast } from "@/hooks/use-toast";
@@ -88,6 +89,8 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
   const [aadhaarOtp, setAadhaarOtp] = useState("");
   const [generatedAadhaarOtp, setGeneratedAadhaarOtp] = useState("");
   const [bioDataPreview, setBioDataPreview] = useState<string>("");
+  const [registrationCompleted, setRegistrationCompleted] = useState(false);
+  const [registeredWorkerId, setRegisteredWorkerId] = useState<string>("");
   const { login, verifyOtp, signupClient, signupWorker, isLoading } = useAuth();
   const { t } = useLanguage();
   const { toast } = useToast();
@@ -533,7 +536,14 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
       bioDataDocument: bioDataPreview, // Add the bio data document from state
     });
     if (result) {
-      onClose();
+      setRegistrationCompleted(true);
+      if (typeof result === 'object' && result.user && result.user.id) {
+        setRegisteredWorkerId(result.user.id);
+      }
+      toast({
+        title: "Registration Successful!",
+        description: "You can now add your bank details for payment processing.",
+      });
     }
   };
 
@@ -1695,6 +1705,64 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
               </form>
             </TabsContent>
           </Tabs>
+        )}
+
+        {/* Worker Registration Completion with Bank Details */}
+        {registrationCompleted && (
+          <div className="space-y-6">
+            <div className="text-center">
+              <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold mb-2">Registration Successful!</h3>
+              <p className="text-sm text-muted-foreground">
+                Your worker application has been submitted successfully. You can now add your bank details for payment processing.
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              <h4 className="font-medium text-center">Add Bank Details (Optional)</h4>
+              <p className="text-sm text-muted-foreground text-center">
+                Add your bank details now or later from your dashboard to receive payments from completed jobs.
+              </p>
+              
+              <BankDetailsForm
+                workerId={registeredWorkerId}
+                isDialog={false}
+                onSuccess={() => {
+                  toast({
+                    title: "Bank Details Added",
+                    description: "Your bank details have been saved successfully.",
+                  });
+                }}
+                onCancel={() => {
+                  // Do nothing for now, they can add later
+                }}
+              />
+            </div>
+
+            <div className="flex space-x-3 pt-4">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setRegistrationCompleted(false);
+                  setRegisteredWorkerId("");
+                  onClose();
+                }}
+                className="flex-1"
+              >
+                Skip for Now
+              </Button>
+              <Button
+                onClick={() => {
+                  setRegistrationCompleted(false);
+                  setRegisteredWorkerId("");
+                  onClose();
+                }}
+                className="flex-1"
+              >
+                Done
+              </Button>
+            </div>
+          </div>
         )}
       </DialogContent>
     </Dialog>

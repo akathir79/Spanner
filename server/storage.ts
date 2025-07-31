@@ -12,6 +12,7 @@ import {
   locationSharingSessions,
   geofences,
   locationEvents,
+  workerBankDetails,
   type User, 
   type InsertUser,
   type WorkerProfile,
@@ -35,7 +36,9 @@ import {
   type Geofence,
   type InsertGeofence,
   type LocationEvent,
-  type InsertLocationEvent
+  type InsertLocationEvent,
+  type WorkerBankDetails,
+  type InsertWorkerBankDetails
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, sql, desc, ilike, inArray } from "drizzle-orm";
@@ -123,6 +126,12 @@ export interface IStorage {
   getAllUsers(): Promise<User[]>;
   getUsersWithProfiles(): Promise<(User & { workerProfile?: WorkerProfile })[]>;
   getBookingsWithDetails(): Promise<(Booking & { client: User; worker: User; district: District })[]>;
+  
+  // Worker Bank Details
+  createWorkerBankDetails(bankDetails: InsertWorkerBankDetails): Promise<WorkerBankDetails>;
+  getWorkerBankDetails(workerId: string): Promise<WorkerBankDetails | undefined>;
+  updateWorkerBankDetails(id: string, updates: Partial<WorkerBankDetails>): Promise<WorkerBankDetails | undefined>;
+  deleteWorkerBankDetails(id: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -669,6 +678,38 @@ export class DatabaseStorage implements IStorage {
       .from(locationEvents)
       .where(eq(locationEvents.bookingId, bookingId))
       .orderBy(desc(locationEvents.timestamp));
+  }
+
+  // Worker Bank Details Implementation
+  async createWorkerBankDetails(bankDetails: InsertWorkerBankDetails): Promise<WorkerBankDetails> {
+    const [newBankDetails] = await db
+      .insert(workerBankDetails)
+      .values(bankDetails)
+      .returning();
+    return newBankDetails;
+  }
+
+  async getWorkerBankDetails(workerId: string): Promise<WorkerBankDetails | undefined> {
+    const [bankDetails] = await db
+      .select()
+      .from(workerBankDetails)
+      .where(eq(workerBankDetails.workerId, workerId));
+    return bankDetails;
+  }
+
+  async updateWorkerBankDetails(id: string, updates: Partial<WorkerBankDetails>): Promise<WorkerBankDetails | undefined> {
+    const [updatedBankDetails] = await db
+      .update(workerBankDetails)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(workerBankDetails.id, id))
+      .returning();
+    return updatedBankDetails;
+  }
+
+  async deleteWorkerBankDetails(id: string): Promise<void> {
+    await db
+      .delete(workerBankDetails)
+      .where(eq(workerBankDetails.id, id));
   }
 }
 
