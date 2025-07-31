@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Plus } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -28,14 +29,164 @@ import {
   Award,
   Users,
   Briefcase,
-  DollarSign
+  DollarSign,
+  CreditCard,
+  Edit,
+  Building2,
+  Eye,
+  EyeOff
 } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import type { WorkerBankDetails } from "@shared/schema";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import LocationTracker from "@/components/LocationTracker";
-import BankDetailsFormFixed from "@/components/BankDetailsFormFixed";
+import BankDetailsModal from "@/components/BankDetailsModal";
+
+// Bank Details Component
+const BankDetailsCard = () => {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [showBankModal, setShowBankModal] = useState(false);
+  const [showAccountNumber, setShowAccountNumber] = useState(false);
+
+  // Fetch bank details
+  const { data: bankDetails, isLoading: isBankDetailsLoading } = useQuery<WorkerBankDetails>({
+    queryKey: ['/api/worker-bank-details', user?.id],
+    enabled: !!user?.id,
+  });
+
+  return (
+    <>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <CreditCard className="h-5 w-5" />
+              <span>Bank Details</span>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowBankModal(true)}
+              className="flex items-center space-x-2"
+            >
+              {bankDetails ? <Edit className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+              <span>{bankDetails ? 'Edit' : 'Add'} Bank Details</span>
+            </Button>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {isBankDetailsLoading ? (
+            <div className="space-y-3">
+              <div className="h-4 bg-muted animate-pulse rounded" />
+              <div className="h-4 bg-muted animate-pulse rounded w-3/4" />
+              <div className="h-4 bg-muted animate-pulse rounded w-1/2" />
+            </div>
+          ) : bankDetails ? (
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-sm text-muted-foreground">Account Holder Name</Label>
+                  <p className="font-medium">{bankDetails.accountHolderName}</p>
+                </div>
+                <div>
+                  <Label className="text-sm text-muted-foreground">Account Number</Label>
+                  <div className="flex items-center space-x-2">
+                    <p className="font-medium font-mono">
+                      {showAccountNumber 
+                        ? bankDetails.accountNumber 
+                        : `****${bankDetails.accountNumber.slice(-4)}`
+                      }
+                    </p>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowAccountNumber(!showAccountNumber)}
+                      className="p-1 h-auto"
+                    >
+                      {showAccountNumber ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-sm text-muted-foreground">IFSC Code</Label>
+                  <p className="font-medium font-mono">{bankDetails.ifscCode}</p>
+                </div>
+                <div>
+                  <Label className="text-sm text-muted-foreground">Account Type</Label>
+                  <p className="font-medium capitalize">{bankDetails.accountType}</p>
+                </div>
+                <div>
+                  <Label className="text-sm text-muted-foreground">Bank Name</Label>
+                  <div className="flex items-center space-x-2">
+                    <Building2 className="h-4 w-4 text-muted-foreground" />
+                    <p className="font-medium">{bankDetails.bankName}</p>
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-sm text-muted-foreground">Branch</Label>
+                  <p className="font-medium">{bankDetails.branchName}</p>
+                </div>
+              </div>
+              <div>
+                <Label className="text-sm text-muted-foreground">Bank Address</Label>
+                <p className="text-sm">{bankDetails.bankAddress}</p>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Badge 
+                  variant={bankDetails.isVerified ? "default" : "secondary"}
+                  className={bankDetails.isVerified ? "bg-green-100 text-green-800" : ""}
+                >
+                  {bankDetails.isVerified ? (
+                    <CheckCircle className="h-3 w-3 mr-1" />
+                  ) : (
+                    <Clock className="h-3 w-3 mr-1" />
+                  )}
+                  {bankDetails.isVerified ? 'Verified' : 'Pending Verification'}
+                </Badge>
+                <span className="text-xs text-muted-foreground">
+                  Added on {new Date(bankDetails.createdAt).toLocaleDateString()}
+                </span>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <CreditCard className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-medium mb-2">No Bank Details Added</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                Add your bank details to receive payments for completed jobs.
+              </p>
+              <Button
+                onClick={() => setShowBankModal(true)}
+                className="flex items-center space-x-2"
+              >
+                <Plus className="h-4 w-4" />
+                <span>Add Bank Details</span>
+              </Button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Bank Details Modal */}
+      <BankDetailsModal
+        isOpen={showBankModal}
+        onClose={() => setShowBankModal(false)}
+        workerId={user?.id || ""}
+        onSuccess={() => {
+          setShowBankModal(false);
+          queryClient.invalidateQueries({ queryKey: ['/api/worker-bank-details', user?.id] });
+        }}
+      />
+    </>
+  );
+};
 
 // Worker Jobs Component
 const WorkerJobsTab = () => {
@@ -830,7 +981,7 @@ export default function WorkerDashboard() {
                     <div className="flex flex-col items-center space-y-4">
                       <Avatar className="h-32 w-32">
                         <AvatarImage 
-                          src={workerProfile?.profilePicture || user?.profilePicture || undefined} 
+                          src={workerProfile?.profilePicture || undefined} 
                           alt={`${user.firstName} ${user.lastName}`} 
                         />
                         <AvatarFallback className="bg-primary text-primary-foreground text-3xl">
@@ -883,20 +1034,20 @@ export default function WorkerDashboard() {
                       <div>
                         <Label className="text-sm text-muted-foreground">Address</Label>
                         <p className="font-medium">
-                          {workerProfile.address || user.address || 'Not provided'}
+                          {workerProfile.address || 'Not provided'}
                         </p>
                       </div>
                       <div>
                         <Label className="text-sm text-muted-foreground">Pincode</Label>
                         <p className="font-medium">
-                          {workerProfile.pincode || user.pincode || 'Not provided'}
+                          {workerProfile.pincode || 'Not provided'}
                         </p>
                       </div>
                       <div>
                         <Label className="text-sm text-muted-foreground">District</Label>
                         <p className="font-medium flex items-center space-x-2">
                           <MapPin className="h-4 w-4" />
-                          <span>{workerProfile.district?.name || user.district?.name || 'Not specified'}</span>
+                          <span>{workerProfile.district?.name || 'Not specified'}</span>
                         </p>
                       </div>
                     </div>
@@ -1040,20 +1191,7 @@ export default function WorkerDashboard() {
             </Card>
 
             {/* Bank Details Section */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <DollarSign className="h-5 w-5" />
-                  <span>Bank Details</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <BankDetailsFormFixed
-                  workerId={user?.id || ""}
-                  isDialog={true}
-                />
-              </CardContent>
-            </Card>
+            <BankDetailsCard />
           </TabsContent>
 
           {/* Settings Tab */}
