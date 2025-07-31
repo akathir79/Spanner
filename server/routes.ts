@@ -889,6 +889,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Delete worker bank details by ID
+  app.delete("/api/worker-bank-details/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteWorkerBankDetails(id);
+      res.status(200).json({ message: "Bank details deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting bank details:", error);
+      res.status(500).json({ message: "Failed to delete bank details" });
+    }
+  });
+
   // Update worker bank details
   app.put("/api/worker-bank-details/:id", async (req, res) => {
     try {

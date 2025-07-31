@@ -183,6 +183,7 @@ const BankDetailsCard = () => {
         isOpen={showBankModal}
         onClose={() => setShowBankModal(false)}
         workerId={user?.id || ""}
+        existingDetails={bankDetails} // Pass existing details for editing
         onSuccess={() => {
           setShowBankModal(false);
           queryClient.invalidateQueries({ queryKey: ['/api/worker-bank-details', user?.id] });

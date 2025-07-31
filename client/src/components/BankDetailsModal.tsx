@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -16,13 +16,16 @@ import {
   CheckCircle, 
   Building2,
   Loader,
-  X
+  X,
+  Trash2,
+  RotateCcw
 } from 'lucide-react';
 
 interface BankDetailsModalProps {
   isOpen: boolean;
   onClose: () => void;
   workerId: string;
+  existingDetails?: any; // Pass existing bank details for editing
   onSuccess?: () => void;
 }
 
@@ -46,7 +49,7 @@ interface BankInfo {
   IFSC: string;
 }
 
-export default function BankDetailsModal({ isOpen, onClose, workerId, onSuccess }: BankDetailsModalProps) {
+export default function BankDetailsModal({ isOpen, onClose, workerId, existingDetails, onSuccess }: BankDetailsModalProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
@@ -64,6 +67,22 @@ export default function BankDetailsModal({ isOpen, onClose, workerId, onSuccess 
   const [isSearching, setIsSearching] = useState(false);
   const [bankInfo, setBankInfo] = useState<BankInfo | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Populate form with existing data when editing
+  useEffect(() => {
+    if (existingDetails && isOpen) {
+      setFormData({
+        accountHolderName: existingDetails.accountHolderName || '',
+        accountNumber: existingDetails.accountNumber || '',
+        ifscCode: existingDetails.ifscCode || '',
+        micrCode: existingDetails.micrCode || '',
+        bankName: existingDetails.bankName || '',
+        branchName: existingDetails.branchName || '',
+        bankAddress: existingDetails.bankAddress || '',
+        accountType: existingDetails.accountType || 'savings',
+      });
+    }
+  }, [existingDetails, isOpen]);
 
   const updateField = useCallback((field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -165,12 +184,21 @@ export default function BankDetailsModal({ isOpen, onClose, workerId, onSuccess 
 
   const saveBankDetailsMutation = useMutation({
     mutationFn: async () => {
-      return apiRequest('POST', '/api/worker-bank-details', { ...formData, workerId });
+      const payload = { ...formData, workerId };
+      
+      // If editing existing details, first delete the old record then create new one
+      if (existingDetails) {
+        // Delete existing record
+        await apiRequest('DELETE', `/api/worker-bank-details/${existingDetails.id}`);
+      }
+      
+      // Create new record
+      return apiRequest('POST', '/api/worker-bank-details', payload);
     },
     onSuccess: () => {
       toast({
         title: "Success",
-        description: "Bank details added successfully",
+        description: existingDetails ? "Bank details updated successfully!" : "Bank details added successfully!",
       });
       queryClient.invalidateQueries({ queryKey: ['/api/worker-bank-details', workerId] });
       onSuccess?.();
@@ -192,7 +220,8 @@ export default function BankDetailsModal({ isOpen, onClose, workerId, onSuccess 
     }
   }, [validateForm, saveBankDetailsMutation]);
 
-  const handleClose = useCallback(() => {
+  // Clear form function
+  const clearForm = useCallback(() => {
     setFormData({
       accountHolderName: '',
       accountNumber: '',
@@ -205,8 +234,12 @@ export default function BankDetailsModal({ isOpen, onClose, workerId, onSuccess 
     });
     setBankInfo(null);
     setErrors({});
+  }, []);
+
+  const handleClose = useCallback(() => {
+    clearForm();
     onClose();
-  }, [onClose]);
+  }, [clearForm, onClose]);
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
@@ -214,7 +247,7 @@ export default function BankDetailsModal({ isOpen, onClose, workerId, onSuccess 
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <CreditCard className="h-5 w-5" />
-            Add Bank Details
+            {existingDetails ? 'Edit Bank Details' : 'Add Bank Details'}
           </DialogTitle>
         </DialogHeader>
 
@@ -385,7 +418,7 @@ export default function BankDetailsModal({ isOpen, onClose, workerId, onSuccess 
             </div>
           </div>
 
-          <div className="flex space-x-4 pt-4">
+          <div className="flex space-x-3 pt-4">
             <Button 
               onClick={handleSubmit} 
               disabled={saveBankDetailsMutation.isPending}
@@ -396,7 +429,16 @@ export default function BankDetailsModal({ isOpen, onClose, workerId, onSuccess 
               ) : (
                 <CheckCircle className="h-4 w-4 mr-2" />
               )}
-              Save Bank Details
+              {existingDetails ? 'Update Details' : 'Save Details'}
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={clearForm}
+              disabled={saveBankDetailsMutation.isPending}
+              className="px-4"
+            >
+              <RotateCcw className="h-4 w-4 mr-2" />
+              Clear
             </Button>
             <Button 
               variant="outline" 
