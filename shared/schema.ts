@@ -143,6 +143,66 @@ export const otpVerifications = pgTable("otp_verifications", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// GPS Location Tracking for Service Delivery
+export const locationTracking = pgTable("location_tracking", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  bookingId: varchar("booking_id").references(() => bookings.id).notNull(),
+  workerId: varchar("worker_id").references(() => users.id).notNull(),
+  latitude: decimal("latitude", { precision: 10, scale: 7 }).notNull(),
+  longitude: decimal("longitude", { precision: 10, scale: 7 }).notNull(),
+  accuracy: decimal("accuracy", { precision: 10, scale: 2 }), // GPS accuracy in meters
+  speed: decimal("speed", { precision: 10, scale: 2 }), // Speed in km/h
+  heading: decimal("heading", { precision: 5, scale: 2 }), // Direction in degrees
+  address: text("address"), // Reverse geocoded address
+  isSharedWithClient: boolean("is_shared_with_client").default(true),
+  batteryLevel: integer("battery_level"), // Worker's device battery percentage
+  connectionType: text("connection_type"), // wifi, cellular, etc.
+  timestamp: timestamp("timestamp").defaultNow().notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Location Sharing Sessions
+export const locationSharingSessions = pgTable("location_sharing_sessions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  bookingId: varchar("booking_id").references(() => bookings.id).notNull(),
+  workerId: varchar("worker_id").references(() => users.id).notNull(),
+  clientId: varchar("client_id").references(() => users.id).notNull(),
+  isActive: boolean("is_active").default(true),
+  startedAt: timestamp("started_at").defaultNow().notNull(),
+  endedAt: timestamp("ended_at"),
+  sharePreferences: jsonb("share_preferences").notNull(), // {realTime: boolean, locationHistory: boolean, estimatedArrival: boolean}
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Geofences for service areas
+export const geofences = pgTable("geofences", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  bookingId: varchar("booking_id").references(() => bookings.id),
+  centerLatitude: decimal("center_latitude", { precision: 10, scale: 7 }).notNull(),
+  centerLongitude: decimal("center_longitude", { precision: 10, scale: 7 }).notNull(),
+  radius: decimal("radius", { precision: 10, scale: 2 }).notNull(), // radius in meters
+  type: text("type").notNull(), // service_area, client_location, worker_start_point
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Location Events (entries/exits from geofences, arrival notifications, etc.)
+export const locationEvents = pgTable("location_events", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  bookingId: varchar("booking_id").references(() => bookings.id).notNull(),
+  workerId: varchar("worker_id").references(() => users.id).notNull(),
+  eventType: text("event_type").notNull(), // arrived_at_client, started_work, geofence_entry, geofence_exit, work_completed
+  geofenceId: varchar("geofence_id").references(() => geofences.id),
+  latitude: decimal("latitude", { precision: 10, scale: 7 }),
+  longitude: decimal("longitude", { precision: 10, scale: 7 }),
+  address: text("address"),
+  metadata: jsonb("metadata"), // Additional event-specific data
+  timestamp: timestamp("timestamp").defaultNow().notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 // Relations
 export const usersRelations = relations(users, ({ one, many }) => ({
   district: one(districts, {
@@ -179,7 +239,7 @@ export const workerProfilesRelations = relations(workerProfiles, ({ one }) => ({
   }),
 }));
 
-export const bookingsRelations = relations(bookings, ({ one }) => ({
+export const bookingsRelations = relations(bookings, ({ one, many }) => ({
   client: one(users, {
     fields: [bookings.clientId],
     references: [users.id],
@@ -194,6 +254,13 @@ export const bookingsRelations = relations(bookings, ({ one }) => ({
     fields: [bookings.districtId],
     references: [districts.id],
   }),
+  locationTracking: many(locationTracking),
+  locationSharingSession: one(locationSharingSessions, {
+    fields: [bookings.id],
+    references: [locationSharingSessions.bookingId],
+  }),
+  geofences: many(geofences),
+  locationEvents: many(locationEvents),
 }));
 
 export const jobPostingsRelations = relations(jobPostings, ({ one, many }) => ({
@@ -216,6 +283,56 @@ export const bidsRelations = relations(bids, ({ one }) => ({
   worker: one(users, {
     fields: [bids.workerId],
     references: [users.id],
+  }),
+}));
+
+// Location tracking relations
+export const locationTrackingRelations = relations(locationTracking, ({ one }) => ({
+  booking: one(bookings, {
+    fields: [locationTracking.bookingId],
+    references: [bookings.id],
+  }),
+  worker: one(users, {
+    fields: [locationTracking.workerId],
+    references: [users.id],
+  }),
+}));
+
+export const locationSharingSessionsRelations = relations(locationSharingSessions, ({ one }) => ({
+  booking: one(bookings, {
+    fields: [locationSharingSessions.bookingId],
+    references: [bookings.id],
+  }),
+  worker: one(users, {
+    fields: [locationSharingSessions.workerId],
+    references: [users.id],
+  }),
+  client: one(users, {
+    fields: [locationSharingSessions.clientId],
+    references: [users.id],
+  }),
+}));
+
+export const geofencesRelations = relations(geofences, ({ one, many }) => ({
+  booking: one(bookings, {
+    fields: [geofences.bookingId],
+    references: [bookings.id],
+  }),
+  locationEvents: many(locationEvents),
+}));
+
+export const locationEventsRelations = relations(locationEvents, ({ one }) => ({
+  booking: one(bookings, {
+    fields: [locationEvents.bookingId],
+    references: [bookings.id],
+  }),
+  worker: one(users, {
+    fields: [locationEvents.workerId],
+    references: [users.id],
+  }),
+  geofence: one(geofences, {
+    fields: [locationEvents.geofenceId],
+    references: [geofences.id],
   }),
 }));
 
@@ -270,6 +387,27 @@ export const insertAreaSchema = createInsertSchema(areas).omit({
   createdAt: true,
 });
 
+export const insertLocationTrackingSchema = createInsertSchema(locationTracking).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertLocationSharingSessionSchema = createInsertSchema(locationSharingSessions).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertGeofenceSchema = createInsertSchema(geofences).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertLocationEventSchema = createInsertSchema(locationEvents).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -288,3 +426,11 @@ export type Area = typeof areas.$inferSelect;
 export type InsertArea = z.infer<typeof insertAreaSchema>;
 export type OtpVerification = typeof otpVerifications.$inferSelect;
 export type InsertOtp = z.infer<typeof insertOtpSchema>;
+export type LocationTracking = typeof locationTracking.$inferSelect;
+export type InsertLocationTracking = z.infer<typeof insertLocationTrackingSchema>;
+export type LocationSharingSession = typeof locationSharingSessions.$inferSelect;
+export type InsertLocationSharingSession = z.infer<typeof insertLocationSharingSessionSchema>;
+export type Geofence = typeof geofences.$inferSelect;
+export type InsertGeofence = z.infer<typeof insertGeofenceSchema>;
+export type LocationEvent = typeof locationEvents.$inferSelect;
+export type InsertLocationEvent = z.infer<typeof insertLocationEventSchema>;

@@ -2,7 +2,17 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { z } from "zod";
-import { insertUserSchema, insertWorkerProfileSchema, insertBookingSchema, insertJobPostingSchema, insertBidSchema } from "@shared/schema";
+import { 
+  insertUserSchema, 
+  insertWorkerProfileSchema, 
+  insertBookingSchema, 
+  insertJobPostingSchema, 
+  insertBidSchema,
+  insertLocationTrackingSchema,
+  insertLocationSharingSessionSchema,
+  insertGeofenceSchema,
+  insertLocationEventSchema
+} from "@shared/schema";
 
 // Validation schemas
 const loginSchema = z.object({
@@ -711,6 +721,140 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error rejecting bid:", error);
       res.status(500).json({ message: "Failed to reject bid" });
+    }
+  });
+
+  // Location Tracking API Routes
+  
+  // Create location tracking entry
+  app.post("/api/location-tracking", async (req, res) => {
+    try {
+      const locationData = insertLocationTrackingSchema.parse(req.body);
+      const tracking = await storage.createLocationTracking(locationData);
+      res.status(201).json(tracking);
+    } catch (error) {
+      console.error("Error creating location tracking:", error);
+      res.status(500).json({ message: "Failed to create location tracking" });
+    }
+  });
+
+  // Get latest location for a booking
+  app.get("/api/location-tracking/latest/:bookingId", async (req, res) => {
+    try {
+      const { bookingId } = req.params;
+      const location = await storage.getLatestLocationByBooking(bookingId);
+      if (!location) {
+        return res.status(404).json({ message: "No location data found" });
+      }
+      res.json(location);
+    } catch (error) {
+      console.error("Error fetching latest location:", error);
+      res.status(500).json({ message: "Failed to fetch location" });
+    }
+  });
+
+  // Get location history for a booking
+  app.get("/api/location-tracking/history/:bookingId", async (req, res) => {
+    try {
+      const { bookingId } = req.params;
+      const { limit = "50", hours = "24" } = req.query;
+      const locations = await storage.getLocationHistoryByBooking(
+        bookingId,
+        parseInt(limit as string),
+        parseInt(hours as string)
+      );
+      res.json(locations);
+    } catch (error) {
+      console.error("Error fetching location history:", error);
+      res.status(500).json({ message: "Failed to fetch location history" });
+    }
+  });
+
+  // Start location sharing session
+  app.post("/api/location-sharing", async (req, res) => {
+    try {
+      const sessionData = insertLocationSharingSessionSchema.parse(req.body);
+      const session = await storage.createLocationSharingSession(sessionData);
+      res.status(201).json(session);
+    } catch (error) {
+      console.error("Error creating location sharing session:", error);
+      res.status(500).json({ message: "Failed to create sharing session" });
+    }
+  });
+
+  // Get location sharing session by booking
+  app.get("/api/location-sharing/:bookingId", async (req, res) => {
+    try {
+      const { bookingId } = req.params;
+      const session = await storage.getLocationSharingSessionByBooking(bookingId);
+      if (!session) {
+        return res.status(404).json({ message: "No sharing session found" });
+      }
+      res.json(session);
+    } catch (error) {
+      console.error("Error fetching sharing session:", error);
+      res.status(500).json({ message: "Failed to fetch sharing session" });
+    }
+  });
+
+  // Update location sharing session
+  app.patch("/api/location-sharing/:sessionId", async (req, res) => {
+    try {
+      const { sessionId } = req.params;
+      const updateData = req.body;
+      const session = await storage.updateLocationSharingSession(sessionId, updateData);
+      res.json(session);
+    } catch (error) {
+      console.error("Error updating sharing session:", error);
+      res.status(500).json({ message: "Failed to update sharing session" });
+    }
+  });
+
+  // Create geofence
+  app.post("/api/geofences", async (req, res) => {
+    try {
+      const geofenceData = insertGeofenceSchema.parse(req.body);
+      const geofence = await storage.createGeofence(geofenceData);
+      res.status(201).json(geofence);
+    } catch (error) {
+      console.error("Error creating geofence:", error);
+      res.status(500).json({ message: "Failed to create geofence" });
+    }
+  });
+
+  // Get geofences by booking
+  app.get("/api/geofences/:bookingId", async (req, res) => {
+    try {
+      const { bookingId } = req.params;
+      const geofences = await storage.getGeofencesByBooking(bookingId);
+      res.json(geofences);
+    } catch (error) {
+      console.error("Error fetching geofences:", error);
+      res.status(500).json({ message: "Failed to fetch geofences" });
+    }
+  });
+
+  // Create location event
+  app.post("/api/location-events", async (req, res) => {
+    try {
+      const eventData = insertLocationEventSchema.parse(req.body);
+      const event = await storage.createLocationEvent(eventData);
+      res.status(201).json(event);
+    } catch (error) {
+      console.error("Error creating location event:", error);
+      res.status(500).json({ message: "Failed to create location event" });
+    }
+  });
+
+  // Get location events by booking
+  app.get("/api/location-events/:bookingId", async (req, res) => {
+    try {
+      const { bookingId } = req.params;
+      const events = await storage.getLocationEventsByBooking(bookingId);
+      res.json(events);
+    } catch (error) {
+      console.error("Error fetching location events:", error);
+      res.status(500).json({ message: "Failed to fetch location events" });
     }
   });
 

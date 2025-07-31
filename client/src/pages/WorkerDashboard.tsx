@@ -34,6 +34,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import LocationTracker from "@/components/LocationTracker";
 
 // Worker Jobs Component
 const WorkerJobsTab = () => {
@@ -618,6 +619,18 @@ export default function WorkerDashboard() {
                           <p className="text-sm p-3 bg-muted/50 rounded-md mb-4">
                             {booking.description}
                           </p>
+                          
+                          {/* GPS Location Tracker for Active Jobs */}
+                          {booking.status === "in_progress" && (
+                            <div className="mb-4">
+                              <LocationTracker
+                                bookingId={booking.id}
+                                workerId={user?.id}
+                                clientId={booking.clientId}
+                                isActive={true}
+                              />
+                            </div>
+                          )}
                           
                           <div className="flex justify-between items-center">
                             <div className="flex space-x-2">

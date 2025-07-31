@@ -37,6 +37,7 @@ import {
   DollarSign
 } from "lucide-react";
 import { useLocation } from "wouter";
+import LocationViewer from "@/components/LocationViewer";
 // Services and districts are now fetched dynamically from database
 
 // Job posting form component
@@ -963,6 +964,17 @@ export default function Dashboard() {
                           <p className="text-sm mt-3 p-3 bg-muted/50 rounded-md">
                             {booking.description}
                           </p>
+                          
+                          {/* Location Tracking for Active Bookings */}
+                          {booking.status === "in_progress" && (
+                            <div className="mt-4">
+                              <LocationViewer
+                                bookingId={booking.id}
+                                workerName={`${booking.worker?.firstName || 'Worker'} ${booking.worker?.lastName || ''}`}
+                                isActive={true}
+                              />
+                            </div>
+                          )}
                           
                           {booking.totalAmount && (
                             <div className="mt-3 flex justify-between items-center">

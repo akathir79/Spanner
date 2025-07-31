@@ -8,6 +8,10 @@ import {
   areas,
   serviceCategories,
   otpVerifications,
+  locationTracking,
+  locationSharingSessions,
+  geofences,
+  locationEvents,
   type User, 
   type InsertUser,
   type WorkerProfile,
@@ -23,7 +27,15 @@ import {
   type InsertArea,
   type ServiceCategory,
   type OtpVerification,
-  type InsertOtp
+  type InsertOtp,
+  type LocationTracking,
+  type InsertLocationTracking,
+  type LocationSharingSession,
+  type InsertLocationSharingSession,
+  type Geofence,
+  type InsertGeofence,
+  type LocationEvent,
+  type InsertLocationEvent
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, sql, desc, ilike, inArray } from "drizzle-orm";
@@ -73,6 +85,24 @@ export interface IStorage {
   // OTP management
   createOtp(otp: InsertOtp): Promise<OtpVerification>;
   getValidOtp(mobile: string, otp: string, purpose: string): Promise<OtpVerification | undefined>;
+  
+  // Location Tracking
+  createLocationTracking(tracking: InsertLocationTracking): Promise<LocationTracking>;
+  getLatestLocationByBooking(bookingId: string): Promise<LocationTracking | undefined>;
+  getLocationHistoryByBooking(bookingId: string, limit?: number, hours?: number): Promise<LocationTracking[]>;
+  
+  // Location Sharing Sessions
+  createLocationSharingSession(session: InsertLocationSharingSession): Promise<LocationSharingSession>;
+  getLocationSharingSessionByBooking(bookingId: string): Promise<LocationSharingSession | undefined>;
+  updateLocationSharingSession(sessionId: string, updates: Partial<LocationSharingSession>): Promise<LocationSharingSession>;
+  
+  // Geofences
+  createGeofence(geofence: InsertGeofence): Promise<Geofence>;
+  getGeofencesByBooking(bookingId: string): Promise<Geofence[]>;
+  
+  // Location Events
+  createLocationEvent(event: InsertLocationEvent): Promise<LocationEvent>;
+  getLocationEventsByBooking(bookingId: string): Promise<LocationEvent[]>;
   markOtpAsUsed(id: string): Promise<void>;
   
   // Job postings
@@ -556,6 +586,89 @@ export class DatabaseStorage implements IStorage {
       .where(eq(bids.id, bidId))
       .returning();
     return bid || undefined;
+  }
+
+  // Location Tracking Methods
+  async createLocationTracking(tracking: InsertLocationTracking): Promise<LocationTracking> {
+    const [newTracking] = await db.insert(locationTracking).values(tracking).returning();
+    return newTracking;
+  }
+
+  async getLatestLocationByBooking(bookingId: string): Promise<LocationTracking | undefined> {
+    const [location] = await db
+      .select()
+      .from(locationTracking)
+      .where(eq(locationTracking.bookingId, bookingId))
+      .orderBy(desc(locationTracking.timestamp))
+      .limit(1);
+    return location || undefined;
+  }
+
+  async getLocationHistoryByBooking(bookingId: string, limit: number = 50, hours: number = 24): Promise<LocationTracking[]> {
+    const hoursAgo = new Date(Date.now() - hours * 60 * 60 * 1000);
+    
+    return await db
+      .select()
+      .from(locationTracking)
+      .where(and(
+        eq(locationTracking.bookingId, bookingId),
+        sql`${locationTracking.timestamp} >= ${hoursAgo}`
+      ))
+      .orderBy(desc(locationTracking.timestamp))
+      .limit(limit);
+  }
+
+  // Location Sharing Session Methods
+  async createLocationSharingSession(session: InsertLocationSharingSession): Promise<LocationSharingSession> {
+    const [newSession] = await db.insert(locationSharingSessions).values(session).returning();
+    return newSession;
+  }
+
+  async getLocationSharingSessionByBooking(bookingId: string): Promise<LocationSharingSession | undefined> {
+    const [session] = await db
+      .select()
+      .from(locationSharingSessions)
+      .where(eq(locationSharingSessions.bookingId, bookingId))
+      .orderBy(desc(locationSharingSessions.createdAt))
+      .limit(1);
+    return session || undefined;
+  }
+
+  async updateLocationSharingSession(sessionId: string, updates: Partial<LocationSharingSession>): Promise<LocationSharingSession> {
+    const [session] = await db
+      .update(locationSharingSessions)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(locationSharingSessions.id, sessionId))
+      .returning();
+    return session;
+  }
+
+  // Geofence Methods
+  async createGeofence(geofence: InsertGeofence): Promise<Geofence> {
+    const [newGeofence] = await db.insert(geofences).values(geofence).returning();
+    return newGeofence;
+  }
+
+  async getGeofencesByBooking(bookingId: string): Promise<Geofence[]> {
+    return await db
+      .select()
+      .from(geofences)
+      .where(eq(geofences.bookingId, bookingId))
+      .orderBy(geofences.createdAt);
+  }
+
+  // Location Event Methods
+  async createLocationEvent(event: InsertLocationEvent): Promise<LocationEvent> {
+    const [newEvent] = await db.insert(locationEvents).values(event).returning();
+    return newEvent;
+  }
+
+  async getLocationEventsByBooking(bookingId: string): Promise<LocationEvent[]> {
+    return await db
+      .select()
+      .from(locationEvents)
+      .where(eq(locationEvents.bookingId, bookingId))
+      .orderBy(desc(locationEvents.timestamp));
   }
 }
 
