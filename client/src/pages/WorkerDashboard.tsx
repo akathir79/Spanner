@@ -119,6 +119,10 @@ const BankDetailsCard = () => {
                   <p className="font-medium font-mono">{bankDetails.ifscCode}</p>
                 </div>
                 <div>
+                  <Label className="text-sm text-muted-foreground">MICR Code</Label>
+                  <p className="font-medium font-mono">{bankDetails.micrCode || 'Not available'}</p>
+                </div>
+                <div>
                   <Label className="text-sm text-muted-foreground">Account Type</Label>
                   <p className="font-medium capitalize">{bankDetails.accountType}</p>
                 </div>

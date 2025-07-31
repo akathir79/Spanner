@@ -210,6 +210,7 @@ export const workerBankDetails = pgTable("worker_bank_details", {
   accountHolderName: text("account_holder_name").notNull(),
   accountNumber: text("account_number").notNull(),
   ifscCode: text("ifsc_code").notNull(),
+  micrCode: text("micr_code"),
   bankName: text("bank_name").notNull(),
   branchName: text("branch_name").notNull(),
   bankAddress: text("bank_address").notNull(),
@@ -488,8 +489,11 @@ export const insertLocationEventSchema = createInsertSchema(locationEvents).omit
 
 export const insertWorkerBankDetailsSchema = createInsertSchema(workerBankDetails).omit({
   id: true,
+  isVerified: true,
   createdAt: true,
   updatedAt: true,
+}).extend({
+  micrCode: z.string().optional(),
 });
 
 export const insertPaymentSchema = createInsertSchema(payments).omit({

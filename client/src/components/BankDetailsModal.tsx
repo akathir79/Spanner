@@ -54,6 +54,7 @@ export default function BankDetailsModal({ isOpen, onClose, workerId, onSuccess 
     accountHolderName: '',
     accountNumber: '',
     ifscCode: '',
+    micrCode: '',
     bankName: '',
     branchName: '',
     bankAddress: '',
@@ -92,7 +93,8 @@ export default function BankDetailsModal({ isOpen, onClose, workerId, onSuccess 
         ...prev,
         bankName: data.BANK,
         branchName: data.BRANCH,
-        bankAddress: addressParts.join(', ')
+        bankAddress: addressParts.join(', '),
+        micrCode: data.MICR || ''
       }));
       
       toast({
@@ -195,6 +197,7 @@ export default function BankDetailsModal({ isOpen, onClose, workerId, onSuccess 
       accountHolderName: '',
       accountNumber: '',
       ifscCode: '',
+      micrCode: '',
       bankName: '',
       branchName: '',
       bankAddress: '',
@@ -320,6 +323,21 @@ export default function BankDetailsModal({ isOpen, onClose, workerId, onSuccess 
                 </AlertDescription>
               </Alert>
             )}
+
+            <div>
+              <Label htmlFor="micrCode">MICR Code</Label>
+              <Input
+                id="micrCode"
+                value={formData.micrCode}
+                onChange={(e) => updateField('micrCode', e.target.value)}
+                placeholder="MICR code (auto-filled from IFSC lookup)"
+                className={`${bankInfo ? 'bg-muted' : ''}`}
+                readOnly={!!bankInfo}
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                MICR code is automatically filled when you lookup IFSC code
+              </p>
+            </div>
 
             <div>
               <Label htmlFor="bankName">Bank Name</Label>
