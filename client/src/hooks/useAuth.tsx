@@ -143,17 +143,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(result.user);
       localStorage.setItem("user", JSON.stringify(result.user));
       
-      toast({
-        title: "Application Submitted",
-        description: "Your worker application is under review. You'll be notified once approved.",
-      });
-      
-      // Redirect to worker dashboard
-      setTimeout(() => {
-        window.location.href = "/worker-dashboard";
-      }, 1000);
-      
-      return true;
+      // Don't show toast or redirect here - let the calling component handle it
+      // Return the full result object so AuthModal can access user.id
+      return result;
     } catch (error: any) {
       toast({
         title: "Application Failed",

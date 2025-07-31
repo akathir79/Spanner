@@ -556,8 +556,25 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
     setRegistrationCompleted(true);
     toast({
       title: "Registration Complete!",
-      description: "Your worker profile has been created successfully.",
+      description: "Your worker profile has been created successfully. Redirecting to dashboard...",
     });
+    
+    // Redirect to worker dashboard after completing bank details
+    setTimeout(() => {
+      window.location.href = "/worker-dashboard";
+    }, 1500);
+  };
+
+  const handleSkipBankDetails = () => {
+    toast({
+      title: "Registration Complete!",
+      description: "You can add bank details later from your dashboard. Redirecting...",
+    });
+    
+    // Redirect to worker dashboard when skipping bank details
+    setTimeout(() => {
+      window.location.href = "/worker-dashboard";
+    }, 1500);
   };
 
   const handleAadhaarVerificationRequest = () => {
@@ -1749,7 +1766,7 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
                     </Button>
                     <Button
                       type="button"
-                      onClick={handleBankDetailsComplete}
+                      onClick={handleSkipBankDetails}
                       className="flex-1"
                     >
                       Skip for Now
