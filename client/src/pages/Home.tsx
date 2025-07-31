@@ -206,6 +206,10 @@ export default function Home() {
       if (userData?.role === "admin" || userData?.role === "super_admin") {
         localStorage.removeItem("pendingBankDetails");
       }
+      // For workers, clear pendingBankDetails to allow them to go to dashboard
+      if (userData?.role === "worker") {
+        localStorage.removeItem("pendingBankDetails");
+      }
     }
     
     if (storedUser && !localStorage.getItem("pendingBankDetails")) {
@@ -228,11 +232,15 @@ export default function Home() {
             }, 10);
             return;
           } else if (userData.role === "worker") {
-            console.log("Worker role detected, redirecting to worker dashboard");
-            setTimeout(() => {
-              setLocation("/worker-dashboard");
-            }, 10);
-            return;
+            console.log("Worker role detected, checking status...");
+            // Allow pending workers to go to dashboard to complete bank details
+            if (userData.status === "pending" || userData.status === "approved") {
+              console.log("Worker status allows dashboard access, redirecting to worker dashboard");
+              setTimeout(() => {
+                setLocation("/worker-dashboard");
+              }, 10);
+              return;
+            }
           } else {
             console.log("Client role detected, redirecting to client dashboard");
             setTimeout(() => {

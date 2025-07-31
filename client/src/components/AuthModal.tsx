@@ -1749,7 +1749,7 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
                     </p>
                   </div>
 
-                  <BankDetailsForm
+                  <BankDetailsFormNew
                     workerId={registeredWorkerId}
                     isDialog={false}
                     showTitle={false}
