@@ -549,6 +549,9 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
         title: "Registration Successful!",
         description: "Please add your bank details for payment processing.",
       });
+      
+      // Prevent automatic redirect by temporarily marking as pending bank details
+      localStorage.setItem("pendingBankDetails", "true");
     }
   };
 
@@ -558,6 +561,12 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
       title: "Registration Complete!",
       description: "Your worker profile has been created successfully. Redirecting to dashboard...",
     });
+    
+    // Clear the pending bank details flag
+    localStorage.removeItem("pendingBankDetails");
+    
+    // Close the modal and let the authentication system handle the redirect
+    onClose();
     
     // Redirect to worker dashboard after completing bank details
     setTimeout(() => {

@@ -188,10 +188,10 @@ export default function Home() {
   const { user } = useAuth();
   const { toast } = useToast();
 
-  // Redirect logged-in users to their dashboards
+  // Redirect logged-in users to their dashboards, unless completing bank details
   useEffect(() => {
-    // Only redirect if user is definitively logged in (has complete user object)
-    if (user && user.id && user.role) {
+    // Only redirect if user is definitively logged in (has complete user object) and not completing bank details
+    if (user && user.id && user.role && !localStorage.getItem("pendingBankDetails")) {
       // Use a more immediate redirect to prevent multiple refreshes
       if (user.role === "super_admin" || user.role === "admin") {
         window.location.replace("/admin-dashboard");

@@ -12,8 +12,8 @@ export default function Login() {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showSignupModal, setShowSignupModal] = useState(false);
 
-  // Redirect if already logged in
-  if (user) {
+  // Redirect if already logged in, unless completing bank details
+  if (user && !localStorage.getItem("pendingBankDetails")) {
     if (user.role === "super_admin" || user.role === "admin") {
       setLocation("/admin-dashboard");
     } else if (user.role === "worker") {
