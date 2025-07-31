@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import BankDetailsFormStable from "@/components/BankDetailsFormStable";
+import BankDetailsFormFinal from "@/components/BankDetailsFormFinal";
 import { 
   CheckCircle, 
   XCircle, 
@@ -797,7 +797,7 @@ export default function WorkerApprovalSection() {
                                 <div className="h-5 w-5 text-green-600">💳</div>
                                 Bank Details
                               </h4>
-                              <BankDetailsFormStable
+                              <BankDetailsFormFinal
                                 workerId={selectedWorker.id}
                                 isDialog={false}
                                 showTitle={false}
