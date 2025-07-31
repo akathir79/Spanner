@@ -337,19 +337,64 @@ export default function WorkerApprovalSection() {
                                   </AvatarFallback>
                                 </Avatar>
                                 <div className="flex-1 space-y-2">
-                                  <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                                    {selectedWorker.firstName} {selectedWorker.lastName}
-                                  </h3>
-                                  <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
-                                    <div className="flex items-center gap-2">
-                                      <Phone className="h-4 w-4" />
-                                      <span className="font-medium">{selectedWorker.mobile}</span>
+                                  {isEditing ? (
+                                    <div className="space-y-3">
+                                      <div className="flex gap-2">
+                                        <Input
+                                          value={editData.firstName || ''}
+                                          onChange={(e) => setEditData({
+                                            ...editData,
+                                            firstName: e.target.value
+                                          })}
+                                          className="text-xl font-bold border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                                          placeholder="First Name"
+                                        />
+                                        <Input
+                                          value={editData.lastName || ''}
+                                          onChange={(e) => setEditData({
+                                            ...editData,
+                                            lastName: e.target.value
+                                          })}
+                                          className="text-xl font-bold border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                                          placeholder="Last Name"
+                                        />
+                                      </div>
+                                      <div className="flex items-center gap-4 text-sm">
+                                        <div className="flex items-center gap-2">
+                                          <Phone className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+                                          <Input
+                                            value={editData.mobile || ''}
+                                            onChange={(e) => setEditData({
+                                              ...editData,
+                                              mobile: e.target.value
+                                            })}
+                                            className="font-medium border-gray-300 focus:border-blue-500 focus:ring-blue-500 w-32"
+                                            placeholder="Mobile Number"
+                                          />
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                          <MapPin className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+                                          <span className="font-medium text-gray-600 dark:text-gray-400">{selectedWorker.district?.name}</span>
+                                        </div>
+                                      </div>
                                     </div>
-                                    <div className="flex items-center gap-2">
-                                      <MapPin className="h-4 w-4" />
-                                      <span className="font-medium">{selectedWorker.district?.name}</span>
-                                    </div>
-                                  </div>
+                                  ) : (
+                                    <>
+                                      <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                                        {selectedWorker.firstName} {selectedWorker.lastName}
+                                      </h3>
+                                      <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
+                                        <div className="flex items-center gap-2">
+                                          <Phone className="h-4 w-4" />
+                                          <span className="font-medium">{selectedWorker.mobile}</span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                          <MapPin className="h-4 w-4" />
+                                          <span className="font-medium">{selectedWorker.district?.name}</span>
+                                        </div>
+                                      </div>
+                                    </>
+                                  )}
                                   {selectedWorker.workerProfile && (
                                     <div className="flex items-center gap-3 pt-2">
                                       <Badge variant="secondary" className="bg-blue-100 text-blue-800 border-blue-200">
