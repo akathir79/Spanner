@@ -13,6 +13,7 @@ import Login from "@/pages/Login";
 import Dashboard from "@/pages/Dashboard";
 import WorkerDashboard from "@/pages/WorkerDashboard";
 import AdminDashboard from "@/pages/AdminDashboard";
+import Payment from "@/pages/Payment";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -26,6 +27,7 @@ function Router() {
           <Route path="/dashboard" component={Dashboard} />
           <Route path="/worker-dashboard" component={WorkerDashboard} />
           <Route path="/admin-dashboard" component={AdminDashboard} />
+          <Route path="/payment/:bookingId" component={Payment} />
           <Route component={NotFound} />
         </Switch>
       </main>

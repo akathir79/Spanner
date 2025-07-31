@@ -219,6 +219,41 @@ export const workerBankDetails = pgTable("worker_bank_details", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+// Payment tables
+export const payments = pgTable("payments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  bookingId: varchar("booking_id").references(() => bookings.id).notNull(),
+  clientId: varchar("client_id").references(() => users.id).notNull(),
+  workerId: varchar("worker_id").references(() => users.id).notNull(),
+  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+  currency: text("currency").default("INR").notNull(),
+  paymentMethod: text("payment_method").notNull(), // card, upi, netbanking, wallet
+  paymentProvider: text("payment_provider").default("stripe").notNull(),
+  providerTransactionId: text("provider_transaction_id"), // Stripe payment intent ID
+  status: text("status").default("pending").notNull(), // pending, processing, completed, failed, refunded
+  paymentData: jsonb("payment_data"), // Store payment method details (last 4 digits, UPI ID, etc.)
+  platformFee: decimal("platform_fee", { precision: 10, scale: 2 }).default("0.00"),
+  workerAmount: decimal("worker_amount", { precision: 10, scale: 2 }).notNull(), // Amount after platform fee
+  failureReason: text("failure_reason"),
+  refundAmount: decimal("refund_amount", { precision: 10, scale: 2 }).default("0.00"),
+  refundReason: text("refund_reason"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Payment webhooks log
+export const paymentWebhooks = pgTable("payment_webhooks", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  provider: text("provider").notNull(), // stripe, razorpay
+  eventType: text("event_type").notNull(),
+  eventId: text("event_id").notNull().unique(),
+  paymentId: varchar("payment_id").references(() => payments.id),
+  webhookData: jsonb("webhook_data").notNull(),
+  processed: boolean("processed").default(false),
+  processingError: text("processing_error"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 // Relations
 export const usersRelations = relations(users, ({ one, many }) => ({
   district: one(districts, {
@@ -356,6 +391,29 @@ export const locationEventsRelations = relations(locationEvents, ({ one }) => ({
   }),
 }));
 
+// Payment relations
+export const paymentsRelations = relations(payments, ({ one }) => ({
+  booking: one(bookings, {
+    fields: [payments.bookingId],
+    references: [bookings.id],
+  }),
+  client: one(users, {
+    fields: [payments.clientId],
+    references: [users.id],
+  }),
+  worker: one(users, {
+    fields: [payments.workerId],
+    references: [users.id],
+  }),
+}));
+
+export const paymentWebhooksRelations = relations(paymentWebhooks, ({ one }) => ({
+  payment: one(payments, {
+    fields: [paymentWebhooks.paymentId],
+    references: [payments.id],
+  }),
+}));
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
@@ -434,6 +492,17 @@ export const insertWorkerBankDetailsSchema = createInsertSchema(workerBankDetail
   updatedAt: true,
 });
 
+export const insertPaymentSchema = createInsertSchema(payments).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertPaymentWebhookSchema = createInsertSchema(paymentWebhooks).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -462,3 +531,7 @@ export type LocationEvent = typeof locationEvents.$inferSelect;
 export type InsertLocationEvent = z.infer<typeof insertLocationEventSchema>;
 export type WorkerBankDetails = typeof workerBankDetails.$inferSelect;
 export type InsertWorkerBankDetails = z.infer<typeof insertWorkerBankDetailsSchema>;
+export type Payment = typeof payments.$inferSelect;
+export type InsertPayment = z.infer<typeof insertPaymentSchema>;
+export type PaymentWebhook = typeof paymentWebhooks.$inferSelect;
+export type InsertPaymentWebhook = z.infer<typeof insertPaymentWebhookSchema>;

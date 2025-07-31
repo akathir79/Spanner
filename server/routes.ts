@@ -12,7 +12,8 @@ import {
   insertLocationSharingSessionSchema,
   insertGeofenceSchema,
   insertLocationEventSchema,
-  insertWorkerBankDetailsSchema
+  insertWorkerBankDetailsSchema,
+  insertPaymentSchema
 } from "@shared/schema";
 
 // Validation schemas
@@ -913,6 +914,227 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting bank details:", error);
       res.status(500).json({ message: "Failed to delete bank details" });
+    }
+  });
+
+  // Mock Stripe Payment Endpoints
+  
+  // Create payment intent (mock)
+  app.post("/api/create-payment-intent", async (req, res) => {
+    try {
+      const { amount, currency = "INR", bookingId, paymentMethod = "card" } = req.body;
+      
+      // Validate required fields
+      if (!amount || !bookingId) {
+        return res.status(400).json({ 
+          message: "Missing required fields: amount, bookingId" 
+        });
+      }
+
+      // Mock payment intent creation (in production, this would call Stripe API)
+      const mockPaymentIntent = {
+        id: `pi_mock_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        client_secret: `pi_mock_${Date.now()}_secret_${Math.random().toString(36).substr(2, 9)}`,
+        amount: Math.round(amount * 100), // Convert to paise/cents
+        currency: currency.toLowerCase(),
+        status: "requires_payment_method",
+        payment_method_types: ["card", "upi", "netbanking"],
+        metadata: {
+          bookingId,
+          paymentMethod
+        }
+      };
+      
+      console.log(`Mock Payment Intent Created: ${mockPaymentIntent.id} for ₹${amount}`);
+      
+      res.json({ 
+        clientSecret: mockPaymentIntent.client_secret,
+        paymentIntentId: mockPaymentIntent.id,
+        amount: mockPaymentIntent.amount,
+        currency: mockPaymentIntent.currency
+      });
+    } catch (error) {
+      console.error("Error creating payment intent:", error);
+      res.status(500).json({ message: "Failed to create payment intent" });
+    }
+  });
+
+  // Confirm payment (mock)
+  app.post("/api/confirm-payment", async (req, res) => {
+    try {
+      const { paymentIntentId, paymentMethodType, bookingId, clientId, workerId, amount } = req.body;
+      
+      // Validate required fields
+      if (!paymentIntentId || !bookingId || !clientId || !workerId || !amount) {
+        return res.status(400).json({ 
+          message: "Missing required payment confirmation fields" 
+        });
+      }
+
+      // Mock payment confirmation (randomly succeed/fail for testing)
+      const shouldSucceed = Math.random() > 0.1; // 90% success rate
+      
+      const platformFee = parseFloat((amount * 0.05).toFixed(2)); // 5% platform fee
+      const workerAmount = parseFloat((amount - platformFee).toFixed(2));
+      
+      const paymentData = {
+        method: paymentMethodType || "card",
+        ...(paymentMethodType === "card" && {
+          last4: "4242",
+          brand: "visa"
+        }),
+        ...(paymentMethodType === "upi" && {
+          upiId: "test@mockupi"
+        }),
+        ...(paymentMethodType === "netbanking" && {
+          bank: "Mock Bank"
+        })
+      };
+
+      if (shouldSucceed) {
+        // Create payment record
+        const payment = await storage.createPayment({
+          bookingId,
+          clientId,
+          workerId,
+          amount: amount.toString(),
+          currency: "INR",
+          paymentMethod: paymentMethodType || "card",
+          paymentProvider: "stripe",
+          providerTransactionId: paymentIntentId,
+          status: "completed",
+          paymentData,
+          platformFee: platformFee.toString(),
+          workerAmount: workerAmount.toString()
+        });
+
+        // Update booking status to paid
+        await storage.updateBookingStatus(bookingId, "confirmed");
+        
+        console.log(`Mock Payment Confirmed: ${paymentIntentId} - ₹${amount} (Worker gets ₹${workerAmount})`);
+        
+        res.json({
+          success: true,
+          paymentId: payment.id,
+          status: "completed",
+          amount,
+          platformFee,
+          workerAmount,
+          paymentMethod: paymentMethodType || "card"
+        });
+      } else {
+        // Payment failed
+        const payment = await storage.createPayment({
+          bookingId,
+          clientId,
+          workerId,
+          amount: amount.toString(),
+          currency: "INR",
+          paymentMethod: paymentMethodType || "card",
+          paymentProvider: "stripe",
+          providerTransactionId: paymentIntentId,
+          status: "failed",
+          paymentData,
+          platformFee: "0.00",
+          workerAmount: "0.00",
+          failureReason: "Mock payment failure for testing"
+        });
+
+        console.log(`Mock Payment Failed: ${paymentIntentId} - ₹${amount}`);
+        
+        res.status(400).json({
+          success: false,
+          error: "Payment failed",
+          paymentId: payment.id,
+          status: "failed",
+          failureReason: "Insufficient funds (mock failure)"
+        });
+      }
+    } catch (error) {
+      console.error("Error confirming payment:", error);
+      res.status(500).json({ message: "Failed to confirm payment" });
+    }
+  });
+
+  // Get payment details
+  app.get("/api/payment/:paymentId", async (req, res) => {
+    try {
+      const { paymentId } = req.params;
+      const payment = await storage.getPayment(paymentId);
+      
+      if (!payment) {
+        return res.status(404).json({ message: "Payment not found" });
+      }
+      
+      res.json(payment);
+    } catch (error) {
+      console.error("Error fetching payment:", error);
+      res.status(500).json({ message: "Failed to fetch payment details" });
+    }
+  });
+
+  // Get payments for a booking
+  app.get("/api/booking/:bookingId/payments", async (req, res) => {
+    try {
+      const { bookingId } = req.params;
+      const payments = await storage.getPaymentsByBooking(bookingId);
+      res.json(payments);
+    } catch (error) {
+      console.error("Error fetching booking payments:", error);
+      res.status(500).json({ message: "Failed to fetch booking payments" });
+    }
+  });
+
+  // Get payment history for user
+  app.get("/api/user/:userId/payments", async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const { role } = req.query; // 'client' or 'worker'
+      const payments = await storage.getPaymentsByUser(userId, role as string);
+      res.json(payments);
+    } catch (error) {
+      console.error("Error fetching user payments:", error);
+      res.status(500).json({ message: "Failed to fetch user payments" });
+    }
+  });
+
+  // Refund payment (mock)
+  app.post("/api/refund-payment", async (req, res) => {
+    try {
+      const { paymentId, refundAmount, refundReason } = req.body;
+      
+      if (!paymentId || !refundAmount) {
+        return res.status(400).json({ 
+          message: "Missing required fields: paymentId, refundAmount" 
+        });
+      }
+
+      const payment = await storage.getPayment(paymentId);
+      if (!payment) {
+        return res.status(404).json({ message: "Payment not found" });
+      }
+
+      if (payment.status !== "completed") {
+        return res.status(400).json({ message: "Can only refund completed payments" });
+      }
+
+      // Mock refund process
+      const updatedPayment = await storage.updatePaymentRefund(paymentId, {
+        status: "refunded",
+        refundAmount: refundAmount.toString(),
+        refundReason: refundReason || "Customer request"
+      });
+
+      console.log(`Mock Refund Processed: ${paymentId} - ₹${refundAmount}`);
+      
+      res.json({
+        success: true,
+        refundId: `re_mock_${Date.now()}`,
+        payment: updatedPayment
+      });
+    } catch (error) {
+      console.error("Error processing refund:", error);
+      res.status(500).json({ message: "Failed to process refund" });
     }
   });
 

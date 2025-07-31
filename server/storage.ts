@@ -13,6 +13,8 @@ import {
   geofences,
   locationEvents,
   workerBankDetails,
+  payments,
+  paymentWebhooks,
   type User, 
   type InsertUser,
   type WorkerProfile,
@@ -38,7 +40,11 @@ import {
   type LocationEvent,
   type InsertLocationEvent,
   type WorkerBankDetails,
-  type InsertWorkerBankDetails
+  type InsertWorkerBankDetails,
+  type Payment,
+  type InsertPayment,
+  type PaymentWebhook,
+  type InsertPaymentWebhook
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, sql, desc, ilike, inArray } from "drizzle-orm";
@@ -132,6 +138,13 @@ export interface IStorage {
   getWorkerBankDetails(workerId: string): Promise<WorkerBankDetails | undefined>;
   updateWorkerBankDetails(id: string, updates: Partial<WorkerBankDetails>): Promise<WorkerBankDetails | undefined>;
   deleteWorkerBankDetails(id: string): Promise<void>;
+  
+  // Payment Management
+  createPayment(payment: InsertPayment): Promise<Payment>;
+  getPayment(paymentId: string): Promise<Payment | undefined>;
+  getPaymentsByBooking(bookingId: string): Promise<Payment[]>;
+  getPaymentsByUser(userId: string, role: string): Promise<Payment[]>;
+  updatePaymentRefund(paymentId: string, refundData: { status: string; refundAmount: string; refundReason: string }): Promise<Payment | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -710,6 +723,60 @@ export class DatabaseStorage implements IStorage {
     await db
       .delete(workerBankDetails)
       .where(eq(workerBankDetails.id, id));
+  }
+
+  // Payment Methods Implementation
+  async createPayment(payment: InsertPayment): Promise<Payment> {
+    const [newPayment] = await db
+      .insert(payments)
+      .values(payment)
+      .returning();
+    return newPayment;
+  }
+
+  async getPayment(paymentId: string): Promise<Payment | undefined> {
+    const [payment] = await db
+      .select()
+      .from(payments)
+      .where(eq(payments.id, paymentId));
+    return payment;
+  }
+
+  async getPaymentsByBooking(bookingId: string): Promise<Payment[]> {
+    return await db
+      .select()
+      .from(payments)
+      .where(eq(payments.bookingId, bookingId))
+      .orderBy(desc(payments.createdAt));
+  }
+
+  async getPaymentsByUser(userId: string, role: string): Promise<Payment[]> {
+    if (role === "client") {
+      return await db
+        .select()
+        .from(payments)
+        .where(eq(payments.clientId, userId))
+        .orderBy(desc(payments.createdAt));
+    } else if (role === "worker") {
+      return await db
+        .select()
+        .from(payments)
+        .where(eq(payments.workerId, userId))
+        .orderBy(desc(payments.createdAt));
+    }
+    return [];
+  }
+
+  async updatePaymentRefund(paymentId: string, refundData: { status: string; refundAmount: string; refundReason: string }): Promise<Payment | undefined> {
+    const [updatedPayment] = await db
+      .update(payments)
+      .set({ 
+        ...refundData, 
+        updatedAt: new Date() 
+      })
+      .where(eq(payments.id, paymentId))
+      .returning();
+    return updatedPayment;
   }
 }
 
