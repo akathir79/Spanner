@@ -91,6 +91,7 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
   const [bioDataPreview, setBioDataPreview] = useState<string>("");
   const [registrationCompleted, setRegistrationCompleted] = useState(false);
   const [registeredWorkerId, setRegisteredWorkerId] = useState<string>("");
+  const [workerRegistrationStep, setWorkerRegistrationStep] = useState<"details" | "bank">("details");
   const { login, verifyOtp, signupClient, signupWorker, isLoading } = useAuth();
   const { t } = useLanguage();
   const { toast } = useToast();
@@ -536,15 +537,27 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
       bioDataDocument: bioDataPreview, // Add the bio data document from state
     });
     if (result) {
-      setRegistrationCompleted(true);
-      if (typeof result === 'object' && result.user && result.user.id) {
-        setRegisteredWorkerId(result.user.id);
+      if (typeof result === 'object' && result !== null && 'user' in result) {
+        const userResult = result as any;
+        if (userResult.user && userResult.user.id) {
+          setRegisteredWorkerId(userResult.user.id);
+        }
       }
+      // Move to bank details step instead of showing completion
+      setWorkerRegistrationStep("bank");
       toast({
         title: "Registration Successful!",
-        description: "You can now add your bank details for payment processing.",
+        description: "Please add your bank details for payment processing.",
       });
     }
+  };
+
+  const handleBankDetailsComplete = () => {
+    setRegistrationCompleted(true);
+    toast({
+      title: "Registration Complete!",
+      description: "Your worker profile has been created successfully.",
+    });
   };
 
   const handleAadhaarVerificationRequest = () => {
@@ -601,6 +614,9 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
     setAadhaarOtp("");
     setGeneratedAadhaarOtp("");
     setBioDataPreview("");
+    setRegistrationCompleted(false);
+    setRegisteredWorkerId("");
+    setWorkerRegistrationStep("details");
     loginForm.reset();
     otpForm.reset();
     clientForm.reset();
@@ -974,7 +990,8 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
             </TabsContent>
 
             <TabsContent value="worker">
-              <form onSubmit={workerForm.handleSubmit(handleWorkerSignup)} className="space-y-4">
+              {workerRegistrationStep === "details" ? (
+                <form onSubmit={workerForm.handleSubmit(handleWorkerSignup)} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="workerFirstName">First Name</Label>
@@ -1703,6 +1720,43 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
                   {isLoading ? "Submitting Application..." : "Submit Application"}
                 </Button>
               </form>
+              ) : (
+                <div className="space-y-6">
+                  <div className="text-center">
+                    <CreditCard className="h-12 w-12 text-blue-500 mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold mb-2">Add Bank Details</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Please add your bank details to receive payments for completed jobs.
+                    </p>
+                  </div>
+
+                  <BankDetailsForm
+                    workerId={registeredWorkerId}
+                    isDialog={false}
+                    showTitle={false}
+                    onSuccess={handleBankDetailsComplete}
+                    onCancel={() => setWorkerRegistrationStep("details")}
+                  />
+
+                  <div className="flex space-x-3 pt-4">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setWorkerRegistrationStep("details")}
+                      className="flex-1"
+                    >
+                      Back
+                    </Button>
+                    <Button
+                      type="button"
+                      onClick={handleBankDetailsComplete}
+                      className="flex-1"
+                    >
+                      Skip for Now
+                    </Button>
+                  </div>
+                </div>
+              )}
             </TabsContent>
           </Tabs>
         )}
