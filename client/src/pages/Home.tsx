@@ -190,15 +190,24 @@ export default function Home() {
 
   // Redirect logged-in users to their dashboards, unless completing bank details
   useEffect(() => {
-    // Only redirect if user is definitively logged in (has complete user object) and not completing bank details
-    if (user && user.id && user.role && !localStorage.getItem("pendingBankDetails")) {
-      // Use a more immediate redirect to prevent multiple refreshes
-      if (user.role === "super_admin" || user.role === "admin") {
-        window.location.replace("/admin-dashboard");
-      } else if (user.role === "worker") {
-        window.location.replace("/worker-dashboard");
-      } else {
-        window.location.replace("/dashboard");
+    // Check localStorage directly to ensure we have the most current user data
+    const storedUser = localStorage.getItem("user");
+    if (storedUser && !localStorage.getItem("pendingBankDetails")) {
+      try {
+        const userData = JSON.parse(storedUser);
+        if (userData && userData.id && userData.role) {
+          // Use a more immediate redirect to prevent multiple refreshes
+          if (userData.role === "super_admin" || userData.role === "admin") {
+            window.location.replace("/admin-dashboard");
+          } else if (userData.role === "worker") {
+            window.location.replace("/worker-dashboard");
+          } else {
+            window.location.replace("/dashboard");
+          }
+        }
+      } catch (error) {
+        // If stored user data is corrupted, clear it
+        localStorage.removeItem("user");
       }
     }
   }, [user]);
