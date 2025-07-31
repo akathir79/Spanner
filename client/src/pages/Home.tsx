@@ -196,34 +196,51 @@ export default function Home() {
     const storedUser = localStorage.getItem("user");
     console.log("Home page - stored user:", storedUser); // Debug log
     
+    console.log("Checking conditions...");
+    console.log("storedUser exists:", !!storedUser);
+    console.log("pendingBankDetails:", localStorage.getItem("pendingBankDetails"));
+    
     if (storedUser && !localStorage.getItem("pendingBankDetails")) {
+      console.log("Passed initial conditions, parsing...");
       try {
         const userData = JSON.parse(storedUser);
-        console.log("Home page - parsed user data:", userData); // Debug log
+        console.log("Home page - parsed user data:", userData);
+        console.log("userData exists:", !!userData);
+        console.log("userData.id:", userData?.id);
+        console.log("userData.role:", userData?.role);
         
         if (userData && userData.id && userData.role) {
-          console.log("Home page - redirecting user with role:", userData.role); // Debug log
+          console.log("All conditions met, redirecting user with role:", userData.role);
           
           // Use router for immediate redirection
           if (userData.role === "super_admin" || userData.role === "admin") {
-            console.log("Redirecting to admin dashboard");
-            setLocation("/admin-dashboard");
+            console.log("Admin role detected, redirecting to admin dashboard");
+            setTimeout(() => {
+              setLocation("/admin-dashboard");
+            }, 10);
             return;
           } else if (userData.role === "worker") {
-            console.log("Redirecting to worker dashboard");
-            setLocation("/worker-dashboard");
+            console.log("Worker role detected, redirecting to worker dashboard");
+            setTimeout(() => {
+              setLocation("/worker-dashboard");
+            }, 10);
             return;
           } else {
-            console.log("Redirecting to client dashboard");
-            setLocation("/dashboard");
+            console.log("Client role detected, redirecting to client dashboard");
+            setTimeout(() => {
+              setLocation("/dashboard");
+            }, 10);
             return;
           }
+        } else {
+          console.log("Conditions not met - userData:", !!userData, "id:", !!userData?.id, "role:", !!userData?.role);
         }
       } catch (error) {
         console.error("Error parsing stored user data:", error);
-        // If stored user data is corrupted, clear it
         localStorage.removeItem("user");
       }
+    } else {
+      console.log("Initial conditions not met");
     }
   }, []);
   const [searchForm, setSearchForm] = useState({
