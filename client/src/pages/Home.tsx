@@ -200,6 +200,14 @@ export default function Home() {
     console.log("storedUser exists:", !!storedUser);
     console.log("pendingBankDetails:", localStorage.getItem("pendingBankDetails"));
     
+    if (storedUser) {
+      // Clear pendingBankDetails for admin users as they don't need bank details
+      const userData = JSON.parse(storedUser);
+      if (userData?.role === "admin" || userData?.role === "super_admin") {
+        localStorage.removeItem("pendingBankDetails");
+      }
+    }
+    
     if (storedUser && !localStorage.getItem("pendingBankDetails")) {
       console.log("Passed initial conditions, parsing...");
       try {
