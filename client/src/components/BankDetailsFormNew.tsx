@@ -37,6 +37,17 @@ interface BankInfo {
   CITY: string;
   STATE: string;
   DISTRICT: string;
+  CENTRE: string;
+  CONTACT: string | null;
+  IMPS: boolean;
+  UPI: boolean;
+  MICR: string | null;
+  RTGS: boolean;
+  NEFT: boolean;
+  SWIFT: string;
+  ISO3166: string;
+  BANKCODE: string;
+  IFSC: string;
 }
 
 export default function BankDetailsFormNew({ 
@@ -85,60 +96,31 @@ export default function BankDetailsFormNew({
     }
   };
 
-  // Razorpay IFSC lookup function
+  // Razorpay IFSC lookup function using real API
   const lookupIFSC = async (ifscCode: string): Promise<BankInfo | null> => {
     setIsSearching(true);
     
     try {
-      // Use Razorpay IFSC API
+      // Use Razorpay IFSC API - https://ifsc.razorpay.com/:ifsc
       const response = await fetch(`https://ifsc.razorpay.com/${ifscCode.toUpperCase()}`);
       
       if (!response.ok) {
-        throw new Error('IFSC not found');
+        // API returns 404 for invalid IFSC codes
+        if (response.status === 404) {
+          throw new Error('IFSC code not found');
+        }
+        throw new Error(`API Error: ${response.status}`);
       }
       
       const data = await response.json();
       setIsSearching(false);
+      
+      // Return the complete bank data from Razorpay API
       return data;
     } catch (error) {
       setIsSearching(false);
-      // Fallback to mock data for demo
-      const mockBankData: Record<string, BankInfo> = {
-        'HDFC0000001': {
-          BANK: 'HDFC Bank',
-          BRANCH: 'Anna Nagar Branch',
-          ADDRESS: '1st Floor, Spencer Plaza, Anna Nagar',
-          CITY: 'Chennai',
-          STATE: 'Tamil Nadu',
-          DISTRICT: 'Chennai'
-        },
-        'SBIN0000123': {
-          BANK: 'State Bank of India',
-          BRANCH: 'T Nagar Branch',
-          ADDRESS: 'No 45, Pondy Bazaar, T Nagar',
-          CITY: 'Chennai',
-          STATE: 'Tamil Nadu',
-          DISTRICT: 'Chennai'
-        },
-        'ICIC0000456': {
-          BANK: 'ICICI Bank',
-          BRANCH: 'Coimbatore Main Branch',
-          ADDRESS: 'Cross Cut Road, Gandhipuram',
-          CITY: 'Coimbatore',
-          STATE: 'Tamil Nadu',
-          DISTRICT: 'Coimbatore'
-        },
-        'AXIS0000789': {
-          BANK: 'Axis Bank',
-          BRANCH: 'Madurai Junction Branch',
-          ADDRESS: 'North Veli Street, Near Railway Station',
-          CITY: 'Madurai',
-          STATE: 'Tamil Nadu',
-          DISTRICT: 'Madurai'
-        }
-      };
-      
-      return mockBankData[ifscCode.toUpperCase()] || null;
+      console.error('IFSC lookup error:', error);
+      throw error; // Re-throw to handle in calling function
     }
   };
 
@@ -150,36 +132,50 @@ export default function BankDetailsFormNew({
 
     try {
       const result = await lookupIFSC(formData.ifscCode);
-      if (result) {
-        setBankInfo(result);
-        const newFormData = {
-          ...formDataRef.current,
-          bankName: result.BANK,
-          branchName: result.BRANCH,
-          bankAddress: `${result.ADDRESS}, ${result.CITY}, ${result.STATE}`
-        };
-        formDataRef.current = newFormData;
-        setFormData(newFormData);
-        setErrors({});
+      setBankInfo(result);
+      
+      // Format the address properly from the API response
+      const addressParts = [result.ADDRESS];
+      if (result.CITY && result.CITY !== result.CENTRE) {
+        addressParts.push(result.CITY);
+      }
+      if (result.STATE) {
+        addressParts.push(result.STATE);
+      }
+      
+      const newFormData = {
+        ...formDataRef.current,
+        bankName: result.BANK,
+        branchName: result.BRANCH,
+        bankAddress: addressParts.join(', ')
+      };
+      formDataRef.current = newFormData;
+      setFormData(newFormData);
+      setErrors({});
+      
+      // Enhanced success message with more details
+      toast({
+        title: "Bank Details Found",
+        description: `${result.BANK} - ${result.BRANCH}, ${result.CITY}`,
+      });
+    } catch (error: any) {
+      const errorMessage = error.message || 'Unknown error occurred';
+      
+      if (errorMessage.includes('IFSC code not found')) {
+        setErrors({ ifscCode: 'Invalid IFSC code. Please check and try again.' });
         toast({
-          title: "Bank Details Found",
-          description: `Found ${result.BANK} - ${result.BRANCH}`,
+          title: "IFSC Not Found",
+          description: "The IFSC code you entered is not valid. Please verify and try again.",
+          variant: "destructive",
         });
       } else {
-        setErrors({ ifscCode: 'Bank details not found for this IFSC code' });
+        setErrors({ ifscCode: 'Failed to fetch bank details. Please try again.' });
         toast({
-          title: "Not Found",
-          description: "No bank details found for this IFSC code",
+          title: "Connection Error",
+          description: "Unable to fetch bank details at the moment. Please try again or enter manually.",
           variant: "destructive",
         });
       }
-    } catch (error) {
-      console.error('IFSC lookup error:', error);
-      toast({
-        title: "Error",
-        description: "Failed to fetch bank details. Please try again.",
-        variant: "destructive",
-      });
     }
   };
 
@@ -398,10 +394,20 @@ export default function BankDetailsFormNew({
                   <Alert className="border-green-200 bg-green-50">
                     <Building2 className="h-4 w-4" />
                     <AlertDescription>
-                      <div className="space-y-1">
-                        <p className="font-medium">{bankInfo.BANK}</p>
-                        <p className="text-sm">{bankInfo.BRANCH}</p>
-                        <p className="text-xs text-muted-foreground">{bankInfo.ADDRESS}</p>
+                      <div className="space-y-2">
+                        <div>
+                          <p className="font-medium">{bankInfo.BANK}</p>
+                          <p className="text-sm">{bankInfo.BRANCH}</p>
+                          <p className="text-xs text-muted-foreground">{bankInfo.ADDRESS}</p>
+                          <p className="text-xs text-muted-foreground">{bankInfo.CITY}, {bankInfo.STATE}</p>
+                        </div>
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          {bankInfo.UPI && <Badge variant="secondary" className="text-xs">UPI</Badge>}
+                          {bankInfo.RTGS && <Badge variant="secondary" className="text-xs">RTGS</Badge>}
+                          {bankInfo.NEFT && <Badge variant="secondary" className="text-xs">NEFT</Badge>}
+                          {bankInfo.IMPS && <Badge variant="secondary" className="text-xs">IMPS</Badge>}
+                          {bankInfo.MICR && <Badge variant="outline" className="text-xs">MICR: {bankInfo.MICR}</Badge>}
+                        </div>
                       </div>
                     </AlertDescription>
                   </Alert>
