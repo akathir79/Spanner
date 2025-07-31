@@ -91,7 +91,8 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
   const [bioDataPreview, setBioDataPreview] = useState<string>("");
   const [registrationCompleted, setRegistrationCompleted] = useState(false);
   const [registeredWorkerId, setRegisteredWorkerId] = useState<string>("");
-  const [workerRegistrationStep, setWorkerRegistrationStep] = useState<"details" | "bank">("details");
+  const [workerRegistrationStep, setWorkerRegistrationStep] = useState<"details" | "bank" | "complete">("details");
+  const [showBankDetailsForm, setShowBankDetailsForm] = useState(false);
   const { login, verifyOtp, signupClient, signupWorker, isLoading } = useAuth();
   const { t } = useLanguage();
   const { toast } = useToast();
@@ -521,6 +522,21 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
     }
   };
 
+  const handleBankDetailsComplete = () => {
+    setShowBankDetailsForm(false);
+    setRegistrationCompleted(true);
+    setWorkerRegistrationStep("details");
+    toast({
+      title: "Registration Complete!",
+      description: "Your worker profile has been created successfully. Please wait for admin approval.",
+    });
+    
+    // Close modal after a brief delay
+    setTimeout(() => {
+      onClose();
+    }, 2000);
+  };
+
   const handleWorkerSignup = async (data: z.infer<typeof workerSignupSchema>) => {
     // Check if Aadhaar is verified before proceeding
     if (aadhaarVerificationStep !== "verified") {
@@ -546,35 +562,13 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
           setRegisteredWorkerId(userResult.user.id);
         }
       }
-      // Move to bank details step instead of showing completion
-      setWorkerRegistrationStep("bank");
+      // Move to completion step instead of forcing bank details
+      setWorkerRegistrationStep("complete");
       toast({
         title: "Registration Successful!",
-        description: "Please add your bank details for payment processing.",
+        description: "Your worker application has been submitted successfully.",
       });
-      
-      // Prevent automatic redirect by temporarily marking as pending bank details
-      localStorage.setItem("pendingBankDetails", "true");
     }
-  };
-
-  const handleBankDetailsComplete = () => {
-    setRegistrationCompleted(true);
-    toast({
-      title: "Registration Complete!",
-      description: "Your worker profile has been created successfully. Redirecting to dashboard...",
-    });
-    
-    // Clear the pending bank details flag
-    localStorage.removeItem("pendingBankDetails");
-    
-    // Close the modal and let the authentication system handle the redirect
-    onClose();
-    
-    // Redirect to worker dashboard after completing bank details
-    setTimeout(() => {
-      window.location.href = "/worker-dashboard";
-    }, 1500);
   };
 
 
@@ -1761,6 +1755,62 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
                   {isLoading ? "Submitting Application..." : "Submit Application"}
                 </Button>
               </form>
+              ) : workerRegistrationStep === "complete" && !showBankDetailsForm ? (
+                <div className="space-y-6">
+                  <div className="text-center">
+                    <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold mb-2">Registration Successful!</h3>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Your worker application has been submitted successfully.
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      You can add your bank details now for payment processing, or add them later from your dashboard.
+                    </p>
+                  </div>
+
+                  <div className="flex space-x-3">
+                    <Button
+                      type="button"
+                      onClick={() => setShowBankDetailsForm(true)}
+                      className="flex-1"
+                    >
+                      <CreditCard className="h-4 w-4 mr-2" />
+                      Add Bank Details Now
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        toast({
+                          title: "Registration Complete",
+                          description: "You can add bank details later from your dashboard.",
+                        });
+                        onClose();
+                      }}
+                      className="flex-1"
+                    >
+                      Add Later
+                    </Button>
+                  </div>
+                </div>
+              ) : workerRegistrationStep === "complete" && showBankDetailsForm ? (
+                <div className="space-y-6">
+                  <div className="text-center">
+                    <CreditCard className="h-12 w-12 text-blue-500 mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold mb-2">Add Bank Details</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Bank details are required to receive payments for completed jobs.
+                    </p>
+                  </div>
+
+                  <BankDetailsFormFixed
+                    workerId={registeredWorkerId}
+                    isDialog={false}
+                    showTitle={false}
+                    onSuccess={handleBankDetailsComplete}
+                    onCancel={() => setShowBankDetailsForm(false)}
+                  />
+                </div>
               ) : (
                 <div className="space-y-6">
                   <div className="text-center">
