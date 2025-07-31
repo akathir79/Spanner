@@ -504,6 +504,9 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
       onClose();
       setStep(1);
       setPendingLogin(null);
+      
+      // Force page refresh to trigger proper redirection
+      window.location.reload();
     }
   };
 
