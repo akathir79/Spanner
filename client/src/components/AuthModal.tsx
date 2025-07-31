@@ -531,9 +531,10 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
       description: "Your worker profile has been created successfully. Please wait for admin approval.",
     });
     
-    // Close modal after a brief delay
+    // Close modal and redirect to worker dashboard
     setTimeout(() => {
       onClose();
+      window.location.reload(); // Force page refresh to trigger proper redirection
     }, 2000);
   };
 
@@ -1786,6 +1787,10 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
                           description: "You can add bank details later from your dashboard.",
                         });
                         onClose();
+                        // Force page refresh to trigger proper redirection to worker dashboard
+                        setTimeout(() => {
+                          window.location.reload();
+                        }, 1000);
                       }}
                       className="flex-1"
                     >
