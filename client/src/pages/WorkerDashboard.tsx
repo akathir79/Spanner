@@ -35,7 +35,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import LocationTracker from "@/components/LocationTracker";
-import BankDetailsFormFinal from "@/components/BankDetailsFormFinal";
+import BankDetailsFormFixed from "@/components/BankDetailsFormFixed";
 
 // Worker Jobs Component
 const WorkerJobsTab = () => {
@@ -1048,7 +1048,7 @@ export default function WorkerDashboard() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <BankDetailsFormFinal
+                <BankDetailsFormFixed
                   workerId={user?.id || ""}
                   isDialog={true}
                 />
