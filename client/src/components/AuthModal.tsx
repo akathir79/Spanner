@@ -772,7 +772,18 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
                   <Alert>
                     <Info className="h-4 w-4" />
                     <AlertDescription>
-                      Development OTP: <strong>{developmentOtp}</strong>
+                      <div className="flex items-center justify-between">
+                        <span>Development OTP: <strong>{developmentOtp}</strong></span>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => otpForm.setValue("otp", developmentOtp)}
+                          className="ml-2"
+                        >
+                          Paste OTP
+                        </Button>
+                      </div>
                     </AlertDescription>
                   </Alert>
                 )}
@@ -1131,7 +1142,18 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
                           <Alert>
                             <Info className="h-4 w-4" />
                             <AlertDescription>
-                              Development OTP: <strong>{generatedAadhaarOtp}</strong>
+                              <div className="flex items-center justify-between">
+                                <span>Development OTP: <strong>{generatedAadhaarOtp}</strong></span>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => setAadhaarOtp(generatedAadhaarOtp)}
+                                  className="ml-2"
+                                >
+                                  Paste OTP
+                                </Button>
+                              </div>
                             </AlertDescription>
                           </Alert>
                         )}

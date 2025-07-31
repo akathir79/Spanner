@@ -47,12 +47,13 @@ Located in `shared/schema.ts`, the database includes:
 
 ### Authentication System
 - Mobile-based authentication with OTP verification (currently mock OTP "123456" for development)
+- Development OTP paste buttons for easy testing in login and worker registration forms
 - Role-based routing and access control with automatic dashboard redirection
 - Super admin capabilities for creating admin accounts
 - Support for both email and mobile login options
 - Profile picture upload functionality (optional for clients, mandatory for workers)
 - Multi-step worker registration: personal details → mandatory bank details → completion
-- Bank details required and integrated directly into registration flow with auto/manual IFSC lookup
+- Bank details required and integrated directly into registration flow with real Razorpay IFSC API
 - Workers cannot skip bank details during registration - must complete to proceed
 - Real SMS OTP integration ready for Twilio implementation when needed
 
