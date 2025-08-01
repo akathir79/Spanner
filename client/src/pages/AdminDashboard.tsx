@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -54,10 +54,53 @@ export default function AdminDashboard() {
   const [selectedUserType, setSelectedUserType] = useState<string | null>(null);
   const [userDetailsModal, setUserDetailsModal] = useState<any>(null);
 
+  // Quick login for demo purposes
+  const quickLogin = async () => {
+    try {
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          mobile: "9000000001",
+          userType: "super_admin",
+          otp: "123456"
+        })
+      });
+      
+      if (response.ok) {
+        window.location.reload();
+      }
+    } catch (error) {
+      console.error("Quick login failed:", error);
+    }
+  };
+
   // Redirect if not authenticated or wrong role
   if (!user) {
-    setLocation("/login");
-    return null;
+    return (
+      <div className="min-h-screen bg-muted/30 flex items-center justify-center">
+        <Card className="w-full max-w-md p-8">
+          <CardHeader className="text-center">
+            <CardTitle>Admin Dashboard Access</CardTitle>
+            <CardDescription>
+              You need to be logged in as an admin to access this page
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Button onClick={quickLogin} className="w-full">
+              Quick Login as Super Admin
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={() => setLocation("/login")} 
+              className="w-full"
+            >
+              Go to Login Page
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   if (user.role !== "admin" && user.role !== "super_admin") {
