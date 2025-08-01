@@ -686,7 +686,7 @@ export default function WorkerApprovalSection() {
                                 <div className="space-y-3">
                                   <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Service Districts</label>
                                   <div className="flex flex-wrap gap-2">
-                                    {selectedWorker.workerProfile.serviceDistricts?.length > 0 ? 
+                                    {selectedWorker.workerProfile?.serviceDistricts?.length > 0 ? 
                                       selectedWorker.workerProfile.serviceDistricts.map((districtId: string, index: number) => {
                                         const district = districts.find((d: any) => d.id === districtId);
                                         return (
