@@ -30,7 +30,12 @@ interface ConversationUser {
   unreadCount?: number;
 }
 
-export function MessagingSystem() {
+interface MessagingSystemProps {
+  initialUserId?: string;
+  onUserSelect?: (user: ConversationUser) => void;
+}
+
+export function MessagingSystem({ initialUserId, onUserSelect }: MessagingSystemProps = {}) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [selectedUser, setSelectedUser] = useState<ConversationUser | null>(null);
@@ -46,21 +51,21 @@ export function MessagingSystem() {
 
   // Get messages for current user
   const { data: userMessages = [] } = useQuery<Message[]>({
-    queryKey: ['/api/messages', user?.id, activeTab],
+    queryKey: [`/api/messages/${user?.id}`, { type: activeTab === 'sent' ? 'sent' : 'received' }],
     enabled: !!user?.id,
     refetchInterval: 5000, // Poll every 5 seconds for new messages
   });
 
   // Get conversation between selected users
   const { data: conversation = [] } = useQuery<Message[]>({
-    queryKey: ['/api/messages/conversation', user?.id, selectedUser?.id],
+    queryKey: [`/api/messages/conversation/${user?.id}/${selectedUser?.id}`],
     enabled: !!user?.id && !!selectedUser?.id,
     refetchInterval: 3000, // Poll every 3 seconds for conversation updates
   });
 
   // Get unread message count
   const { data: unreadData } = useQuery<{count: number}>({
-    queryKey: ['/api/messages', user?.id, 'unread-count'],
+    queryKey: [`/api/messages/${user?.id}/unread-count`],
     enabled: !!user?.id,
     refetchInterval: 10000, // Poll every 10 seconds for unread count
   });
@@ -72,20 +77,47 @@ export function MessagingSystem() {
     mutationFn: (messageData: {
       senderId: string;
       receiverId: string;
+      subject: string;
       content: string;
       messageType?: string;
     }) => apiRequest('/api/messages', 'POST', messageData),
     onSuccess: () => {
       setMessageText("");
+      // Invalidate all message-related queries
       queryClient.invalidateQueries({ queryKey: ['/api/messages'] });
+      queryClient.invalidateQueries({ queryKey: [`/api/messages/${user?.id}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/messages/conversation/${user?.id}/${selectedUser?.id}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/messages/${user?.id}/unread-count`] });
     },
   });
+
+  // Effect to handle initial user selection
+  useEffect(() => {
+    if (initialUserId && allUsers.length > 0) {
+      const targetUser = allUsers.find((u: User) => u.id === initialUserId);
+      if (targetUser && (targetUser.role === 'client' || targetUser.role === 'worker')) {
+        const fullName = `${targetUser.firstName} ${targetUser.lastName}`.trim() || targetUser.mobile;
+        const conversationUser: ConversationUser = {
+          id: targetUser.id,
+          name: fullName,
+          mobile: targetUser.mobile,
+          role: targetUser.role,
+          profilePicture: targetUser.profilePicture || undefined,
+        };
+        setSelectedUser(conversationUser);
+        if (onUserSelect) {
+          onUserSelect(conversationUser);
+        }
+      }
+    }
+  }, [initialUserId, allUsers, onUserSelect]);
 
   // Mark message as read mutation
   const markAsReadMutation = useMutation({
     mutationFn: (messageId: string) => apiRequest(`/api/messages/${messageId}/read`, 'PATCH'),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/messages'] });
+      queryClient.invalidateQueries({ queryKey: [`/api/messages/${user?.id}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/messages/${user?.id}/unread-count`] });
     },
   });
 
@@ -132,6 +164,7 @@ export function MessagingSystem() {
     sendMessageMutation.mutate({
       senderId: user.id,
       receiverId: selectedUser.id,
+      subject: `Message to ${selectedUser.name}`,
       content: messageText.trim(),
       messageType: 'text',
     });
@@ -150,7 +183,7 @@ export function MessagingSystem() {
     });
   };
 
-  if (!user || user.role !== 'admin') {
+  if (!user || (user.role !== 'admin' && user.role !== 'super_admin')) {
     return (
       <Card>
         <CardContent className="p-6">

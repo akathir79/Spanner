@@ -56,6 +56,7 @@ export default function AdminDashboard() {
   const [selectedUserType, setSelectedUserType] = useState<string | null>(null);
   const [userDetailsModal, setUserDetailsModal] = useState<any>(null);
   const [activeTab, setActiveTab] = useState("approvals");
+  const [messageDialogUser, setMessageDialogUser] = useState<any>(null);
 
   // Fetch admin data (hooks must be called unconditionally)
   const { data: users = [], isLoading: usersLoading } = useQuery({
@@ -566,7 +567,12 @@ export default function AdminDashboard() {
                                     <Eye className="mr-2 h-4 w-4" />
                                     View Details
                                   </DropdownMenuItem>
-                                  <DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    onClick={() => {
+                                      setMessageDialogUser(user);
+                                      setActiveTab("messaging");
+                                    }}
+                                  >
                                     <Mail className="mr-2 h-4 w-4" />
                                     Send Message
                                   </DropdownMenuItem>
@@ -777,7 +783,15 @@ export default function AdminDashboard() {
 
                   {/* Action Buttons */}
                   <div className="flex space-x-2 pt-4 border-t">
-                    <Button variant="outline" className="flex-1">
+                    <Button 
+                      variant="outline" 
+                      className="flex-1"
+                      onClick={() => {
+                        setMessageDialogUser(userDetailsModal);
+                        setActiveTab("messaging");
+                        setUserDetailsModal(null);
+                      }}
+                    >
                       <Mail className="h-4 w-4 mr-2" />
                       Send Message
                     </Button>
@@ -931,7 +945,10 @@ export default function AdminDashboard() {
 
           {/* Messaging Tab */}
           <TabsContent value="messaging" className="space-y-6">
-            <MessagingSystem />
+            <MessagingSystem 
+              initialUserId={messageDialogUser?.id}
+              onUserSelect={(user) => setMessageDialogUser(null)}
+            />
           </TabsContent>
 
           {/* Analytics Tab */}
