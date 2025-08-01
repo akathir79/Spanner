@@ -41,9 +41,13 @@ Located in `shared/schema.ts`, the database includes:
 - **Users**: Core user information with role-based access (client, worker, admin, super_admin)
 - **Worker Profiles**: Extended information for service providers including skills, rates, and verification status
 - **Districts**: Complete coverage of Tamil Nadu's 38 districts with Tamil names
+- **Areas**: Comprehensive village and town coverage with 492+ locations across Tamil Nadu
 - **Service Categories**: Dynamic service types that workers can offer
 - **Bookings**: Complete booking workflow from request to completion
 - **OTP Verifications**: Secure authentication via mobile OTP
+- **Location Tracking**: GPS tracking for service delivery with geofencing
+- **Payments**: Complete payment processing with Stripe integration
+- **Job Postings & Bids**: Bidding system for service requests
 
 ### Authentication System
 - Mobile-based authentication with OTP verification (currently mock OTP "123456" for development)
