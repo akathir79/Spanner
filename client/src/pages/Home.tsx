@@ -649,7 +649,10 @@ export default function Home() {
                                 className="w-full justify-between"
                               >
                                 {searchForm.area
-                                  ? (getAvailableAreasForSearch() as any[])?.find((area: any) => area.id === searchForm.area)?.name
+                                  ? (() => {
+                                      const selectedArea = (getAvailableAreasForSearch() as any[])?.find((area: any) => area.id === searchForm.area);
+                                      return selectedArea ? `${selectedArea.name}${selectedArea.tamilName ? ` (${selectedArea.tamilName})` : ''}` : "Select Area";
+                                    })()
                                   : "Select Area"}
                                 <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                               </Button>
