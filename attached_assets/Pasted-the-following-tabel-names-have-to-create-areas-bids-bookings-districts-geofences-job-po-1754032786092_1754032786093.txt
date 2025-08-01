@@ -1,0 +1,424 @@
+the following tabel names have to create 
+- areas
+- bids
+- bookings
+- districts
+- geofences
+- job_postings
+- location_events
+- location_sharing_sessi...
+- location_tracking
+- otp_verifications
+- payment_webhooks
+- payments
+- service_categories
+- users
+- worker_bank_details
+- worker_profiles
+
+------------------------------------------------------------------------------
+ a table named `areas` in the `public` schema with Row Level Security enabled. Here is a breakdown of the table structure:
+
+### Columns:
+- `id` (VARCHAR, PRIMARY KEY, DEFAULT `gen_random_uuid()`)
+- `name` (TEXT, NOT NULL)
+- `tamil_name` (TEXT)
+- `district_id` (VARCHAR, NOT NULL)
+- `pincode` (TEXT)
+- `latitude` (NUMERIC)
+- `longitude` (NUMERIC)
+- `is_active` (BOOLEAN, DEFAULT `true`)
+- `created_at` (TIMESTAMP, NOT NULL, DEFAULT `now()`)
+
+### Constraints:
+- `areas_district_id_districts_id_fk` (FOREIGN KEY constraint on `district_id` referencing `public.districts (id)`)
+- `areas_pkey` (PRIMARY KEY constraint on `id`)
+
+### Indexes:
+- `areas_pkey` (UNIQUE INDEX using BTREE on `id`)
+
+### Policies:
+- (No policies defined)
+
+Let me know if you need further analysis or assistance!
+------------------------------------------------------------------------------------------------------------ 
+
+table named `bids` in the `public` schema with Row Level Security enabled. Here is a breakdown of the table structure:
+
+### Columns:
+- `id` (VARCHAR, PRIMARY KEY, DEFAULT `gen_random_uuid()`)
+- `job_posting_id` (VARCHAR, NOT NULL)
+- `worker_id` (VARCHAR, NOT NULL)
+- `proposed_amount` (NUMERIC, NOT NULL)
+- `estimated_duration` (TEXT)
+- `proposal` (TEXT, NOT NULL)
+- `attachments` (JSONB)
+- `status` (TEXT, NOT NULL, DEFAULT `'pending'`)
+- `created_at` (TIMESTAMP, NOT NULL, DEFAULT `now()`)
+- `updated_at` (TIMESTAMP, NOT NULL, DEFAULT `now()`)
+
+### Constraints:
+- `bids_job_posting_id_job_postings_id_fk` (FOREIGN KEY constraint on `job_posting_id` referencing `public.job_postings (id)`)
+- `bids_worker_id_users_id_fk` (FOREIGN KEY constraint on `worker_id` referencing `public.users (id)`)
+- `bids_pkey` (PRIMARY KEY constraint on `id`)
+
+### Indexes:
+- `bids_pkey` (UNIQUE INDEX using BTREE on `id`)
+
+### Policies:
+- (No policies defined)
+--------------------------------------------------------------------------------------------------------------------
+ a table named `bookings` in the `public` schema with Row Level Security enabled. Here is a breakdown of the table structure:
+
+### Columns:
+- `id` (VARCHAR, PRIMARY KEY, DEFAULT `gen_random_uuid()`)
+- `client_id` (VARCHAR, NOT NULL)
+- `worker_id` (VARCHAR, NOT NULL)
+- `service_category` (TEXT, NOT NULL)
+- `description` (TEXT, NOT NULL)
+- `district_id` (VARCHAR, NOT NULL)
+- `scheduled_date` (TIMESTAMP, NOT NULL)
+- `status` (TEXT, NOT NULL, DEFAULT `'pending'`)
+- `total_amount` (NUMERIC)
+- `payment_status` (TEXT, DEFAULT `'pending'`)
+- `client_rating` (INTEGER)
+- `client_review` (TEXT)
+- `worker_rating` (INTEGER)
+- `worker_review` (TEXT)
+- `created_at` (TIMESTAMP, NOT NULL, DEFAULT `now()`)
+- `updated_at` (TIMESTAMP, NOT NULL, DEFAULT `now()`)
+
+### Constraints:
+- `bookings_client_id_users_id_fk` (FOREIGN KEY constraint on `client_id` referencing `public.users (id)`)
+- `bookings_district_id_districts_id_fk` (FOREIGN KEY constraint on `district_id` referencing `public.districts (id)`)
+- `bookings_worker_id_users_id_fk` (FOREIGN KEY constraint on `worker_id` referencing `public.users (id)`)
+- `bookings_pkey` (PRIMARY KEY constraint on `id`)
+
+### Indexes:
+- `bookings_pkey` (UNIQUE INDEX using BTREE on `id`)
+
+### Policies:
+- (No policies defined)
+
+-----------------------------------------------------------------------------------------------------------------
+ a table named `districts` in the `public` schema with Row Level Security enabled. Here is a breakdown of the table structure:
+
+### Columns:
+- `id` (VARCHAR, PRIMARY KEY, DEFAULT `gen_random_uuid()`)
+- `name` (TEXT, NOT NULL)
+- `tamil_name` (TEXT, NOT NULL)
+- `code` (TEXT, UNIQUE, NOT NULL)
+- `created_at` (TIMESTAMP, NOT NULL, DEFAULT `now()`)
+
+### Constraints:
+- `districts_code_unique` (UNIQUE constraint on `code`)
+- `districts_pkey` (PRIMARY KEY constraint on `id`)
+
+### Indexes:
+- `districts_code_unique` (UNIQUE INDEX using BTREE on `code`)
+- `districts_pkey` (UNIQUE INDEX using BTREE on `id`)
+
+### Policies:
+- (No policies defined)
+
+--------------------------------------------------------------------------------------------------
+The image shows the schema definition for a table named `geofences` in the `public` schema with Row Level Security disabled. Here is a breakdown of the table structure:
+
+### Columns:
+- `id` (VARCHAR, PRIMARY KEY, DEFAULT `gen_random_uuid()`)
+- `name` (TEXT, NOT NULL)
+- `booking_id` (VARCHAR)
+- `center_latitude` (NUMERIC, NOT NULL)
+- `center_longitude` (NUMERIC, NOT NULL)
+- `radius` (NUMERIC, NOT NULL)
+- `type` (TEXT, NOT NULL)
+- `is_active` (BOOLEAN, DEFAULT `true`)
+- `created_at` (TIMESTAMP, NOT NULL, DEFAULT `now()`)
+
+### Constraints:
+- `geofences_booking_id_bookings_id_fk` (FOREIGN KEY constraint on `booking_id` referencing `public.bookings (id)`)
+- `geofences_pkey` (PRIMARY KEY constraint on `id`)
+
+### Indexes:
+- `geofences_pkey` (UNIQUE INDEX using BTREE on `id`)
+
+### Policies:
+- (No policies defined)
+---------------------------------------------------------------------------------------------------------------------
+ a table named `job_postings` in the `public` schema with Row Level Security disabled. Here is a breakdown of the table structure:
+
+### Columns:
+- `id` (VARCHAR, PRIMARY KEY, DEFAULT `gen_random_uuid()`)
+- `client_id` (VARCHAR, NOT NULL)
+- `title` (TEXT, NOT NULL)
+- `description` (TEXT, NOT NULL)
+- `service_category` (TEXT, NOT NULL)
+- `district_id` (VARCHAR, NOT NULL)
+- `budget_min` (NUMERIC)
+- `budget_max` (NUMERIC)
+- `deadline` (TIMESTAMP)
+- `requirements` (JSONB)
+- `attachments` (JSONB)
+- `status` (TEXT, NOT NULL, DEFAULT `'open'`)
+- `selected_bid_id` (VARCHAR)
+- `created_at` (TIMESTAMP, NOT NULL, DEFAULT `now()`)
+- `updated_at` (TIMESTAMP, NOT NULL, DEFAULT `now()`)
+
+### Constraints:
+- `job_postings_client_id_users_id_fk` (FOREIGN KEY constraint on `client_id` referencing `public.users (id)`)
+- `job_postings_district_id_districts_id_fk` (FOREIGN KEY constraint on `district_id` referencing `public.districts (id)`)
+- `job_postings_pkey` (PRIMARY KEY constraint on `id`)
+
+### Indexes:
+- `job_postings_pkey` (UNIQUE INDEX using BTREE on `id`)
+
+### Policies:
+- (No policies defined)
+
+--------------------------------------------------------------------------------------------------------------------------------
+ a table named `location_events` in the `public` schema with Row Level Security enabled. Here is a breakdown of the table structure:
+
+### Columns:
+- `id` (VARCHAR, PRIMARY KEY, DEFAULT `gen_random_uuid()`)
+- `booking_id` (VARCHAR, NOT NULL)
+- `worker_id` (VARCHAR, NOT NULL)
+- `event_type` (TEXT, NOT NULL)
+- `geofence_id` (VARCHAR)
+- `latitude` (NUMERIC)
+- `longitude` (NUMERIC)
+- `address` (TEXT)
+- `metadata` (JSONB)
+- `timestamp` (TIMESTAMP, NOT NULL, DEFAULT `now()`)
+- `created_at` (TIMESTAMP, NOT NULL, DEFAULT `now()`)
+
+### Constraints:
+- `location_events_booking_id_bookings_id_fk` (FOREIGN KEY constraint on `booking_id` referencing `public.bookings (id)`)
+- `location_events_geofence_id_geofences_id_fk` (FOREIGN KEY constraint on `geofence_id` referencing `public.geofences (id)`)
+- `location_events_worker_id_users_id_fk` (FOREIGN KEY constraint on `worker_id` referencing `public.users (id)`)
+- `location_events_pkey` (PRIMARY KEY constraint on `id`)
+
+### Indexes:
+- `location_events_pkey` (UNIQUE INDEX using BTREE on `id`)
+
+### Policies:
+- (No policies defined)
+
+----------------------------------------------------------------------------------------------------------------------------
+ a table named `location_sharing_sessions` in the `public` schema with Row Level Security enabled. Here is a breakdown of the table structure:
+
+### Columns:
+- `id` (VARCHAR, PRIMARY KEY, DEFAULT `gen_random_uuid()`)
+- `booking_id` (VARCHAR, NOT NULL)
+- `worker_id` (VARCHAR, NOT NULL)
+- `client_id` (VARCHAR, NOT NULL)
+- `is_active` (BOOLEAN, DEFAULT `true`)
+- `started_at` (TIMESTAMP, NOT NULL, DEFAULT `now()`)
+- `ended_at` (TIMESTAMP)
+- `share_preferences` (JSONB, NOT NULL)
+- `created_at` (TIMESTAMP, NOT NULL, DEFAULT `now()`)
+- `updated_at` (TIMESTAMP, NOT NULL, DEFAULT `now()`)
+
+### Constraints:
+- `location_sharing_sessions_booking_id_bookings_id_fk` (FOREIGN KEY constraint on `booking_id` referencing `public.bookings (id)`)
+- `location_sharing_sessions_client_id_users_id_fk` (FOREIGN KEY constraint on `client_id` referencing `public.users (id)`)
+- `location_sharing_sessions_worker_id_users_id_fk` (FOREIGN KEY constraint on `worker_id` referencing `public.users (id)`)
+- `location_sharing_sessions_pkey` (PRIMARY KEY constraint on `id`)
+
+### Indexes:
+- `location_sharing_sessions_pkey` (UNIQUE INDEX using BTREE on `id`)
+
+### Policies:
+- (No policies defined)
+
+-----------------------------------------------------------------------------------------------------------------
+ a table named `otp_verifications` in the `public` schema with Row Level Security disabled. Here is a breakdown of the table structure:
+
+### Columns:
+- `id` (VARCHAR, PRIMARY KEY, DEFAULT `gen_random_uuid()`)
+- `mobile` (TEXT, NOT NULL)
+- `otp` (TEXT, NOT NULL)
+- `purpose` (TEXT, NOT NULL)
+- `expires_at` (TIMESTAMP, NOT NULL)
+- `is_used` (BOOLEAN, DEFAULT `false`)
+- `created_at` (TIMESTAMP, NOT NULL, DEFAULT `now()`)
+
+### Constraints:
+- `otp_verifications_pkey` (PRIMARY KEY constraint on `id`)
+
+### Indexes:
+- `otp_verifications_pkey` (UNIQUE INDEX using BTREE on `id`)
+
+### Policies:
+- (No policies defined)
+-------------------------------------------------------------------------------------------------------
+ a table named `payment_webhooks` in the `public` schema with Row Level Security disabled. Here is a breakdown of the table structure:
+
+### Columns:
+- `id` (VARCHAR, PRIMARY KEY, DEFAULT `gen_random_uuid()`)
+- `provider` (TEXT, NOT NULL)
+- `event_type` (TEXT, NOT NULL)
+- `event_id` (TEXT, UNIQUE, NOT NULL)
+- `payment_id` (VARCHAR)
+- `webhook_data` (JSONB, NOT NULL)
+- `processed` (BOOLEAN, DEFAULT `false`)
+- `processing_error` (TEXT)
+- `created_at` (TIMESTAMP, NOT NULL, DEFAULT `now()`)
+
+### Constraints:
+- `payment_webhooks_payment_id_payments_id_fk` (FOREIGN KEY constraint on `payment_id` referencing `public.payments (id)`)
+- `payment_webhooks_event_id_unique` (UNIQUE constraint on `event_id`)
+- `payment_webhooks_pkey` (PRIMARY KEY constraint on `id`)
+
+### Indexes:
+- `payment_webhooks_event_id_unique` (UNIQUE INDEX using BTREE on `event_id`)
+- `payment_webhooks_pkey` (UNIQUE INDEX using BTREE on `id`)
+
+### Policies:
+- (No policies defined)
+-------------------------------------------------------------------
+ a table named `payments` in the `public` schema with Row Level Security enabled. Here is a breakdown of the table structure:
+
+### Columns:
+- `id` (VARCHAR, PRIMARY KEY, DEFAULT `gen_random_uuid()`)
+- `booking_id` (VARCHAR, NOT NULL)
+- `client_id` (VARCHAR, NOT NULL)
+- `worker_id` (VARCHAR, NOT NULL)
+- `amount` (NUMERIC, NOT NULL)
+- `currency` (TEXT, NOT NULL, DEFAULT `'INR'`)
+- `payment_method` (TEXT, NOT NULL)
+- `payment_provider` (TEXT, NOT NULL, DEFAULT `'stripe'`)
+- `provider_transaction_id` (TEXT)
+- `status` (TEXT, NOT NULL, DEFAULT `'pending'`)
+- `payment_data` (JSONB)
+- `platform_fee` (NUMERIC, DEFAULT `0.00`)
+- `worker_amount` (NUMERIC, NOT NULL)
+- `failure_reason` (TEXT)
+- `refund_amount` (NUMERIC, DEFAULT `0.00`)
+- `refund_reason` (TEXT)
+- `created_at` (TIMESTAMP, NOT NULL, DEFAULT `now()`)
+- `updated_at` (TIMESTAMP, NOT NULL, DEFAULT `now()`)
+
+### Constraints:
+- `payments_booking_id_bookings_id_fk` (FOREIGN KEY constraint on `booking_id` referencing `public.bookings (id)`)
+- `payments_client_id_users_id_fk` (FOREIGN KEY constraint on `client_id` referencing `public.users (id)`)
+- `payments_worker_id_users_id_fk` (FOREIGN KEY constraint on `worker_id` referencing `public.users (id)`)
+- `payments_pkey` (PRIMARY KEY constraint on `id`)
+
+### Indexes:
+- `payments_pkey` (UNIQUE INDEX using BTREE on `id`)
+
+### Policies:
+- (No policies defined)
+
+---------------------------------------------------------------------------------------------
+ a table named `service_categories` in the `public` schema with Row Level Security disabled. Here is a breakdown of the table structure:
+
+### Columns:
+- `id` (VARCHAR, PRIMARY KEY, DEFAULT `gen_random_uuid()`)
+- `name` (TEXT, NOT NULL)
+- `tamil_name` (TEXT, NOT NULL)
+- `description` (TEXT)
+- `icon` (TEXT, NOT NULL)
+- `is_active` (BOOLEAN, DEFAULT `true`)
+- `created_at` (TIMESTAMP, NOT NULL, DEFAULT `now()`)
+
+### Constraints:
+- `service_categories_pkey` (PRIMARY KEY constraint on `id`)
+
+### Indexes:
+- `service_categories_pkey` (UNIQUE INDEX using BTREE on `id`)
+
+### Policies:
+- (No policies defined)
+----------------------------------------------------------------------------------------
+ a table named `users` in the `public` schema with Row Level Security enabled. Here is a breakdown of the table structure:
+
+### Columns:
+- `id` (VARCHAR, PRIMARY KEY, DEFAULT `gen_random_uuid()`)
+- `email` (TEXT)
+- `mobile` (TEXT, UNIQUE, NOT NULL)
+- `first_name` (TEXT, NOT NULL)
+- `last_name` (TEXT, NOT NULL)
+- `role` (TEXT, NOT NULL, DEFAULT `'client'`)
+- `district_id` (VARCHAR)
+- `is_verified` (BOOLEAN, DEFAULT `'false'`)
+- `is_active` (BOOLEAN, DEFAULT `'true'`)
+- `created_at` (TIMESTAMP, NOT NULL, DEFAULT `now()`)
+- `updated_at` (TIMESTAMP, NOT NULL, DEFAULT `now()`)
+- `profile_picture` (TEXT)
+- `status` (TEXT, DEFAULT `'pending'`)
+- `address` (TEXT)
+- `pincode` (TEXT)
+
+### Constraints:
+- `users_district_id_districts_id_fk` (FOREIGN KEY constraint on `district_id` referencing `public.districts (id)`)
+- `users_mobile_unique` (UNIQUE constraint on `mobile`)
+- `users_pkey` (PRIMARY KEY constraint on `id`)
+
+### Indexes:
+- `users_mobile_unique` (UNIQUE INDEX using BTREE on `mobile`)
+- `users_pkey` (UNIQUE INDEX using BTREE on `id`)
+
+### Policies:
+- (No policies defined)
+
+------------------------------------------------------
+a table named `worker_bank_details` in the `public` schema with Row Level Security enabled. Here is a breakdown of the table structure:
+
+### Columns:
+- `id` (VARCHAR, PRIMARY KEY, DEFAULT `gen_random_uuid()`)
+- `worker_id` (VARCHAR, NOT NULL)
+- `account_holder_name` (TEXT, NOT NULL)
+- `account_number` (TEXT, NOT NULL)
+- `ifsc_code` (TEXT, NOT NULL)
+- `bank_name` (TEXT, NOT NULL)
+- `branch_name` (TEXT, NOT NULL)
+- `bank_address` (TEXT, NOT NULL)
+- `account_type` (TEXT, DEFAULT `'savings'`)
+- `is_verified` (BOOLEAN, DEFAULT `'false'`)
+- `created_at` (TIMESTAMP, NOT NULL, DEFAULT `now()`)
+- `updated_at` (TIMESTAMP, NOT NULL, DEFAULT `now()`)
+- `micr_code` (TEXT)
+
+### Constraints:
+- `worker_bank_details_worker_id_users_id_fk` (FOREIGN KEY constraint on `worker_id` referencing `public.users (id)`)
+- `worker_bank_details_pkey` (PRIMARY KEY constraint on `id`)
+
+### Indexes:
+- `worker_bank_details_pkey` (UNIQUE INDEX using BTREE on `id`)
+
+### Policies:
+- (No policies defined)
+-----------------------------------------------------------------------
+ a table named `worker_profiles` in the `public` schema with Row Level Security disabled. Here is a breakdown of the table structure:
+
+### Columns:
+- `id` (VARCHAR, PRIMARY KEY, DEFAULT `gen_random_uuid()`)
+- `user_id` (VARCHAR, NOT NULL)
+- `aadhaar_number` (TEXT, NOT NULL)
+- `primary_service` (TEXT, NOT NULL)
+- `experience_years` (INTEGER, NOT NULL)
+- `hourly_rate` (NUMERIC, NOT NULL)
+- `service_districts` (JSONB, NOT NULL)
+- `bio` (TEXT)
+- `skills` (JSONB, NOT NULL)
+- `is_background_verified` (BOOLEAN, DEFAULT `'false'`)
+- `is_available` (BOOLEAN, DEFAULT `'true'`)
+- `rating` (NUMERIC, DEFAULT `'0.00'`)
+- `total_jobs` (INTEGER, DEFAULT `'0'`)
+- `created_at` (TIMESTAMP, NOT NULL, DEFAULT `now()`)
+- `updated_at` (TIMESTAMP, NOT NULL, DEFAULT `now()`)
+- `aadhaar_verified` (BOOLEAN, DEFAULT `'false'`)
+- `bio_data_document` (TEXT)
+- `service_areas` (JSONB)
+- `service_all_areas` (BOOLEAN, DEFAULT `'false'`)
+
+### Constraints:
+- `worker_profiles_user_id_users_id_fk` (FOREIGN KEY constraint on `user_id` referencing `public.users (id)`)
+- `worker_profiles_pkey` (PRIMARY KEY constraint on `id`)
+
+### Indexes:
+- `worker_profiles_pkey` (UNIQUE INDEX using BTREE on `id`)
+
+### Policies:
+- (No policies defined)
