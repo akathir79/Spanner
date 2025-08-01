@@ -506,16 +506,16 @@ export default function AdminDashboard() {
                             <TableCell>
                               <div className="text-sm">
                                 <p className="font-medium">
-                                  {user.totalBookings} bookings
+                                  {user.totalBookings || 0} bookings
                                 </p>
                                 {user.role === "client" && (
                                   <p className="text-muted-foreground">
-                                    Spent: ₹{user.balance.toLocaleString()}
+                                    Spent: ₹{(user.balance || 0).toLocaleString()}
                                   </p>
                                 )}
                                 {user.role === "worker" && (
                                   <p className="text-green-600 font-medium">
-                                    Earned: ₹{user.totalEarnings.toLocaleString()}
+                                    Earned: ₹{(user.totalEarnings || 0).toLocaleString()}
                                   </p>
                                 )}
                               </div>
