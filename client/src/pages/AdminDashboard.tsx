@@ -8,6 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/components/LanguageProvider";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -26,7 +28,18 @@ import {
   UserCheck,
   Clock,
   Filter,
-  Search
+  Search,
+  DollarSign,
+  Briefcase,
+  Star,
+  Mail,
+  Phone,
+  Eye,
+  Edit,
+  Trash2,
+  MoreHorizontal,
+  Ban,
+  Unlock
 } from "lucide-react";
 import { useLocation } from "wouter";
 import WorkerApprovalSection from "@/components/WorkerApprovalSection";
@@ -38,6 +51,8 @@ export default function AdminDashboard() {
   const [, setLocation] = useLocation();
   const [userFilter, setUserFilter] = useState("");
   const [bookingFilter, setBookingFilter] = useState("");
+  const [selectedUserType, setSelectedUserType] = useState<string | null>(null);
+  const [userDetailsModal, setUserDetailsModal] = useState<any>(null);
 
   // Redirect if not authenticated or wrong role
   if (!user) {
@@ -119,33 +134,73 @@ export default function AdminDashboard() {
     }
   };
 
-  // Calculate stats - ensure arrays before filtering
+  // Calculate detailed stats - ensure arrays before filtering
+  const allUsers = Array.isArray(users) ? users : [];
+  const allBookings = Array.isArray(bookings) ? bookings : [];
+  
   const stats = {
-    totalUsers: Array.isArray(users) ? users.length : 0,
-    totalClients: Array.isArray(users) ? users.filter((u: any) => u.role === "client").length : 0,
-    totalWorkers: Array.isArray(users) ? users.filter((u: any) => u.role === "worker").length : 0,
-    pendingVerifications: Array.isArray(users) ? users.filter((u: any) => u.role === "worker" && u.workerProfile && !u.workerProfile.isBackgroundVerified).length : 0,
-    totalBookings: Array.isArray(bookings) ? bookings.length : 0,
-    pendingBookings: Array.isArray(bookings) ? bookings.filter((b: any) => b.status === "pending").length : 0,
-    completedBookings: Array.isArray(bookings) ? bookings.filter((b: any) => b.status === "completed").length : 0,
-    totalRevenue: Array.isArray(bookings) ? bookings.filter((b: any) => b.status === "completed")
-      .reduce((sum: number, b: any) => sum + (parseFloat(b.totalAmount) || 0), 0) : 0,
+    totalUsers: allUsers.length,
+    totalClients: allUsers.filter((u: any) => u.role === "client").length,
+    totalWorkers: allUsers.filter((u: any) => u.role === "worker").length,
+    totalAdmins: allUsers.filter((u: any) => u.role === "admin").length,
+    totalSuperAdmins: allUsers.filter((u: any) => u.role === "super_admin").length,
+    pendingVerifications: allUsers.filter((u: any) => u.role === "worker" && u.workerProfile && !u.workerProfile.isBackgroundVerified).length,
+    totalBookings: allBookings.length,
+    pendingBookings: allBookings.filter((b: any) => b.status === "pending").length,
+    completedBookings: allBookings.filter((b: any) => b.status === "completed").length,
+    totalRevenue: allBookings.filter((b: any) => b.status === "completed")
+      .reduce((sum: number, b: any) => sum + (parseFloat(b.totalAmount) || 0), 0),
+    // Calculate worker earnings (85% of total revenue)
+    totalWorkerEarnings: allBookings.filter((b: any) => b.status === "completed")
+      .reduce((sum: number, b: any) => sum + (parseFloat(b.totalAmount) || 0) * 0.85, 0),
   };
 
   const platformFee = stats.totalRevenue * 0.15;
 
+  // Get users by type with detailed info
+  const getUsersByType = (userType: string) => {
+    return allUsers.filter((u: any) => {
+      if (userType === "admin") return u.role === "admin" || u.role === "super_admin";
+      return u.role === userType;
+    }).map((user: any) => {
+      const userDistrict = districts.find((d: any) => d.id === user.districtId);
+      const userBookings = allBookings.filter((b: any) => 
+        (user.role === "client" && b.clientId === user.id) || 
+        (user.role === "worker" && b.workerId === user.id)
+      );
+      const completedBookings = userBookings.filter((b: any) => b.status === "completed");
+      
+      return {
+        ...user,
+        location: userDistrict ? `${userDistrict.name} (${userDistrict.tamilName})` : "Not specified",
+        serviceType: user.workerProfile?.primaryService?.replace('_', ' ') || 
+                    (user.role === "client" ? "General Services" : "N/A"),
+        totalBookings: userBookings.length,
+        balance: user.role === "client" ? 
+          completedBookings.reduce((sum: number, b: any) => sum + (parseFloat(b.totalAmount) || 0), 0) : 0,
+        totalEarnings: user.role === "worker" ? 
+          completedBookings.reduce((sum: number, b: any) => sum + (parseFloat(b.totalAmount) || 0) * 0.85, 0) : 0,
+      };
+    });
+  };
+
   // Filter users - ensure users is an array before filtering
-  const filteredUsers = (Array.isArray(users) ? users : [])?.filter((user: any) => {
-    if (!userFilter) return true;
+  const filteredUsers = (() => {
+    let usersToFilter = selectedUserType ? getUsersByType(selectedUserType) : allUsers;
+    
+    if (!userFilter) return usersToFilter;
+    
     const searchLower = userFilter.toLowerCase();
-    return (
+    return usersToFilter.filter((user: any) => (
       user.firstName?.toLowerCase().includes(searchLower) ||
       user.lastName?.toLowerCase().includes(searchLower) ||
       user.mobile?.includes(searchLower) ||
       user.email?.toLowerCase().includes(searchLower) ||
-      user.role?.toLowerCase().includes(searchLower)
-    );
-  }) || [];
+      user.role?.toLowerCase().includes(searchLower) ||
+      user.serviceType?.toLowerCase().includes(searchLower) ||
+      user.location?.toLowerCase().includes(searchLower)
+    ));
+  })();
 
   // Filter bookings - ensure bookings is an array before filtering
   const filteredBookings = (Array.isArray(bookings) ? bookings : [])?.filter((booking: any) => {
@@ -172,19 +227,84 @@ export default function AdminDashboard() {
           </p>
         </div>
 
-        {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card>
+        {/* Enhanced Stats Overview with User Type Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-6 mb-8">
+          <Card 
+            className="cursor-pointer transition-all hover:shadow-md border-2 hover:border-blue-200"
+            onClick={() => {
+              setSelectedUserType(null);
+              const usersTab = document.querySelector('[value="users"]') as HTMLElement;
+              if (usersTab) usersTab.click();
+            }}
+          >
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Total Users</p>
                   <p className="text-2xl font-bold">{stats.totalUsers}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {stats.totalClients} clients, {stats.totalWorkers} workers
-                  </p>
+                  <p className="text-xs text-muted-foreground">All platform users</p>
                 </div>
                 <Users className="h-8 w-8 text-blue-600" />
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card 
+            className="cursor-pointer transition-all hover:shadow-md border-2 hover:border-green-200"
+            onClick={() => {
+              setSelectedUserType("client");
+              const usersTab = document.querySelector('[value="users"]') as HTMLElement;
+              if (usersTab) usersTab.click();
+            }}
+          >
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Total Clients</p>
+                  <p className="text-2xl font-bold text-green-600">{stats.totalClients}</p>
+                  <p className="text-xs text-muted-foreground">Service requesters</p>
+                </div>
+                <Users className="h-8 w-8 text-green-600" />
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card 
+            className="cursor-pointer transition-all hover:shadow-md border-2 hover:border-purple-200"
+            onClick={() => {
+              setSelectedUserType("worker");
+              const usersTab = document.querySelector('[value="users"]') as HTMLElement;
+              if (usersTab) usersTab.click();
+            }}
+          >
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Total Workers</p>
+                  <p className="text-2xl font-bold text-purple-600">{stats.totalWorkers}</p>
+                  <p className="text-xs text-muted-foreground">Service providers</p>
+                </div>
+                <Briefcase className="h-8 w-8 text-purple-600" />
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card 
+            className="cursor-pointer transition-all hover:shadow-md border-2 hover:border-orange-200"
+            onClick={() => {
+              setSelectedUserType("admin");
+              const usersTab = document.querySelector('[value="users"]') as HTMLElement;
+              if (usersTab) usersTab.click();
+            }}
+          >
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Total Admins</p>
+                  <p className="text-2xl font-bold text-orange-600">{stats.totalAdmins + stats.totalSuperAdmins}</p>
+                  <p className="text-xs text-muted-foreground">{stats.totalAdmins} admin, {stats.totalSuperAdmins} super</p>
+                </div>
+                <Shield className="h-8 w-8 text-orange-600" />
               </div>
             </CardContent>
           </Card>
@@ -198,21 +318,6 @@ export default function AdminDashboard() {
                   <p className="text-xs text-muted-foreground">Worker applications</p>
                 </div>
                 <UserCheck className="h-8 w-8 text-yellow-600" />
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Total Bookings</p>
-                  <p className="text-2xl font-bold">{stats.totalBookings}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {stats.pendingBookings} pending, {stats.completedBookings} completed
-                  </p>
-                </div>
-                <Calendar className="h-8 w-8 text-green-600" />
               </div>
             </CardContent>
           </Card>
@@ -245,7 +350,7 @@ export default function AdminDashboard() {
             <WorkerApprovalSection />
           </TabsContent>
 
-          {/* User Management Tab */}
+          {/* Enhanced User Management Tab */}
           <TabsContent value="users" className="space-y-6">
             <Card>
               <CardHeader>
@@ -253,8 +358,24 @@ export default function AdminDashboard() {
                   <div className="flex items-center space-x-2">
                     <Users className="h-5 w-5" />
                     <span>User Management</span>
+                    {selectedUserType && (
+                      <Badge variant="secondary" className="ml-2">
+                        {selectedUserType === "admin" ? "Admins & Super Admins" : 
+                         selectedUserType === "client" ? "Clients" : 
+                         selectedUserType === "worker" ? "Workers" : "All Users"}
+                      </Badge>
+                    )}
                   </div>
                   <div className="flex items-center space-x-2">
+                    {selectedUserType && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setSelectedUserType(null)}
+                      >
+                        Clear Filter
+                      </Button>
+                    )}
                     <div className="relative">
                       <Search className="h-4 w-4 absolute left-3 top-3 text-muted-foreground" />
                       <Input
@@ -283,9 +404,11 @@ export default function AdminDashboard() {
                         <TableRow>
                           <TableHead>User</TableHead>
                           <TableHead>Role</TableHead>
+                          <TableHead>Location</TableHead>
+                          <TableHead>Service Type</TableHead>
+                          <TableHead>Bookings/Earnings</TableHead>
                           <TableHead>Contact</TableHead>
                           <TableHead>Status</TableHead>
-                          <TableHead>Joined</TableHead>
                           <TableHead>Actions</TableHead>
                         </TableRow>
                       </TableHeader>
@@ -297,97 +420,349 @@ export default function AdminDashboard() {
                                 <p className="font-medium">
                                   {user.firstName} {user.lastName}
                                 </p>
-                                {user.workerProfile && (
-                                  <p className="text-sm text-muted-foreground capitalize">
-                                    {user.workerProfile.primaryService?.replace('_', ' ')}
+                                <p className="text-sm text-muted-foreground">
+                                  ID: {user.id.substring(0, 8)}...
+                                </p>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <Badge 
+                                variant={
+                                  user.role === "super_admin" ? "default" :
+                                  user.role === "admin" ? "secondary" :
+                                  user.role === "worker" ? "outline" : "secondary"
+                                }
+                                className={
+                                  user.role === "super_admin" ? "bg-red-100 text-red-800" :
+                                  user.role === "admin" ? "bg-orange-100 text-orange-800" :
+                                  user.role === "worker" ? "bg-purple-100 text-purple-800" :
+                                  "bg-green-100 text-green-800"
+                                }
+                              >
+                                {user.role === "super_admin" ? "Super Admin" :
+                                 user.role === "admin" ? "Admin" :
+                                 user.role === "worker" ? "Worker" : "Client"}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <div className="text-sm">
+                                <p className="font-medium">{user.location}</p>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <div className="text-sm">
+                                <p className="font-medium">{user.serviceType}</p>
+                                {user.workerProfile?.skills && (
+                                  <p className="text-muted-foreground">
+                                    {user.workerProfile.skills.slice(0, 2).join(", ")}
+                                    {user.workerProfile.skills.length > 2 && "..."}
                                   </p>
                                 )}
                               </div>
                             </TableCell>
                             <TableCell>
-                              <Badge variant={user.role === "worker" ? "default" : "secondary"}>
-                                {user.role}
-                              </Badge>
+                              <div className="text-sm">
+                                <p className="font-medium">
+                                  {user.totalBookings} bookings
+                                </p>
+                                {user.role === "client" && (
+                                  <p className="text-muted-foreground">
+                                    Spent: ₹{user.balance.toLocaleString()}
+                                  </p>
+                                )}
+                                {user.role === "worker" && (
+                                  <p className="text-green-600 font-medium">
+                                    Earned: ₹{user.totalEarnings.toLocaleString()}
+                                  </p>
+                                )}
+                              </div>
                             </TableCell>
                             <TableCell>
                               <div className="text-sm">
-                                <p>{user.mobile}</p>
-                                {user.email && <p className="text-muted-foreground">{user.email}</p>}
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <div className="space-y-1">
-                                {user.isVerified ? (
-                                  <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100">
-                                    <CheckCircle className="h-3 w-3 mr-1" />
-                                    Verified
-                                  </Badge>
-                                ) : (
-                                  <Badge variant="secondary">
-                                    <AlertCircle className="h-3 w-3 mr-1" />
-                                    Unverified
-                                  </Badge>
-                                )}
-                                {user.workerProfile && !user.workerProfile.isBackgroundVerified && (
-                                  <Badge className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100">
-                                    <Clock className="h-3 w-3 mr-1" />
-                                    Pending BG Check
-                                  </Badge>
+                                <p className="font-medium flex items-center space-x-1">
+                                  <Phone className="h-3 w-3" />
+                                  <span>{user.mobile}</span>
+                                </p>
+                                {user.email && (
+                                  <p className="text-muted-foreground flex items-center space-x-1">
+                                    <Mail className="h-3 w-3" />
+                                    <span>{user.email}</span>
+                                  </p>
                                 )}
                               </div>
                             </TableCell>
                             <TableCell>
-                              <p className="text-sm">
-                                {new Date(user.createdAt).toLocaleDateString()}
-                              </p>
+                              <Badge 
+                                variant={user.isVerified ? "default" : "secondary"}
+                                className={user.isVerified ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800"}
+                              >
+                                {user.isVerified ? "Verified" : "Pending"}
+                              </Badge>
+                              {user.role === "worker" && user.workerProfile?.isBackgroundVerified && (
+                                <Badge variant="outline" className="ml-1 bg-blue-100 text-blue-800">
+                                  BG Verified
+                                </Badge>
+                              )}
                             </TableCell>
                             <TableCell>
-                              <div className="flex space-x-2">
-                                {!user.isVerified && (
-                                  <Button
-                                    size="sm"
-                                    onClick={() => handleVerifyUser(user.id, true)}
-                                    disabled={verifyUserMutation.isPending}
-                                  >
-                                    Verify
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" className="h-8 w-8 p-0">
+                                    <span className="sr-only">Open menu</span>
+                                    <MoreHorizontal className="h-4 w-4" />
                                   </Button>
-                                )}
-                                {user.workerProfile && !user.workerProfile.isBackgroundVerified && (
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => {
-                                      toast({
-                                        title: "Feature Coming Soon",
-                                        description: "Background verification approval will be implemented soon.",
-                                      });
-                                    }}
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuLabel>User Actions</DropdownMenuLabel>
+                                  <DropdownMenuItem onClick={() => setUserDetailsModal(user)}>
+                                    <Eye className="mr-2 h-4 w-4" />
+                                    View Details
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem>
+                                    <Mail className="mr-2 h-4 w-4" />
+                                    Send Message
+                                  </DropdownMenuItem>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem 
+                                    onClick={() => handleVerifyUser(user.id, !user.isVerified)}
+                                    className={user.isVerified ? "text-yellow-600" : "text-green-600"}
                                   >
-                                    Approve BG
-                                  </Button>
-                                )}
-                              </div>
+                                    {user.isVerified ? (
+                                      <>
+                                        <XCircle className="mr-2 h-4 w-4" />
+                                        Unverify User
+                                      </>
+                                    ) : (
+                                      <>
+                                        <CheckCircle className="mr-2 h-4 w-4" />
+                                        Verify User
+                                      </>
+                                    )}
+                                  </DropdownMenuItem>
+                                  {user.role === "worker" && (
+                                    <DropdownMenuItem className="text-blue-600">
+                                      <Settings className="mr-2 h-4 w-4" />
+                                      Manage Profile
+                                    </DropdownMenuItem>
+                                  )}
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem className="text-red-600">
+                                    <Ban className="mr-2 h-4 w-4" />
+                                    Suspend User
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem className="text-red-600">
+                                    <Trash2 className="mr-2 h-4 w-4" />
+                                    Delete User
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
                             </TableCell>
                           </TableRow>
                         ))}
-                        {filteredUsers.length === 0 && (
-                          <TableRow>
-                            <TableCell colSpan={6} className="text-center py-12">
-                              <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                              <p className="text-muted-foreground">No users found</p>
-                            </TableCell>
-                          </TableRow>
-                        )}
                       </TableBody>
                     </Table>
+                    
+                    {filteredUsers.length === 0 && (
+                      <div className="text-center py-12">
+                        <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                        <h3 className="text-lg font-semibold mb-2">No users found</h3>
+                        <p className="text-muted-foreground">
+                          {userFilter ? "Try adjusting your search terms." : "No users match the current filter."}
+                        </p>
+                      </div>
+                    )}
                   </div>
                 )}
               </CardContent>
             </Card>
           </TabsContent>
 
+          {/* User Details Modal */}
+          <Dialog open={!!userDetailsModal} onOpenChange={() => setUserDetailsModal(null)}>
+            <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle className="flex items-center space-x-2">
+                  <Users className="h-5 w-5" />
+                  <span>User Details: {userDetailsModal?.firstName} {userDetailsModal?.lastName}</span>
+                </DialogTitle>
+                <DialogDescription>
+                  Comprehensive user information and platform activity
+                </DialogDescription>
+              </DialogHeader>
+              
+              {userDetailsModal && (
+                <div className="space-y-6">
+                  {/* Personal Information */}
+                  <div>
+                    <h3 className="text-lg font-semibold mb-3">Personal Information</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label className="text-sm font-medium text-muted-foreground">Full Name</Label>
+                        <p className="font-medium">{userDetailsModal.firstName} {userDetailsModal.lastName}</p>
+                      </div>
+                      <div>
+                        <Label className="text-sm font-medium text-muted-foreground">User ID</Label>
+                        <p className="font-mono text-sm">{userDetailsModal.id}</p>
+                      </div>
+                      <div>
+                        <Label className="text-sm font-medium text-muted-foreground">Role</Label>
+                        <Badge 
+                          className={
+                            userDetailsModal.role === "super_admin" ? "bg-red-100 text-red-800" :
+                            userDetailsModal.role === "admin" ? "bg-orange-100 text-orange-800" :
+                            userDetailsModal.role === "worker" ? "bg-purple-100 text-purple-800" :
+                            "bg-green-100 text-green-800"
+                          }
+                        >
+                          {userDetailsModal.role === "super_admin" ? "Super Admin" :
+                           userDetailsModal.role === "admin" ? "Admin" :
+                           userDetailsModal.role === "worker" ? "Worker" : "Client"}
+                        </Badge>
+                      </div>
+                      <div>
+                        <Label className="text-sm font-medium text-muted-foreground">Location</Label>
+                        <p>{userDetailsModal.location || "Not specified"}</p>
+                      </div>
+                      <div>
+                        <Label className="text-sm font-medium text-muted-foreground">Mobile</Label>
+                        <p className="flex items-center space-x-1">
+                          <Phone className="h-3 w-3" />
+                          <span>{userDetailsModal.mobile}</span>
+                        </p>
+                      </div>
+                      <div>
+                        <Label className="text-sm font-medium text-muted-foreground">Email</Label>
+                        <p className="flex items-center space-x-1">
+                          <Mail className="h-3 w-3" />
+                          <span>{userDetailsModal.email || "Not provided"}</span>
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Service Information for Workers */}
+                  {userDetailsModal.role === "worker" && userDetailsModal.workerProfile && (
+                    <div>
+                      <h3 className="text-lg font-semibold mb-3">Service Information</h3>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label className="text-sm font-medium text-muted-foreground">Primary Service</Label>
+                          <p className="capitalize">{userDetailsModal.workerProfile.primaryService?.replace('_', ' ')}</p>
+                        </div>
+                        <div>
+                          <Label className="text-sm font-medium text-muted-foreground">Experience</Label>
+                          <p>{userDetailsModal.workerProfile.experienceYears} years</p>
+                        </div>
+                        <div>
+                          <Label className="text-sm font-medium text-muted-foreground">Hourly Rate</Label>
+                          <p className="flex items-center space-x-1">
+                            <DollarSign className="h-3 w-3" />
+                            <span>₹{userDetailsModal.workerProfile.hourlyRate}/hour</span>
+                          </p>
+                        </div>
+                        <div>
+                          <Label className="text-sm font-medium text-muted-foreground">Rating</Label>
+                          <p className="flex items-center space-x-1">
+                            <Star className="h-3 w-3 text-yellow-500" />
+                            <span>{userDetailsModal.workerProfile.rating || "No ratings yet"}</span>
+                          </p>
+                        </div>
+                        <div className="col-span-2">
+                          <Label className="text-sm font-medium text-muted-foreground">Skills</Label>
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {userDetailsModal.workerProfile.skills?.map((skill: string, index: number) => (
+                              <Badge key={index} variant="outline" className="text-xs">
+                                {skill}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                        {userDetailsModal.workerProfile.bio && (
+                          <div className="col-span-2">
+                            <Label className="text-sm font-medium text-muted-foreground">Bio</Label>
+                            <p className="text-sm mt-1">{userDetailsModal.workerProfile.bio}</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Platform Activity */}
+                  <div>
+                    <h3 className="text-lg font-semibold mb-3">Platform Activity</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label className="text-sm font-medium text-muted-foreground">Total Bookings</Label>
+                        <p className="text-2xl font-bold text-blue-600">{userDetailsModal.totalBookings || 0}</p>
+                      </div>
+                      {userDetailsModal.role === "client" && (
+                        <div>
+                          <Label className="text-sm font-medium text-muted-foreground">Total Spent</Label>
+                          <p className="text-2xl font-bold text-green-600">₹{(userDetailsModal.balance || 0).toLocaleString()}</p>
+                        </div>
+                      )}
+                      {userDetailsModal.role === "worker" && (
+                        <div>
+                          <Label className="text-sm font-medium text-muted-foreground">Total Earnings</Label>
+                          <p className="text-2xl font-bold text-green-600">₹{(userDetailsModal.totalEarnings || 0).toLocaleString()}</p>
+                        </div>
+                      )}
+                      <div>
+                        <Label className="text-sm font-medium text-muted-foreground">Member Since</Label>
+                        <p>{new Date(userDetailsModal.createdAt).toLocaleDateString()}</p>
+                      </div>
+                      <div>
+                        <Label className="text-sm font-medium text-muted-foreground">Status</Label>
+                        <div className="flex space-x-2">
+                          <Badge variant={userDetailsModal.isVerified ? "default" : "secondary"}>
+                            {userDetailsModal.isVerified ? "Verified" : "Pending"}
+                          </Badge>
+                          {userDetailsModal.role === "worker" && userDetailsModal.workerProfile?.isBackgroundVerified && (
+                            <Badge variant="outline" className="bg-blue-100 text-blue-800">
+                              Background Verified
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex space-x-2 pt-4 border-t">
+                    <Button variant="outline" className="flex-1">
+                      <Mail className="h-4 w-4 mr-2" />
+                      Send Message
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      className="flex-1"
+                      onClick={() => handleVerifyUser(userDetailsModal.id, !userDetailsModal.isVerified)}
+                    >
+                      {userDetailsModal.isVerified ? (
+                        <>
+                          <XCircle className="h-4 w-4 mr-2" />
+                          Unverify
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle className="h-4 w-4 mr-2" />
+                          Verify
+                        </>
+                      )}
+                    </Button>
+                    <Button variant="destructive" className="flex-1">
+                      <Ban className="h-4 w-4 mr-2" />
+                      Suspend
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </DialogContent>
+          </Dialog>
+
           {/* Booking Management Tab */}
           <TabsContent value="bookings" className="space-y-6">
+
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
