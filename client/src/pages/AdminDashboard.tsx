@@ -54,6 +54,47 @@ export default function AdminDashboard() {
   const [selectedUserType, setSelectedUserType] = useState<string | null>(null);
   const [userDetailsModal, setUserDetailsModal] = useState<any>(null);
 
+  // Fetch admin data (hooks must be called unconditionally)
+  const { data: users = [], isLoading: usersLoading } = useQuery({
+    queryKey: ["/api/admin/users"],
+    queryFn: () => fetch("/api/admin/users").then(res => res.json()),
+    enabled: !!user && (user.role === "admin" || user.role === "super_admin")
+  });
+
+  const { data: bookings = [], isLoading: bookingsLoading } = useQuery({
+    queryKey: ["/api/admin/bookings"],
+    queryFn: () => fetch("/api/admin/bookings").then(res => res.json()),
+    enabled: !!user && (user.role === "admin" || user.role === "super_admin")
+  });
+
+  const { data: districts = [] } = useQuery({
+    queryKey: ["/api/districts"],
+    queryFn: () => fetch("/api/districts").then(res => res.json()),
+    enabled: !!user && (user.role === "admin" || user.role === "super_admin")
+  });
+
+  // Update user verification status
+  const verifyUserMutation = useMutation({
+    mutationFn: async ({ userId, isVerified }: { userId: string; isVerified: boolean }) => {
+      const response = await apiRequest("PATCH", `/api/admin/users/${userId}/verify`, { isVerified });
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "User Updated",
+        description: "User verification status has been updated.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Update Failed",
+        description: error.message || "Failed to update user",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Quick login for demo purposes
   const quickLogin = async () => {
     try {
@@ -111,45 +152,6 @@ export default function AdminDashboard() {
     }
     return null;
   }
-
-  // Fetch admin data
-  const { data: users = [], isLoading: usersLoading } = useQuery({
-    queryKey: ["/api/admin/users"],
-    queryFn: () => fetch("/api/admin/users").then(res => res.json())
-  });
-
-  const { data: bookings = [], isLoading: bookingsLoading } = useQuery({
-    queryKey: ["/api/admin/bookings"],
-    queryFn: () => fetch("/api/admin/bookings").then(res => res.json())
-  });
-
-  const { data: districts = [] } = useQuery({
-    queryKey: ["/api/districts"],
-    queryFn: () => fetch("/api/districts").then(res => res.json())
-  });
-
-  // Update user verification status
-  const verifyUserMutation = useMutation({
-    mutationFn: async ({ userId, isVerified }: { userId: string; isVerified: boolean }) => {
-      // This would need to be implemented in the backend
-      const response = await apiRequest("PATCH", `/api/admin/users/${userId}/verify`, { isVerified });
-      return response.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: "User Updated",
-        description: "User verification status has been updated.",
-      });
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Update Failed",
-        description: error.message || "Failed to update user",
-        variant: "destructive",
-      });
-    },
-  });
 
   const handleVerifyUser = (userId: string, isVerified: boolean) => {
     verifyUserMutation.mutate({ userId, isVerified });
