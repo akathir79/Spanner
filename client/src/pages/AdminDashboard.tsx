@@ -53,6 +53,7 @@ export default function AdminDashboard() {
   const [bookingFilter, setBookingFilter] = useState("");
   const [selectedUserType, setSelectedUserType] = useState<string | null>(null);
   const [userDetailsModal, setUserDetailsModal] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState("approvals");
 
   // Fetch admin data (hooks must be called unconditionally)
   const { data: users = [], isLoading: usersLoading } = useQuery({
@@ -278,8 +279,7 @@ export default function AdminDashboard() {
             className="cursor-pointer transition-all hover:shadow-md border-2 hover:border-blue-200"
             onClick={() => {
               setSelectedUserType(null);
-              const usersTab = document.querySelector('[value="users"]') as HTMLElement;
-              if (usersTab) usersTab.click();
+              setActiveTab("users");
             }}
           >
             <CardContent className="p-6">
@@ -298,8 +298,7 @@ export default function AdminDashboard() {
             className="cursor-pointer transition-all hover:shadow-md border-2 hover:border-green-200"
             onClick={() => {
               setSelectedUserType("client");
-              const usersTab = document.querySelector('[value="users"]') as HTMLElement;
-              if (usersTab) usersTab.click();
+              setActiveTab("users");
             }}
           >
             <CardContent className="p-6">
@@ -318,8 +317,7 @@ export default function AdminDashboard() {
             className="cursor-pointer transition-all hover:shadow-md border-2 hover:border-purple-200"
             onClick={() => {
               setSelectedUserType("worker");
-              const usersTab = document.querySelector('[value="users"]') as HTMLElement;
-              if (usersTab) usersTab.click();
+              setActiveTab("users");
             }}
           >
             <CardContent className="p-6">
@@ -338,8 +336,7 @@ export default function AdminDashboard() {
             className="cursor-pointer transition-all hover:shadow-md border-2 hover:border-orange-200"
             onClick={() => {
               setSelectedUserType("admin");
-              const usersTab = document.querySelector('[value="users"]') as HTMLElement;
-              if (usersTab) usersTab.click();
+              setActiveTab("users");
             }}
           >
             <CardContent className="p-6">
@@ -381,7 +378,7 @@ export default function AdminDashboard() {
           </Card>
         </div>
 
-        <Tabs defaultValue="approvals" className="space-y-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="approvals">Worker Approvals</TabsTrigger>
             <TabsTrigger value="users">User Management</TabsTrigger>
