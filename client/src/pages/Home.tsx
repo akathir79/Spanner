@@ -593,7 +593,10 @@ export default function Home() {
                               className="w-full justify-between"
                             >
                               {searchForm.district
-                                ? (districts as any)?.find((district: any) => district.id === searchForm.district)?.name
+                                ? (() => {
+                                    const selectedDistrict = (districts as any)?.find((district: any) => district.id === searchForm.district);
+                                    return selectedDistrict ? `${selectedDistrict.name}${selectedDistrict.tamilName ? ` (${selectedDistrict.tamilName})` : ''}` : "Select District";
+                                  })()
                                 : "Select District"}
                               <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                             </Button>

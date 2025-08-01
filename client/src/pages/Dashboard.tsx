@@ -395,7 +395,10 @@ const JobPostingForm = () => {
                 className="w-full justify-between"
               >
                 {formData.districtId
-                  ? (districts as any)?.find((district: any) => district.id === formData.districtId)?.name
+                  ? (() => {
+                      const selectedDistrict = (districts as any)?.find((district: any) => district.id === formData.districtId);
+                      return selectedDistrict ? `${selectedDistrict.name}${selectedDistrict.tamilName ? ` (${selectedDistrict.tamilName})` : ''}` : "Select district";
+                    })()
                   : "Select district"}
                 <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
               </Button>
@@ -1087,7 +1090,10 @@ export default function Dashboard() {
                             className="w-full justify-between"
                           >
                             {searchFilters.district
-                              ? (districts as any)?.find((district: any) => district.id === searchFilters.district)?.name
+                              ? (() => {
+                                  const selectedDistrict = (districts as any)?.find((district: any) => district.id === searchFilters.district);
+                                  return selectedDistrict ? `${selectedDistrict.name}${selectedDistrict.tamilName ? ` (${selectedDistrict.tamilName})` : ''}` : "Select District";
+                                })()
                               : "Select District"}
                             <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                           </Button>
