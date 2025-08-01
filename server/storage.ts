@@ -15,6 +15,7 @@ import {
   workerBankDetails,
   payments,
   paymentWebhooks,
+  messages,
   type User, 
   type InsertUser,
   type WorkerProfile,
@@ -44,7 +45,9 @@ import {
   type Payment,
   type InsertPayment,
   type PaymentWebhook,
-  type InsertPaymentWebhook
+  type InsertPaymentWebhook,
+  type Message,
+  type InsertMessage
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, sql, desc, ilike, inArray } from "drizzle-orm";
@@ -145,6 +148,15 @@ export interface IStorage {
   getPaymentsByBooking(bookingId: string): Promise<Payment[]>;
   getPaymentsByUser(userId: string, role: string): Promise<Payment[]>;
   updatePaymentRefund(paymentId: string, refundData: { status: string; refundAmount: string; refundReason: string }): Promise<Payment | undefined>;
+  
+  // Messaging
+  createMessage(message: InsertMessage): Promise<Message>;
+  getMessagesBySender(senderId: string): Promise<Message[]>;
+  getMessagesByReceiver(receiverId: string): Promise<Message[]>;
+  getConversation(userId1: string, userId2: string): Promise<Message[]>;
+  markMessageAsRead(messageId: string): Promise<Message | undefined>;
+  getUnreadMessageCount(userId: string): Promise<number>;
+  deleteMessage(messageId: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -777,6 +789,70 @@ export class DatabaseStorage implements IStorage {
       .where(eq(payments.id, paymentId))
       .returning();
     return updatedPayment;
+  }
+
+  // Messaging Methods Implementation
+  async createMessage(message: InsertMessage): Promise<Message> {
+    const [newMessage] = await db
+      .insert(messages)
+      .values(message)
+      .returning();
+    return newMessage;
+  }
+
+  async getMessagesBySender(senderId: string): Promise<Message[]> {
+    return await db
+      .select()
+      .from(messages)
+      .where(eq(messages.senderId, senderId))
+      .orderBy(desc(messages.createdAt));
+  }
+
+  async getMessagesByReceiver(receiverId: string): Promise<Message[]> {
+    return await db
+      .select()
+      .from(messages)
+      .where(eq(messages.receiverId, receiverId))
+      .orderBy(desc(messages.createdAt));
+  }
+
+  async getConversation(userId1: string, userId2: string): Promise<Message[]> {
+    return await db
+      .select()
+      .from(messages)
+      .where(
+        sql`(${messages.senderId} = ${userId1} AND ${messages.receiverId} = ${userId2}) OR (${messages.senderId} = ${userId2} AND ${messages.receiverId} = ${userId1})`
+      )
+      .orderBy(messages.createdAt);
+  }
+
+  async markMessageAsRead(messageId: string): Promise<Message | undefined> {
+    const [updatedMessage] = await db
+      .update(messages)
+      .set({ 
+        isRead: true,
+        updatedAt: new Date() 
+      })
+      .where(eq(messages.id, messageId))
+      .returning();
+    return updatedMessage;
+  }
+
+  async getUnreadMessageCount(userId: string): Promise<number> {
+    const result = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(messages)
+      .where(and(
+        eq(messages.receiverId, userId),
+        eq(messages.isRead, false)
+      ));
+    return result[0]?.count || 0;
+  }
+
+  async deleteMessage(messageId: string): Promise<void> {
+    await db
+      .delete(messages)
+      .where(eq(messages.id, messageId));
   }
 }
 

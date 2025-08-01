@@ -39,10 +39,12 @@ import {
   Trash2,
   MoreHorizontal,
   Ban,
-  Unlock
+  Unlock,
+  MessageSquare
 } from "lucide-react";
 import { useLocation } from "wouter";
 import WorkerApprovalSection from "@/components/WorkerApprovalSection";
+import { MessagingSystem } from "@/components/MessagingSystem";
 
 export default function AdminDashboard() {
   const { user } = useAuth();
@@ -379,10 +381,14 @@ export default function AdminDashboard() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="approvals">Worker Approvals</TabsTrigger>
             <TabsTrigger value="users">User Management</TabsTrigger>
             <TabsTrigger value="bookings">Booking Management</TabsTrigger>
+            <TabsTrigger value="messaging" className="flex items-center gap-2">
+              <MessageSquare className="h-4 w-4" />
+              Messaging
+            </TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
             <TabsTrigger value="settings">Platform Settings</TabsTrigger>
           </TabsList>
@@ -921,6 +927,11 @@ export default function AdminDashboard() {
                 )}
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* Messaging Tab */}
+          <TabsContent value="messaging" className="space-y-6">
+            <MessagingSystem />
           </TabsContent>
 
           {/* Analytics Tab */}

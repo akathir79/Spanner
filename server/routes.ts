@@ -13,7 +13,8 @@ import {
   insertGeofenceSchema,
   insertLocationEventSchema,
   insertWorkerBankDetailsSchema,
-  insertPaymentSchema
+  insertPaymentSchema,
+  insertMessageSchema
 } from "@shared/schema";
 
 // Validation schemas
@@ -1147,6 +1148,88 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error processing refund:", error);
       res.status(500).json({ message: "Failed to process refund" });
+    }
+  });
+
+  // Messaging API endpoints
+  
+  // Send a message
+  app.post("/api/messages", async (req, res) => {
+    try {
+      const validatedData = insertMessageSchema.parse(req.body);
+      const message = await storage.createMessage(validatedData);
+      res.status(201).json(message);
+    } catch (error) {
+      console.error("Error sending message:", error);
+      res.status(500).json({ message: "Failed to send message" });
+    }
+  });
+
+  // Get messages for a specific user (inbox)
+  app.get("/api/messages/:userId", async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const { type = 'received' } = req.query;
+      
+      const messages = type === 'sent' 
+        ? await storage.getMessagesBySender(userId)
+        : await storage.getMessagesByReceiver(userId);
+      
+      res.json(messages);
+    } catch (error) {
+      console.error("Error fetching messages:", error);
+      res.status(500).json({ message: "Failed to fetch messages" });
+    }
+  });
+
+  // Get conversation between two users
+  app.get("/api/messages/conversation/:userId1/:userId2", async (req, res) => {
+    try {
+      const { userId1, userId2 } = req.params;
+      const messages = await storage.getConversation(userId1, userId2);
+      res.json(messages);
+    } catch (error) {
+      console.error("Error fetching conversation:", error);
+      res.status(500).json({ message: "Failed to fetch conversation" });
+    }
+  });
+
+  // Mark message as read
+  app.patch("/api/messages/:messageId/read", async (req, res) => {
+    try {
+      const { messageId } = req.params;
+      const message = await storage.markMessageAsRead(messageId);
+      if (!message) {
+        return res.status(404).json({ message: "Message not found" });
+      }
+      res.json(message);
+    } catch (error) {
+      console.error("Error marking message as read:", error);
+      res.status(500).json({ message: "Failed to mark message as read" });
+    }
+  });
+
+  // Get unread message count
+  app.get("/api/messages/:userId/unread-count", async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const count = await storage.getUnreadMessageCount(userId);
+      res.json({ count });
+    } catch (error) {
+      console.error("Error fetching unread count:", error);
+      res.status(500).json({ message: "Failed to fetch unread count" });
+    }
+  });
+
+  // Delete message
+  app.delete("/api/messages/:messageId", async (req, res) => {
+    try {
+      const { messageId } = req.params;
+      await storage.deleteMessage(messageId);
+      res.json({ message: "Message deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting message:", error);
+      res.status(500).json({ message: "Failed to delete message" });
     }
   });
 

@@ -255,6 +255,23 @@ export const paymentWebhooks = pgTable("payment_webhooks", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// Messages between users and admins
+export const messages = pgTable("messages", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  senderId: varchar("sender_id").references(() => users.id).notNull(),
+  receiverId: varchar("receiver_id").references(() => users.id).notNull(),
+  subject: text("subject").notNull(),
+  content: text("content").notNull(),
+  isRead: boolean("is_read").default(false),
+  parentMessageId: varchar("parent_message_id").references(() => messages.id), // For replies
+  attachments: jsonb("attachments"), // Array of attachment URLs/data
+  messageType: text("message_type").default("general"), // general, support, complaint, inquiry
+  priority: text("priority").default("normal"), // low, normal, high, urgent
+  status: text("status").default("active"), // active, archived, deleted
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 // Relations
 export const usersRelations = relations(users, ({ one, many }) => ({
   district: one(districts, {
@@ -273,6 +290,8 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   workerBookings: many(bookings, { relationName: "workerBookings" }),
   jobPostings: many(jobPostings),
   bids: many(bids),
+  sentMessages: many(messages, { relationName: "sentMessages" }),
+  receivedMessages: many(messages, { relationName: "receivedMessages" }),
 }));
 
 export const districtsRelations = relations(districts, ({ many }) => ({
@@ -539,3 +558,33 @@ export type Payment = typeof payments.$inferSelect;
 export type InsertPayment = z.infer<typeof insertPaymentSchema>;
 export type PaymentWebhook = typeof paymentWebhooks.$inferSelect;
 export type InsertPaymentWebhook = z.infer<typeof insertPaymentWebhookSchema>;
+
+// Message relations
+export const messagesRelations = relations(messages, ({ one, many }) => ({
+  sender: one(users, {
+    fields: [messages.senderId],
+    references: [users.id],
+    relationName: "sentMessages",
+  }),
+  receiver: one(users, {
+    fields: [messages.receiverId],
+    references: [users.id],
+    relationName: "receivedMessages",
+  }),
+  parentMessage: one(messages, {
+    fields: [messages.parentMessageId],
+    references: [messages.id],
+    relationName: "parentMessage",
+  }),
+  replies: many(messages, { relationName: "parentMessage" }),
+}));
+
+// Message schemas
+export const insertMessageSchema = createInsertSchema(messages).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type Message = typeof messages.$inferSelect;
+export type InsertMessage = z.infer<typeof insertMessageSchema>;
