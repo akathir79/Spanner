@@ -1,4 +1,12 @@
 import { useState, useEffect } from "react";
+
+// Add TypeScript declarations for Speech Recognition API
+declare global {
+  interface Window {
+    SpeechRecognition: any;
+    webkitSpeechRecognition: any;
+  }
+}
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
@@ -14,6 +22,7 @@ import { useLanguage } from "@/components/LanguageProvider";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Search, CheckCircle, Shield, Clock, Users, MapPin, Star, Handshake, ChevronDown, X, MapPinIcon } from "lucide-react";
+import { VoiceInput } from "@/components/VoiceInput";
 import rajeshAvatar from "@assets/Babu_1753861985304.png";
 import arjunAvatar from "@assets/krishnan_1753861985304.png";
 import sureshAvatar from "@assets/veni_1753861985304.png";
@@ -270,6 +279,7 @@ export default function Home() {
   const [areaOpen, setAreaOpen] = useState(false);
   const [isLocationLoading, setIsLocationLoading] = useState(false);
 
+
   const { data: districts } = useQuery({
     queryKey: ["/api/districts"],
     staleTime: 1000 * 60 * 60, // 1 hour
@@ -427,6 +437,11 @@ export default function Home() {
       area: "",
       description: ""
     });
+  };
+
+  // Voice input handler
+  const handleVoiceTranscript = (transcript: string) => {
+    setSearchForm(prev => ({ ...prev, description: transcript }));
   };
 
   const handleServiceClick = (serviceId: string) => {
@@ -701,11 +716,22 @@ export default function Home() {
                         <label className="block text-sm font-medium mb-1 text-foreground">
                           Description
                         </label>
-                        <Input
-                          placeholder="Describe your service requirement..."
-                          value={searchForm.description}
-                          onChange={(e) => setSearchForm(prev => ({ ...prev, description: e.target.value }))}
-                        />
+                        <div className="relative">
+                          <Input
+                            placeholder="Describe your service requirement..."
+                            value={searchForm.description}
+                            onChange={(e) => setSearchForm(prev => ({ ...prev, description: e.target.value }))}
+                            className="pr-12"
+                          />
+                          <div className="absolute right-1 top-1/2 -translate-y-1/2">
+                            <VoiceInput 
+                              onTranscript={handleVoiceTranscript}
+                              language="en-US"
+                              size="sm"
+                              className="h-8 w-8 p-0"
+                            />
+                          </div>
+                        </div>
                       </div>
                     </div>
                     
