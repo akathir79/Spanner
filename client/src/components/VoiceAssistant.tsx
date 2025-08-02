@@ -86,6 +86,7 @@ export function VoiceAssistant({
   // Use ref to persist conversation state across re-renders
   const conversationActiveRef = useRef(false);
   const dialogOpenRef = useRef(false);
+  const currentStepRef = useRef(0);
   const { toast } = useToast();
 
   // Check for speech recognition support
@@ -121,13 +122,13 @@ export function VoiceAssistant({
               console.log('Checking auto-listen conditions:', { 
                 currentConversationActive, 
                 currentDialogOpen, 
-                currentStep, 
+                currentStep: currentStepRef.current, 
                 totalSteps: conversationSteps.length, 
                 isListening 
               });
               
               // Check if we're still in conversation mode and dialog is open
-              if (currentConversationActive && currentDialogOpen && currentStep < conversationSteps.length && !isListening) {
+              if (currentConversationActive && currentDialogOpen && currentStepRef.current < conversationSteps.length && !isListening) {
                 console.log('✅ Starting auto-listen after speech end...');
                 startListening();
               } else {
@@ -142,7 +143,7 @@ export function VoiceAssistant({
             speechEnded = true;
             console.log('Speech error, auto-starting listening...');
             setTimeout(() => {
-              if (conversationActiveRef.current && dialogOpenRef.current && currentStep < conversationSteps.length && !isListening) {
+              if (conversationActiveRef.current && dialogOpenRef.current && currentStepRef.current < conversationSteps.length && !isListening) {
                 console.log('✅ Starting auto-listen after speech error...');
                 startListening();
               }
@@ -155,7 +156,7 @@ export function VoiceAssistant({
           if (!speechEnded) {
             speechEnded = true;
             console.log('Speech timeout, auto-starting listening...');
-            if (conversationActiveRef.current && dialogOpenRef.current && currentStep < conversationSteps.length && !isListening) {
+            if (conversationActiveRef.current && dialogOpenRef.current && currentStepRef.current < conversationSteps.length && !isListening) {
               console.log('✅ Starting auto-listen after speech timeout...');
               startListening();
             }
@@ -168,7 +169,7 @@ export function VoiceAssistant({
       // If speech synthesis is not available, auto-start listening immediately
       console.log('No speech synthesis, starting listening immediately...');
       setTimeout(() => {
-        if (conversationActiveRef.current && dialogOpenRef.current && currentStep < conversationSteps.length && !isListening) {
+        if (conversationActiveRef.current && dialogOpenRef.current && currentStepRef.current < conversationSteps.length && !isListening) {
           console.log('✅ Starting auto-listen (no speech synthesis)...');
           startListening();
         }
@@ -251,6 +252,7 @@ export function VoiceAssistant({
           setTimeout(() => {
             console.log('🔄 Moving to step 1 (service selection)');
             setCurrentStep(1);
+            currentStepRef.current = 1; // Update ref immediately
             const nextQuestion = conversationSteps[1].question.english;
             setConversation(prev => [...prev, `Assistant: ${nextQuestion}`]);
             speak(nextQuestion, 'english', true);
@@ -262,6 +264,7 @@ export function VoiceAssistant({
           setTimeout(() => {
             console.log('🔄 Moving to step 1 (service selection) - Tamil');
             setCurrentStep(1);
+            currentStepRef.current = 1; // Update ref immediately
             const nextQuestion = conversationSteps[1].question.tamil;
             setConversation(prev => [...prev, `Assistant: ${nextQuestion}`]);
             speak(nextQuestion, 'tamil', true);
@@ -287,6 +290,7 @@ export function VoiceAssistant({
           setTimeout(() => {
             console.log('🔄 Moving to step 2 (district selection)');
             setCurrentStep(2);
+            currentStepRef.current = 2; // Update ref immediately
             const nextQuestion = conversationSteps[2].question[selectedLanguage];
             setConversation(prev => [...prev, `Assistant: ${nextQuestion}`]);
             speak(nextQuestion, selectedLanguage === 'tamil' ? 'tamil' : 'english', true);
@@ -312,6 +316,7 @@ export function VoiceAssistant({
           setTimeout(() => {
             console.log('🔄 Moving to step 3 (description)');
             setCurrentStep(3);
+            currentStepRef.current = 3; // Update ref immediately
             const nextQuestion = conversationSteps[3].question[selectedLanguage];
             setConversation(prev => [...prev, `Assistant: ${nextQuestion}`]);
             speak(nextQuestion, selectedLanguage === 'tamil' ? 'tamil' : 'english', true);
@@ -337,6 +342,7 @@ export function VoiceAssistant({
           setIsConversationActive(false);
           conversationActiveRef.current = false;
           dialogOpenRef.current = false;
+          currentStepRef.current = 0;
           setIsOpen(false);
         }, 3000);
         return;
@@ -373,11 +379,11 @@ export function VoiceAssistant({
     }
     
     // Force dialog to stay open during conversation
-    if (!isOpen && currentStep < conversationSteps.length - 1) {
+    if (!isOpen && currentStepRef.current < conversationSteps.length - 1) {
       setIsOpen(true);
     }
     
-    console.log('Starting voice recognition...', { isOpen, isListening, currentStep, selectedLanguage });
+    console.log('Starting voice recognition...', { isOpen, isListening, currentStep: currentStepRef.current, selectedLanguage });
 
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     const recognition = new SpeechRecognition();
@@ -414,7 +420,7 @@ export function VoiceAssistant({
       
       // Process final result
       if (finalTranscript.trim()) {
-        console.log('🎤 Final voice recognition result:', finalTranscript, '| Current step:', currentStep);
+        console.log('🎤 Final voice recognition result:', finalTranscript, '| Current step:', currentStepRef.current);
         recognition.stop();
         setIsListening(false);
         processResponse(finalTranscript.trim());
@@ -441,7 +447,7 @@ export function VoiceAssistant({
       }
       
       // Auto-restart on some recoverable errors
-      if (event.error === 'no-speech' && isConversationActive && isOpen && currentStep < conversationSteps.length) {
+      if (event.error === 'no-speech' && isConversationActive && isOpen && currentStepRef.current < conversationSteps.length) {
         setTimeout(() => {
           if (!isListening) {
             console.log('Restarting after no-speech error...');
@@ -496,6 +502,7 @@ export function VoiceAssistant({
     // Update refs
     conversationActiveRef.current = true;
     dialogOpenRef.current = true;
+    currentStepRef.current = 0;
     
     setTimeout(() => {
       console.log('Starting first question...');
@@ -520,6 +527,7 @@ export function VoiceAssistant({
       // Update refs
       conversationActiveRef.current = false;
       dialogOpenRef.current = false;
+      currentStepRef.current = 0;
       
       // Stop any ongoing speech synthesis
       if ('speechSynthesis' in window) {
