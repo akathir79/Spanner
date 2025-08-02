@@ -107,10 +107,13 @@ export function VoiceAssistant({
         utterance.onend = () => {
           if (!speechEnded) {
             speechEnded = true;
-            console.log('Speech ended, auto-starting listening...');
+            console.log('Speech ended, auto-starting listening...', { isOpen, isListening });
             setTimeout(() => {
               if (isOpen && !isListening) {
+                console.log('Calling startListening after speech end...');
                 startListening();
+              } else {
+                console.log('Skipping startListening:', { isOpen, isListening });
               }
             }, 500);
           }
@@ -334,9 +337,11 @@ export function VoiceAssistant({
     }
 
     if (isListening) {
-      console.log('Already listening, skipping...');
+      console.log('Already listening, skipping...', { isListening });
       return;
     }
+    
+    console.log('Starting voice recognition...', { isOpen, isListening, currentStep, selectedLanguage });
 
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     const recognition = new SpeechRecognition();
@@ -393,11 +398,20 @@ export function VoiceAssistant({
     };
 
     try {
+      console.log('About to call recognition.start()...');
       recognition.start();
-      console.log('Starting voice recognition...');
+      console.log('recognition.start() called successfully');
     } catch (error) {
       console.error('Failed to start voice recognition:', error);
       setIsListening(false);
+      
+      // Retry after a short delay
+      setTimeout(() => {
+        if (isOpen && !isListening) {
+          console.log('Retrying voice recognition after error...');
+          startListening();
+        }
+      }, 1000);
     }
   };
 
