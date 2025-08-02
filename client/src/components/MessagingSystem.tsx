@@ -51,7 +51,7 @@ export function MessagingSystem({ initialUserId, onUserSelect }: MessagingSystem
 
   // Get messages for current user
   const { data: userMessages = [] } = useQuery<Message[]>({
-    queryKey: [`/api/messages/${user?.id}`, { type: activeTab === 'sent' ? 'sent' : 'received' }],
+    queryKey: [`/api/messages/${user?.id}?type=${activeTab === 'sent' ? 'sent' : 'received'}`],
     enabled: !!user?.id,
     refetchInterval: 5000, // Poll every 5 seconds for new messages
   });
@@ -80,12 +80,13 @@ export function MessagingSystem({ initialUserId, onUserSelect }: MessagingSystem
       subject: string;
       content: string;
       messageType?: string;
-    }) => apiRequest('/api/messages', 'POST', messageData),
+    }) => apiRequest('POST', '/api/messages', messageData),
     onSuccess: () => {
       setMessageText("");
       // Invalidate all message-related queries
       queryClient.invalidateQueries({ queryKey: ['/api/messages'] });
-      queryClient.invalidateQueries({ queryKey: [`/api/messages/${user?.id}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/messages/${user?.id}?type=received`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/messages/${user?.id}?type=sent`] });
       queryClient.invalidateQueries({ queryKey: [`/api/messages/conversation/${user?.id}/${selectedUser?.id}`] });
       queryClient.invalidateQueries({ queryKey: [`/api/messages/${user?.id}/unread-count`] });
     },
@@ -114,9 +115,10 @@ export function MessagingSystem({ initialUserId, onUserSelect }: MessagingSystem
 
   // Mark message as read mutation
   const markAsReadMutation = useMutation({
-    mutationFn: (messageId: string) => apiRequest(`/api/messages/${messageId}/read`, 'PATCH'),
+    mutationFn: (messageId: string) => apiRequest('PATCH', `/api/messages/${messageId}/read`),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/messages/${user?.id}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/messages/${user?.id}?type=received`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/messages/${user?.id}?type=sent`] });
       queryClient.invalidateQueries({ queryKey: [`/api/messages/${user?.id}/unread-count`] });
     },
   });
