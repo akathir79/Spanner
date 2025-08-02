@@ -324,25 +324,27 @@ export default function AdminDashboard() {
   // Get users by type with detailed info
   const getUsersByType = (userType: string) => {
     return allUsers.filter((u: any) => {
+      // Regular admins cannot access admin management
+      if (userType === "admin" && user.role !== "super_admin") return false;
       if (userType === "admin") return u.role === "admin" || u.role === "super_admin";
       return u.role === userType;
-    }).map((user: any) => {
-      const userDistrict = districts.find((d: any) => d.id === user.districtId);
+    }).map((userItem: any) => {
+      const userDistrict = districts.find((d: any) => d.id === userItem.districtId);
       const userBookings = allBookings.filter((b: any) => 
-        (user.role === "client" && b.clientId === user.id) || 
-        (user.role === "worker" && b.workerId === user.id)
+        (userItem.role === "client" && b.clientId === userItem.id) || 
+        (userItem.role === "worker" && b.workerId === userItem.id)
       );
       const completedBookings = userBookings.filter((b: any) => b.status === "completed");
       
       return {
-        ...user,
+        ...userItem,
         location: userDistrict ? `${userDistrict.name} (${userDistrict.tamilName})` : "Not specified",
-        serviceType: user.workerProfile?.primaryService?.replace('_', ' ') || 
-                    (user.role === "client" ? "General Services" : "N/A"),
+        serviceType: userItem.workerProfile?.primaryService?.replace('_', ' ') || 
+                    (userItem.role === "client" ? "General Services" : "N/A"),
         totalBookings: userBookings.length,
-        balance: user.role === "client" ? 
+        balance: userItem.role === "client" ? 
           completedBookings.reduce((sum: number, b: any) => sum + (parseFloat(b.totalAmount) || 0), 0) : 0,
-        totalEarnings: user.role === "worker" ? 
+        totalEarnings: userItem.role === "worker" ? 
           completedBookings.reduce((sum: number, b: any) => sum + (parseFloat(b.totalAmount) || 0) * 0.85, 0) : 0,
       };
     });
@@ -351,6 +353,11 @@ export default function AdminDashboard() {
   // Filter users - ensure users is an array before filtering
   const filteredUsers = (() => {
     let usersToFilter = selectedUserType ? getUsersByType(selectedUserType) : allUsers;
+    
+    // For regular admins, hide admin and super_admin users from the default view
+    if (!selectedUserType && user.role === "admin") {
+      usersToFilter = allUsers.filter((u: any) => u.role !== "admin" && u.role !== "super_admin");
+    }
     
     if (!userFilter) return usersToFilter;
     
@@ -392,7 +399,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Enhanced Stats Overview with User Type Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-6 mb-8">
+        <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 ${user.role === "super_admin" ? "xl:grid-cols-6" : "xl:grid-cols-5"} gap-6 mb-8`}>
           <Card 
             className="cursor-pointer transition-all hover:shadow-md border-2 hover:border-blue-200"
             onClick={() => {
@@ -450,24 +457,27 @@ export default function AdminDashboard() {
             </CardContent>
           </Card>
           
-          <Card 
-            className="cursor-pointer transition-all hover:shadow-md border-2 hover:border-orange-200"
-            onClick={() => {
-              setSelectedUserType("admin");
-              setActiveTab("users");
-            }}
-          >
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Total Admins</p>
-                  <p className="text-2xl font-bold text-orange-600">{stats.totalAdmins + stats.totalSuperAdmins}</p>
-                  <p className="text-xs text-muted-foreground">{stats.totalAdmins} admin, {stats.totalSuperAdmins} super</p>
+          {/* Total Admins Card - Only for Super Admin */}
+          {user.role === "super_admin" && (
+            <Card 
+              className="cursor-pointer transition-all hover:shadow-md border-2 hover:border-orange-200"
+              onClick={() => {
+                setSelectedUserType("admin");
+                setActiveTab("users");
+              }}
+            >
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Total Admins</p>
+                    <p className="text-2xl font-bold text-orange-600">{stats.totalAdmins + stats.totalSuperAdmins}</p>
+                    <p className="text-xs text-muted-foreground">{stats.totalAdmins} admin, {stats.totalSuperAdmins} super</p>
+                  </div>
+                  <Shield className="h-8 w-8 text-orange-600" />
                 </div>
-                <Shield className="h-8 w-8 text-orange-600" />
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          )}
           
           <Card 
             className="cursor-pointer transition-all hover:shadow-md border-2 hover:border-yellow-200"
