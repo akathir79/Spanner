@@ -100,10 +100,11 @@ export function VoiceAssistant({
       if (autoListen) {
         utterance.onend = () => {
           setTimeout(() => {
-            if (isOpen) {
+            if (isOpen && !isListening) {
+              console.log('Auto-starting listening after speech...');
               startListening();
             }
-          }, 500); // Small delay to ensure speech has fully ended
+          }, 800); // Increased delay to ensure speech has fully ended
         };
       }
       
@@ -111,10 +112,11 @@ export function VoiceAssistant({
     } else if (autoListen) {
       // If speech synthesis is not available, still auto-start listening
       setTimeout(() => {
-        if (isOpen) {
+        if (isOpen && !isListening) {
+          console.log('Auto-starting listening (no speech synthesis)...');
           startListening();
         }
-      }, 1000);
+      }, 1500);
     }
   };
 
@@ -348,6 +350,14 @@ export function VoiceAssistant({
       const question = conversationSteps[0].question.english;
       setConversation([`Assistant: ${question}`]);
       speak(question, 'english', true); // Auto-listen after question
+      
+      // Backup auto-listen in case speech synthesis doesn't work properly
+      setTimeout(() => {
+        if (!isListening) {
+          console.log('Backup auto-starting listening...');
+          startListening();
+        }
+      }, 3000);
     }, 500);
   };
 
@@ -388,28 +398,23 @@ export function VoiceAssistant({
               ))}
             </div>
 
-            <div className="flex gap-2">
-              <Button
-                onClick={startListening}
-                disabled={isListening}
-                className={`flex-1 ${isListening ? 'bg-red-500 hover:bg-red-600' : 'bg-purple-600 hover:bg-purple-700'}`}
-              >
-                {isListening ? (
-                  <>
-                    <MicOff className="h-4 w-4 mr-2" />
-                    Listening...
-                  </>
-                ) : (
-                  <>
-                    <Mic className="h-4 w-4 mr-2" />
-                    Speak
-                  </>
-                )}
-              </Button>
+            <div className="flex gap-2 items-center justify-center">
+              {isListening ? (
+                <div className="flex items-center gap-2 text-red-600">
+                  <div className="animate-pulse bg-red-500 w-3 h-3 rounded-full"></div>
+                  <span className="font-medium">Listening...</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 text-gray-500">
+                  <Volume2 className="h-4 w-4" />
+                  <span>Voice conversation in progress</span>
+                </div>
+              )}
               
               <Button
                 variant="outline"
                 onClick={() => setIsOpen(false)}
+                className="ml-4 px-4"
               >
                 Close
               </Button>
