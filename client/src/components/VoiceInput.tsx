@@ -34,8 +34,20 @@ export function VoiceInput({
   useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     const supported = !!SpeechRecognition;
-    console.log("Speech recognition support check:", { supported, SpeechRecognition });
-    setSpeechSupported(supported);
+    const isHTTPS = window.location.protocol === 'https:';
+    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    
+    console.log("Speech recognition support check:", { 
+      supported, 
+      SpeechRecognition: !!SpeechRecognition,
+      isHTTPS,
+      isLocalhost,
+      protocol: window.location.protocol,
+      hostname: window.location.hostname
+    });
+    
+    // Enable for HTTPS or localhost
+    setSpeechSupported(supported && (isHTTPS || isLocalhost));
   }, []);
 
   const startVoiceRecognition = () => {
@@ -109,16 +121,35 @@ export function VoiceInput({
     setIsListening(false);
   };
 
-  if (!speechSupported) {
-    // Still render the icon but disable it to show the feature exists
+  // Always render the button but show different states
+  const isDisabled = !speechSupported;
+  
+  const handleClick = () => {
+    if (isDisabled) {
+      toast({
+        title: "Voice input not available",
+        description: "Voice recognition requires HTTPS or a supported browser. Please try typing your request instead.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (isListening) {
+      stopVoiceRecognition();
+    } else {
+      startVoiceRecognition();
+    }
+  };
+  
+  if (isDisabled) {
     return (
       <Button
         type="button"
         variant="outline"
         size={size}
-        className={`text-gray-400 bg-gray-50 border-gray-200 cursor-not-allowed ${className}`}
-        disabled
-        title="❌ Voice input not supported in this browser"
+        className={`text-gray-400 bg-gray-50 border-gray-200 hover:bg-gray-100 hover:text-gray-500 ${className}`}
+        onClick={handleClick}
+        title="🎤 Voice input (Click for info)"
       >
         <Mic className="h-5 w-5" />
       </Button>
@@ -135,7 +166,7 @@ export function VoiceInput({
           ? "text-white bg-red-500 hover:bg-red-600 border-red-500 animate-pulse shadow-lg" 
           : "text-blue-600 bg-blue-50 hover:bg-blue-100 border-blue-300 hover:border-blue-400 shadow-sm"
         } ${className} transition-all duration-200 relative z-10`}
-        onClick={isListening ? stopVoiceRecognition : startVoiceRecognition}
+        onClick={handleClick}
         title={isListening ? "🔴 Recording... Click to stop" : "🎤 Click to speak your service requirement"}
       >
         {isListening ? (
