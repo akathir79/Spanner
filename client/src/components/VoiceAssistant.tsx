@@ -92,31 +92,63 @@ export function VoiceAssistant({
   // Text-to-speech function with auto-listen after speech
   const speak = (text: string, lang: string = 'en-US', autoListen: boolean = true) => {
     if ('speechSynthesis' in window) {
+      // Clear any existing speech
+      window.speechSynthesis.cancel();
+      
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = lang === 'tamil' ? 'ta-IN' : 'en-US';
       utterance.rate = 0.8;
+      utterance.volume = 1;
+      
+      let speechEnded = false;
       
       // Auto-start listening after speech completes
       if (autoListen) {
         utterance.onend = () => {
-          setTimeout(() => {
+          if (!speechEnded) {
+            speechEnded = true;
+            console.log('Speech ended, auto-starting listening...');
+            setTimeout(() => {
+              if (isOpen && !isListening) {
+                startListening();
+              }
+            }, 500);
+          }
+        };
+        
+        utterance.onerror = () => {
+          if (!speechEnded) {
+            speechEnded = true;
+            console.log('Speech error, auto-starting listening...');
+            setTimeout(() => {
+              if (isOpen && !isListening) {
+                startListening();
+              }
+            }, 500);
+          }
+        };
+        
+        // Fallback timeout in case speech events don't fire
+        setTimeout(() => {
+          if (!speechEnded) {
+            speechEnded = true;
+            console.log('Speech timeout, auto-starting listening...');
             if (isOpen && !isListening) {
-              console.log('Auto-starting listening after speech...');
               startListening();
             }
-          }, 800); // Increased delay to ensure speech has fully ended
-        };
+          }
+        }, Math.max(text.length * 100, 2000)); // Estimate speech duration
       }
       
       window.speechSynthesis.speak(utterance);
     } else if (autoListen) {
-      // If speech synthesis is not available, still auto-start listening
+      // If speech synthesis is not available, auto-start listening immediately
+      console.log('No speech synthesis, starting listening immediately...');
       setTimeout(() => {
         if (isOpen && !isListening) {
-          console.log('Auto-starting listening (no speech synthesis)...');
           startListening();
         }
-      }, 1500);
+      }, 500);
     }
   };
 
@@ -301,6 +333,11 @@ export function VoiceAssistant({
       return;
     }
 
+    if (isListening) {
+      console.log('Already listening, skipping...');
+      return;
+    }
+
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     const recognition = new SpeechRecognition();
 
@@ -315,28 +352,53 @@ export function VoiceAssistant({
     }
 
     recognition.onstart = () => {
+      console.log('Voice recognition started');
       setIsListening(true);
     };
 
     recognition.onresult = (event: any) => {
       const transcript = event.results[0][0].transcript;
+      console.log('Voice recognition result:', transcript);
+      setIsListening(false);
       processResponse(transcript);
     };
 
     recognition.onerror = (event: any) => {
+      console.log('Voice recognition error:', event.error);
       setIsListening(false);
-      toast({
-        title: "Voice recognition error",
-        description: "Please try again",
-        variant: "destructive",
-      });
+      
+      // Only show error toast for significant errors, not for no-speech
+      if (event.error !== 'no-speech' && event.error !== 'aborted') {
+        toast({
+          title: "Voice recognition error",
+          description: "Please try again",
+          variant: "destructive",
+        });
+      }
+      
+      // Auto-restart on some recoverable errors
+      if (event.error === 'no-speech' && isOpen) {
+        setTimeout(() => {
+          if (isOpen && !isListening) {
+            console.log('Restarting after no-speech error...');
+            startListening();
+          }
+        }, 1000);
+      }
     };
 
     recognition.onend = () => {
+      console.log('Voice recognition ended');
       setIsListening(false);
     };
 
-    recognition.start();
+    try {
+      recognition.start();
+      console.log('Starting voice recognition...');
+    } catch (error) {
+      console.error('Failed to start voice recognition:', error);
+      setIsListening(false);
+    }
   };
 
   // Start conversation
@@ -350,14 +412,6 @@ export function VoiceAssistant({
       const question = conversationSteps[0].question.english;
       setConversation([`Assistant: ${question}`]);
       speak(question, 'english', true); // Auto-listen after question
-      
-      // Backup auto-listen in case speech synthesis doesn't work properly
-      setTimeout(() => {
-        if (!isListening) {
-          console.log('Backup auto-starting listening...');
-          startListening();
-        }
-      }, 3000);
     }, 500);
   };
 
