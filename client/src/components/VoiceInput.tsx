@@ -17,6 +17,7 @@ interface VoiceInputProps {
   className?: string;
   size?: "sm" | "default" | "lg";
   showStatus?: boolean;
+  supportedLanguages?: string[];
 }
 
 export function VoiceInput({ 
@@ -24,10 +25,12 @@ export function VoiceInput({
   language = "en-US", 
   className = "",
   size = "sm",
-  showStatus = true 
+  showStatus = true,
+  supportedLanguages = ["en-US", "ta-IN", "hi-IN"]
 }: VoiceInputProps) {
   const [isListening, setIsListening] = useState(false);
   const [speechSupported, setSpeechSupported] = useState(false);
+  const [currentLanguage, setCurrentLanguage] = useState(language);
   const { toast } = useToast();
 
   // Check for speech recognition support
@@ -36,18 +39,21 @@ export function VoiceInput({
     const supported = !!SpeechRecognition;
     const isHTTPS = window.location.protocol === 'https:';
     const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const isReplit = window.location.hostname.includes('replit.dev');
     
     console.log("Speech recognition support check:", { 
       supported, 
       SpeechRecognition: !!SpeechRecognition,
       isHTTPS,
       isLocalhost,
+      isReplit,
       protocol: window.location.protocol,
-      hostname: window.location.hostname
+      hostname: window.location.hostname,
+      userAgent: navigator.userAgent
     });
     
-    // Enable for HTTPS or localhost
-    setSpeechSupported(supported && (isHTTPS || isLocalhost));
+    // Enable for HTTPS, localhost, or Replit environments
+    setSpeechSupported(supported && (isHTTPS || isLocalhost || isReplit));
   }, []);
 
   const startVoiceRecognition = () => {
@@ -69,8 +75,9 @@ export function VoiceInput({
       console.log("Recognition created:", recognition);
 
       recognition.continuous = false;
-      recognition.interimResults = false;
-      recognition.lang = language;
+      recognition.interimResults = true;
+      recognition.lang = currentLanguage;
+      recognition.maxAlternatives = 3;
 
       recognition.onstart = () => {
         console.log("Recognition started");
@@ -82,13 +89,25 @@ export function VoiceInput({
       };
 
       recognition.onresult = (event: any) => {
-        const transcript = event.results[0][0].transcript;
-        onTranscript(transcript);
+        let finalTranscript = '';
+        let interimTranscript = '';
         
-        toast({
-          title: "Voice input captured",
-          description: `Recognized: "${transcript}"`,
-        });
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const result = event.results[i];
+          if (result.isFinal) {
+            finalTranscript += result[0].transcript;
+          } else {
+            interimTranscript += result[0].transcript;
+          }
+        }
+        
+        if (finalTranscript) {
+          onTranscript(finalTranscript);
+          toast({
+            title: "Voice input captured",
+            description: `Recognized: "${finalTranscript.trim()}"`,
+          });
+        }
       };
 
       recognition.onerror = (event: any) => {
@@ -128,7 +147,7 @@ export function VoiceInput({
     if (isDisabled) {
       toast({
         title: "Voice input not available",
-        description: "Voice recognition requires HTTPS or a supported browser. Please try typing your request instead.",
+        description: "Voice recognition requires a supported browser (Chrome, Edge, Safari) and secure connection. Please try typing your request instead.",
         variant: "destructive",
       });
       return;
@@ -149,7 +168,7 @@ export function VoiceInput({
         size={size}
         className={`text-gray-400 bg-gray-50 border-gray-200 hover:bg-gray-100 hover:text-gray-500 ${className}`}
         onClick={handleClick}
-        title="🎤 Voice input (Click for info)"
+        title="🎤 Voice input - Works best in Chrome/Edge browsers"
       >
         <Mic className="h-5 w-5" />
       </Button>

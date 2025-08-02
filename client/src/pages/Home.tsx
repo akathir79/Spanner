@@ -730,6 +730,7 @@ export default function Home() {
                               size="sm"
                               className="h-9 w-9 p-1.5 rounded-lg font-medium"
                               showStatus={false}
+                              supportedLanguages={["en-US", "ta-IN", "hi-IN", "en-IN"]}
                             />
                           </div>
                         </div>
