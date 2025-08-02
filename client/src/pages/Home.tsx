@@ -23,6 +23,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Search, CheckCircle, Shield, Clock, Users, MapPin, Star, Handshake, ChevronDown, X, MapPinIcon } from "lucide-react";
 import { VoiceInput } from "@/components/VoiceInput";
+import { VoiceAssistant } from "@/components/VoiceAssistant";
 import rajeshAvatar from "@assets/Babu_1753861985304.png";
 import arjunAvatar from "@assets/krishnan_1753861985304.png";
 import sureshAvatar from "@assets/veni_1753861985304.png";
@@ -522,9 +523,19 @@ export default function Home() {
             <div>
               <Card className="bg-white/95 backdrop-blur text-foreground shadow-2xl">
                 <CardContent className="p-6">
-                  <h3 className="text-xl font-bold mb-4 text-foreground">
-                    Find Services Near You
-                  </h3>
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-xl font-bold text-foreground flex-1">
+                      Find Services Near You
+                    </h3>
+                    <VoiceAssistant
+                      onServiceSelect={(serviceId) => setSearchForm(prev => ({ ...prev, serviceId }))}
+                      onDistrictSelect={(districtId) => setSearchForm(prev => ({ ...prev, districtId }))}
+                      onDescriptionUpdate={(description) => setSearchForm(prev => ({ ...prev, description }))}
+                      services={services}
+                      districts={districts}
+                      className="h-10 w-10 p-2 rounded-full"
+                    />
+                  </div>
                   
                   <form onSubmit={handleSearch} className="space-y-4">
                     <div className="space-y-4">
