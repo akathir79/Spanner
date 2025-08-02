@@ -528,8 +528,8 @@ export default function Home() {
                       Find Services Near You
                     </h3>
                     <VoiceAssistant
-                      onServiceSelect={(serviceId) => setSearchForm(prev => ({ ...prev, serviceId }))}
-                      onDistrictSelect={(districtId) => setSearchForm(prev => ({ ...prev, districtId }))}
+                      onServiceSelect={(serviceId) => setSearchForm(prev => ({ ...prev, service: serviceId }))}
+                      onDistrictSelect={(districtId) => setSearchForm(prev => ({ ...prev, district: districtId }))}
                       onDescriptionUpdate={(description) => setSearchForm(prev => ({ ...prev, description }))}
                       services={services}
                       districts={districts}
