@@ -102,24 +102,59 @@ export function VoiceAssistant({
   // Find matching service
   const findService = (userInput: string) => {
     const input = userInput.toLowerCase().trim();
+    
+    // Service mapping for variations and Tamil words
+    const serviceVariations: { [key: string]: string[] } = {
+      'plumbing': ['plumber', 'plumbers', 'குழாய்', 'குழாய் பழுதுபார்ப்பு', 'பிளம்பர்'],
+      'electrical': ['electrician', 'electricians', 'மின்சாரம்', 'மின்சார வேலை', 'எலக்ட்ரிசியன்'],
+      'painting': ['painter', 'painters', 'paint', 'ஓவியம்', 'வண்ணம் அடிக்கும்', 'பெயிண்டர்'],
+      'carpentry': ['carpenter', 'carpenters', 'wood work', 'மரவேலை', 'தச்சன்', 'கார்பென்டர்'],
+      'ac repair': ['ac', 'air conditioner', 'cooling', 'ஏசி', 'குளிர்சாதன பெட்டி', 'ஏசி ரிப்பேர்'],
+      'cleaning': ['cleaner', 'cleaners', 'housekeeping', 'சுத்தம்', 'சுத்தம் செய்யும்', 'க்ளீனிங்'],
+      'mechanic': ['mechanics', 'auto repair', 'car repair', 'மெக்கானிக்', 'வாகன பழுதுபார்ப்பு'],
+      'gardening': ['gardener', 'landscaping', 'garden', 'தோட்டக்கலை', 'தோட்டம்', 'கார்டனிங்']
+    };
+    
     return services.find(service => {
-      const englishMatch = service.name.toLowerCase().includes(input) || 
-                          input.includes(service.name.toLowerCase());
-      const tamilMatch = service.tamil_name && 
-                        (service.tamil_name.includes(input) || input.includes(service.tamil_name));
-      return englishMatch || tamilMatch;
+      const serviceName = service.name.toLowerCase();
+      
+      // Direct match with service name
+      if (serviceName.includes(input) || input.includes(serviceName)) {
+        return true;
+      }
+      
+      // Tamil name match
+      if (service.tamil_name && 
+          (service.tamil_name.includes(input) || input.includes(service.tamil_name))) {
+        return true;
+      }
+      
+      // Check variations
+      const variations = serviceVariations[serviceName] || [];
+      return variations.some(variation => 
+        variation.includes(input) || input.includes(variation)
+      );
     });
   };
 
   // Find matching district
   const findDistrict = (userInput: string) => {
     const input = userInput.toLowerCase().trim();
+    
     return districts.find(district => {
       const englishMatch = district.name.toLowerCase().includes(input) || 
                           input.includes(district.name.toLowerCase());
       const tamilMatch = district.tamil_name && 
                         (district.tamil_name.includes(input) || input.includes(district.tamil_name));
-      return englishMatch || tamilMatch;
+      
+      // Also check for partial matches and common variations
+      const nameWords = district.name.toLowerCase().split(' ');
+      const inputWords = input.split(' ');
+      const hasPartialMatch = nameWords.some(word => 
+        inputWords.some(inputWord => word.includes(inputWord) || inputWord.includes(word))
+      );
+      
+      return englishMatch || tamilMatch || hasPartialMatch;
     });
   };
 
@@ -178,8 +213,8 @@ export function VoiceAssistant({
           }, 2000);
         } else {
           const retry = selectedLanguage === 'tamil' 
-            ? "மன்னிக்கவும், அந்த சேவையை கண்டுபிடிக்க முடியவில்லை. தயவுசெய்து மீண்டும் சொல்லுங்கள் அல்லது டைப் செய்யுங்கள்."
-            : "Sorry, I couldn't find that service. Please try again or type your answer.";
+            ? "மன்னிக்கவும், அந்த சேவையை கண்டுபிடிக்க முடியவில்லை. குழாய், மின்சாரம், ஓவியம், அல்லது மரவேலை போன்ற சேவைகளைச் சொல்லுங்கள்."
+            : "Sorry, I couldn't find that service. Try saying plumber, electrician, painter, carpenter, or mechanic.";
           setConversation(prev => [...prev, `Assistant: ${retry}`]);
           speak(retry, selectedLanguage === 'tamil' ? 'tamil' : 'english');
         }
@@ -202,8 +237,8 @@ export function VoiceAssistant({
           }, 2000);
         } else {
           const retry = selectedLanguage === 'tamil' 
-            ? "மன்னிக்கவும், அந்த மாவட்டத்தை கண்டுபிடிக்க முடியவில்லை. தயவுசெய்து மீண்டும் சொல்லுங்கள் அல்லது டைப் செய்யுங்கள்."
-            : "Sorry, I couldn't find that district. Please try again or type your answer.";
+            ? "மன்னிக்கவும், அந்த மாவட்டத்தை கண்டுபிடிக்க முடியவில்லை. சென்னை, கோவை, மதுரை போன்ற மாவட்டப் பெயரைச் சொல்லுங்கள்."
+            : "Sorry, I couldn't find that district. Try saying district names like Chennai, Coimbatore, or Madurai.";
           setConversation(prev => [...prev, `Assistant: ${retry}`]);
           speak(retry, selectedLanguage === 'tamil' ? 'tamil' : 'english');
         }
