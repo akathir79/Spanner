@@ -136,12 +136,22 @@ export function VoiceAssistant({
           setSelectedLanguage('english');
           setConversation(prev => [...prev, `Assistant: Great! Continuing in English.`]);
           speak("Great! Continuing in English.");
-          setTimeout(() => askNextQuestion(), 2000);
+          setTimeout(() => {
+            setCurrentStep(1);
+            const nextQuestion = conversationSteps[1].question.english;
+            setConversation(prev => [...prev, `Assistant: ${nextQuestion}`]);
+            speak(nextQuestion, 'english');
+          }, 2000);
         } else if (input.includes('tamil') || input.includes('தமிழ்')) {
           setSelectedLanguage('tamil');
           setConversation(prev => [...prev, `Assistant: சிறப்பு! தமிழில் தொடர்கிறோம்.`]);
           speak("சிறப்பு! தமிழில் தொடர்கிறோம்.", 'tamil');
-          setTimeout(() => askNextQuestion(), 2000);
+          setTimeout(() => {
+            setCurrentStep(1);
+            const nextQuestion = conversationSteps[1].question.tamil;
+            setConversation(prev => [...prev, `Assistant: ${nextQuestion}`]);
+            speak(nextQuestion, 'tamil');
+          }, 2000);
         } else {
           const retry = selectedLanguage === 'tamil' 
             ? "தயவுசெய்து ஆங்கிலம் அல்லது தமிழ் என்று சொல்லுங்கள்."
@@ -160,7 +170,12 @@ export function VoiceAssistant({
             : `Great! I've selected ${foundService.name} service.`;
           setConversation(prev => [...prev, `Assistant: ${response}`]);
           speak(response, selectedLanguage === 'tamil' ? 'tamil' : 'english');
-          setTimeout(() => askNextQuestion(), 2000);
+          setTimeout(() => {
+            setCurrentStep(2);
+            const nextQuestion = conversationSteps[2].question[selectedLanguage];
+            setConversation(prev => [...prev, `Assistant: ${nextQuestion}`]);
+            speak(nextQuestion, selectedLanguage === 'tamil' ? 'tamil' : 'english');
+          }, 2000);
         } else {
           const retry = selectedLanguage === 'tamil' 
             ? "மன்னிக்கவும், அந்த சேவையை கண்டுபிடிக்க முடியவில்லை. தயவுசெய்து மீண்டும் சொல்லுங்கள் அல்லது டைப் செய்யுங்கள்."
@@ -179,7 +194,12 @@ export function VoiceAssistant({
             : `Great! I've selected ${foundDistrict.name} district.`;
           setConversation(prev => [...prev, `Assistant: ${response}`]);
           speak(response, selectedLanguage === 'tamil' ? 'tamil' : 'english');
-          setTimeout(() => askNextQuestion(), 2000);
+          setTimeout(() => {
+            setCurrentStep(3);
+            const nextQuestion = conversationSteps[3].question[selectedLanguage];
+            setConversation(prev => [...prev, `Assistant: ${nextQuestion}`]);
+            speak(nextQuestion, selectedLanguage === 'tamil' ? 'tamil' : 'english');
+          }, 2000);
         } else {
           const retry = selectedLanguage === 'tamil' 
             ? "மன்னிக்கவும், அந்த மாவட்டத்தை கண்டுபிடிக்க முடியவில்லை. தயவுசெய்து மீண்டும் சொல்லுங்கள் அல்லது டைப் செய்யுங்கள்."
@@ -201,7 +221,8 @@ export function VoiceAssistant({
     }
   };
 
-  // Ask next question
+  // This function is no longer needed as we handle step transitions inline
+  // but keeping it for any edge cases
   const askNextQuestion = () => {
     const nextStep = currentStep + 1;
     if (nextStep < conversationSteps.length) {
@@ -229,7 +250,13 @@ export function VoiceAssistant({
 
     recognition.continuous = false;
     recognition.interimResults = false;
+    // Set recognition language based on current step and selected language
     recognition.lang = selectedLanguage === 'tamil' ? 'ta-IN' : 'en-US';
+    
+    // For the language selection step, use English initially
+    if (currentStep === 0) {
+      recognition.lang = 'en-US';
+    }
 
     recognition.onstart = () => {
       setIsListening(true);
@@ -286,13 +313,16 @@ export function VoiceAssistant({
       </Button>
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md" aria-describedby="voice-assistant-description">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Volume2 className="h-5 w-5 text-purple-600" />
               Voice Assistant
             </DialogTitle>
           </DialogHeader>
+          <p id="voice-assistant-description" className="sr-only">
+            Interactive voice assistant to help you find services by speaking in English or Tamil
+          </p>
           
           <div className="space-y-4">
             <div className="bg-gray-50 rounded-lg p-3 max-h-60 overflow-y-auto">
