@@ -41,12 +41,22 @@ export function VoiceInput({
     const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
     const isReplit = window.location.hostname.includes('replit.dev');
     
+    // Detect browser type
+    const isFirefox = navigator.userAgent.toLowerCase().includes('firefox');
+    const isChrome = navigator.userAgent.toLowerCase().includes('chrome');
+    const isEdge = navigator.userAgent.toLowerCase().includes('edge');
+    const isSafari = navigator.userAgent.toLowerCase().includes('safari') && !isChrome;
+    
     console.log("Speech recognition support check:", { 
       supported, 
       SpeechRecognition: !!SpeechRecognition,
       isHTTPS,
       isLocalhost,
       isReplit,
+      isFirefox,
+      isChrome,
+      isEdge,
+      isSafari,
       protocol: window.location.protocol,
       hostname: window.location.hostname,
       userAgent: navigator.userAgent
@@ -145,9 +155,14 @@ export function VoiceInput({
   
   const handleClick = () => {
     if (isDisabled) {
+      const isFirefox = navigator.userAgent.toLowerCase().includes('firefox');
+      const browserMessage = isFirefox 
+        ? "Firefox doesn't support voice recognition. Please use Chrome, Edge, or Safari for voice input."
+        : "Voice recognition requires a supported browser (Chrome, Edge, Safari) and secure connection.";
+      
       toast({
         title: "Voice input not available",
-        description: "Voice recognition requires a supported browser (Chrome, Edge, Safari) and secure connection. Please try typing your request instead.",
+        description: `${browserMessage} Please try typing your request instead.`,
         variant: "destructive",
       });
       return;
@@ -168,7 +183,7 @@ export function VoiceInput({
         size={size}
         className={`text-gray-400 bg-gray-50 border-gray-200 hover:bg-gray-100 hover:text-gray-500 ${className}`}
         onClick={handleClick}
-        title="🎤 Voice input - Works best in Chrome/Edge browsers"
+        title="🎤 Voice input - Firefox not supported. Use Chrome/Edge/Safari"
       >
         <Mic className="h-5 w-5" />
       </Button>
