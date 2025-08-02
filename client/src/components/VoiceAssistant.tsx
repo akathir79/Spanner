@@ -111,7 +111,7 @@ export function VoiceAssistant({
             console.log('Speech ended, auto-starting listening...', { isOpen, isListening });
             setTimeout(() => {
               // Check if we're still in conversation mode and dialog is open
-              if (isConversationActive && isOpen && currentStep < conversationSteps.length - 1 && !isListening) {
+              if (isConversationActive && isOpen && currentStep < conversationSteps.length && !isListening) {
                 console.log('Calling startListening after speech end...');
                 startListening();
               } else {
@@ -126,7 +126,7 @@ export function VoiceAssistant({
             speechEnded = true;
             console.log('Speech error, auto-starting listening...');
             setTimeout(() => {
-              if (isConversationActive && isOpen && currentStep < conversationSteps.length - 1 && !isListening) {
+              if (isConversationActive && isOpen && currentStep < conversationSteps.length && !isListening) {
                 console.log('Calling startListening after speech error...');
                 startListening();
               }
@@ -139,7 +139,7 @@ export function VoiceAssistant({
           if (!speechEnded) {
             speechEnded = true;
             console.log('Speech timeout, auto-starting listening...');
-            if (isConversationActive && isOpen && currentStep < conversationSteps.length - 1 && !isListening) {
+            if (isConversationActive && isOpen && currentStep < conversationSteps.length && !isListening) {
               console.log('Calling startListening after speech timeout...');
               startListening();
             }
@@ -152,7 +152,7 @@ export function VoiceAssistant({
       // If speech synthesis is not available, auto-start listening immediately
       console.log('No speech synthesis, starting listening immediately...');
       setTimeout(() => {
-        if (isConversationActive && isOpen && currentStep < conversationSteps.length - 1 && !isListening) {
+        if (isConversationActive && isOpen && currentStep < conversationSteps.length && !isListening) {
           console.log('Calling startListening (no speech synthesis)...');
           startListening();
         }
@@ -415,7 +415,7 @@ export function VoiceAssistant({
       }
       
       // Auto-restart on some recoverable errors
-      if (event.error === 'no-speech' && isConversationActive && isOpen && currentStep < conversationSteps.length - 1) {
+      if (event.error === 'no-speech' && isConversationActive && isOpen && currentStep < conversationSteps.length) {
         setTimeout(() => {
           if (!isListening) {
             console.log('Restarting after no-speech error...');
@@ -430,7 +430,7 @@ export function VoiceAssistant({
       setIsListening(false);
       
       // If no final transcript and still in conversation, restart listening
-      if (!finalTranscript.trim() && isConversationActive && isOpen && currentStep < conversationSteps.length - 1) {
+      if (!finalTranscript.trim() && isConversationActive && isOpen && currentStep < conversationSteps.length) {
         setTimeout(() => {
           if (!isListening) {
             console.log('Restarting listening - no response detected...');
@@ -450,7 +450,7 @@ export function VoiceAssistant({
       
       // Retry after a short delay
       setTimeout(() => {
-        if (isConversationActive && isOpen && currentStep < conversationSteps.length - 1 && !isListening) {
+        if (isConversationActive && isOpen && currentStep < conversationSteps.length && !isListening) {
           console.log('Retrying voice recognition after error...');
           startListening();
         }
