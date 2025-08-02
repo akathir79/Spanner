@@ -723,12 +723,13 @@ export default function Home() {
                             onChange={(e) => setSearchForm(prev => ({ ...prev, description: e.target.value }))}
                             className="pr-12"
                           />
-                          <div className="absolute right-1 top-1/2 -translate-y-1/2">
+                          <div className="absolute right-2 top-1/2 -translate-y-1/2">
                             <VoiceInput 
                               onTranscript={handleVoiceTranscript}
                               language="en-US"
                               size="sm"
-                              className="h-8 w-8 p-0"
+                              className="h-8 w-8 p-1 rounded-md border border-border hover:border-blue-300 bg-background"
+                              showStatus={false}
                             />
                           </div>
                         </div>

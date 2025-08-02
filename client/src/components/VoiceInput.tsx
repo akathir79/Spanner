@@ -88,7 +88,19 @@ export function VoiceInput({
   };
 
   if (!speechSupported) {
-    return null; // Don't render if speech is not supported
+    // Still render the icon but disable it to show the feature exists
+    return (
+      <Button
+        type="button"
+        variant="ghost"
+        size={size}
+        className={`text-muted-foreground/50 cursor-not-allowed ${className}`}
+        disabled
+        title="Voice input not supported in this browser"
+      >
+        <Mic className="h-4 w-4" />
+      </Button>
+    );
   }
 
   return (
@@ -98,11 +110,11 @@ export function VoiceInput({
         variant="ghost"
         size={size}
         className={`${isListening 
-          ? "text-red-500 hover:text-red-600 bg-red-50 hover:bg-red-100" 
-          : "text-muted-foreground hover:text-foreground"
-        } ${className}`}
+          ? "text-red-500 hover:text-red-600 bg-red-50 hover:bg-red-100 animate-pulse" 
+          : "text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+        } ${className} transition-all duration-200`}
         onClick={isListening ? stopVoiceRecognition : startVoiceRecognition}
-        title={isListening ? "Stop voice input" : "Start voice input"}
+        title={isListening ? "Stop voice input" : "Click to speak your service requirement"}
       >
         {isListening ? (
           <MicOff className="h-4 w-4" />
