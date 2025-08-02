@@ -180,6 +180,7 @@ export function VoiceAssistant({
   // Find matching service
   const findService = (userInput: string) => {
     const input = userInput.toLowerCase().trim();
+    console.log('🔍 findService called with:', input);
     
     // Service mapping for variations and Tamil words
     const serviceVariations: { [key: string]: string[] } = {
@@ -193,26 +194,36 @@ export function VoiceAssistant({
       'gardening': ['gardener', 'landscaping', 'garden', 'தோட்டக்கலை', 'தோட்டம்', 'கார்டனிங்']
     };
     
-    return services.find(service => {
+    const foundService = services.find(service => {
       const serviceName = service.name.toLowerCase();
+      console.log('🔍 Checking service:', serviceName, 'against input:', input);
       
       // Direct match with service name
       if (serviceName.includes(input) || input.includes(serviceName)) {
+        console.log('✅ Direct match found:', serviceName);
         return true;
       }
       
       // Tamil name match
       if (service.tamil_name && 
           (service.tamil_name.includes(input) || input.includes(service.tamil_name))) {
+        console.log('✅ Tamil name match found:', service.tamil_name);
         return true;
       }
       
       // Check variations
       const variations = serviceVariations[serviceName] || [];
-      return variations.some(variation => 
-        variation.includes(input) || input.includes(variation)
-      );
+      const hasVariationMatch = variations.some(variation => {
+        const match = variation.includes(input) || input.includes(variation);
+        if (match) console.log('✅ Variation match found:', variation, 'for service:', serviceName);
+        return match;
+      });
+      
+      return hasVariationMatch;
     });
+    
+    console.log('🔍 findService result:', foundService);
+    return foundService;
   };
 
   // Find matching district
@@ -279,7 +290,9 @@ export function VoiceAssistant({
         break;
 
       case 'service':
+        console.log('🔍 Looking for service:', input, '| Available services:', services.map(s => s.name));
         const foundService = findService(input);
+        console.log('🔍 Found service:', foundService);
         if (foundService) {
           onServiceSelect(foundService.id);
           const response = selectedLanguage === 'tamil' 
@@ -296,6 +309,7 @@ export function VoiceAssistant({
             speak(nextQuestion, selectedLanguage === 'tamil' ? 'tamil' : 'english', true);
           }, 1500);
         } else {
+          console.log('❌ Service not found for input:', input);
           const retry = selectedLanguage === 'tamil' 
             ? "மன்னிக்கவும், அந்த சேவையை கண்டுபிடிக்க முடியவில்லை. குழாய், மின்சாரம், ஓவியம், அல்லது மரவேலை போன்ற சேவைகளைச் சொல்லுங்கள்."
             : "Sorry, I couldn't find that service. Try saying plumber, electrician, painter, carpenter, or mechanic.";
