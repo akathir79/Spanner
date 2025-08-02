@@ -92,13 +92,13 @@ export function VoiceInput({
     return (
       <Button
         type="button"
-        variant="ghost"
+        variant="outline"
         size={size}
-        className={`text-muted-foreground/50 cursor-not-allowed ${className}`}
+        className={`text-gray-400 bg-gray-50 border-gray-200 cursor-not-allowed ${className}`}
         disabled
-        title="Voice input not supported in this browser"
+        title="❌ Voice input not supported in this browser"
       >
-        <Mic className="h-4 w-4" />
+        <Mic className="h-5 w-5" />
       </Button>
     );
   }
@@ -107,19 +107,19 @@ export function VoiceInput({
     <div className="flex flex-col">
       <Button
         type="button"
-        variant="ghost"
+        variant="outline"
         size={size}
         className={`${isListening 
-          ? "text-red-500 hover:text-red-600 bg-red-50 hover:bg-red-100 animate-pulse" 
-          : "text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-        } ${className} transition-all duration-200`}
+          ? "text-white bg-red-500 hover:bg-red-600 border-red-500 animate-pulse shadow-lg" 
+          : "text-blue-600 bg-blue-50 hover:bg-blue-100 border-blue-300 hover:border-blue-400 shadow-sm"
+        } ${className} transition-all duration-200 relative z-10`}
         onClick={isListening ? stopVoiceRecognition : startVoiceRecognition}
-        title={isListening ? "Stop voice input" : "Click to speak your service requirement"}
+        title={isListening ? "🔴 Recording... Click to stop" : "🎤 Click to speak your service requirement"}
       >
         {isListening ? (
-          <MicOff className="h-4 w-4" />
+          <MicOff className="h-5 w-5" />
         ) : (
-          <Mic className="h-4 w-4" />
+          <Mic className="h-5 w-5" />
         )}
       </Button>
       

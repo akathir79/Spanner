@@ -721,14 +721,14 @@ export default function Home() {
                             placeholder="Describe your service requirement..."
                             value={searchForm.description}
                             onChange={(e) => setSearchForm(prev => ({ ...prev, description: e.target.value }))}
-                            className="pr-12"
+                            className="pr-14"
                           />
-                          <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                          <div className="absolute right-2 top-1/2 -translate-y-1/2 z-10">
                             <VoiceInput 
                               onTranscript={handleVoiceTranscript}
                               language="en-US"
                               size="sm"
-                              className="h-8 w-8 p-1 rounded-md border border-border hover:border-blue-300 bg-background"
+                              className="h-9 w-9 p-1.5 rounded-lg font-medium"
                               showStatus={false}
                             />
                           </div>
