@@ -517,7 +517,7 @@ export default function AdminDashboard() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6">
+          <TabsList className={`grid w-full ${user.role === "super_admin" ? "grid-cols-6" : "grid-cols-5"}`}>
             <TabsTrigger value="approvals">Worker Approvals</TabsTrigger>
             <TabsTrigger value="users">User Management</TabsTrigger>
             <TabsTrigger value="bookings">Booking Management</TabsTrigger>
@@ -526,7 +526,10 @@ export default function AdminDashboard() {
               Messaging
             </TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
-            <TabsTrigger value="settings">Platform Settings</TabsTrigger>
+            {/* Platform Settings - Only for Super Admin */}
+            {user.role === "super_admin" && (
+              <TabsTrigger value="settings">Platform Settings</TabsTrigger>
+            )}
           </TabsList>
 
           {/* Worker Approvals Tab */}
@@ -1202,8 +1205,9 @@ export default function AdminDashboard() {
             </Card>
           </TabsContent>
 
-          {/* Platform Settings Tab */}
-          <TabsContent value="settings" className="space-y-6">
+          {/* Platform Settings Tab - Only for Super Admin */}
+          {user.role === "super_admin" && (
+            <TabsContent value="settings" className="space-y-6">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
@@ -1299,6 +1303,7 @@ export default function AdminDashboard() {
               </CardContent>
             </Card>
           </TabsContent>
+          )}
         </Tabs>
       </div>
 
