@@ -28,8 +28,8 @@ export function Navbar() {
 
   // Get the appropriate profile picture
   const profilePicture = user?.role === "worker" 
-    ? workerProfile?.profilePicture || user?.profilePicture 
-    : user?.profilePicture;
+    ? workerProfile?.profilePicture || (user as any)?.profilePicture 
+    : (user as any)?.profilePicture;
 
   const handleDashboard = () => {
     if (user?.role === "super_admin" || user?.role === "admin") {
