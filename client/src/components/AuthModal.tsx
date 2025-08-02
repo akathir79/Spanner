@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -70,9 +71,10 @@ interface AuthModalProps {
 
 export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
   const [step, setStep] = useState(1);
-  const [pendingLogin, setPendingLogin] = useState<{ mobile: string } | null>(null);
+  const [pendingLogin, setPendingLogin] = useState<{ mobile: string; role: string } | null>(null);
   const [developmentOtp, setDevelopmentOtp] = useState<string>("");
   const [signupType, setSignupType] = useState<"client" | "worker">("client");
+  const [loginRole, setLoginRole] = useState<"client" | "worker">("client");
   const [isLocationLoading, setIsLocationLoading] = useState(false);
   const [clientProfilePreview, setClientProfilePreview] = useState<string>("");
   const [workerProfilePreview, setWorkerProfilePreview] = useState<string>("");
@@ -489,9 +491,9 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
   };
 
   const handleLogin = async (data: z.infer<typeof loginSchema>) => {
-    const result = await login(data.mobile, "auto"); // Let backend detect user type
+    const result = await login(data.mobile, loginRole);
     if (result.success) {
-      setPendingLogin({ mobile: data.mobile });
+      setPendingLogin({ mobile: data.mobile, role: loginRole });
       setDevelopmentOtp(result.otp || "");
       setStep(2);
     }
@@ -700,6 +702,20 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
             {step === 1 && (
               <div className="space-y-4">
                 <form onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-4">
+                  <div>
+                    <Label>Login As</Label>
+                    <RadioGroup value={loginRole} onValueChange={(value: "client" | "worker") => setLoginRole(value)} className="flex gap-6 mt-2">
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="client" id="login-client" />
+                        <Label htmlFor="login-client" className="cursor-pointer">Client (Need Services)</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="worker" id="login-worker" />
+                        <Label htmlFor="login-worker" className="cursor-pointer">Worker (Provide Services)</Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+                  
                   <div>
                     <Label htmlFor="mobile">Mobile Number / Email</Label>
                     <Input

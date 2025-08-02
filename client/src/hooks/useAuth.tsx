@@ -50,6 +50,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const response = await apiRequest("POST", "/api/auth/send-otp", {
         mobile,
         userType,
+        role: userType !== "auto" ? userType : undefined,
       });
       
       const data = await response.json();

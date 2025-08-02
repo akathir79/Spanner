@@ -21,6 +21,7 @@ import {
 const loginSchema = z.object({
   mobile: z.string().min(1),
   userType: z.enum(["client", "worker", "admin", "super_admin", "auto"]).optional(),
+  role: z.enum(["client", "worker"]).optional(),
 });
 
 const verifyOtpSchema = z.object({
@@ -84,7 +85,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Authentication routes
   app.post("/api/auth/send-otp", async (req, res) => {
     try {
-      const { mobile, userType } = loginSchema.parse(req.body);
+      const { mobile, userType, role } = loginSchema.parse(req.body);
       
       // For admin mobile, always send OTP
       if (mobile === "9000000001") {
@@ -136,6 +137,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = await storage.getUserByMobile(mobile);
       if (!user) {
         return res.status(404).json({ message: "User not found. Please sign up first." });
+      }
+
+      // If role is specified, check if user has that role
+      if (role && user.role !== role) {
+        // User exists but doesn't have the requested role
+        return res.status(404).json({ 
+          message: `No ${role} account found for this mobile number. Please sign up as a ${role}.`,
+          needsSignup: true,
+          existingRole: user.role
+        });
       }
 
       // If userType is provided and not "auto", verify it matches
