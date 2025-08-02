@@ -10,6 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/components/LanguageProvider";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -45,6 +47,22 @@ import {
 import { useLocation } from "wouter";
 import WorkerApprovalSection from "@/components/WorkerApprovalSection";
 import { MessagingSystem } from "@/components/MessagingSystem";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+
+// Form schema for creating admin users
+const createAdminSchema = z.object({
+  firstName: z.string().min(2, "First name must be at least 2 characters"),
+  lastName: z.string().min(2, "Last name must be at least 2 characters"),
+  mobile: z.string().regex(/^[6-9]\d{9}$/, "Please enter a valid Indian mobile number"),
+  email: z.string().email("Please enter a valid email address"),
+  address: z.string().min(10, "Address must be at least 10 characters"),
+  districtId: z.string().min(1, "Please select a district"),
+  profilePicture: z.string().optional()
+});
+
+type CreateAdminForm = z.infer<typeof createAdminSchema>;
 
 export default function AdminDashboard() {
   const { user } = useAuth();
@@ -57,6 +75,21 @@ export default function AdminDashboard() {
   const [userDetailsModal, setUserDetailsModal] = useState<any>(null);
   const [activeTab, setActiveTab] = useState("approvals");
   const [messageDialogUser, setMessageDialogUser] = useState<any>(null);
+  const [createAdminModalOpen, setCreateAdminModalOpen] = useState(false);
+
+  // Create admin form
+  const createAdminForm = useForm<CreateAdminForm>({
+    resolver: zodResolver(createAdminSchema),
+    defaultValues: {
+      firstName: "",
+      lastName: "",
+      mobile: "",
+      email: "",
+      address: "",
+      districtId: "",
+      profilePicture: ""
+    }
+  });
 
   // Fetch admin data (hooks must be called unconditionally)
   const { data: users = [], isLoading: usersLoading } = useQuery({
@@ -98,6 +131,38 @@ export default function AdminDashboard() {
       });
     },
   });
+
+  // Create admin user mutation
+  const createAdminMutation = useMutation({
+    mutationFn: async (adminData: CreateAdminForm) => {
+      const response = await apiRequest("POST", "/api/admin/create-admin", {
+        ...adminData,
+        role: "admin"
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Admin Created",
+        description: "New admin user has been created successfully. They can now login using OTP.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      setCreateAdminModalOpen(false);
+      createAdminForm.reset();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Creation Failed",
+        description: error.message || "Failed to create admin user",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Handle admin creation form submission
+  const onCreateAdminSubmit = (data: CreateAdminForm) => {
+    createAdminMutation.mutate(data);
+  };
 
   // Quick login for demo purposes
   const quickLogin = async () => {
@@ -1142,7 +1207,11 @@ export default function AdminDashboard() {
                     <div>
                       <h4 className="font-semibold mb-4">Super Admin Tools</h4>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <Button variant="outline" className="justify-start">
+                        <Button 
+                          variant="outline" 
+                          className="justify-start"
+                          onClick={() => setCreateAdminModalOpen(true)}
+                        >
                           <Users className="h-4 w-4 mr-2" />
                           Create Admin User
                         </Button>
@@ -1167,6 +1236,169 @@ export default function AdminDashboard() {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Create Admin User Modal */}
+      <Dialog open={createAdminModalOpen} onOpenChange={setCreateAdminModalOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Create New Admin User</DialogTitle>
+            <DialogDescription>
+              Create a new admin user who can login using mobile OTP. They will have admin privileges to manage the platform.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <Form {...createAdminForm}>
+            <form onSubmit={createAdminForm.handleSubmit(onCreateAdminSubmit)} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={createAdminForm.control}
+                  name="firstName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>First Name *</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter first name" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={createAdminForm.control}
+                  name="lastName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Last Name *</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter last name" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={createAdminForm.control}
+                  name="mobile"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Mobile Number *</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter 10-digit mobile number" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={createAdminForm.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email Address *</FormLabel>
+                      <FormControl>
+                        <Input type="email" placeholder="Enter email address" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <FormField
+                control={createAdminForm.control}
+                name="districtId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>District *</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select district" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {districts.map((district: any) => (
+                          <SelectItem key={district.id} value={district.id}>
+                            {district.name} ({district.tamilName})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={createAdminForm.control}
+                name="address"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Address *</FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        placeholder="Enter full address including city, state, postal code" 
+                        className="min-h-[80px]"
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={createAdminForm.control}
+                name="profilePicture"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Profile Picture (Optional)</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="file" 
+                        accept="image/*"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onloadend = () => {
+                              field.onChange(reader.result as string);
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="flex justify-end space-x-2 pt-4 border-t">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => setCreateAdminModalOpen(false)}
+                  disabled={createAdminMutation.isPending}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  type="submit" 
+                  disabled={createAdminMutation.isPending}
+                >
+                  {createAdminMutation.isPending ? "Creating..." : "Create Admin User"}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

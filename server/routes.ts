@@ -549,6 +549,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Create admin user (super admin only)
+  app.post("/api/admin/create-admin", async (req, res) => {
+    try {
+      const { firstName, lastName, mobile, email, address, districtId, profilePicture } = req.body;
+      
+      // Validate required fields
+      if (!firstName || !lastName || !mobile || !email || !address || !districtId) {
+        return res.status(400).json({ message: "All required fields must be provided" });
+      }
+
+      // Check if user already exists
+      const existingUser = await storage.getUserByMobile(mobile);
+      if (existingUser) {
+        return res.status(400).json({ message: "User already exists with this mobile number" });
+      }
+
+      // Create admin user
+      const adminUser = await storage.createUser({
+        firstName,
+        lastName,
+        mobile,
+        email,
+        address,
+        districtId,
+        profilePicture: profilePicture || null,
+        role: "admin",
+        isVerified: true, // Admins are pre-verified
+        isActive: true,
+        status: "approved"
+      });
+
+      res.status(201).json({
+        message: "Admin user created successfully",
+        user: {
+          id: adminUser.id,
+          firstName: adminUser.firstName,
+          lastName: adminUser.lastName,
+          mobile: adminUser.mobile,
+          email: adminUser.email,
+          role: adminUser.role,
+          isVerified: adminUser.isVerified,
+          createdAt: adminUser.createdAt
+        }
+      });
+    } catch (error) {
+      console.error("Create admin user error:", error);
+      res.status(500).json({ message: "Failed to create admin user" });
+    }
+  });
+
   app.get("/api/admin/bookings", async (req, res) => {
     try {
       const bookings = await storage.getBookingsWithDetails();
