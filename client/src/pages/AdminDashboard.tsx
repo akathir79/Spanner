@@ -7,6 +7,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -42,7 +44,9 @@ import {
   MoreHorizontal,
   Ban,
   Unlock,
-  MessageSquare
+  MessageSquare,
+  ChevronDown,
+  Check
 } from "lucide-react";
 import { useLocation } from "wouter";
 import WorkerApprovalSection from "@/components/WorkerApprovalSection";
@@ -50,6 +54,7 @@ import { MessagingSystem } from "@/components/MessagingSystem";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { cn } from "@/lib/utils";
 
 // Form schema for creating admin users
 const createAdminSchema = z.object({
@@ -76,6 +81,7 @@ export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState("approvals");
   const [messageDialogUser, setMessageDialogUser] = useState<any>(null);
   const [createAdminModalOpen, setCreateAdminModalOpen] = useState(false);
+  const [districtDropdownOpen, setDistrictDropdownOpen] = useState(false);
 
   // Create admin form
   const createAdminForm = useForm<CreateAdminForm>({
@@ -1315,20 +1321,53 @@ export default function AdminDashboard() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>District *</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select district" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {districts.map((district: any) => (
-                          <SelectItem key={district.id} value={district.id}>
-                            {district.name} ({district.tamilName})
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <Popover open={districtDropdownOpen} onOpenChange={setDistrictDropdownOpen}>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant="outline"
+                            role="combobox"
+                            aria-expanded={districtDropdownOpen}
+                            className="w-full justify-between"
+                          >
+                            {field.value
+                              ? (() => {
+                                  const selectedDistrict = districts.find((district: any) => district.id === field.value);
+                                  return selectedDistrict ? `${selectedDistrict.name} (${selectedDistrict.tamilName})` : "Select district";
+                                })()
+                              : "Select district"}
+                            <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[300px] p-0">
+                        <Command>
+                          <CommandInput placeholder="Search districts..." />
+                          <CommandList>
+                            <CommandEmpty>No district found.</CommandEmpty>
+                            <CommandGroup>
+                              {districts.map((district: any) => (
+                                <CommandItem
+                                  key={district.id}
+                                  value={`${district.name} ${district.tamilName}`}
+                                  onSelect={() => {
+                                    field.onChange(district.id);
+                                    setDistrictDropdownOpen(false);
+                                  }}
+                                >
+                                  <Check
+                                    className={`mr-2 h-4 w-4 ${
+                                      field.value === district.id ? "opacity-100" : "opacity-0"
+                                    }`}
+                                  />
+                                  {district.name} ({district.tamilName})
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
                     <FormMessage />
                   </FormItem>
                 )}
