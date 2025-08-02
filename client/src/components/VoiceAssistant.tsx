@@ -249,21 +249,23 @@ export function VoiceAssistant({
           setConversation(prev => [...prev, `Assistant: Great! Continuing in English.`]);
           speak("Great! Continuing in English.", 'english', false);
           setTimeout(() => {
+            console.log('🔄 Moving to step 1 (service selection)');
             setCurrentStep(1);
             const nextQuestion = conversationSteps[1].question.english;
             setConversation(prev => [...prev, `Assistant: ${nextQuestion}`]);
             speak(nextQuestion, 'english', true);
-          }, 2000);
+          }, 1500);
         } else if (input.includes('tamil') || input.includes('தமிழ்')) {
           setSelectedLanguage('tamil');
           setConversation(prev => [...prev, `Assistant: சிறப்பு! தமிழில் தொடர்கிறோம்.`]);
           speak("சிறப்பு! தமிழில் தொடர்கிறோம்.", 'tamil', false);
           setTimeout(() => {
+            console.log('🔄 Moving to step 1 (service selection) - Tamil');
             setCurrentStep(1);
             const nextQuestion = conversationSteps[1].question.tamil;
             setConversation(prev => [...prev, `Assistant: ${nextQuestion}`]);
             speak(nextQuestion, 'tamil', true);
-          }, 2000);
+          }, 1500);
         } else {
           const retry = selectedLanguage === 'tamil' 
             ? "தயவுசெய்து ஆங்கிலம் அல்லது தமிழ் என்று சொல்லுங்கள்."
@@ -283,11 +285,12 @@ export function VoiceAssistant({
           setConversation(prev => [...prev, `Assistant: ${response}`]);
           speak(response, selectedLanguage === 'tamil' ? 'tamil' : 'english', false);
           setTimeout(() => {
+            console.log('🔄 Moving to step 2 (district selection)');
             setCurrentStep(2);
             const nextQuestion = conversationSteps[2].question[selectedLanguage];
             setConversation(prev => [...prev, `Assistant: ${nextQuestion}`]);
             speak(nextQuestion, selectedLanguage === 'tamil' ? 'tamil' : 'english', true);
-          }, 2000);
+          }, 1500);
         } else {
           const retry = selectedLanguage === 'tamil' 
             ? "மன்னிக்கவும், அந்த சேவையை கண்டுபிடிக்க முடியவில்லை. குழாய், மின்சாரம், ஓவியம், அல்லது மரவேலை போன்ற சேவைகளைச் சொல்லுங்கள்."
@@ -307,11 +310,12 @@ export function VoiceAssistant({
           setConversation(prev => [...prev, `Assistant: ${response}`]);
           speak(response, selectedLanguage === 'tamil' ? 'tamil' : 'english', false);
           setTimeout(() => {
+            console.log('🔄 Moving to step 3 (description)');
             setCurrentStep(3);
             const nextQuestion = conversationSteps[3].question[selectedLanguage];
             setConversation(prev => [...prev, `Assistant: ${nextQuestion}`]);
             speak(nextQuestion, selectedLanguage === 'tamil' ? 'tamil' : 'english', true);
-          }, 2000);
+          }, 1500);
         } else {
           const retry = selectedLanguage === 'tamil' 
             ? "மன்னிக்கவும், அந்த மாவட்டத்தை கண்டுபிடிக்க முடியவில்லை. சென்னை, கோவை, மதுரை போன்ற மாவட்டப் பெயரைச் சொல்லுங்கள்."
@@ -328,7 +332,13 @@ export function VoiceAssistant({
           : "Great! I've recorded your service description. You can now proceed with the search.";
         setConversation(prev => [...prev, `Assistant: ${response}`]);
         speak(response, selectedLanguage === 'tamil' ? 'tamil' : 'english', false);
-        setTimeout(() => setIsOpen(false), 3000);
+        setTimeout(() => {
+          console.log('✅ Conversation completed - closing dialog');
+          setIsConversationActive(false);
+          conversationActiveRef.current = false;
+          dialogOpenRef.current = false;
+          setIsOpen(false);
+        }, 3000);
         return;
     }
   };
@@ -404,7 +414,7 @@ export function VoiceAssistant({
       
       // Process final result
       if (finalTranscript.trim()) {
-        console.log('Final voice recognition result:', finalTranscript);
+        console.log('🎤 Final voice recognition result:', finalTranscript, '| Current step:', currentStep);
         recognition.stop();
         setIsListening(false);
         processResponse(finalTranscript.trim());
