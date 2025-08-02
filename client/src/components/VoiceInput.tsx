@@ -33,10 +33,14 @@ export function VoiceInput({
   // Check for speech recognition support
   useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    setSpeechSupported(!!SpeechRecognition);
+    const supported = !!SpeechRecognition;
+    console.log("Speech recognition support check:", { supported, SpeechRecognition });
+    setSpeechSupported(supported);
   }, []);
 
   const startVoiceRecognition = () => {
+    console.log("Voice recognition clicked!", { speechSupported, isListening });
+    
     if (!speechSupported) {
       toast({
         title: "Speech not supported",
@@ -46,41 +50,59 @@ export function VoiceInput({
       return;
     }
 
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    const recognition = new SpeechRecognition();
-
-    recognition.continuous = false;
-    recognition.interimResults = false;
-    recognition.lang = language;
-
-    recognition.onstart = () => {
-      setIsListening(true);
-    };
-
-    recognition.onresult = (event: any) => {
-      const transcript = event.results[0][0].transcript;
-      onTranscript(transcript);
+    try {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const recognition = new SpeechRecognition();
       
-      toast({
-        title: "Voice input captured",
-        description: `Recognized: "${transcript}"`,
-      });
-    };
+      console.log("Recognition created:", recognition);
 
-    recognition.onerror = (event: any) => {
-      setIsListening(false);
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.lang = language;
+
+      recognition.onstart = () => {
+        console.log("Recognition started");
+        setIsListening(true);
+        toast({
+          title: "Listening...",
+          description: "Speak now to describe your service requirement",
+        });
+      };
+
+      recognition.onresult = (event: any) => {
+        const transcript = event.results[0][0].transcript;
+        onTranscript(transcript);
+        
+        toast({
+          title: "Voice input captured",
+          description: `Recognized: "${transcript}"`,
+        });
+      };
+
+      recognition.onerror = (event: any) => {
+        console.error("Recognition error:", event.error);
+        setIsListening(false);
+        toast({
+          title: "Voice recognition error",
+          description: `Error: ${event.error}. Please try again or type your request`,
+          variant: "destructive",
+        });
+      };
+
+      recognition.onend = () => {
+        setIsListening(false);
+      };
+
+      recognition.start();
+      console.log("Recognition.start() called");
+    } catch (error) {
+      console.error("Error starting recognition:", error);
       toast({
-        title: "Voice recognition error",
-        description: "Please try again or type your request",
+        title: "Voice recognition failed",
+        description: "Could not start voice recognition",
         variant: "destructive",
       });
-    };
-
-    recognition.onend = () => {
-      setIsListening(false);
-    };
-
-    recognition.start();
+    }
   };
 
   const stopVoiceRecognition = () => {
