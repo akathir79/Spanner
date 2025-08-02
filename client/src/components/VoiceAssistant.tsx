@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
@@ -82,6 +82,10 @@ export function VoiceAssistant({
   const [speechSupported, setSpeechSupported] = useState(false);
   const [conversation, setConversation] = useState<string[]>([]);
   const [isConversationActive, setIsConversationActive] = useState(false);
+  
+  // Use ref to persist conversation state across re-renders
+  const conversationActiveRef = useRef(false);
+  const dialogOpenRef = useRef(false);
   const { toast } = useToast();
 
   // Check for speech recognition support
@@ -110,14 +114,26 @@ export function VoiceAssistant({
             speechEnded = true;
             console.log('Speech ended, auto-starting listening...', { isOpen, isListening });
             setTimeout(() => {
+              // Use refs for reliable state checking
+              const currentConversationActive = conversationActiveRef.current;
+              const currentDialogOpen = dialogOpenRef.current;
+              
+              console.log('Checking auto-listen conditions:', { 
+                currentConversationActive, 
+                currentDialogOpen, 
+                currentStep, 
+                totalSteps: conversationSteps.length, 
+                isListening 
+              });
+              
               // Check if we're still in conversation mode and dialog is open
-              if (isConversationActive && isOpen && currentStep < conversationSteps.length && !isListening) {
-                console.log('Calling startListening after speech end...');
+              if (currentConversationActive && currentDialogOpen && currentStep < conversationSteps.length && !isListening) {
+                console.log('✅ Starting auto-listen after speech end...');
                 startListening();
               } else {
-                console.log('Skipping startListening:', { isConversationActive, isOpen, currentStep, totalSteps: conversationSteps.length, isListening });
+                console.log('❌ Skipping auto-listen - conditions not met');
               }
-            }, 500);
+            }, 1000); // Increased delay for speech synthesis completion
           }
         };
         
@@ -126,8 +142,8 @@ export function VoiceAssistant({
             speechEnded = true;
             console.log('Speech error, auto-starting listening...');
             setTimeout(() => {
-              if (isConversationActive && isOpen && currentStep < conversationSteps.length && !isListening) {
-                console.log('Calling startListening after speech error...');
+              if (conversationActiveRef.current && dialogOpenRef.current && currentStep < conversationSteps.length && !isListening) {
+                console.log('✅ Starting auto-listen after speech error...');
                 startListening();
               }
             }, 500);
@@ -139,8 +155,8 @@ export function VoiceAssistant({
           if (!speechEnded) {
             speechEnded = true;
             console.log('Speech timeout, auto-starting listening...');
-            if (isConversationActive && isOpen && currentStep < conversationSteps.length && !isListening) {
-              console.log('Calling startListening after speech timeout...');
+            if (conversationActiveRef.current && dialogOpenRef.current && currentStep < conversationSteps.length && !isListening) {
+              console.log('✅ Starting auto-listen after speech timeout...');
               startListening();
             }
           }
@@ -152,8 +168,8 @@ export function VoiceAssistant({
       // If speech synthesis is not available, auto-start listening immediately
       console.log('No speech synthesis, starting listening immediately...');
       setTimeout(() => {
-        if (isConversationActive && isOpen && currentStep < conversationSteps.length && !isListening) {
-          console.log('Calling startListening (no speech synthesis)...');
+        if (conversationActiveRef.current && dialogOpenRef.current && currentStep < conversationSteps.length && !isListening) {
+          console.log('✅ Starting auto-listen (no speech synthesis)...');
           startListening();
         }
       }, 500);
@@ -460,29 +476,45 @@ export function VoiceAssistant({
 
   // Start conversation
   const startConversation = () => {
+    console.log('Starting conversation...');
     setIsOpen(true);
     setCurrentStep(0);
     setConversation([]);
     setSelectedLanguage('english');
     setIsConversationActive(true);
     
+    // Update refs
+    conversationActiveRef.current = true;
+    dialogOpenRef.current = true;
+    
     setTimeout(() => {
+      console.log('Starting first question...');
       const question = conversationSteps[0].question.english;
       setConversation([`Assistant: ${question}`]);
+      console.log('Speaking first question and setting up auto-listen...', { 
+        conversationActive: conversationActiveRef.current, 
+        dialogOpen: dialogOpenRef.current 
+      });
       speak(question, 'english', true); // Auto-listen after question
     }, 500);
   };
 
   // Close conversation
-  const closeConversation = () => {
-    console.log('Closing conversation...');
-    setIsConversationActive(false);
-    setIsListening(false);
-    setIsOpen(false);
-    
-    // Stop any ongoing speech synthesis
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
+  const closeConversation = (newOpen: boolean) => {
+    if (!newOpen) {
+      console.log('Closing conversation...');
+      setIsConversationActive(false);
+      setIsListening(false);
+      setIsOpen(false);
+      
+      // Update refs
+      conversationActiveRef.current = false;
+      dialogOpenRef.current = false;
+      
+      // Stop any ongoing speech synthesis
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
     }
   };
 
