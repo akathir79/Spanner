@@ -249,9 +249,11 @@ export function VoiceAssistant({
 
   // Process user response
   const processResponse = (transcript: string) => {
-    const currentStepData = conversationSteps[currentStep];
+    const actualCurrentStep = currentStepRef.current; // Use ref for reliable step tracking
+    const currentStepData = conversationSteps[actualCurrentStep];
     const input = transcript.toLowerCase().trim();
     
+    console.log('🔄 processResponse called:', { transcript, actualCurrentStep, stepField: currentStepData.field });
     setConversation(prev => [...prev, `You: ${transcript}`]);
 
     switch (currentStepData.field) {
