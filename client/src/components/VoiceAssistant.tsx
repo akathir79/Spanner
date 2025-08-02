@@ -355,8 +355,9 @@ export function VoiceAssistant({
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     const recognition = new SpeechRecognition();
 
-    recognition.continuous = false;
-    recognition.interimResults = false;
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.maxAlternatives = 1;
     // Set recognition language based on current step and selected language
     recognition.lang = selectedLanguage === 'tamil' ? 'ta-IN' : 'en-US';
     
@@ -370,11 +371,27 @@ export function VoiceAssistant({
       setIsListening(true);
     };
 
+    let finalTranscript = '';
+    
     recognition.onresult = (event: any) => {
-      const transcript = event.results[0][0].transcript;
-      console.log('Voice recognition result:', transcript);
-      setIsListening(false);
-      processResponse(transcript);
+      let interimTranscript = '';
+      
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const transcript = event.results[i][0].transcript;
+        if (event.results[i].isFinal) {
+          finalTranscript += transcript;
+        } else {
+          interimTranscript += transcript;
+        }
+      }
+      
+      // Process final result
+      if (finalTranscript.trim()) {
+        console.log('Final voice recognition result:', finalTranscript);
+        recognition.stop();
+        setIsListening(false);
+        processResponse(finalTranscript.trim());
+      }
     };
 
     recognition.onerror = (event: any) => {
@@ -402,8 +419,18 @@ export function VoiceAssistant({
     };
 
     recognition.onend = () => {
-      console.log('Voice recognition ended');
+      console.log('Voice recognition ended', { finalTranscript, currentStep });
       setIsListening(false);
+      
+      // If no final transcript and still in conversation, restart listening
+      if (!finalTranscript.trim() && currentStep < conversationSteps.length - 1) {
+        setTimeout(() => {
+          if (!isListening) {
+            console.log('Restarting listening - no response detected...');
+            startListening();
+          }
+        }, 1000);
+      }
     };
 
     try {
