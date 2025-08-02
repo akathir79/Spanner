@@ -816,9 +816,19 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
           </>
         ) : (
           <Tabs value={signupType} onValueChange={(value) => setSignupType(value as "client" | "worker")}>
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="client">Client</TabsTrigger>
-              <TabsTrigger value="worker">Worker</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2 bg-muted p-1 h-10 rounded-md">
+              <TabsTrigger 
+                value="client" 
+                className="data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-sm rounded-sm transition-all"
+              >
+                Client
+              </TabsTrigger>
+              <TabsTrigger 
+                value="worker" 
+                className="data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-sm rounded-sm transition-all"
+              >
+                Worker
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="client">
