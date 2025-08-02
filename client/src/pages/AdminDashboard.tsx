@@ -303,7 +303,10 @@ export default function AdminDashboard() {
   const allBookings = Array.isArray(bookings) ? bookings : [];
   
   const stats = {
-    totalUsers: allUsers.length,
+    // For regular admins, only count clients and workers as "total users"
+    totalUsers: user.role === "super_admin" ? 
+      allUsers.length : 
+      allUsers.filter((u: any) => u.role === "client" || u.role === "worker").length,
     totalClients: allUsers.filter((u: any) => u.role === "client").length,
     totalWorkers: allUsers.filter((u: any) => u.role === "worker").length,
     totalAdmins: allUsers.filter((u: any) => u.role === "admin").length,
@@ -412,7 +415,9 @@ export default function AdminDashboard() {
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Total Users</p>
                   <p className="text-2xl font-bold">{stats.totalUsers}</p>
-                  <p className="text-xs text-muted-foreground">All platform users</p>
+                  <p className="text-xs text-muted-foreground">
+                    {user.role === "super_admin" ? "All platform users" : `${stats.totalClients} clients, ${stats.totalWorkers} workers`}
+                  </p>
                 </div>
                 <Users className="h-8 w-8 text-blue-600" />
               </div>
