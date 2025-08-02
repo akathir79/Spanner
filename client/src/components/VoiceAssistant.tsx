@@ -89,13 +89,32 @@ export function VoiceAssistant({
     setSpeechSupported(!!SpeechRecognition);
   }, []);
 
-  // Text-to-speech function
-  const speak = (text: string, lang: string = 'en-US') => {
+  // Text-to-speech function with auto-listen after speech
+  const speak = (text: string, lang: string = 'en-US', autoListen: boolean = true) => {
     if ('speechSynthesis' in window) {
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = lang === 'tamil' ? 'ta-IN' : 'en-US';
       utterance.rate = 0.8;
+      
+      // Auto-start listening after speech completes
+      if (autoListen) {
+        utterance.onend = () => {
+          setTimeout(() => {
+            if (isOpen) {
+              startListening();
+            }
+          }, 500); // Small delay to ensure speech has fully ended
+        };
+      }
+      
       window.speechSynthesis.speak(utterance);
+    } else if (autoListen) {
+      // If speech synthesis is not available, still auto-start listening
+      setTimeout(() => {
+        if (isOpen) {
+          startListening();
+        }
+      }, 1000);
     }
   };
 
@@ -170,29 +189,29 @@ export function VoiceAssistant({
         if (input.includes('english') || input.includes('ஆங்கிலம்')) {
           setSelectedLanguage('english');
           setConversation(prev => [...prev, `Assistant: Great! Continuing in English.`]);
-          speak("Great! Continuing in English.");
+          speak("Great! Continuing in English.", 'english', false);
           setTimeout(() => {
             setCurrentStep(1);
             const nextQuestion = conversationSteps[1].question.english;
             setConversation(prev => [...prev, `Assistant: ${nextQuestion}`]);
-            speak(nextQuestion, 'english');
+            speak(nextQuestion, 'english', true);
           }, 2000);
         } else if (input.includes('tamil') || input.includes('தமிழ்')) {
           setSelectedLanguage('tamil');
           setConversation(prev => [...prev, `Assistant: சிறப்பு! தமிழில் தொடர்கிறோம்.`]);
-          speak("சிறப்பு! தமிழில் தொடர்கிறோம்.", 'tamil');
+          speak("சிறப்பு! தமிழில் தொடர்கிறோம்.", 'tamil', false);
           setTimeout(() => {
             setCurrentStep(1);
             const nextQuestion = conversationSteps[1].question.tamil;
             setConversation(prev => [...prev, `Assistant: ${nextQuestion}`]);
-            speak(nextQuestion, 'tamil');
+            speak(nextQuestion, 'tamil', true);
           }, 2000);
         } else {
           const retry = selectedLanguage === 'tamil' 
             ? "தயவுசெய்து ஆங்கிலம் அல்லது தமிழ் என்று சொல்லுங்கள்."
             : "Please say English or Tamil.";
           setConversation(prev => [...prev, `Assistant: ${retry}`]);
-          speak(retry, selectedLanguage === 'tamil' ? 'tamil' : 'english');
+          speak(retry, selectedLanguage === 'tamil' ? 'tamil' : 'english', true);
         }
         break;
 
@@ -204,19 +223,19 @@ export function VoiceAssistant({
             ? `சிறப்பு! ${foundService.tamil_name || foundService.name} சேவையை தேர்வு செய்தேன்.`
             : `Great! I've selected ${foundService.name} service.`;
           setConversation(prev => [...prev, `Assistant: ${response}`]);
-          speak(response, selectedLanguage === 'tamil' ? 'tamil' : 'english');
+          speak(response, selectedLanguage === 'tamil' ? 'tamil' : 'english', false);
           setTimeout(() => {
             setCurrentStep(2);
             const nextQuestion = conversationSteps[2].question[selectedLanguage];
             setConversation(prev => [...prev, `Assistant: ${nextQuestion}`]);
-            speak(nextQuestion, selectedLanguage === 'tamil' ? 'tamil' : 'english');
+            speak(nextQuestion, selectedLanguage === 'tamil' ? 'tamil' : 'english', true);
           }, 2000);
         } else {
           const retry = selectedLanguage === 'tamil' 
             ? "மன்னிக்கவும், அந்த சேவையை கண்டுபிடிக்க முடியவில்லை. குழாய், மின்சாரம், ஓவியம், அல்லது மரவேலை போன்ற சேவைகளைச் சொல்லுங்கள்."
             : "Sorry, I couldn't find that service. Try saying plumber, electrician, painter, carpenter, or mechanic.";
           setConversation(prev => [...prev, `Assistant: ${retry}`]);
-          speak(retry, selectedLanguage === 'tamil' ? 'tamil' : 'english');
+          speak(retry, selectedLanguage === 'tamil' ? 'tamil' : 'english', true);
         }
         break;
 
@@ -228,19 +247,19 @@ export function VoiceAssistant({
             ? `சிறப்பு! ${foundDistrict.tamil_name || foundDistrict.name} மாவட்டத்தை தேர்வு செய்தேன்.`
             : `Great! I've selected ${foundDistrict.name} district.`;
           setConversation(prev => [...prev, `Assistant: ${response}`]);
-          speak(response, selectedLanguage === 'tamil' ? 'tamil' : 'english');
+          speak(response, selectedLanguage === 'tamil' ? 'tamil' : 'english', false);
           setTimeout(() => {
             setCurrentStep(3);
             const nextQuestion = conversationSteps[3].question[selectedLanguage];
             setConversation(prev => [...prev, `Assistant: ${nextQuestion}`]);
-            speak(nextQuestion, selectedLanguage === 'tamil' ? 'tamil' : 'english');
+            speak(nextQuestion, selectedLanguage === 'tamil' ? 'tamil' : 'english', true);
           }, 2000);
         } else {
           const retry = selectedLanguage === 'tamil' 
             ? "மன்னிக்கவும், அந்த மாவட்டத்தை கண்டுபிடிக்க முடியவில்லை. சென்னை, கோவை, மதுரை போன்ற மாவட்டப் பெயரைச் சொல்லுங்கள்."
             : "Sorry, I couldn't find that district. Try saying district names like Chennai, Coimbatore, or Madurai.";
           setConversation(prev => [...prev, `Assistant: ${retry}`]);
-          speak(retry, selectedLanguage === 'tamil' ? 'tamil' : 'english');
+          speak(retry, selectedLanguage === 'tamil' ? 'tamil' : 'english', true);
         }
         break;
 
@@ -250,7 +269,7 @@ export function VoiceAssistant({
           ? "சிறப்பு! உங்கள் சேவை விவரணையை பதிவு செய்தேன். நீங்கள் இப்போது தேடலைத் தொடரலாம்."
           : "Great! I've recorded your service description. You can now proceed with the search.";
         setConversation(prev => [...prev, `Assistant: ${response}`]);
-        speak(response, selectedLanguage === 'tamil' ? 'tamil' : 'english');
+        speak(response, selectedLanguage === 'tamil' ? 'tamil' : 'english', false);
         setTimeout(() => setIsOpen(false), 3000);
         return;
     }
@@ -323,11 +342,12 @@ export function VoiceAssistant({
     setIsOpen(true);
     setCurrentStep(0);
     setConversation([]);
+    setSelectedLanguage('english');
     
     setTimeout(() => {
       const question = conversationSteps[0].question.english;
       setConversation([`Assistant: ${question}`]);
-      speak(question);
+      speak(question, 'english', true); // Auto-listen after question
     }, 500);
   };
 
