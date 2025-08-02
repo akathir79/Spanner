@@ -82,6 +82,7 @@ export default function AdminDashboard() {
   const [messageDialogUser, setMessageDialogUser] = useState<any>(null);
   const [createAdminModalOpen, setCreateAdminModalOpen] = useState(false);
   const [districtDropdownOpen, setDistrictDropdownOpen] = useState(false);
+  const [adminProfilePreview, setAdminProfilePreview] = useState<string | null>(null);
 
   // Create admin form
   const createAdminForm = useForm<CreateAdminForm>({
@@ -155,6 +156,7 @@ export default function AdminDashboard() {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
       setCreateAdminModalOpen(false);
       createAdminForm.reset();
+      setAdminProfilePreview(null);
     },
     onError: (error: any) => {
       toast({
@@ -168,6 +170,45 @@ export default function AdminDashboard() {
   // Handle admin creation form submission
   const onCreateAdminSubmit = (data: CreateAdminForm) => {
     createAdminMutation.mutate(data);
+  };
+
+  // Handle admin profile picture upload
+  const handleAdminProfilePictureUpload = (file: File | null) => {
+    if (!file) return;
+
+    // Validate file size (5MB limit)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "Please select an image smaller than 5MB",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Invalid file type",
+        description: "Please select a valid image file",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const base64String = e.target?.result as string;
+      setAdminProfilePreview(base64String);
+      createAdminForm.setValue("profilePicture", base64String);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // Remove admin profile picture
+  const removeAdminProfilePicture = () => {
+    setAdminProfilePreview(null);
+    createAdminForm.setValue("profilePicture", "");
   };
 
   // Quick login for demo purposes
@@ -1398,20 +1439,56 @@ export default function AdminDashboard() {
                   <FormItem>
                     <FormLabel>Profile Picture (Optional)</FormLabel>
                     <FormControl>
-                      <Input 
-                        type="file" 
-                        accept="image/*"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) {
-                            const reader = new FileReader();
-                            reader.onloadend = () => {
-                              field.onChange(reader.result as string);
-                            };
-                            reader.readAsDataURL(file);
-                          }
-                        }}
-                      />
+                      <div className="flex items-center space-x-4">
+                        <div className="w-16 h-16 rounded-full bg-muted border-2 border-dashed border-border flex items-center justify-center overflow-hidden">
+                          {adminProfilePreview ? (
+                            <img 
+                              src={adminProfilePreview} 
+                              alt="Admin profile preview" 
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <User className="h-8 w-8 text-muted-foreground" />
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-2">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              className="relative"
+                              asChild
+                            >
+                              <label htmlFor="adminProfilePictureInput" className="cursor-pointer">
+                                <Upload className="h-4 w-4 mr-2" />
+                                Upload Photo
+                              </label>
+                            </Button>
+                            {adminProfilePreview && (
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={removeAdminProfilePicture}
+                              >
+                                <X className="h-4 w-4 mr-2" />
+                                Remove
+                              </Button>
+                            )}
+                          </div>
+                          <input
+                            id="adminProfilePictureInput"
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => handleAdminProfilePictureUpload(e.target.files?.[0] || null)}
+                          />
+                          <p className="text-xs text-muted-foreground mt-1">
+                            JPG, PNG up to 5MB (Optional for admin profile)
+                          </p>
+                        </div>
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -1422,7 +1499,11 @@ export default function AdminDashboard() {
                 <Button 
                   type="button" 
                   variant="outline" 
-                  onClick={() => setCreateAdminModalOpen(false)}
+                  onClick={() => {
+                    setCreateAdminModalOpen(false);
+                    createAdminForm.reset();
+                    setAdminProfilePreview(null);
+                  }}
                   disabled={createAdminMutation.isPending}
                 >
                   Cancel
