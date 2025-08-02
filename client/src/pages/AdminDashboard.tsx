@@ -46,7 +46,10 @@ import {
   Unlock,
   MessageSquare,
   ChevronDown,
-  Check
+  Check,
+  Upload,
+  User,
+  X
 } from "lucide-react";
 import { useLocation } from "wouter";
 import WorkerApprovalSection from "@/components/WorkerApprovalSection";
