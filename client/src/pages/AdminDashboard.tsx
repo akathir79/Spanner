@@ -354,7 +354,12 @@ export default function AdminDashboard() {
             </CardContent>
           </Card>
           
-          <Card>
+          <Card 
+            className="cursor-pointer transition-all hover:shadow-md border-2 hover:border-yellow-200"
+            onClick={() => {
+              setActiveTab("approvals");
+            }}
+          >
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
