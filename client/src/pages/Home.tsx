@@ -200,74 +200,12 @@ export default function Home() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
 
-  // Redirect logged-in users to their dashboards, unless completing bank details
+  // Clear any stored user data to ensure clean testing flow
   useEffect(() => {
-    // Check localStorage directly to ensure we have the most current user data
-    const storedUser = localStorage.getItem("user");
-    console.log("Home page - stored user:", storedUser); // Debug log
-    
-    console.log("Checking conditions...");
-    console.log("storedUser exists:", !!storedUser);
-    console.log("pendingBankDetails:", localStorage.getItem("pendingBankDetails"));
-    
-    if (storedUser) {
-      // Clear pendingBankDetails for admin users as they don't need bank details
-      const userData = JSON.parse(storedUser);
-      if (userData?.role === "admin" || userData?.role === "super_admin") {
-        localStorage.removeItem("pendingBankDetails");
-      }
-      // For workers, clear pendingBankDetails to allow them to go to dashboard
-      if (userData?.role === "worker") {
-        localStorage.removeItem("pendingBankDetails");
-      }
-    }
-    
-    if (storedUser && !localStorage.getItem("pendingBankDetails")) {
-      console.log("Passed initial conditions, parsing...");
-      try {
-        const userData = JSON.parse(storedUser);
-        console.log("Home page - parsed user data:", userData);
-        console.log("userData exists:", !!userData);
-        console.log("userData.id:", userData?.id);
-        console.log("userData.role:", userData?.role);
-        
-        if (userData && userData.id && userData.role) {
-          console.log("All conditions met, redirecting user with role:", userData.role);
-          
-          // Use router for immediate redirection
-          if (userData.role === "super_admin" || userData.role === "admin") {
-            console.log("Admin role detected, redirecting to admin dashboard");
-            setTimeout(() => {
-              setLocation("/admin-dashboard");
-            }, 10);
-            return;
-          } else if (userData.role === "worker") {
-            console.log("Worker role detected, checking status...");
-            // Allow pending workers to go to dashboard to complete bank details
-            if (userData.status === "pending" || userData.status === "approved") {
-              console.log("Worker status allows dashboard access, redirecting to worker dashboard");
-              setTimeout(() => {
-                setLocation("/worker-dashboard");
-              }, 10);
-              return;
-            }
-          } else {
-            console.log("Client role detected, redirecting to client dashboard");
-            setTimeout(() => {
-              setLocation("/dashboard");
-            }, 10);
-            return;
-          }
-        } else {
-          console.log("Conditions not met - userData:", !!userData, "id:", !!userData?.id, "role:", !!userData?.role);
-        }
-      } catch (error) {
-        console.error("Error parsing stored user data:", error);
-        localStorage.removeItem("user");
-      }
-    } else {
-      console.log("Initial conditions not met");
-    }
+    // Clear all stored authentication data for clean app flow testing
+    localStorage.removeItem("user");
+    localStorage.removeItem("pendingBankDetails");
+    console.log("Cleared stored authentication data for clean testing");
   }, []);
   const [searchForm, setSearchForm] = useState({
     service: "",
