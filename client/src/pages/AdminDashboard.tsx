@@ -639,7 +639,7 @@ export default function AdminDashboard() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className={`grid w-full ${user.role === "super_admin" ? "grid-cols-6" : "grid-cols-5"}`}>
+          <TabsList className={`grid w-full ${user.role === "super_admin" ? "grid-cols-6" : "grid-cols-5"} admin-tabs`}>
             <TabsTrigger value="approvals">Worker Approvals</TabsTrigger>
             <TabsTrigger value="users">User Management</TabsTrigger>
             <TabsTrigger value="bookings">Booking Management</TabsTrigger>

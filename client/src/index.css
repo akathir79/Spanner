@@ -193,6 +193,15 @@
     @apply bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100;
   }
 
+  /* Admin Dashboard - Blue Selected Tab Styling */
+  .admin-tabs [data-state="active"] {
+    @apply bg-blue-600 text-white shadow-md;
+  }
+
+  .admin-tabs [data-state="active"]:hover {
+    @apply bg-blue-700;
+  }
+
   /* Form improvements */
   .form-floating {
     @apply relative;
