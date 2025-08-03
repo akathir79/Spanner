@@ -200,13 +200,19 @@ export default function Home() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
 
-  // Clear any stored user data to ensure clean testing flow
+  // Redirect authenticated users to their appropriate dashboards
   useEffect(() => {
-    // Clear all stored authentication data for clean app flow testing
-    localStorage.removeItem("user");
-    localStorage.removeItem("pendingBankDetails");
-    console.log("Cleared stored authentication data for clean testing");
-  }, []);
+    if (user) {
+      const userRole = user.role;
+      if (userRole === "admin" || userRole === "super_admin") {
+        setLocation("/admin-dashboard");
+      } else if (userRole === "worker") {
+        setLocation("/worker-dashboard");
+      } else if (userRole === "client") {
+        setLocation("/dashboard");
+      }
+    }
+  }, [user, setLocation]);
   const [searchForm, setSearchForm] = useState({
     service: "",
     district: "",

@@ -90,6 +90,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         description: "Welcome to SPANNER!",
       });
       
+      // Redirect based on user role
+      setTimeout(() => {
+        const userRole = data.user.role;
+        if (userRole === "admin" || userRole === "super_admin") {
+          window.location.href = "/admin-dashboard";
+        } else if (userRole === "worker") {
+          window.location.href = "/worker-dashboard";
+        } else if (userRole === "client") {
+          window.location.href = "/dashboard";
+        } else {
+          // Default to home page
+          window.location.href = "/";
+        }
+      }, 1000);
+      
       return true;
     } catch (error: any) {
       toast({
