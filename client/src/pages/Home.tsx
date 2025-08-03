@@ -280,30 +280,14 @@ export default function Home() {
   const fetchDistrictsFromAPI = async (stateName: string) => {
     setIsLoadingDistricts(true);
     try {
-      // Using India API - districts endpoint
-      const response = await fetch(`https://indian-cities-api-nocbegfhqg.now.sh/cities?state=${encodeURIComponent(stateName)}`);
-      
-      if (response.ok) {
-        const cities = await response.json();
-        // Extract unique districts from cities
-        const uniqueDistricts = Array.from(new Set(cities.map((city: any) => city.district)))
-          .filter(Boolean)
-          .map((district, index) => ({
-            id: `${district}-${index}`,
-            name: district as string
-          }));
-        
-        setApiDistricts(uniqueDistricts);
-      } else {
-        // Fallback: Use a static list of major districts for the state
-        const fallbackDistricts = await getFallbackDistricts(stateName);
-        setApiDistricts(fallbackDistricts);
-      }
+      // Use reliable fallback data directly for better user experience
+      // This provides immediate district data without depending on external APIs
+      const districts = await getFallbackDistricts(stateName);
+      setApiDistricts(districts);
     } catch (error) {
-      console.error("Error fetching districts:", error);
-      // Fallback: Use a static list of major districts
-      const fallbackDistricts = await getFallbackDistricts(stateName);
-      setApiDistricts(fallbackDistricts);
+      console.error("Error loading districts:", error);
+      // Set empty array if even fallback fails
+      setApiDistricts([]);
     } finally {
       setIsLoadingDistricts(false);
     }
