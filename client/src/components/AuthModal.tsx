@@ -35,6 +35,7 @@ const clientSignupSchema = z.object({
   email: z.string().email("Invalid email address").optional(),
   districtId: z.string().min(1, "District is required"),
   address: z.string().min(5, "Address is required"),
+  state: z.string().min(1, "State is required"),
   pincode: z.string().length(6, "Pincode must be 6 digits"),
   profilePicture: z.string().optional(),
   termsAccepted: z.boolean().refine(val => val === true, "You must accept the terms"),
@@ -240,6 +241,7 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
       email: "",
       districtId: "",
       address: "",
+      state: "Tamil Nadu",
       pincode: "",
       profilePicture: "",
       termsAccepted: false,
@@ -420,6 +422,7 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
             if (matchingDistrict) {
               if (formType === "client") {
                 clientForm.setValue("districtId", matchingDistrict.id);
+                clientForm.setValue("state", "Tamil Nadu");
               } else {
                 // For worker form, set both home district and add to service districts
                 workerForm.setValue("districtId", matchingDistrict.id);
@@ -953,6 +956,20 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
                 </div>
 
                 <div>
+                  <Label htmlFor="address">Full Address</Label>
+                  <Input
+                    id="address"
+                    placeholder="House/Building number, Street, Area"
+                    {...clientForm.register("address")}
+                  />
+                  {clientForm.formState.errors.address && (
+                    <p className="text-sm text-destructive mt-1">
+                      {clientForm.formState.errors.address.message}
+                    </p>
+                  )}
+                </div>
+
+                <div>
                   <div className="flex items-center justify-between mb-1">
                     <Label htmlFor="district">District</Label>
                     <Button
@@ -969,7 +986,11 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
                   </div>
                   <Select 
                     value={clientForm.watch("districtId")} 
-                    onValueChange={(value) => clientForm.setValue("districtId", value)}
+                    onValueChange={(value) => {
+                      clientForm.setValue("districtId", value);
+                      // Auto-populate state when district is selected
+                      clientForm.setValue("state", "Tamil Nadu");
+                    }}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select your district" />
@@ -990,15 +1011,17 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
                 </div>
 
                 <div>
-                  <Label htmlFor="address">Full Address</Label>
+                  <Label htmlFor="state">State</Label>
                   <Input
-                    id="address"
-                    placeholder="House/Building number, Street, Area"
-                    {...clientForm.register("address")}
+                    id="state"
+                    value={clientForm.watch("state")}
+                    readOnly
+                    className="bg-muted cursor-not-allowed"
+                    placeholder="State will be auto-filled"
                   />
-                  {clientForm.formState.errors.address && (
+                  {clientForm.formState.errors.state && (
                     <p className="text-sm text-destructive mt-1">
-                      {clientForm.formState.errors.address.message}
+                      {clientForm.formState.errors.state.message}
                     </p>
                   )}
                 </div>
