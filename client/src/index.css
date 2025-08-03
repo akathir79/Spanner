@@ -193,13 +193,21 @@
     @apply bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100;
   }
 
-  /* Admin Dashboard - Blue Selected Tab Styling */
-  .admin-tabs [data-state="active"] {
-    @apply bg-blue-600 text-white shadow-md;
+  /* Admin Dashboard - Blue Selected Tab Styling - Force Override */
+  .admin-tabs [data-state="active"],
+  .admin-tabs button[data-state="active"],
+  .admin-tabs [role="tab"][data-state="active"] {
+    background-color: #3b82f6 !important;
+    color: white !important;
+    border-color: #3b82f6 !important;
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1) !important;
   }
 
-  .admin-tabs [data-state="active"]:hover {
-    @apply bg-blue-700;
+  .admin-tabs [data-state="active"]:hover,
+  .admin-tabs button[data-state="active"]:hover,
+  .admin-tabs [role="tab"][data-state="active"]:hover {
+    background-color: #2563eb !important;
+    color: white !important;
   }
 
   /* Form improvements */
