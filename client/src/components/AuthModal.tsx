@@ -1107,7 +1107,19 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
                             ? INDIAN_STATES_AND_UTS.find(state => state.name === clientForm.watch("state"))?.name
                             : "Select your state"}
                         </span>
-                        <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        <div className="flex items-center gap-1">
+                          {clientForm.watch("state") && (
+                            <X 
+                              className="h-3 w-3 cursor-pointer hover:text-destructive" 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                clientForm.setValue("state", "");
+                                clientForm.setValue("districtId", "");
+                              }}
+                            />
+                          )}
+                          <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
+                        </div>
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-full p-0">
@@ -1877,7 +1889,19 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
                             ? INDIAN_STATES_AND_UTS.find(state => state.name === workerForm.watch("state"))?.name
                             : "Select your state"}
                         </span>
-                        <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        <div className="flex items-center gap-1">
+                          {workerForm.watch("state") && (
+                            <X 
+                              className="h-3 w-3 cursor-pointer hover:text-destructive" 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                workerForm.setValue("state", "");
+                                workerForm.setValue("districtId", "");
+                              }}
+                            />
+                          )}
+                          <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
+                        </div>
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-full p-0">
