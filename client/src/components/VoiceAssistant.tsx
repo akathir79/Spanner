@@ -23,7 +23,7 @@ interface VoiceAssistantProps {
 
 interface ConversationStep {
   step: number;
-  field: 'language' | 'service' | 'district' | 'description';
+  field: 'service' | 'district' | 'description';
   question: {
     english: string;
     tamil: string;
@@ -34,35 +34,26 @@ interface ConversationStep {
 const conversationSteps: ConversationStep[] = [
   {
     step: 0,
-    field: 'language',
-    question: {
-      english: "Would you like to continue in English or Tamil? Please say English or Tamil.",
-      tamil: "நீங்கள் ஆங்கிலத்தில் அல்லது தமிழில் தொடர விரும்புகிறீர்களா? ஆங்கிலம் அல்லது தமிழ் என்று சொல்லுங்கள்."
-    },
-    expectedAnswers: ['english', 'tamil', 'ஆங்கிலம்', 'தமிழ்']
-  },
-  {
-    step: 1,
     field: 'service',
     question: {
       english: "What type of service do you need? For example, say plumber, electrician, painter, or mechanic.",
-      tamil: "உங்களுக்கு என்ன வகையான சேவை தேவை? உதாரணமாக, குழாய் பழுதுபார்ப்பவர், மின்சாரக் கொத்தனார், ஓவியர், அல்லது மெக்கானிக் என்று சொல்லுங்கள்."
+      tamil: ""
+    }
+  },
+  {
+    step: 1,
+    field: 'district',
+    question: {
+      english: "Which district are you in? Please say your district name.",
+      tamil: ""
     }
   },
   {
     step: 2,
-    field: 'district',
-    question: {
-      english: "Which district are you in? Please say your district name.",
-      tamil: "நீங்கள் எந்த மாவட்டத்தில் இருக்கிறீர்கள்? உங்கள் மாவட்டத்தின் பெயரைச் சொல்லுங்கள்."
-    }
-  },
-  {
-    step: 3,
     field: 'description',
     question: {
       english: "Please describe your service requirement in detail.",
-      tamil: "உங்கள் சேவைத் தேவையை விரிவாக விவரிக்கவும்."
+      tamil: ""
     }
   }
 ];
@@ -78,7 +69,7 @@ export function VoiceAssistant({
   const [isOpen, setIsOpen] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
-  const [selectedLanguage, setSelectedLanguage] = useState<'english' | 'tamil'>('english');
+  const selectedLanguage = 'english';
   const [speechSupported, setSpeechSupported] = useState(false);
   const [conversation, setConversation] = useState<string[]>([]);
   const [isConversationActive, setIsConversationActive] = useState(false);
@@ -257,66 +248,28 @@ export function VoiceAssistant({
     setConversation(prev => [...prev, `You: ${transcript}`]);
 
     switch (currentStepData.field) {
-      case 'language':
-        if (input.includes('english') || input.includes('ஆங்கிலம்')) {
-          setSelectedLanguage('english');
-          setConversation(prev => [...prev, `Assistant: Great! Continuing in English.`]);
-          speak("Great! Continuing in English.", 'english', false);
-          setTimeout(() => {
-            console.log('🔄 Moving to step 1 (service selection)');
-            setCurrentStep(1);
-            currentStepRef.current = 1; // Update ref immediately
-            const nextQuestion = conversationSteps[1].question.english;
-            setConversation(prev => [...prev, `Assistant: ${nextQuestion}`]);
-            speak(nextQuestion, 'english', true);
-          }, 1500);
-        } else if (input.includes('tamil') || input.includes('தமிழ்')) {
-          setSelectedLanguage('tamil');
-          setConversation(prev => [...prev, `Assistant: சிறப்பு! தமிழில் தொடர்கிறோம்.`]);
-          speak("சிறப்பு! தமிழில் தொடர்கிறோம்.", 'tamil', false);
-          setTimeout(() => {
-            console.log('🔄 Moving to step 1 (service selection) - Tamil');
-            setCurrentStep(1);
-            currentStepRef.current = 1; // Update ref immediately
-            const nextQuestion = conversationSteps[1].question.tamil;
-            setConversation(prev => [...prev, `Assistant: ${nextQuestion}`]);
-            speak(nextQuestion, 'tamil', true);
-          }, 1500);
-        } else {
-          const retry = selectedLanguage === 'tamil' 
-            ? "தயவுசெய்து ஆங்கிலம் அல்லது தமிழ் என்று சொல்லுங்கள்."
-            : "Please say English or Tamil.";
-          setConversation(prev => [...prev, `Assistant: ${retry}`]);
-          speak(retry, selectedLanguage === 'tamil' ? 'tamil' : 'english', true);
-        }
-        break;
-
       case 'service':
         console.log('🔍 Looking for service:', input, '| Available services:', services.map(s => s.name));
         const foundService = findService(input);
         console.log('🔍 Found service:', foundService);
         if (foundService) {
           onServiceSelect(foundService.id);
-          const response = selectedLanguage === 'tamil' 
-            ? `சிறப்பு! ${foundService.tamil_name || foundService.name} சேவையை தேர்வு செய்தேன்.`
-            : `Great! I've selected ${foundService.name} service.`;
+          const response = `Great! I've selected ${foundService.name} service.`;
           setConversation(prev => [...prev, `Assistant: ${response}`]);
-          speak(response, selectedLanguage === 'tamil' ? 'tamil' : 'english', false);
+          speak(response, 'english', false);
           setTimeout(() => {
-            console.log('🔄 Moving to step 2 (district selection)');
-            setCurrentStep(2);
-            currentStepRef.current = 2; // Update ref immediately
-            const nextQuestion = conversationSteps[2].question[selectedLanguage];
+            console.log('🔄 Moving to step 1 (district selection)');
+            setCurrentStep(1);
+            currentStepRef.current = 1; // Update ref immediately
+            const nextQuestion = conversationSteps[1].question.english;
             setConversation(prev => [...prev, `Assistant: ${nextQuestion}`]);
-            speak(nextQuestion, selectedLanguage === 'tamil' ? 'tamil' : 'english', true);
+            speak(nextQuestion, 'english', true);
           }, 1500);
         } else {
           console.log('❌ Service not found for input:', input);
-          const retry = selectedLanguage === 'tamil' 
-            ? "மன்னிக்கவும், அந்த சேவையை கண்டுபிடிக்க முடியவில்லை. குழாய், மின்சாரம், ஓவியம், அல்லது மரவேலை போன்ற சேவைகளைச் சொல்லுங்கள்."
-            : "Sorry, I couldn't find that service. Try saying plumber, electrician, painter, carpenter, or mechanic.";
+          const retry = "Sorry, I couldn't find that service. Try saying plumber, electrician, painter, carpenter, or mechanic.";
           setConversation(prev => [...prev, `Assistant: ${retry}`]);
-          speak(retry, selectedLanguage === 'tamil' ? 'tamil' : 'english', true);
+          speak(retry, 'english', true);
         }
         break;
 
@@ -324,35 +277,29 @@ export function VoiceAssistant({
         const foundDistrict = findDistrict(input);
         if (foundDistrict) {
           onDistrictSelect(foundDistrict.id);
-          const response = selectedLanguage === 'tamil' 
-            ? `சிறப்பு! ${foundDistrict.tamil_name || foundDistrict.name} மாவட்டத்தை தேர்வு செய்தேன்.`
-            : `Great! I've selected ${foundDistrict.name} district.`;
+          const response = `Great! I've selected ${foundDistrict.name} district.`;
           setConversation(prev => [...prev, `Assistant: ${response}`]);
-          speak(response, selectedLanguage === 'tamil' ? 'tamil' : 'english', false);
+          speak(response, 'english', false);
           setTimeout(() => {
-            console.log('🔄 Moving to step 3 (description)');
-            setCurrentStep(3);
-            currentStepRef.current = 3; // Update ref immediately
-            const nextQuestion = conversationSteps[3].question[selectedLanguage];
+            console.log('🔄 Moving to step 2 (description)');
+            setCurrentStep(2);
+            currentStepRef.current = 2; // Update ref immediately
+            const nextQuestion = conversationSteps[2].question.english;
             setConversation(prev => [...prev, `Assistant: ${nextQuestion}`]);
-            speak(nextQuestion, selectedLanguage === 'tamil' ? 'tamil' : 'english', true);
+            speak(nextQuestion, 'english', true);
           }, 1500);
         } else {
-          const retry = selectedLanguage === 'tamil' 
-            ? "மன்னிக்கவும், அந்த மாவட்டத்தை கண்டுபிடிக்க முடியவில்லை. சென்னை, கோவை, மதுரை போன்ற மாவட்டப் பெயரைச் சொல்லுங்கள்."
-            : "Sorry, I couldn't find that district. Try saying district names like Chennai, Coimbatore, or Madurai.";
+          const retry = "Sorry, I couldn't find that district. Try saying district names like Mumbai, Delhi, or Bangalore.";
           setConversation(prev => [...prev, `Assistant: ${retry}`]);
-          speak(retry, selectedLanguage === 'tamil' ? 'tamil' : 'english', true);
+          speak(retry, 'english', true);
         }
         break;
 
       case 'description':
         onDescriptionUpdate(transcript);
-        const response = selectedLanguage === 'tamil' 
-          ? "சிறப்பு! உங்கள் சேவை விவரணையை பதிவு செய்தேன். நீங்கள் இப்போது தேடலைத் தொடரலாம்."
-          : "Great! I've recorded your service description. You can now proceed with the search.";
+        const response = "Great! I've recorded your service description. You can now proceed with the search.";
         setConversation(prev => [...prev, `Assistant: ${response}`]);
-        speak(response, selectedLanguage === 'tamil' ? 'tamil' : 'english', false);
+        speak(response, 'english', false);
         setTimeout(() => {
           console.log('✅ Conversation completed - closing dialog');
           setIsConversationActive(false);
@@ -372,9 +319,9 @@ export function VoiceAssistant({
     if (nextStep < conversationSteps.length) {
       setCurrentStep(nextStep);
       const stepData = conversationSteps[nextStep];
-      const question = stepData.question[selectedLanguage];
+      const question = stepData.question.english;
       setConversation(prev => [...prev, `Assistant: ${question}`]);
-      speak(question, selectedLanguage === 'tamil' ? 'tamil' : 'english');
+      speak(question, 'english');
     }
   };
 
@@ -408,12 +355,7 @@ export function VoiceAssistant({
     recognition.interimResults = true;
     recognition.maxAlternatives = 1;
     // Set recognition language based on current step and selected language
-    recognition.lang = selectedLanguage === 'tamil' ? 'ta-IN' : 'en-US';
-    
-    // For the language selection step, use English initially
-    if (currentStep === 0) {
-      recognition.lang = 'en-US';
-    }
+    recognition.lang = 'en-US';
 
     recognition.onstart = () => {
       console.log('Voice recognition started');
@@ -512,7 +454,7 @@ export function VoiceAssistant({
     setIsOpen(true);
     setCurrentStep(0);
     setConversation([]);
-    setSelectedLanguage('english');
+    // Language is now fixed to English
     setIsConversationActive(true);
     
     // Update refs
@@ -563,7 +505,7 @@ export function VoiceAssistant({
         variant="outline"
         className={`text-purple-600 bg-purple-50 hover:bg-purple-100 border-purple-300 hover:border-purple-400 shadow-sm transition-all duration-200 ${className}`}
         onClick={startConversation}
-        title="🎤 Voice Assistant - Interactive conversation mode"
+        title="🎤 Voice Assistant - Interactive conversation in English"
       >
         <Volume2 className="h-5 w-5" />
       </Button>
@@ -577,7 +519,7 @@ export function VoiceAssistant({
             </DialogTitle>
           </DialogHeader>
           <p id="voice-assistant-description" className="sr-only">
-            Interactive voice assistant to help you find services by speaking in English or Tamil
+            Interactive voice assistant to help you find services by speaking in English
           </p>
           
           <div className="space-y-4">

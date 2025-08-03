@@ -75,10 +75,10 @@ Located in `shared/schema.ts`, the database includes:
 - **Worker Dashboard**: Job management, earnings tracking, and availability control
 - **Admin Dashboard**: Platform oversight, user management, and analytics
 
-### Multi-language Support
-- Bilingual interface supporting English and Tamil
-- District names and service categories available in both languages
-- Context-based language provider for seamless switching
+### Language Support
+- English-only interface for India-wide coverage
+- Simplified language provider for consistent English experience
+- Updated content for all Indian states and districts
 
 ## Data Flow
 

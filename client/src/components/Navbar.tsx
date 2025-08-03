@@ -13,7 +13,7 @@ import { useQuery } from "@tanstack/react-query";
 export function Navbar() {
   const [location] = useLocation();
   const { theme, toggleTheme } = useTheme();
-  const { language, setLanguage, t } = useLanguage();
+  const { t } = useLanguage();
   const { user, logout } = useAuth();
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showSignupModal, setShowSignupModal] = useState(false);
@@ -68,25 +68,6 @@ export function Navbar() {
 
             {/* Controls */}
             <div className="flex items-center space-x-4">
-              {/* Language Toggle */}
-              <div className="hidden md:flex border rounded-md">
-                <Button
-                  variant={language === "en" ? "default" : "ghost"}
-                  size="sm"
-                  onClick={() => setLanguage("en")}
-                  className="px-3 py-1 text-xs"
-                >
-                  EN
-                </Button>
-                <Button
-                  variant={language === "ta" ? "default" : "ghost"}
-                  size="sm"
-                  onClick={() => setLanguage("ta")}
-                  className="px-3 py-1 text-xs"
-                >
-                  தமிழ்
-                </Button>
-              </div>
 
               {/* Theme Toggle */}
               <Button
@@ -164,26 +145,7 @@ export function Navbar() {
           {mobileMenuOpen && (
             <div className="md:hidden border-t py-4 space-y-2">
               
-              <div className="px-4 py-2 flex items-center justify-between">
-                <div className="flex border rounded-md">
-                  <Button
-                    variant={language === "en" ? "default" : "ghost"}
-                    size="sm"
-                    onClick={() => setLanguage("en")}
-                    className="px-3 py-1 text-xs"
-                  >
-                    EN
-                  </Button>
-                  <Button
-                    variant={language === "ta" ? "default" : "ghost"}
-                    size="sm"
-                    onClick={() => setLanguage("ta")}
-                    className="px-3 py-1 text-xs"
-                  >
-                    தமிழ்
-                  </Button>
-                </div>
-                
+              <div className="px-4 py-2 flex justify-end">
                 <Button variant="ghost" size="sm" onClick={toggleTheme}>
                   {theme === "light" ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
                 </Button>
