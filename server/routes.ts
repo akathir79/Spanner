@@ -82,6 +82,41 @@ function addMinutes(date: Date, minutes: number): Date {
 
 export async function registerRoutes(app: Express): Promise<Server> {
   
+  // District API endpoint - serves authentic Indian district data
+  app.get("/api/districts/:stateName", async (req, res) => {
+    try {
+      const { stateName } = req.params;
+      
+      // Try REST India API for authentic government data
+      const response = await fetch(`https://restindia.herokuapp.com/${encodeURIComponent(stateName)}/all`);
+      
+      if (response.ok) {
+        const districtsData = await response.json();
+        if (Array.isArray(districtsData) && districtsData.length > 0) {
+          const districts = districtsData.map((district: any) => ({
+            id: district.name.toLowerCase().replace(/\s+/g, '-'),
+            name: district.name,
+            state: district.state,
+            population: district.population,
+            area: district.area,
+            tamilName: stateName === "Tamil Nadu" ? district.name : undefined
+          }));
+          
+          console.log(`API: Served ${districts.length} districts for ${stateName} from REST India API`);
+          return res.json(districts);
+        }
+      }
+      
+      // Fallback to empty array if API fails
+      console.log(`API: No districts found for ${stateName}`);
+      return res.json([]);
+      
+    } catch (error) {
+      console.error("Districts API error:", error);
+      return res.status(500).json({ error: "Failed to fetch districts" });
+    }
+  });
+  
   // Authentication routes
   app.post("/api/auth/send-otp", async (req, res) => {
     try {

@@ -229,12 +229,33 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
   const fetchDistrictsFromAPI = async (stateName: string) => {
     setIsLoadingDistricts(true);
     try {
-      // Use reliable fallback data directly for better user experience
+      // Use our backend API endpoint which connects to REST India API
+      const response = await fetch(`/api/districts/${encodeURIComponent(stateName)}`);
+      
+      if (response.ok) {
+        const districtsData = await response.json();
+        if (Array.isArray(districtsData) && districtsData.length > 0) {
+          setApiDistricts(districtsData);
+          console.log(`Loaded ${districtsData.length} districts from API for ${stateName}`);
+          return;
+        }
+      }
+      
+      // Fallback to static data if API fails or returns no data
       const districts = await getFallbackDistricts(stateName);
       setApiDistricts(districts);
+      console.log(`Loaded ${districts.length} districts from fallback data for ${stateName}`);
+      
     } catch (error) {
-      console.error("Error loading districts:", error);
-      setApiDistricts([]);
+      console.error("Error loading districts from API, using fallback:", error);
+      // Use fallback data if API fails
+      try {
+        const districts = await getFallbackDistricts(stateName);
+        setApiDistricts(districts);
+      } catch (fallbackError) {
+        console.error("Even fallback failed:", fallbackError);
+        setApiDistricts([]);
+      }
     } finally {
       setIsLoadingDistricts(false);
     }
