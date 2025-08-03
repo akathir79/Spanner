@@ -655,9 +655,22 @@ export default function Home() {
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium mb-1 text-foreground">
-                          State
-                        </label>
+                        <div className="flex items-center justify-between mb-1">
+                          <label className="block text-sm font-medium text-foreground">
+                            State
+                          </label>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 px-2 text-xs"
+                            onClick={handleLocationFinder}
+                            disabled={isLocationLoading}
+                          >
+                            <MapPinIcon className="h-3 w-3 mr-1" />
+                            {isLocationLoading ? "Finding..." : "Use Location"}
+                          </Button>
+                        </div>
                         <Popover open={stateOpen} onOpenChange={setStateOpen}>
                           <PopoverTrigger asChild>
                             <Button
@@ -725,22 +738,9 @@ export default function Home() {
                       </div>
                       
                       <div>
-                        <div className="flex items-center justify-between mb-1">
-                          <label className="block text-sm font-medium text-foreground">
-                            District
-                          </label>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            className="h-6 px-2 text-xs"
-                            onClick={handleLocationFinder}
-                            disabled={isLocationLoading}
-                          >
-                            <MapPinIcon className="h-3 w-3 mr-1" />
-                            {isLocationLoading ? "Finding..." : "Use Location"}
-                          </Button>
-                        </div>
+                        <label className="block text-sm font-medium mb-1 text-foreground">
+                          District
+                        </label>
                         <Popover open={districtOpen} onOpenChange={setDistrictOpen}>
                           <PopoverTrigger asChild>
                             <Button
