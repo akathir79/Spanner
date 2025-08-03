@@ -27,6 +27,7 @@ import { VoiceAssistant } from "@/components/VoiceAssistant";
 import rajeshAvatar from "@assets/Babu_1753861985304.png";
 import arjunAvatar from "@assets/krishnan_1753861985304.png";
 import sureshAvatar from "@assets/veni_1753861985304.png";
+import { INDIAN_STATES_AND_UTS } from "@shared/constants";
 
 // Mock data for demonstration
 const mockServices = [
@@ -215,11 +216,13 @@ export default function Home() {
   }, [user, setLocation]);
   const [searchForm, setSearchForm] = useState({
     service: "",
+    state: "",
     district: "",
     area: "",
     description: ""
   });
   const [serviceOpen, setServiceOpen] = useState(false);
+  const [stateOpen, setStateOpen] = useState(false);
   const [districtOpen, setDistrictOpen] = useState(false);
   const [areaOpen, setAreaOpen] = useState(false);
   const [isLocationLoading, setIsLocationLoading] = useState(false);
@@ -378,6 +381,7 @@ export default function Home() {
   const resetForm = () => {
     setSearchForm({
       service: "",
+      state: "",
       district: "",
       area: "",
       description: ""
@@ -530,6 +534,76 @@ export default function Home() {
                             size="sm"
                             className="mt-1 h-6 px-2 text-xs"
                             onClick={() => setSearchForm(prev => ({ ...prev, service: "" }))}
+                          >
+                            <X className="h-3 w-3 mr-1" />
+                            Clear
+                          </Button>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium mb-1 text-foreground">
+                          State
+                        </label>
+                        <Popover open={stateOpen} onOpenChange={setStateOpen}>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              role="combobox"
+                              aria-expanded={stateOpen}
+                              className="w-full justify-between"
+                            >
+                              <span className={searchForm.state ? "" : "text-muted-foreground"}>
+                                {searchForm.state
+                                  ? INDIAN_STATES_AND_UTS.find(state => state.name === searchForm.state)?.name
+                                  : "Select your state"}
+                              </span>
+                              <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-full p-0">
+                            <Command>
+                              <CommandInput placeholder="Search states..." />
+                              <CommandList>
+                                <CommandEmpty>No state found.</CommandEmpty>
+                                <CommandGroup heading="States">
+                                  {INDIAN_STATES_AND_UTS.filter(item => item.type === 'state').map((state) => (
+                                    <CommandItem
+                                      key={state.name}
+                                      value={state.name}
+                                      onSelect={() => {
+                                        setSearchForm(prev => ({ ...prev, state: state.name }));
+                                        setStateOpen(false);
+                                      }}
+                                    >
+                                      {state.name}
+                                    </CommandItem>
+                                  ))}
+                                </CommandGroup>
+                                <CommandGroup heading="Union Territories">
+                                  {INDIAN_STATES_AND_UTS.filter(item => item.type === 'ut').map((ut) => (
+                                    <CommandItem
+                                      key={ut.name}
+                                      value={ut.name}
+                                      onSelect={() => {
+                                        setSearchForm(prev => ({ ...prev, state: ut.name }));
+                                        setStateOpen(false);
+                                      }}
+                                    >
+                                      {ut.name}
+                                    </CommandItem>
+                                  ))}
+                                </CommandGroup>
+                              </CommandList>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
+                        {searchForm.state && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="mt-1 h-6 px-2 text-xs"
+                            onClick={() => setSearchForm(prev => ({ ...prev, state: "" }))}
                           >
                             <X className="h-3 w-3 mr-1" />
                             Clear
