@@ -1038,9 +1038,11 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
                         aria-expanded={statePopoverOpen}
                         className="w-full justify-between"
                       >
-                        {clientForm.watch("state") 
-                          ? INDIAN_STATES_AND_UTS.find(state => state.name === clientForm.watch("state"))?.name
-                          : "Select your state"}
+                        <span className={clientForm.watch("state") ? "" : "text-muted-foreground"}>
+                          {clientForm.watch("state") 
+                            ? INDIAN_STATES_AND_UTS.find(state => state.name === clientForm.watch("state"))?.name
+                            : "Select your state"}
+                        </span>
                         <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                       </Button>
                     </PopoverTrigger>
@@ -1826,9 +1828,11 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
                         aria-expanded={workerStatePopoverOpen}
                         className="w-full justify-between"
                       >
-                        {workerForm.watch("state") 
-                          ? INDIAN_STATES_AND_UTS.find(state => state.name === workerForm.watch("state"))?.name
-                          : "Select your state"}
+                        <span className={workerForm.watch("state") ? "" : "text-muted-foreground"}>
+                          {workerForm.watch("state") 
+                            ? INDIAN_STATES_AND_UTS.find(state => state.name === workerForm.watch("state"))?.name
+                            : "Select your state"}
+                        </span>
                         <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                       </Button>
                     </PopoverTrigger>
