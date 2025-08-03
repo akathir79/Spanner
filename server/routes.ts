@@ -82,33 +82,38 @@ function addMinutes(date: Date, minutes: number): Date {
 
 export async function registerRoutes(app: Express): Promise<Server> {
   
-  // District API endpoint - serves authentic Indian district data from GitHub JSON API
+  // District API endpoint - serves authentic Indian district data from local JSON file
   app.get("/api/districts/:stateName", async (req, res) => {
     try {
       const { stateName } = req.params;
       
-      // Fetch authentic Indian states and districts data from GitHub JSON API
-      const response = await fetch('https://raw.githubusercontent.com/sab99r/Indian-States-And-Districts/master/states-and-districts.json');
+      // Load authentic Indian states and districts data from local JSON file
+      const fs = await import('fs');
+      const path = await import('path');
+      const dataPath = path.join(process.cwd(), 'shared', 'states-districts.json');
       
-      if (response.ok) {
-        const data = await response.json();
+      if (!fs.existsSync(dataPath)) {
+        console.error("States-districts.json file not found at:", dataPath);
+        return res.status(500).json({ error: "District data file not found" });
+      }
+      
+      const data = JSON.parse(fs.readFileSync(dataPath, 'utf8'));
+      
+      // Find the state in the authentic government data
+      const stateData = data.states.find((state: any) => 
+        state.state.toLowerCase() === stateName.toLowerCase()
+      );
+      
+      if (stateData && stateData.districts) {
+        const districts = stateData.districts.map((districtName: string) => ({
+          id: districtName.toLowerCase().replace(/\s+/g, '-'),
+          name: districtName,
+          state: stateName,
+          tamilName: stateName === "Tamil Nadu" ? districtName : undefined
+        }));
         
-        // Find the state in the authentic government data
-        const stateData = data.states.find((state: any) => 
-          state.state.toLowerCase() === stateName.toLowerCase()
-        );
-        
-        if (stateData && stateData.districts) {
-          const districts = stateData.districts.map((districtName: string) => ({
-            id: districtName.toLowerCase().replace(/\s+/g, '-'),
-            name: districtName,
-            state: stateName,
-            tamilName: stateName === "Tamil Nadu" ? districtName : undefined
-          }));
-          
-          console.log(`API: Served ${districts.length} authentic districts for ${stateName} from GitHub JSON API`);
-          return res.json(districts);
-        }
+        console.log(`API: Served ${districts.length} authentic districts for ${stateName} from local JSON file`);
+        return res.json(districts);
       }
       
       console.log(`API: No authentic districts found for ${stateName}`);
@@ -116,7 +121,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
     } catch (error) {
       console.error("Districts API error:", error);
-      return res.status(500).json({ error: "Failed to fetch districts from authentic government data" });
+      return res.status(500).json({ error: "Failed to load districts from local data file" });
     }
   });
   
