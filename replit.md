@@ -25,6 +25,7 @@ Preferred communication style: Simple, everyday language.
 - **Database Provider**: Neon (serverless PostgreSQL)
 - **API Design**: RESTful endpoints with JSON responses
 - **Development**: ESM modules with tsx for TypeScript execution
+- **Location Data**: API-based district/area lookup for all Indian states via external service with comprehensive fallback data
 
 ### Key Design Decisions
 

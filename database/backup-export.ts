@@ -1,8 +1,6 @@
 import { db } from "../server/db";
 import { 
   users, 
-  districts, 
-  areas, 
   serviceCategories, 
   workerProfiles, 
   otpVerifications,
@@ -27,8 +25,6 @@ interface DatabaseBackup {
   };
   schema: {
     users: any[];
-    districts: any[];
-    areas: any[];
     serviceCategories: any[];
     workerProfiles: any[];
     otpVerifications: any[];
@@ -54,8 +50,6 @@ async function exportDatabase(): Promise<void> {
     
     const [
       usersData,
-      districtsData,
-      areasData,
       serviceCategoriesData,
       workerProfilesData,
       otpVerificationsData,
@@ -65,8 +59,6 @@ async function exportDatabase(): Promise<void> {
       workerBankDetailsData
     ] = await Promise.all([
       db.select().from(users),
-      db.select().from(districts),
-      db.select().from(areas),
       db.select().from(serviceCategories),
       db.select().from(workerProfiles),
       db.select().from(otpVerifications),
@@ -85,8 +77,6 @@ async function exportDatabase(): Promise<void> {
       },
       schema: {
         users: usersData,
-        districts: districtsData,
-        areas: areasData,
         serviceCategories: serviceCategoriesData,
         workerProfiles: workerProfilesData,
         otpVerifications: otpVerificationsData,
@@ -116,8 +106,6 @@ async function exportDatabase(): Promise<void> {
     // Print summary
     console.log('\n📊 Export Summary:');
     console.log(`- Users: ${backup.schema.users.length}`);
-    console.log(`- Districts: ${backup.schema.districts.length}`);
-    console.log(`- Areas: ${backup.schema.areas.length}`);
     console.log(`- Service Categories: ${backup.schema.serviceCategories.length}`);
     console.log(`- Worker Profiles: ${backup.schema.workerProfiles.length}`);
     console.log(`- OTP Verifications: ${backup.schema.otpVerifications.length}`);

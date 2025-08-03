@@ -4,27 +4,7 @@ import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-// Tamil Nadu Districts
-export const districts = pgTable("districts", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  name: text("name").notNull(),
-  tamilName: text("tamil_name").notNull(),
-  code: text("code").notNull().unique(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-});
-
-// Areas within districts
-export const areas = pgTable("areas", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  name: text("name").notNull(),
-  tamilName: text("tamil_name"),
-  districtId: varchar("district_id").references(() => districts.id).notNull(),
-  pincode: text("pincode"),
-  latitude: decimal("latitude", { precision: 10, scale: 7 }),
-  longitude: decimal("longitude", { precision: 10, scale: 7 }),
-  isActive: boolean("is_active").default(true),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+// Note: Districts and areas now handled via API - no longer stored in database
 
 // User roles: client, worker, admin, super_admin
 export const users = pgTable("users", {
@@ -35,7 +15,7 @@ export const users = pgTable("users", {
   lastName: text("last_name").notNull(),
   role: text("role").notNull().default("client"), // client, worker, admin, super_admin
   profilePicture: text("profile_picture"), // Base64 encoded image
-  districtId: varchar("district_id").references(() => districts.id),
+  district: text("district"), // District name stored as text since API-based
   address: text("address"), // Physical address
   pincode: text("pincode"), // Area pincode
   state: text("state"), // State name
@@ -55,8 +35,8 @@ export const workerProfiles = pgTable("worker_profiles", {
   primaryService: text("primary_service").notNull(),
   experienceYears: integer("experience_years").notNull(),
   hourlyRate: decimal("hourly_rate", { precision: 10, scale: 2 }).notNull(),
-  serviceDistricts: jsonb("service_districts").notNull(), // Array of district IDs
-  serviceAreas: jsonb("service_areas"), // Array of area IDs within service districts
+  serviceDistricts: jsonb("service_districts").notNull(), // Array of district names
+  serviceAreas: jsonb("service_areas"), // Array of area names within service districts
   serviceAllAreas: boolean("service_all_areas").default(false), // Whether worker serves all areas in selected districts
   bio: text("bio"),
   skills: jsonb("skills").notNull(), // Array of skills
@@ -87,7 +67,7 @@ export const bookings = pgTable("bookings", {
   workerId: varchar("worker_id").references(() => users.id).notNull(),
   serviceCategory: text("service_category").notNull(),
   description: text("description").notNull(),
-  districtId: varchar("district_id").references(() => districts.id).notNull(),
+  district: text("district").notNull(), // District name stored as text
   scheduledDate: timestamp("scheduled_date").notNull(),
   status: text("status").notNull().default("pending"), // pending, accepted, in_progress, completed, cancelled
   totalAmount: decimal("total_amount", { precision: 10, scale: 2 }),
@@ -107,7 +87,7 @@ export const jobPostings = pgTable("job_postings", {
   title: text("title").notNull(),
   description: text("description").notNull(),
   serviceCategory: text("service_category").notNull(),
-  districtId: varchar("district_id").references(() => districts.id).notNull(),
+  district: text("district").notNull(), // District name stored as text
   budgetMin: decimal("budget_min", { precision: 10, scale: 2 }),
   budgetMax: decimal("budget_max", { precision: 10, scale: 2 }),
   deadline: timestamp("deadline"),
@@ -275,10 +255,6 @@ export const messages = pgTable("messages", {
 
 // Relations
 export const usersRelations = relations(users, ({ one, many }) => ({
-  district: one(districts, {
-    fields: [users.districtId],
-    references: [districts.id],
-  }),
   workerProfile: one(workerProfiles, {
     fields: [users.id],
     references: [workerProfiles.userId],
@@ -293,19 +269,6 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   bids: many(bids),
   sentMessages: many(messages, { relationName: "sentMessages" }),
   receivedMessages: many(messages, { relationName: "receivedMessages" }),
-}));
-
-export const districtsRelations = relations(districts, ({ many }) => ({
-  users: many(users),
-  bookings: many(bookings),
-  areas: many(areas),
-}));
-
-export const areasRelations = relations(areas, ({ one }) => ({
-  district: one(districts, {
-    fields: [areas.districtId],
-    references: [districts.id],
-  }),
 }));
 
 export const workerProfilesRelations = relations(workerProfiles, ({ one }) => ({
@@ -326,10 +289,6 @@ export const bookingsRelations = relations(bookings, ({ one, many }) => ({
     references: [users.id],
     relationName: "workerBookings",
   }),
-  district: one(districts, {
-    fields: [bookings.districtId],
-    references: [districts.id],
-  }),
   locationTracking: many(locationTracking),
   locationSharingSession: one(locationSharingSessions, {
     fields: [bookings.id],
@@ -343,10 +302,6 @@ export const jobPostingsRelations = relations(jobPostings, ({ one, many }) => ({
   client: one(users, {
     fields: [jobPostings.clientId],
     references: [users.id],
-  }),
-  district: one(districts, {
-    fields: [jobPostings.districtId],
-    references: [districts.id],
   }),
   bids: many(bids),
 }));
@@ -481,10 +436,7 @@ export const insertServiceCategorySchema = createInsertSchema(serviceCategories)
   createdAt: true,
 });
 
-export const insertAreaSchema = createInsertSchema(areas).omit({
-  id: true,
-  createdAt: true,
-});
+// insertAreaSchema removed - areas now handled via API
 
 export const insertLocationTrackingSchema = createInsertSchema(locationTracking).omit({
   id: true,

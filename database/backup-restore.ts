@@ -1,8 +1,6 @@
 import { db } from "../server/db";
 import { 
   users, 
-  districts, 
-  areas, 
   serviceCategories, 
   workerProfiles, 
   otpVerifications,
@@ -28,8 +26,6 @@ interface DatabaseBackup {
   };
   schema: {
     users: any[];
-    districts: any[];
-    areas: any[];
     serviceCategories: any[];
     workerProfiles: any[];
     otpVerifications: any[];

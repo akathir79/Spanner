@@ -330,17 +330,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get districts
-  app.get("/api/districts", async (req, res) => {
-    try {
-      const districts = await storage.getAllDistricts();
-      res.json(districts);
-    } catch (error) {
-      console.error("Get districts error:", error);
-      res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
+  // Districts and areas now handled via API - database routes removed
+  
   // Get service categories
   app.get("/api/services", async (req, res) => {
     try {
@@ -348,41 +339,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(services);
     } catch (error) {
       console.error("Get services error:", error);
-      res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Get areas by district
-  app.get("/api/districts/:districtId/areas", async (req, res) => {
-    try {
-      const { districtId } = req.params;
-      const areas = await storage.getAreasByDistrict(districtId);
-      res.json(areas);
-    } catch (error) {
-      console.error("Get areas error:", error);
-      res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Get all areas
-  app.get("/api/areas", async (req, res) => {
-    try {
-      const areas = await storage.getAllAreas();
-      res.json(areas);
-    } catch (error) {
-      console.error("Get all areas error:", error);
-      res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Create new area
-  app.post("/api/areas", async (req, res) => {
-    try {
-      const areaData = req.body;
-      const area = await storage.createArea(areaData);
-      res.json(area);
-    } catch (error) {
-      console.error("Create area error:", error);
       res.status(500).json({ message: "Internal server error" });
     }
   });
