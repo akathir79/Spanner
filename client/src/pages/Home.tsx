@@ -406,10 +406,57 @@ export default function Home() {
               if (matchingState) {
                 finalDetectedState = matchingState.name;
                 setSearchForm(prev => ({ ...prev, state: matchingState.name }));
+                
+                // After setting state, load districts and then find matching district
+                const loadDistrictsAndMatch = async () => {
+                  try {
+                    // Load districts for the detected state
+                    const response = await fetch(`/api/districts/${encodeURIComponent(matchingState.name)}`);
+                    if (response.ok) {
+                      const districtsData = await response.json();
+                      if (Array.isArray(districtsData) && districtsData.length > 0) {
+                        setApiDistricts(districtsData);
+                        
+                        // Now find matching district
+                        const matchingDistrict = districtsData.find((district: any) => {
+                          const districtName = district.name.toLowerCase();
+                          const detectedName = detectedLocation?.toLowerCase() || '';
+                          return districtName.includes(detectedName) || 
+                                 detectedName.includes(districtName);
+                        });
+                        
+                        if (matchingDistrict) {
+                          setSearchForm(prev => ({ ...prev, district: matchingDistrict.name }));
+                          toast({
+                            title: "Location detected",
+                            description: `Your location has been set to ${matchingDistrict.name}, ${finalDetectedState}`,
+                          });
+                          return;
+                        }
+                      }
+                    }
+                    
+                    // If no district match found, show state was detected
+                    toast({
+                      title: "Location detected",
+                      description: `Please select your district from ${finalDetectedState}`,
+                    });
+                    
+                  } catch (error) {
+                    console.error("Error loading districts for location matching:", error);
+                    toast({
+                      title: "Location detected",
+                      description: `Please select your district from ${finalDetectedState}`,
+                    });
+                  }
+                };
+                
+                loadDistrictsAndMatch();
+                return; // Skip the original district matching logic
               }
             }
             
-            // Find matching district using API data for all states
+            // Find matching district using current API data (fallback)
             let matchingDistrict = null;
             const availableDistricts = getAvailableDistricts();
             matchingDistrict = availableDistricts.find((district: any) => {
