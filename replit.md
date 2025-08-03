@@ -36,6 +36,13 @@ Preferred communication style: Simple, everyday language.
 
 ## Key Components
 
+### Database Backup & Restore System
+Complete database backup and restore utilities in `database/` folder:
+- **backup-export.ts**: Export complete database to JSON backup files
+- **backup-restore.ts**: Restore database from JSON backup files  
+- **auto-setup.ts**: Automatically setup database on fresh deployments
+- **backups/**: Directory containing backup JSON files (71K+ lines of authentic Tamil Nadu data)
+
 ### Database Schema
 Located in `shared/schema.ts`, the database includes:
 - **Users**: Core user information with role-based access (client, worker, admin, super_admin)
