@@ -58,7 +58,6 @@ const workerSignupSchema = z.object({
   address: z.string().min(5, "Address is required"),
   pincode: z.string().length(6, "Pincode must be 6 digits"),
   districtId: z.string().min(1, "District is required"),
-  state: z.string().min(1, "State is required"),
   bio: z.string().optional(),
   profilePicture: z.string().min(1, "Profile picture is required for workers"),
   bioDataDocument: z.string().optional(),
@@ -268,7 +267,6 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
       address: "",
       pincode: "",
       districtId: "",
-      state: "Tamil Nadu",
       bio: "",
       profilePicture: "",
       termsAccepted: false,
@@ -428,7 +426,6 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
               } else {
                 // For worker form, set both home district and add to service districts
                 workerForm.setValue("districtId", matchingDistrict.id);
-                workerForm.setValue("state", "Tamil Nadu");
                 setHomeDistrictPopoverOpen(false); // Close the popover
                 const currentDistricts: string[] = workerForm.getValues("serviceDistricts") || [];
                 if (!currentDistricts.includes(matchingDistrict.id)) {
@@ -1674,41 +1671,55 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
                   )}
                 </div>
 
-                <div>
-                  <Label htmlFor="workerDistrict">District</Label>
-                  <Popover open={homeDistrictPopoverOpen} onOpenChange={setHomeDistrictPopoverOpen}>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        role="combobox"
-                        aria-expanded={homeDistrictPopoverOpen}
-                        className="w-full justify-between"
-                      >
-                        {workerForm.watch("districtId") 
-                          ? (districts as any[])?.find((d: any) => d.id === workerForm.watch("districtId"))?.name || "Select District"
-                          : "Select District"
-                        }
-                        <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-full p-0">
-                      <Command>
-                        <CommandInput placeholder="Search districts..." />
-                        <CommandList>
-                          <CommandEmpty>No district found.</CommandEmpty>
-                          <CommandGroup>
-                            {districts && Array.isArray(districts) ? districts.map((district: any) => (
-                              <CommandItem
-                                key={district.id}
-                                value={district.name}
-                                onSelect={() => {
-                                  workerForm.setValue("districtId", district.id);
-                                  workerForm.setValue("state", "Tamil Nadu");
-                                  setHomeDistrictPopoverOpen(false);
-                                }}
-                              >
-                                <div className="flex flex-col">
-                                  <span className="font-medium">{district.name}</span>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="workerPincode">Pincode</Label>
+                    <Input
+                      id="workerPincode"
+                      placeholder="6-digit pincode"
+                      maxLength={6}
+                      {...workerForm.register("pincode")}
+                    />
+                    {workerForm.formState.errors.pincode && (
+                      <p className="text-sm text-destructive mt-1">
+                        {workerForm.formState.errors.pincode.message}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <Label htmlFor="workerDistrict">District</Label>
+                    <Popover open={homeDistrictPopoverOpen} onOpenChange={setHomeDistrictPopoverOpen}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          aria-expanded={homeDistrictPopoverOpen}
+                          className="w-full justify-between"
+                        >
+                          {workerForm.watch("districtId") 
+                            ? (districts as any[])?.find((d: any) => d.id === workerForm.watch("districtId"))?.name || "Select District"
+                            : "Select District"
+                          }
+                          <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-full p-0">
+                        <Command>
+                          <CommandInput placeholder="Search districts..." />
+                          <CommandList>
+                            <CommandEmpty>No district found.</CommandEmpty>
+                            <CommandGroup>
+                              {districts && Array.isArray(districts) ? districts.map((district: any) => (
+                                <CommandItem
+                                  key={district.id}
+                                  value={district.name}
+                                  onSelect={() => {
+                                    workerForm.setValue("districtId", district.id);
+                                    setHomeDistrictPopoverOpen(false);
+                                  }}
+                                >
+                                  <div className="flex flex-col">
+                                    <span className="font-medium">{district.name}</span>
                                     <span className="text-sm text-muted-foreground">({district.tamilName})</span>
                                   </div>
                                 </CommandItem>
@@ -1727,37 +1738,6 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
                       </p>
                     )}
                   </div>
-                </div>
-
-                <div>
-                  <Label htmlFor="workerState">State</Label>
-                  <Input
-                    id="workerState"
-                    value={workerForm.watch("state")}
-                    readOnly
-                    className="bg-muted cursor-not-allowed"
-                    placeholder="State will be auto-filled"
-                  />
-                  {workerForm.formState.errors.state && (
-                    <p className="text-sm text-destructive mt-1">
-                      {workerForm.formState.errors.state.message}
-                    </p>
-                  )}
-                </div>
-
-                <div>
-                  <Label htmlFor="workerPincode">Pincode</Label>
-                  <Input
-                    id="workerPincode"
-                    placeholder="6-digit pincode"
-                    maxLength={6}
-                    {...workerForm.register("pincode")}
-                  />
-                  {workerForm.formState.errors.pincode && (
-                    <p className="text-sm text-destructive mt-1">
-                      {workerForm.formState.errors.pincode.message}
-                    </p>
-                  )}
                 </div>
 
                 <div>
