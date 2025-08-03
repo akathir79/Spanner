@@ -94,6 +94,7 @@ export default function AdminDashboard() {
   const [districtDropdownOpen, setDistrictDropdownOpen] = useState(false);
   const [databaseManagementOpen, setDatabaseManagementOpen] = useState(false);
   const [adminProfilePreview, setAdminProfilePreview] = useState<string | null>(null);
+  const [deleteConfirmUser, setDeleteConfirmUser] = useState<any>(null);
 
   // Create admin form
   const createAdminForm = useForm<CreateAdminForm>({
@@ -256,9 +257,42 @@ export default function AdminDashboard() {
     },
   });
 
+  // Delete user mutation (super admin only)
+  const deleteUserMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      const response = await apiRequest("DELETE", `/api/admin/delete-user/${userId}`);
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "User Deleted",
+        description: "User and all associated data have been permanently deleted.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Delete Failed",
+        description: error.message || "Failed to delete user",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Handle admin creation form submission
   const onCreateAdminSubmit = (data: CreateAdminForm) => {
     createAdminMutation.mutate(data);
+  };
+
+  // Handle user verification
+  const handleVerifyUser = (userId: string, isVerified: boolean) => {
+    verifyUserMutation.mutate({ userId, isVerified });
+  };
+
+  // Handle user deletion
+  const handleDeleteUser = (userId: string) => {
+    deleteUserMutation.mutate(userId);
+    setDeleteConfirmUser(null);
   };
 
   // Handle admin profile picture upload
@@ -362,10 +396,6 @@ export default function AdminDashboard() {
     }
     return null;
   }
-
-  const handleVerifyUser = (userId: string, isVerified: boolean) => {
-    verifyUserMutation.mutate({ userId, isVerified });
-  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -833,10 +863,15 @@ export default function AdminDashboard() {
                                     <Ban className="mr-2 h-4 w-4" />
                                     Suspend User
                                   </DropdownMenuItem>
-                                  <DropdownMenuItem className="text-red-600">
-                                    <Trash2 className="mr-2 h-4 w-4" />
-                                    Delete User
-                                  </DropdownMenuItem>
+                                  {user.role !== 'super_admin' && (
+                                    <DropdownMenuItem 
+                                      className="text-red-600"
+                                      onClick={() => setDeleteConfirmUser(user)}
+                                    >
+                                      <Trash2 className="mr-2 h-4 w-4" />
+                                      Delete User
+                                    </DropdownMenuItem>
+                                  )}
                                 </DropdownMenuContent>
                               </DropdownMenu>
                             </TableCell>
@@ -1797,6 +1832,74 @@ export default function AdminDashboard() {
                 </div>
               </CardContent>
             </Card>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete User Confirmation Dialog */}
+      <Dialog open={!!deleteConfirmUser} onOpenChange={() => setDeleteConfirmUser(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="text-red-600">Delete User</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to permanently delete this user? This action cannot be undone and will remove:
+              <br />
+              <br />
+              <strong>User Information:</strong>
+              <br />
+              • {deleteConfirmUser?.firstName} {deleteConfirmUser?.lastName}
+              <br />
+              • {deleteConfirmUser?.mobile}
+              <br />
+              • {deleteConfirmUser?.email}
+              <br />
+              <br />
+              <strong>All Associated Data:</strong>
+              <br />
+              • Profile and account information
+              <br />
+              • All bookings and service history
+              <br />
+              • Payment records and transactions
+              <br />
+              • Messages and communications
+              {deleteConfirmUser?.role === 'worker' && (
+                <>
+                  <br />
+                  • Worker profile and certifications
+                  <br />
+                  • Bank account details
+                  <br />
+                  • Service ratings and reviews
+                </>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-3 mt-6">
+            <Button
+              variant="outline"
+              onClick={() => setDeleteConfirmUser(null)}
+              disabled={deleteUserMutation.isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => handleDeleteUser(deleteConfirmUser?.id)}
+              disabled={deleteUserMutation.isPending}
+            >
+              {deleteUserMutation.isPending ? (
+                <>
+                  <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete Permanently
+                </>
+              )}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

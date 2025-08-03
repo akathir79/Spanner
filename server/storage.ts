@@ -59,6 +59,7 @@ export interface IStorage {
   getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: string, updates: Partial<User>): Promise<User | undefined>;
+  deleteUser(id: string): Promise<void>;
   
   // Worker profiles
   getWorkerProfile(userId: string): Promise<WorkerProfile | undefined>;
@@ -188,6 +189,88 @@ export class DatabaseStorage implements IStorage {
       .where(eq(users.id, id))
       .returning();
     return user || undefined;
+  }
+
+  async deleteUser(id: string): Promise<void> {
+    // First get the user to check if they are a worker
+    const user = await this.getUser(id);
+    if (!user) {
+      return; // User doesn't exist, nothing to delete
+    }
+
+    try {
+      // Delete related data in transaction
+      await db.transaction(async (tx) => {
+        // If user is a worker, delete worker-specific data
+        if (user.role === 'worker') {
+          // Delete worker bank details
+          await tx.delete(workerBankDetails).where(eq(workerBankDetails.workerId, id));
+          
+          // Delete worker profile
+          await tx.delete(workerProfiles).where(eq(workerProfiles.userId, id));
+          
+          // Delete worker-related location tracking
+          await tx.delete(locationTracking).where(eq(locationTracking.workerId, id));
+          
+          // Delete worker-related location sharing sessions
+          await tx.delete(locationSharingSessions).where(eq(locationSharingSessions.workerId, id));
+          
+          // Delete worker-related location events
+          await tx.delete(locationEvents).where(eq(locationEvents.workerId, id));
+          
+          // Delete bids made by the worker
+          await tx.delete(bids).where(eq(bids.workerId, id));
+        }
+
+        // Delete user-related data regardless of role
+        // Delete OTP verifications
+        await tx.delete(otpVerifications).where(eq(otpVerifications.mobile, user.mobile));
+        
+        // Delete payments (both as client and worker)
+        await tx.delete(payments).where(eq(payments.clientId, id));
+        await tx.delete(payments).where(eq(payments.workerId, id));
+        
+        // Delete messages (both sent and received)
+        await tx.delete(messages).where(eq(messages.senderId, id));
+        await tx.delete(messages).where(eq(messages.receiverId, id));
+        
+        // Delete bookings where user is client
+        const userBookings = await tx.select().from(bookings).where(eq(bookings.clientId, id));
+        for (const booking of userBookings) {
+          // Delete related location data for each booking
+          await tx.delete(locationTracking).where(eq(locationTracking.bookingId, booking.id));
+          await tx.delete(locationSharingSessions).where(eq(locationSharingSessions.bookingId, booking.id));
+          await tx.delete(locationEvents).where(eq(locationEvents.bookingId, booking.id));
+          await tx.delete(geofences).where(eq(geofences.bookingId, booking.id));
+        }
+        await tx.delete(bookings).where(eq(bookings.clientId, id));
+        
+        // Delete bookings where user is worker
+        const workerBookings = await tx.select().from(bookings).where(eq(bookings.workerId, id));
+        for (const booking of workerBookings) {
+          // Delete related location data for each booking
+          await tx.delete(locationTracking).where(eq(locationTracking.bookingId, booking.id));
+          await tx.delete(locationSharingSessions).where(eq(locationSharingSessions.bookingId, booking.id));
+          await tx.delete(locationEvents).where(eq(locationEvents.bookingId, booking.id));
+          await tx.delete(geofences).where(eq(geofences.bookingId, booking.id));
+        }
+        await tx.delete(bookings).where(eq(bookings.workerId, id));
+        
+        // Delete job postings if user is client
+        const userJobPostings = await tx.select().from(jobPostings).where(eq(jobPostings.clientId, id));
+        for (const jobPosting of userJobPostings) {
+          // Delete bids for each job posting
+          await tx.delete(bids).where(eq(bids.jobPostingId, jobPosting.id));
+        }
+        await tx.delete(jobPostings).where(eq(jobPostings.clientId, id));
+        
+        // Finally, delete the user
+        await tx.delete(users).where(eq(users.id, id));
+      });
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      throw new Error('Failed to delete user completely');
+    }
   }
 
   async getWorkerProfile(userId: string): Promise<WorkerProfile | undefined> {

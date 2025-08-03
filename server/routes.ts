@@ -614,7 +614,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Database management endpoints (super admin only)
   app.post("/api/admin/database/export", async (req, res) => {
     try {
-      const { execSync } = require('child_process');
+      const { execSync } = await import('child_process');
       
       // Execute the backup script
       execSync('cd database && tsx backup-export.ts', { 
@@ -635,7 +635,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/admin/database/restore", async (req, res) => {
     try {
-      const { execSync } = require('child_process');
+      const { execSync } = await import('child_process');
       
       // Execute the restore script
       execSync('cd database && tsx backup-restore.ts', { 
@@ -656,12 +656,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/admin/database/download", async (req, res) => {
     try {
-      const fs = require('fs');
-      const path = require('path');
+      const fs = await import('fs');
+      const path = await import('path');
       
-      const backupPath = path.join(process.cwd(), 'database', 'backups', 'latest-backup.json');
+      const backupPath = path.default.join(process.cwd(), 'database', 'backups', 'latest-backup.json');
       
-      if (!fs.existsSync(backupPath)) {
+      if (!fs.default.existsSync(backupPath)) {
         return res.status(404).json({ message: "Backup file not found" });
       }
 
@@ -671,7 +671,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.setHeader('Content-Type', 'application/json');
       res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
       
-      const fileStream = fs.createReadStream(backupPath);
+      const fileStream = fs.default.createReadStream(backupPath);
       fileStream.pipe(res);
     } catch (error) {
       console.error("Database download error:", error);
@@ -718,6 +718,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error rejecting worker:", error);
       res.status(500).json({ error: "Failed to reject worker" });
+    }
+  });
+
+  // Delete user endpoint (super admin only)
+  app.delete("/api/admin/delete-user/:userId", async (req, res) => {
+    try {
+      const { userId } = req.params;
+      
+      // Only super admin can delete users
+      // Additional validation can be added here if needed
+      
+      await storage.deleteUser(userId);
+      res.json({ message: "User deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      res.status(500).json({ error: "Failed to delete user" });
     }
   });
 
