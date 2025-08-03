@@ -403,6 +403,7 @@ export default function Home() {
                                    locationData.village;
             
             // Set the state field if detected
+            let finalDetectedState = detectedState;
             if (detectedState) {
               // Find matching state in INDIAN_STATES_AND_UTS
               const matchingState = INDIAN_STATES_AND_UTS.find(state => 
@@ -411,19 +412,32 @@ export default function Home() {
               );
               
               if (matchingState) {
+                finalDetectedState = matchingState.name;
                 setSearchForm(prev => ({ ...prev, state: matchingState.name }));
               }
             }
             
-            // Find matching district in our available districts
-            const availableDistricts = getAvailableDistricts();
-            const matchingDistrict = availableDistricts.find((district: any) => {
-              const districtName = district.name.toLowerCase();
-              const detectedName = detectedLocation?.toLowerCase() || '';
-              return districtName.includes(detectedName) || 
-                     detectedName.includes(districtName) ||
-                     (district.tamilName && district.tamilName.includes(detectedLocation));
-            });
+            // Find matching district - use Tamil Nadu districts directly when state is Tamil Nadu
+            let matchingDistrict = null;
+            if (finalDetectedState === "Tamil Nadu" && tamilNaduDistricts) {
+              // Use Tamil Nadu districts from database
+              matchingDistrict = (tamilNaduDistricts as any[]).find((district: any) => {
+                const districtName = district.name.toLowerCase();
+                const detectedName = detectedLocation?.toLowerCase() || '';
+                return districtName.includes(detectedName) || 
+                       detectedName.includes(districtName) ||
+                       (district.tamilName && district.tamilName.toLowerCase().includes(detectedName));
+              });
+            } else {
+              // For other states, use available districts
+              const availableDistricts = getAvailableDistricts();
+              matchingDistrict = availableDistricts.find((district: any) => {
+                const districtName = district.name.toLowerCase();
+                const detectedName = detectedLocation?.toLowerCase() || '';
+                return districtName.includes(detectedName) || 
+                       detectedName.includes(districtName);
+              });
+            }
             
             console.log("Location detection results:", {
               detectedLocation,
@@ -442,24 +456,31 @@ export default function Home() {
               });
             } else {
               // If location is outside Tamil Nadu or no match found
-              if (detectedState && detectedState !== "Tamil Nadu") {
+              if (finalDetectedState && finalDetectedState !== "Tamil Nadu") {
                 // For other states, just show the state was detected
                 toast({
                   title: "Location detected",
-                  description: `Please select your district from ${detectedState}`,
+                  description: `Please select your district from ${finalDetectedState}`,
                 });
               } else {
                 // If location is Tamil Nadu but district not found, suggest Chennai
-                const tamilNaduDistricts = getAvailableDistricts();
-                const chennaiDistrict = tamilNaduDistricts.find((district: any) => 
-                  district.name.toLowerCase() === "chennai"
-                );
-                if (chennaiDistrict) {
-                  setSearchForm(prev => ({ ...prev, district: chennaiDistrict.id }));
-                  toast({
-                    title: "Location detected",
-                    description: `Set to Chennai (nearest major district)${detectedState ? `, ${detectedState}` : ''}`,
-                  });
+                if (tamilNaduDistricts) {
+                  const chennaiDistrict = (tamilNaduDistricts as any[]).find((district: any) => 
+                    district.name.toLowerCase() === "chennai"
+                  );
+                  if (chennaiDistrict) {
+                    setSearchForm(prev => ({ ...prev, district: chennaiDistrict.id }));
+                    toast({
+                      title: "Location detected",
+                      description: `Set to Chennai (nearest major district)${finalDetectedState ? `, ${finalDetectedState}` : ''}`,
+                    });
+                  } else {
+                    toast({
+                      title: "District not found",
+                      description: "Please select your location manually",
+                      variant: "destructive",
+                    });
+                  }
                 } else {
                   toast({
                     title: "District not found",
