@@ -247,7 +247,7 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
       email: "",
       districtId: "",
       address: "",
-      state: "Tamil Nadu",
+      state: "",
       pincode: "",
       profilePicture: "",
       termsAccepted: false,
@@ -273,7 +273,7 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
       address: "",
       pincode: "",
       districtId: "",
-      state: "Tamil Nadu",
+      state: "",
       bio: "",
       profilePicture: "",
       termsAccepted: false,
@@ -1040,7 +1040,7 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
                       >
                         {clientForm.watch("state") 
                           ? INDIAN_STATES_AND_UTS.find(state => state.name === clientForm.watch("state"))?.name
-                          : "Select state"}
+                          : "Select your state"}
                         <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                       </Button>
                     </PopoverTrigger>
@@ -1828,7 +1828,7 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
                       >
                         {workerForm.watch("state") 
                           ? INDIAN_STATES_AND_UTS.find(state => state.name === workerForm.watch("state"))?.name
-                          : "Select state"}
+                          : "Select your state"}
                         <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                       </Button>
                     </PopoverTrigger>
