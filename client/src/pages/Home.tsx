@@ -726,23 +726,10 @@ export default function Home() {
                               aria-expanded={stateOpen}
                               className="w-full justify-between"
                             >
-                              <span className={searchForm.state ? "" : "text-muted-foreground"}>
-                                {searchForm.state
-                                  ? INDIAN_STATES_AND_UTS.find(state => state.name === searchForm.state)?.name
-                                  : "Select your state"}
-                              </span>
-                              <div className="flex items-center gap-1">
-                                {searchForm.state && (
-                                  <X 
-                                    className="h-3 w-3 cursor-pointer hover:text-destructive" 
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setSearchForm(prev => ({ ...prev, state: "", district: "" }));
-                                    }}
-                                  />
-                                )}
-                                <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
-                              </div>
+                              {searchForm.state
+                                ? INDIAN_STATES_AND_UTS.find(state => state.name === searchForm.state)?.name
+                                : "Select your state"}
+                              <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                             </Button>
                           </PopoverTrigger>
                           <PopoverContent className="w-full p-0">
@@ -797,26 +784,13 @@ export default function Home() {
                               aria-expanded={districtOpen}
                               className="w-full justify-between"
                             >
-                              <span className={searchForm.district ? "" : "text-muted-foreground"}>
-                                {searchForm.district
-                                  ? (() => {
-                                      const selectedDistrict = getAvailableDistricts().find((district: any) => district.id === searchForm.district);
-                                      return selectedDistrict ? `${selectedDistrict.name}${selectedDistrict.tamilName ? ` (${selectedDistrict.tamilName})` : ''}` : "Select District";
-                                    })()
-                                  : isLoadingDistricts ? "Loading districts..." : "Select District"}
-                              </span>
-                              <div className="flex items-center gap-1">
-                                {searchForm.district && (
-                                  <X 
-                                    className="h-3 w-3 cursor-pointer hover:text-destructive" 
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setSearchForm(prev => ({ ...prev, district: "" }));
-                                    }}
-                                  />
-                                )}
-                                <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
-                              </div>
+                              {searchForm.district
+                                ? (() => {
+                                    const selectedDistrict = getAvailableDistricts().find((district: any) => district.id === searchForm.district);
+                                    return selectedDistrict ? `${selectedDistrict.name}${selectedDistrict.tamilName ? ` (${selectedDistrict.tamilName})` : ''}` : "Select District";
+                                  })()
+                                : isLoadingDistricts ? "Loading districts..." : "Select District"}
+                              <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                             </Button>
                           </PopoverTrigger>
                           <PopoverContent className="w-full p-0">
