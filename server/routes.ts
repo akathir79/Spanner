@@ -244,6 +244,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           isVerified: user.isVerified,
           status: user.status,
           createdAt: user.createdAt,
+          profilePicture: user.profilePicture,
         }
       });
     } catch (error) {

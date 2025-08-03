@@ -13,6 +13,7 @@ interface User {
   isVerified: boolean;
   status?: string; // pending, approved, rejected
   createdAt?: string;
+  profilePicture?: string; // Base64 encoded image
 }
 
 interface AuthContextType {
