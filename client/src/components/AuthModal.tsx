@@ -107,9 +107,98 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Fetch districts and services from database
+  const loginForm = useForm({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      mobile: "",
+    },
+  });
+
+  const otpForm = useForm({
+    resolver: zodResolver(otpSchema),
+    defaultValues: {
+      otp: "",
+    },
+  });
+
+  const clientForm = useForm({
+    resolver: zodResolver(clientSignupSchema),
+    defaultValues: {
+      firstName: "",
+      lastName: "",
+      mobile: "",
+      email: "",
+      districtId: "",
+      address: "",
+      state: "",
+      pincode: "",
+      profilePicture: "",
+      termsAccepted: false,
+    },
+  });
+
+  const workerForm = useForm({
+    resolver: zodResolver(workerSignupSchema),
+    defaultValues: {
+      firstName: "",
+      lastName: "",
+      mobile: "",
+      email: "",
+      aadhaarNumber: "",
+      aadhaarVerified: false,
+      primaryService: "",
+      experienceYears: 1,
+      hourlyRate: 300,
+      serviceDistricts: [] as string[],
+      serviceAreas: [] as string[],
+      serviceAllAreas: false,
+      skills: [] as string[],
+      address: "",
+      pincode: "",
+      districtId: "",
+      state: "",
+      bio: "",
+      profilePicture: "",
+      termsAccepted: false,
+    },
+  });
+
+  // Fetch districts based on selected state
+  const selectedClientState = clientForm.watch("state");
+  const selectedWorkerState = workerForm.watch("state");
+  const currentState = selectedClientState || selectedWorkerState;
+  
   const { data: districts } = useQuery({
-    queryKey: ["/api/districts"],
+    queryKey: ["/api/districts", currentState],
+    queryFn: async () => {
+      if (!currentState) return [];
+      
+      const response = await fetch(`https://api.postalpincode.in/postoffice/${encodeURIComponent(currentState)}`);
+      const data = await response.json();
+      
+      if (data && data[0] && data[0].PostOffice) {
+        const uniqueDistricts = new Set();
+        const districts = data[0].PostOffice
+          .map((office: any) => ({
+            id: office.District,
+            name: office.District,
+            tamilName: office.District,
+            state: office.State
+          }))
+          .filter((district: any) => {
+            if (!uniqueDistricts.has(district.name)) {
+              uniqueDistricts.add(district.name);
+              return true;
+            }
+            return false;
+          })
+          .sort((a: any, b: any) => a.name.localeCompare(b.name));
+        
+        return districts;
+      }
+      return [];
+    },
+    enabled: !!currentState,
     staleTime: 1000 * 60 * 60, // 1 hour
   });
 
@@ -223,62 +312,6 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
     workerForm.setValue("primaryService", value);
     setShowNewServiceInput(false);
   };
-
-  const loginForm = useForm({
-    resolver: zodResolver(loginSchema),
-    defaultValues: {
-      mobile: "",
-    },
-  });
-
-  const otpForm = useForm({
-    resolver: zodResolver(otpSchema),
-    defaultValues: {
-      otp: "",
-    },
-  });
-
-  const clientForm = useForm({
-    resolver: zodResolver(clientSignupSchema),
-    defaultValues: {
-      firstName: "",
-      lastName: "",
-      mobile: "",
-      email: "",
-      districtId: "",
-      address: "",
-      state: "",
-      pincode: "",
-      profilePicture: "",
-      termsAccepted: false,
-    },
-  });
-
-  const workerForm = useForm({
-    resolver: zodResolver(workerSignupSchema),
-    defaultValues: {
-      firstName: "",
-      lastName: "",
-      mobile: "",
-      email: "",
-      aadhaarNumber: "",
-      aadhaarVerified: false,
-      primaryService: "",
-      experienceYears: 1,
-      hourlyRate: 300,
-      serviceDistricts: [] as string[],
-      serviceAreas: [] as string[],
-      serviceAllAreas: false,
-      skills: [] as string[],
-      address: "",
-      pincode: "",
-      districtId: "",
-      state: "",
-      bio: "",
-      profilePicture: "",
-      termsAccepted: false,
-    },
-  });
 
   const handleProfilePictureUpload = (file: File | null, formType: "client" | "worker") => {
     if (!file) return;
@@ -988,47 +1021,6 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
                 </div>
 
                 <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <Label htmlFor="district">District</Label>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="h-6 px-2 text-xs"
-                      onClick={() => handleLocationDetection("client")}
-                      disabled={isLocationLoading}
-                    >
-                      <MapPin className="h-3 w-3 mr-1" />
-                      {isLocationLoading ? "Finding..." : "Use Location"}
-                    </Button>
-                  </div>
-                  <Select 
-                    value={clientForm.watch("districtId")} 
-                    onValueChange={(value) => {
-                      clientForm.setValue("districtId", value);
-                      // Auto-populate state when district is selected
-                      clientForm.setValue("state", "Tamil Nadu");
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select your district" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {(districts as any)?.map((district: any) => (
-                        <SelectItem key={district.id} value={district.id}>
-                          {district.name} ({district.tamilName})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {clientForm.formState.errors.districtId && (
-                    <p className="text-sm text-destructive mt-1">
-                      {clientForm.formState.errors.districtId.message}
-                    </p>
-                  )}
-                </div>
-
-                <div>
                   <Label htmlFor="state">State</Label>
                   <Popover open={statePopoverOpen} onOpenChange={setStatePopoverOpen}>
                     <PopoverTrigger asChild>
@@ -1066,6 +1058,8 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
                                   key={state.id}
                                   onSelect={() => {
                                     clientForm.setValue("state", state.name);
+                                    // Clear district when state changes
+                                    clientForm.setValue("districtId", "");
                                     setStatePopoverOpen(false);
                                     setStateSearchInput("");
                                   }}
@@ -1085,6 +1079,8 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
                                   key={state.id}
                                   onSelect={() => {
                                     clientForm.setValue("state", state.name);
+                                    // Clear district when state changes
+                                    clientForm.setValue("districtId", "");
                                     setStatePopoverOpen(false);
                                     setStateSearchInput("");
                                   }}
@@ -1100,6 +1096,50 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
                   {clientForm.formState.errors.state && (
                     <p className="text-sm text-destructive mt-1">
                       {clientForm.formState.errors.state.message}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <Label htmlFor="district">District</Label>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 px-2 text-xs"
+                      onClick={() => handleLocationDetection("client")}
+                      disabled={isLocationLoading}
+                    >
+                      <MapPin className="h-3 w-3 mr-1" />
+                      {isLocationLoading ? "Finding..." : "Use Location"}
+                    </Button>
+                  </div>
+                  <Select 
+                    value={clientForm.watch("districtId")} 
+                    onValueChange={(value) => {
+                      clientForm.setValue("districtId", value);
+                    }}
+                    disabled={!clientForm.watch("state")}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder={
+                        !clientForm.watch("state") 
+                          ? "Select state first" 
+                          : "Select your district"
+                      } />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {(districts as any)?.map((district: any) => (
+                        <SelectItem key={district.id} value={district.id}>
+                          {district.name} ({district.tamilName})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {clientForm.formState.errors.districtId && (
+                    <p className="text-sm text-destructive mt-1">
+                      {clientForm.formState.errors.districtId.message}
                     </p>
                   )}
                 </div>
@@ -1749,6 +1789,86 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
                   )}
                 </div>
 
+                <div>
+                  <Label htmlFor="workerState">State</Label>
+                  <Popover open={workerStatePopoverOpen} onOpenChange={setWorkerStatePopoverOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={workerStatePopoverOpen}
+                        className="w-full justify-between"
+                      >
+                        <span className={workerForm.watch("state") ? "" : "text-muted-foreground"}>
+                          {workerForm.watch("state") 
+                            ? INDIAN_STATES_AND_UTS.find(state => state.name === workerForm.watch("state"))?.name
+                            : "Select your state"}
+                        </span>
+                        <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-full p-0">
+                      <Command>
+                        <CommandInput 
+                          placeholder="Search states..." 
+                          value={workerStateSearchInput}
+                          onValueChange={setWorkerStateSearchInput}
+                        />
+                        <CommandEmpty>No state found.</CommandEmpty>
+                        <CommandList className="max-h-40 overflow-y-auto">
+                          <CommandGroup heading="States">
+                            {INDIAN_STATES_AND_UTS
+                              .filter(state => state.type === "state")
+                              .filter(state => 
+                                state.name.toLowerCase().includes(workerStateSearchInput.toLowerCase())
+                              )
+                              .map((state) => (
+                                <CommandItem
+                                  key={state.id}
+                                  onSelect={() => {
+                                    workerForm.setValue("state", state.name);
+                                    // Clear district when state changes
+                                    workerForm.setValue("districtId", "");
+                                    setWorkerStatePopoverOpen(false);
+                                    setWorkerStateSearchInput("");
+                                  }}
+                                >
+                                  {state.name}
+                                </CommandItem>
+                              ))}
+                          </CommandGroup>
+                          <CommandGroup heading="Union Territories">
+                            {INDIAN_STATES_AND_UTS
+                              .filter(state => state.type === "ut")
+                              .filter(state => 
+                                state.name.toLowerCase().includes(workerStateSearchInput.toLowerCase())
+                              )
+                              .map((state) => (
+                                <CommandItem
+                                  key={state.id}
+                                  onSelect={() => {
+                                    workerForm.setValue("state", state.name);
+                                    // Clear district when state changes
+                                    workerForm.setValue("districtId", "");
+                                    setWorkerStatePopoverOpen(false);
+                                    setWorkerStateSearchInput("");
+                                  }}
+                                >
+                                  {state.name}
+                                </CommandItem>
+                              ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                  {workerForm.formState.errors.state && (
+                    <p className="text-sm text-destructive mt-1">
+                      {workerForm.formState.errors.state.message}
+                    </p>
+                  )}
+                </div>
+
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="workerPincode">Pincode</Label>
@@ -1773,10 +1893,11 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
                           role="combobox"
                           aria-expanded={homeDistrictPopoverOpen}
                           className="w-full justify-between"
+                          disabled={!workerForm.watch("state")}
                         >
                           {workerForm.watch("districtId") 
                             ? (districts as any[])?.find((d: any) => d.id === workerForm.watch("districtId"))?.name || "Select District"
-                            : "Select District"
+                            : (!workerForm.watch("state") ? "Select state first" : "Select District")
                           }
                           <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                         </Button>
@@ -1816,82 +1937,6 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
                       </p>
                     )}
                   </div>
-                </div>
-
-                <div>
-                  <Label htmlFor="workerState">State</Label>
-                  <Popover open={workerStatePopoverOpen} onOpenChange={setWorkerStatePopoverOpen}>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        role="combobox"
-                        aria-expanded={workerStatePopoverOpen}
-                        className="w-full justify-between"
-                      >
-                        <span className={workerForm.watch("state") ? "" : "text-muted-foreground"}>
-                          {workerForm.watch("state") 
-                            ? INDIAN_STATES_AND_UTS.find(state => state.name === workerForm.watch("state"))?.name
-                            : "Select your state"}
-                        </span>
-                        <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-full p-0">
-                      <Command>
-                        <CommandInput 
-                          placeholder="Search states..." 
-                          value={workerStateSearchInput}
-                          onValueChange={setWorkerStateSearchInput}
-                        />
-                        <CommandEmpty>No state found.</CommandEmpty>
-                        <CommandList className="max-h-40 overflow-y-auto">
-                          <CommandGroup heading="States">
-                            {INDIAN_STATES_AND_UTS
-                              .filter(state => state.type === "state")
-                              .filter(state => 
-                                state.name.toLowerCase().includes(workerStateSearchInput.toLowerCase())
-                              )
-                              .map((state) => (
-                                <CommandItem
-                                  key={state.id}
-                                  onSelect={() => {
-                                    workerForm.setValue("state", state.name);
-                                    setWorkerStatePopoverOpen(false);
-                                    setWorkerStateSearchInput("");
-                                  }}
-                                >
-                                  {state.name}
-                                </CommandItem>
-                              ))}
-                          </CommandGroup>
-                          <CommandGroup heading="Union Territories">
-                            {INDIAN_STATES_AND_UTS
-                              .filter(state => state.type === "ut")
-                              .filter(state => 
-                                state.name.toLowerCase().includes(workerStateSearchInput.toLowerCase())
-                              )
-                              .map((state) => (
-                                <CommandItem
-                                  key={state.id}
-                                  onSelect={() => {
-                                    workerForm.setValue("state", state.name);
-                                    setWorkerStatePopoverOpen(false);
-                                    setWorkerStateSearchInput("");
-                                  }}
-                                >
-                                  {state.name}
-                                </CommandItem>
-                              ))}
-                          </CommandGroup>
-                        </CommandList>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
-                  {workerForm.formState.errors.state && (
-                    <p className="text-sm text-destructive mt-1">
-                      {workerForm.formState.errors.state.message}
-                    </p>
-                  )}
                 </div>
 
                 <div>
