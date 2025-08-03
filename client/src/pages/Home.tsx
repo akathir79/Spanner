@@ -226,10 +226,15 @@ export default function Home() {
   const [isLocationLoading, setIsLocationLoading] = useState(false);
 
 
-  const { data: districts } = useQuery({
+  // Fetch districts from database (only for Tamil Nadu)
+  const { data: tamilNaduDistricts } = useQuery({
     queryKey: ["/api/districts"],
     staleTime: 1000 * 60 * 60, // 1 hour
   });
+
+  // State for dynamic districts from API
+  const [apiDistricts, setApiDistricts] = useState<Array<{id: string, name: string}>>([]);
+  const [isLoadingDistricts, setIsLoadingDistricts] = useState(false);
 
   const { data: rawServices } = useQuery({
     queryKey: ["/api/services"],
@@ -241,6 +246,106 @@ export default function Home() {
     (rawServices as any[]).filter((service, index, arr) => 
       arr.findIndex(s => s.name === service.name) === index
     ) : null;
+
+  // Get districts based on selected state
+  const getAvailableDistricts = () => {
+    if (searchForm.state === "Tamil Nadu") {
+      // Use database districts for Tamil Nadu
+      return tamilNaduDistricts ? 
+        (tamilNaduDistricts as any[]).map(district => ({
+          id: district.id,
+          name: district.name,
+          tamilName: district.tamilName
+        })) : [];
+    } else if (searchForm.state && apiDistricts.length > 0) {
+      // Use API districts for other states
+      return apiDistricts.map(district => ({
+        id: district.name, // Use name as id for API districts
+        name: district.name,
+        tamilName: null
+      }));
+    }
+    return [];
+  };
+
+  // Fetch districts from API when state changes (except Tamil Nadu)
+  useEffect(() => {
+    if (searchForm.state && searchForm.state !== "Tamil Nadu") {
+      fetchDistrictsFromAPI(searchForm.state);
+    } else if (searchForm.state === "Tamil Nadu") {
+      setApiDistricts([]);
+    }
+  }, [searchForm.state]);
+
+  const fetchDistrictsFromAPI = async (stateName: string) => {
+    setIsLoadingDistricts(true);
+    try {
+      // Using India API - districts endpoint
+      const response = await fetch(`https://indian-cities-api-nocbegfhqg.now.sh/cities?state=${encodeURIComponent(stateName)}`);
+      
+      if (response.ok) {
+        const cities = await response.json();
+        // Extract unique districts from cities
+        const uniqueDistricts = Array.from(new Set(cities.map((city: any) => city.district)))
+          .filter(Boolean)
+          .map((district, index) => ({
+            id: `${district}-${index}`,
+            name: district as string
+          }));
+        
+        setApiDistricts(uniqueDistricts);
+      } else {
+        // Fallback: Use a static list of major districts for the state
+        const fallbackDistricts = await getFallbackDistricts(stateName);
+        setApiDistricts(fallbackDistricts);
+      }
+    } catch (error) {
+      console.error("Error fetching districts:", error);
+      // Fallback: Use a static list of major districts
+      const fallbackDistricts = await getFallbackDistricts(stateName);
+      setApiDistricts(fallbackDistricts);
+    } finally {
+      setIsLoadingDistricts(false);
+    }
+  };
+
+  const getFallbackDistricts = async (stateName: string): Promise<Array<{id: string, name: string}>> => {
+    // Fallback static data for major states
+    const majorDistricts: Record<string, string[]> = {
+      "Karnataka": ["Bangalore Urban", "Mysore", "Hubli", "Mangalore", "Belgaum", "Gulbarga", "Shimoga", "Tumkur"],
+      "Maharashtra": ["Mumbai", "Pune", "Nashik", "Nagpur", "Aurangabad", "Solapur", "Kolhapur", "Satara"],
+      "Uttar Pradesh": ["Lucknow", "Kanpur", "Agra", "Varanasi", "Meerut", "Allahabad", "Bareilly", "Ghaziabad"],
+      "West Bengal": ["Kolkata", "Howrah", "Darjeeling", "Asansol", "Siliguri", "Durgapur", "Bardhaman", "Malda"],
+      "Gujarat": ["Ahmedabad", "Surat", "Vadodara", "Rajkot", "Bhavnagar", "Jamnagar", "Gandhinagar", "Anand"],
+      "Rajasthan": ["Jaipur", "Jodhpur", "Udaipur", "Kota", "Bikaner", "Ajmer", "Bharatpur", "Alwar"],
+      "Madhya Pradesh": ["Bhopal", "Indore", "Gwalior", "Jabalpur", "Ujjain", "Sagar", "Ratlam", "Satna"],
+      "Kerala": ["Thiruvananthapuram", "Kochi", "Kozhikode", "Thrissur", "Kollam", "Kottayam", "Palakkad", "Kannur"],
+      "Andhra Pradesh": ["Hyderabad", "Visakhapatnam", "Vijayawada", "Guntur", "Nellore", "Kurnool", "Rajahmundry", "Tirupati"],
+      "Telangana": ["Hyderabad", "Warangal", "Nizamabad", "Khammam", "Karimnagar", "Ramagundam", "Mahbubnagar", "Nalgonda"],
+      "Odisha": ["Bhubaneswar", "Cuttack", "Rourkela", "Berhampur", "Sambalpur", "Puri", "Balasore", "Baripada"],
+      "Punjab": ["Ludhiana", "Amritsar", "Jalandhar", "Patiala", "Bathinda", "Mohali", "Firozpur", "Hoshiarpur"],
+      "Haryana": ["Gurgaon", "Faridabad", "Hisar", "Panipat", "Karnal", "Ambala", "Yamunanagar", "Rohtak"],
+      "Bihar": ["Patna", "Gaya", "Bhagalpur", "Muzaffarpur", "Purnia", "Darbhanga", "Bihar Sharif", "Arrah"],
+      "Jharkhand": ["Ranchi", "Jamshedpur", "Dhanbad", "Bokaro", "Deoghar", "Phusro", "Hazaribagh", "Giridih"],
+      "Assam": ["Guwahati", "Silchar", "Dibrugarh", "Jorhat", "Nagaon", "Tinsukia", "Tezpur", "Bongaigaon"],
+      "Himachal Pradesh": ["Shimla", "Dharamshala", "Solan", "Mandi", "Palampur", "Nahan", "Kullu", "Hamirpur"],
+      "Uttarakhand": ["Dehradun", "Haridwar", "Haldwani", "Roorkee", "Rudrapur", "Kashipur", "Rishikesh", "Pithoragarh"],
+      "Goa": ["North Goa", "South Goa"],
+      "Manipur": ["Imphal East", "Imphal West", "Thoubal", "Bishnupur", "Churachandpur", "Senapati", "Ukhrul", "Chandel"],
+      "Tripura": ["West Tripura", "South Tripura", "North Tripura", "Dhalai"],
+      "Meghalaya": ["East Khasi Hills", "West Khasi Hills", "East Garo Hills", "West Garo Hills", "South Garo Hills"],
+      "Nagaland": ["Kohima", "Dimapur", "Mokokchung", "Tuensang", "Mon", "Wokha", "Zunheboto", "Phek"],
+      "Mizoram": ["Aizawl", "Lunglei", "Champhai", "Kolasib", "Serchhip", "Lawngtlai", "Saiha", "Mamit"],
+      "Arunachal Pradesh": ["Itanagar", "Naharlagun", "Pasighat", "Tezpur", "Bomdila", "Ziro", "Tezu", "Khonsa"],
+      "Sikkim": ["East Sikkim", "West Sikkim", "North Sikkim", "South Sikkim"]
+    };
+
+    const districts = majorDistricts[stateName] || [];
+    return districts.map((district, index) => ({
+      id: `${district}-${index}`,
+      name: district
+    }));
+  };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -310,13 +415,14 @@ export default function Home() {
               }
             }
             
-            // Find matching district in our database
-            const matchingDistrict = (districts as any)?.find((district: any) => {
+            // Find matching district in our available districts
+            const availableDistricts = getAvailableDistricts();
+            const matchingDistrict = availableDistricts.find((district: any) => {
               const districtName = district.name.toLowerCase();
               const detectedName = detectedLocation?.toLowerCase() || '';
               return districtName.includes(detectedName) || 
                      detectedName.includes(districtName) ||
-                     district.tamilName?.includes(detectedLocation);
+                     (district.tamilName && district.tamilName.includes(detectedLocation));
             });
             
             console.log("Location detection results:", {
@@ -335,22 +441,32 @@ export default function Home() {
                 description: `Your location has been set to ${matchingDistrict.name}${detectedState ? `, ${detectedState}` : ''}`,
               });
             } else {
-              // If location is outside Tamil Nadu, suggest nearest major district
-              const chennaiDistrict = (districts as any)?.find((district: any) => 
-                district.name.toLowerCase() === "chennai"
-              );
-              if (chennaiDistrict) {
-                setSearchForm(prev => ({ ...prev, district: chennaiDistrict.id }));
+              // If location is outside Tamil Nadu or no match found
+              if (detectedState && detectedState !== "Tamil Nadu") {
+                // For other states, just show the state was detected
                 toast({
                   title: "Location detected",
-                  description: `Set to Chennai (nearest major district)${detectedState ? `, ${detectedState}` : ''}`,
+                  description: `Please select your district from ${detectedState}`,
                 });
               } else {
-                toast({
-                  title: "District not found",
-                  description: "Please select your location manually",
-                  variant: "destructive",
-                });
+                // If location is Tamil Nadu but district not found, suggest Chennai
+                const tamilNaduDistricts = getAvailableDistricts();
+                const chennaiDistrict = tamilNaduDistricts.find((district: any) => 
+                  district.name.toLowerCase() === "chennai"
+                );
+                if (chennaiDistrict) {
+                  setSearchForm(prev => ({ ...prev, district: chennaiDistrict.id }));
+                  toast({
+                    title: "Location detected",
+                    description: `Set to Chennai (nearest major district)${detectedState ? `, ${detectedState}` : ''}`,
+                  });
+                } else {
+                  toast({
+                    title: "District not found",
+                    description: "Please select your location manually",
+                    variant: "destructive",
+                  });
+                }
               }
             }
           }
@@ -497,7 +613,7 @@ export default function Home() {
                       onDistrictSelect={(districtId) => setSearchForm(prev => ({ ...prev, district: districtId }))}
                       onDescriptionUpdate={(description) => setSearchForm(prev => ({ ...prev, description }))}
                       services={services}
-                      districts={districts}
+                      districts={getAvailableDistricts()}
                       className="h-10 w-10 p-2 rounded-full"
                     />
                   </div>
@@ -655,10 +771,10 @@ export default function Home() {
                             >
                               {searchForm.district
                                 ? (() => {
-                                    const selectedDistrict = (districts as any)?.find((district: any) => district.id === searchForm.district);
+                                    const selectedDistrict = getAvailableDistricts().find((district: any) => district.id === searchForm.district);
                                     return selectedDistrict ? `${selectedDistrict.name}${selectedDistrict.tamilName ? ` (${selectedDistrict.tamilName})` : ''}` : "Select District";
                                   })()
-                                : "Select District"}
+                                : isLoadingDistricts ? "Loading districts..." : "Select District"}
                               <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                             </Button>
                           </PopoverTrigger>
@@ -668,16 +784,16 @@ export default function Home() {
                               <CommandList>
                                 <CommandEmpty>No district found.</CommandEmpty>
                                 <CommandGroup>
-                                  {(districts as any)?.map((district: any) => (
+                                  {getAvailableDistricts().map((district: any) => (
                                     <CommandItem
                                       key={district.id}
                                       value={district.name}
                                       onSelect={() => {
-                                        setSearchForm(prev => ({ ...prev, district: district.id, area: "" }));
+                                        setSearchForm(prev => ({ ...prev, district: district.id }));
                                         setDistrictOpen(false);
                                       }}
                                     >
-                                      {district.name} ({district.tamilName})
+                                      {district.name} {district.tamilName && `(${district.tamilName})`}
                                     </CommandItem>
                                   ))}
                                 </CommandGroup>
@@ -690,7 +806,7 @@ export default function Home() {
                             variant="ghost"
                             size="sm"
                             className="mt-1 h-6 px-2 text-xs"
-                            onClick={() => setSearchForm(prev => ({ ...prev, district: "", area: "" }))}
+                            onClick={() => setSearchForm(prev => ({ ...prev, district: "" }))}
                           >
                             <X className="h-3 w-3 mr-1" />
                             Clear
