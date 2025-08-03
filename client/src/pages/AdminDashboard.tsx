@@ -298,6 +298,11 @@ export default function AdminDashboard() {
   const removeAdminProfilePicture = () => {
     setAdminProfilePreview(null);
     createAdminForm.setValue("profilePicture", "");
+    // Reset the file input
+    const fileInput = document.getElementById("adminProfilePictureInput") as HTMLInputElement;
+    if (fileInput) {
+      fileInput.value = "";
+    }
   };
 
   // Quick login for demo purposes
