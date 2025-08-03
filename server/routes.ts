@@ -610,6 +610,74 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Database management endpoints (super admin only)
+  app.post("/api/admin/database/export", async (req, res) => {
+    try {
+      const { execSync } = require('child_process');
+      
+      // Execute the backup script
+      execSync('cd database && tsx backup-export.ts', { 
+        stdio: 'inherit',
+        cwd: process.cwd() 
+      });
+
+      res.json({ 
+        message: "Database exported successfully",
+        timestamp: new Date().toISOString(),
+        status: "completed"
+      });
+    } catch (error) {
+      console.error("Database export error:", error);
+      res.status(500).json({ message: "Failed to export database" });
+    }
+  });
+
+  app.post("/api/admin/database/restore", async (req, res) => {
+    try {
+      const { execSync } = require('child_process');
+      
+      // Execute the restore script
+      execSync('cd database && tsx backup-restore.ts', { 
+        stdio: 'inherit',
+        cwd: process.cwd() 
+      });
+
+      res.json({ 
+        message: "Database restored successfully",
+        timestamp: new Date().toISOString(),
+        status: "completed"
+      });
+    } catch (error) {
+      console.error("Database restore error:", error);
+      res.status(500).json({ message: "Failed to restore database" });
+    }
+  });
+
+  app.get("/api/admin/database/download", async (req, res) => {
+    try {
+      const fs = require('fs');
+      const path = require('path');
+      
+      const backupPath = path.join(process.cwd(), 'database', 'backups', 'latest-backup.json');
+      
+      if (!fs.existsSync(backupPath)) {
+        return res.status(404).json({ message: "Backup file not found" });
+      }
+
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const filename = `spanner-database-backup-${timestamp}.json`;
+
+      res.setHeader('Content-Type', 'application/json');
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      
+      const fileStream = fs.createReadStream(backupPath);
+      fileStream.pipe(res);
+    } catch (error) {
+      console.error("Database download error:", error);
+      res.status(500).json({ message: "Failed to download backup" });
+    }
+  });
+
   app.get("/api/admin/bookings", async (req, res) => {
     try {
       const bookings = await storage.getBookingsWithDetails();

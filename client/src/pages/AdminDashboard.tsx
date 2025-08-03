@@ -49,7 +49,14 @@ import {
   Check,
   Upload,
   User,
-  X
+  X,
+  Database,
+  Download,
+  CloudUpload,
+  Save,
+  FileUp,
+  FileDown,
+  RefreshCw
 } from "lucide-react";
 import { useLocation } from "wouter";
 import WorkerApprovalSection from "@/components/WorkerApprovalSection";
@@ -85,6 +92,7 @@ export default function AdminDashboard() {
   const [messageDialogUser, setMessageDialogUser] = useState<any>(null);
   const [createAdminModalOpen, setCreateAdminModalOpen] = useState(false);
   const [districtDropdownOpen, setDistrictDropdownOpen] = useState(false);
+  const [databaseManagementOpen, setDatabaseManagementOpen] = useState(false);
   const [adminProfilePreview, setAdminProfilePreview] = useState<string | null>(null);
 
   // Create admin form
@@ -165,6 +173,84 @@ export default function AdminDashboard() {
       toast({
         title: "Creation Failed",
         description: error.message || "Failed to create admin user",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Database management mutations
+  const exportDatabaseMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest("POST", "/api/admin/database/export");
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Database Pull Complete",
+        description: "Database exported successfully. Current data pulled to backup system.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Pull Failed",
+        description: error.message || "Failed to export database",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const restoreDatabaseMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest("POST", "/api/admin/database/restore");
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Database Push Complete",
+        description: "Database restored successfully. Backup data pushed and overwrites existing data.",
+      });
+      // Refresh all data after restore
+      queryClient.invalidateQueries();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Push Failed",
+        description: error.message || "Failed to restore database",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const downloadBackupMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch("/api/admin/database/download", {
+        method: "GET",
+      });
+      if (!response.ok) {
+        throw new Error("Failed to download backup");
+      }
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.style.display = "none";
+      a.href = url;
+      a.download = `spanner-database-backup-${new Date().toISOString().replace(/[:.]/g, "-")}.json`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      return { success: true };
+    },
+    onSuccess: () => {
+      toast({
+        title: "Save Complete",
+        description: "Database backup downloaded to your local system.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Save Failed",
+        description: error.message || "Failed to download backup",
         variant: "destructive",
       });
     },
@@ -1284,6 +1370,14 @@ export default function AdminDashboard() {
                           <Users className="h-4 w-4 mr-2" />
                           Create Admin User
                         </Button>
+                        <Button 
+                          variant="outline" 
+                          className="justify-start"
+                          onClick={() => setDatabaseManagementOpen(true)}
+                        >
+                          <Database className="h-4 w-4 mr-2" />
+                          Database Management
+                        </Button>
                         <Button variant="outline" className="justify-start">
                           <Settings className="h-4 w-4 mr-2" />
                           System Configuration
@@ -1540,6 +1634,165 @@ export default function AdminDashboard() {
               </div>
             </form>
           </Form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Database Management Modal */}
+      <Dialog open={databaseManagementOpen} onOpenChange={setDatabaseManagementOpen}>
+        <DialogContent className="sm:max-w-3xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center space-x-2">
+              <Database className="h-5 w-5" />
+              <span>Database Management</span>
+            </DialogTitle>
+            <DialogDescription>
+              Manage database backups, restore data, and download backup files to your local system.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-6">
+            {/* Database Overview */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Current Database Status</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                    <MapPin className="h-8 w-8 text-blue-600 mx-auto mb-2" />
+                    <p className="font-semibold">37 Districts</p>
+                    <p className="text-sm text-muted-foreground">Tamil Nadu Coverage</p>
+                  </div>
+                  <div className="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                    <Users className="h-8 w-8 text-green-600 mx-auto mb-2" />
+                    <p className="font-semibold">6,430 Areas</p>
+                    <p className="text-sm text-muted-foreground">Villages & Towns</p>
+                  </div>
+                  <div className="text-center p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+                    <Briefcase className="h-8 w-8 text-purple-600 mx-auto mb-2" />
+                    <p className="font-semibold">9 Services</p>
+                    <p className="text-sm text-muted-foreground">Blue-collar Categories</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Database Operations */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Database Operations</CardTitle>
+                <CardDescription>
+                  Pull current data, push backup data, or save backups to your local system
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {/* Pull Operation */}
+                  <div className="space-y-3">
+                    <div className="flex items-center space-x-2">
+                      <FileDown className="h-5 w-5 text-blue-600" />
+                      <h3 className="font-semibold">Pull Database</h3>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Export current database to backup system. Updates the backup files with latest data.
+                    </p>
+                    <Button 
+                      onClick={() => exportDatabaseMutation.mutate()}
+                      disabled={exportDatabaseMutation.isPending}
+                      className="w-full"
+                      variant="outline"
+                    >
+                      {exportDatabaseMutation.isPending ? (
+                        <>
+                          <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                          Pulling...
+                        </>
+                      ) : (
+                        <>
+                          <FileDown className="h-4 w-4 mr-2" />
+                          Pull Current Data
+                        </>
+                      )}
+                    </Button>
+                  </div>
+
+                  {/* Push Operation */}
+                  <div className="space-y-3">
+                    <div className="flex items-center space-x-2">
+                      <FileUp className="h-5 w-5 text-green-600" />
+                      <h3 className="font-semibold">Push Database</h3>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Restore database from backup files. Overwrites existing data with backup data.
+                    </p>
+                    <Button 
+                      onClick={() => restoreDatabaseMutation.mutate()}
+                      disabled={restoreDatabaseMutation.isPending}
+                      className="w-full"
+                      variant="outline"
+                    >
+                      {restoreDatabaseMutation.isPending ? (
+                        <>
+                          <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                          Pushing...
+                        </>
+                      ) : (
+                        <>
+                          <FileUp className="h-4 w-4 mr-2" />
+                          Push Backup Data
+                        </>
+                      )}
+                    </Button>
+                  </div>
+
+                  {/* Save Operation */}
+                  <div className="space-y-3">
+                    <div className="flex items-center space-x-2">
+                      <Download className="h-5 w-5 text-purple-600" />
+                      <h3 className="font-semibold">Save to Local</h3>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Download backup file to your computer. Saves current backup to local system.
+                    </p>
+                    <Button 
+                      onClick={() => downloadBackupMutation.mutate()}
+                      disabled={downloadBackupMutation.isPending}
+                      className="w-full"
+                      variant="outline"
+                    >
+                      {downloadBackupMutation.isPending ? (
+                        <>
+                          <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                          Saving...
+                        </>
+                      ) : (
+                        <>
+                          <Download className="h-4 w-4 mr-2" />
+                          Save to Computer
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Important Notes */}
+                <div className="mt-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
+                  <div className="flex items-start space-x-2">
+                    <AlertCircle className="h-5 w-5 text-yellow-600 mt-0.5" />
+                    <div>
+                      <h4 className="font-semibold text-yellow-800 dark:text-yellow-200">Important Notes</h4>
+                      <ul className="text-sm text-yellow-700 dark:text-yellow-300 mt-1 space-y-1">
+                        <li>• <strong>Pull:</strong> Updates backup files with current database state</li>
+                        <li>• <strong>Push:</strong> Overwrites current database with backup data</li>
+                        <li>• <strong>Save:</strong> Downloads backup file to your local computer</li>
+                        <li>• Push operation will replace ALL existing data with backup data</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
