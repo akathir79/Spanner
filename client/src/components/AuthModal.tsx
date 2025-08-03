@@ -19,6 +19,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
+import { INDIAN_STATES_AND_UTS, detectStateFromLocation } from "@shared/constants";
 
 const loginSchema = z.object({
   mobile: z.string().min(1, "Mobile number or email is required"),
@@ -56,8 +57,9 @@ const workerSignupSchema = z.object({
   serviceAllAreas: z.boolean().default(false),
   skills: z.array(z.string()).min(1, "Add at least one skill"),
   address: z.string().min(5, "Address is required"),
-  pincode: z.string().length(6, "Pincode must be 6 digits"),
+  pincode: z.string().length(6, "Pincode must be 6 digits"),  
   districtId: z.string().min(1, "District is required"),
+  state: z.string().min(1, "State is required"),
   bio: z.string().optional(),
   profilePicture: z.string().min(1, "Profile picture is required for workers"),
   bioDataDocument: z.string().optional(),
@@ -84,6 +86,10 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
   const [newSkillInput, setNewSkillInput] = useState("");
   const [districtSearchInput, setDistrictSearchInput] = useState("");
   const [districtPopoverOpen, setDistrictPopoverOpen] = useState(false);
+  const [statePopoverOpen, setStatePopoverOpen] = useState(false);
+  const [workerStatePopoverOpen, setWorkerStatePopoverOpen] = useState(false);
+  const [stateSearchInput, setStateSearchInput] = useState("");
+  const [workerStateSearchInput, setWorkerStateSearchInput] = useState("");
   const [selectedDistrictForAreas, setSelectedDistrictForAreas] = useState<string>("");
   const [areasPopoverOpen, setAreasPopoverOpen] = useState(false);
   const [homeDistrictPopoverOpen, setHomeDistrictPopoverOpen] = useState(false);
@@ -267,6 +273,7 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
       address: "",
       pincode: "",
       districtId: "",
+      state: "Tamil Nadu",
       bio: "",
       profilePicture: "",
       termsAccepted: false,
@@ -419,18 +426,29 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
                 workerForm.setValue("pincode", detectedPincode);
               }
             }
+            // Detect state from location data
+            const detectedState = detectStateFromLocation(locationData);
+            
             if (matchingDistrict) {
               if (formType === "client") {
                 clientForm.setValue("districtId", matchingDistrict.id);
-                clientForm.setValue("state", "Tamil Nadu");
+                clientForm.setValue("state", detectedState);
               } else {
                 // For worker form, set both home district and add to service districts
                 workerForm.setValue("districtId", matchingDistrict.id);
+                workerForm.setValue("state", detectedState);
                 setHomeDistrictPopoverOpen(false); // Close the popover
                 const currentDistricts: string[] = workerForm.getValues("serviceDistricts") || [];
                 if (!currentDistricts.includes(matchingDistrict.id)) {
                   workerForm.setValue("serviceDistricts", [...currentDistricts, matchingDistrict.id]);
                 }
+              }
+            } else {
+              // Even if district is not found, set the detected state
+              if (formType === "client") {
+                clientForm.setValue("state", detectedState);
+              } else {
+                workerForm.setValue("state", detectedState);
               }
             }
             
@@ -1012,13 +1030,71 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
 
                 <div>
                   <Label htmlFor="state">State</Label>
-                  <Input
-                    id="state"
-                    value={clientForm.watch("state")}
-                    readOnly
-                    className="bg-muted cursor-not-allowed"
-                    placeholder="State will be auto-filled"
-                  />
+                  <Popover open={statePopoverOpen} onOpenChange={setStatePopoverOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={statePopoverOpen}
+                        className="w-full justify-between"
+                      >
+                        {clientForm.watch("state") 
+                          ? INDIAN_STATES_AND_UTS.find(state => state.name === clientForm.watch("state"))?.name
+                          : "Select state"}
+                        <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-full p-0">
+                      <Command>
+                        <CommandInput 
+                          placeholder="Search states..." 
+                          value={stateSearchInput}
+                          onValueChange={setStateSearchInput}
+                        />
+                        <CommandEmpty>No state found.</CommandEmpty>
+                        <CommandList className="max-h-40 overflow-y-auto">
+                          <CommandGroup heading="States">
+                            {INDIAN_STATES_AND_UTS
+                              .filter(state => state.type === "state")
+                              .filter(state => 
+                                state.name.toLowerCase().includes(stateSearchInput.toLowerCase())
+                              )
+                              .map((state) => (
+                                <CommandItem
+                                  key={state.id}
+                                  onSelect={() => {
+                                    clientForm.setValue("state", state.name);
+                                    setStatePopoverOpen(false);
+                                    setStateSearchInput("");
+                                  }}
+                                >
+                                  {state.name}
+                                </CommandItem>
+                              ))}
+                          </CommandGroup>
+                          <CommandGroup heading="Union Territories">
+                            {INDIAN_STATES_AND_UTS
+                              .filter(state => state.type === "ut")
+                              .filter(state => 
+                                state.name.toLowerCase().includes(stateSearchInput.toLowerCase())
+                              )
+                              .map((state) => (
+                                <CommandItem
+                                  key={state.id}
+                                  onSelect={() => {
+                                    clientForm.setValue("state", state.name);
+                                    setStatePopoverOpen(false);
+                                    setStateSearchInput("");
+                                  }}
+                                >
+                                  {state.name}
+                                </CommandItem>
+                              ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
                   {clientForm.formState.errors.state && (
                     <p className="text-sm text-destructive mt-1">
                       {clientForm.formState.errors.state.message}
@@ -1738,6 +1814,80 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
                       </p>
                     )}
                   </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="workerState">State</Label>
+                  <Popover open={workerStatePopoverOpen} onOpenChange={setWorkerStatePopoverOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={workerStatePopoverOpen}
+                        className="w-full justify-between"
+                      >
+                        {workerForm.watch("state") 
+                          ? INDIAN_STATES_AND_UTS.find(state => state.name === workerForm.watch("state"))?.name
+                          : "Select state"}
+                        <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-full p-0">
+                      <Command>
+                        <CommandInput 
+                          placeholder="Search states..." 
+                          value={workerStateSearchInput}
+                          onValueChange={setWorkerStateSearchInput}
+                        />
+                        <CommandEmpty>No state found.</CommandEmpty>
+                        <CommandList className="max-h-40 overflow-y-auto">
+                          <CommandGroup heading="States">
+                            {INDIAN_STATES_AND_UTS
+                              .filter(state => state.type === "state")
+                              .filter(state => 
+                                state.name.toLowerCase().includes(workerStateSearchInput.toLowerCase())
+                              )
+                              .map((state) => (
+                                <CommandItem
+                                  key={state.id}
+                                  onSelect={() => {
+                                    workerForm.setValue("state", state.name);
+                                    setWorkerStatePopoverOpen(false);
+                                    setWorkerStateSearchInput("");
+                                  }}
+                                >
+                                  {state.name}
+                                </CommandItem>
+                              ))}
+                          </CommandGroup>
+                          <CommandGroup heading="Union Territories">
+                            {INDIAN_STATES_AND_UTS
+                              .filter(state => state.type === "ut")
+                              .filter(state => 
+                                state.name.toLowerCase().includes(workerStateSearchInput.toLowerCase())
+                              )
+                              .map((state) => (
+                                <CommandItem
+                                  key={state.id}
+                                  onSelect={() => {
+                                    workerForm.setValue("state", state.name);
+                                    setWorkerStatePopoverOpen(false);
+                                    setWorkerStateSearchInput("");
+                                  }}
+                                >
+                                  {state.name}
+                                </CommandItem>
+                              ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                  {workerForm.formState.errors.state && (
+                    <p className="text-sm text-destructive mt-1">
+                      {workerForm.formState.errors.state.message}
+                    </p>
+                  )}
                 </div>
 
                 <div>

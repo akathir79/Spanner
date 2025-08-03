@@ -38,6 +38,7 @@ export const users = pgTable("users", {
   districtId: varchar("district_id").references(() => districts.id),
   address: text("address"), // Physical address
   pincode: text("pincode"), // Area pincode
+  state: text("state"), // State name
   isVerified: boolean("is_verified").default(false),
   isActive: boolean("is_active").default(true),
   status: text("status").default("pending"), // pending, approved, rejected (for worker approval workflow)
