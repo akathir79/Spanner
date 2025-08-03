@@ -236,7 +236,7 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
         const districtsData = await response.json();
         if (Array.isArray(districtsData) && districtsData.length > 0) {
           setApiDistricts(districtsData);
-          console.log(`Loaded ${districtsData.length} districts from API for ${stateName}`);
+          console.log(`AuthModal: Loaded ${districtsData.length} districts from API for ${stateName}`, districtsData);
           return;
         }
       }
@@ -1198,7 +1198,9 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
                           </SelectItem>
                         ))
                       ) : (
-                        <SelectItem value="no-districts" disabled>No districts found</SelectItem>
+                        <SelectItem value="no-districts" disabled>
+                          {clientForm.watch("state") ? "No districts found" : "Select state first"}
+                        </SelectItem>
                       )}
                     </SelectContent>
                   </Select>
