@@ -218,13 +218,11 @@ export default function Home() {
     service: "",
     state: "",
     district: "",
-    area: "",
     description: ""
   });
   const [serviceOpen, setServiceOpen] = useState(false);
   const [stateOpen, setStateOpen] = useState(false);
   const [districtOpen, setDistrictOpen] = useState(false);
-  const [areaOpen, setAreaOpen] = useState(false);
   const [isLocationLoading, setIsLocationLoading] = useState(false);
 
 
@@ -238,25 +236,11 @@ export default function Home() {
     staleTime: 1000 * 60 * 60, // 1 hour
   });
 
-  // Fetch areas for selected district
-  const { data: allAreas = [] } = useQuery({
-    queryKey: ["/api/areas"],
-    staleTime: 1000 * 60 * 30, // 30 minutes
-  });
-
   // Remove duplicate services by name
   const services = rawServices ? 
     (rawServices as any[]).filter((service, index, arr) => 
       arr.findIndex(s => s.name === service.name) === index
     ) : null;
-
-  // Get available areas for selected district
-  const getAvailableAreasForSearch = () => {
-    if (!searchForm.district || !allAreas) {
-      return [];
-    }
-    return (allAreas as any[]).filter((area: any) => area.districtId === searchForm.district);
-  };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -294,6 +278,18 @@ export default function Home() {
           
           if (data && data.address) {
             const locationData = data.address;
+            console.log("Location detection results:", {
+              detectedLocation: locationData.state_district || locationData.county || locationData.city || locationData.town || locationData.village,
+              detectedCounty: locationData.county,
+              detectedStateDistrict: locationData.state_district,
+              detectedPincode: locationData.postcode,
+              matchingDistrict: null,
+              allLocationData: locationData
+            });
+            
+            // Extract state from location data
+            const detectedState = locationData.state;
+            
             // Try to extract district/state information
             const detectedLocation = locationData.state_district || 
                                    locationData.county || 
@@ -301,20 +297,42 @@ export default function Home() {
                                    locationData.town ||
                                    locationData.village;
             
+            // Set the state field if detected
+            if (detectedState) {
+              // Find matching state in INDIAN_STATES_AND_UTS
+              const matchingState = INDIAN_STATES_AND_UTS.find(state => 
+                state.name.toLowerCase() === detectedState.toLowerCase() ||
+                detectedState.toLowerCase().includes(state.name.toLowerCase())
+              );
+              
+              if (matchingState) {
+                setSearchForm(prev => ({ ...prev, state: matchingState.name }));
+              }
+            }
+            
             // Find matching district in our database
             const matchingDistrict = (districts as any)?.find((district: any) => {
               const districtName = district.name.toLowerCase();
               const detectedName = detectedLocation?.toLowerCase() || '';
               return districtName.includes(detectedName) || 
                      detectedName.includes(districtName) ||
-                     district.tamilName.includes(detectedLocation);
+                     district.tamilName?.includes(detectedLocation);
+            });
+            
+            console.log("Location detection results:", {
+              detectedLocation,
+              detectedCounty: locationData.county,
+              detectedStateDistrict: locationData.state_district,
+              detectedPincode: locationData.postcode,
+              matchingDistrict: matchingDistrict?.name,
+              allLocationData: locationData
             });
             
             if (matchingDistrict) {
               setSearchForm(prev => ({ ...prev, district: matchingDistrict.id }));
               toast({
                 title: "Location detected",
-                description: `Your district has been set to ${matchingDistrict.name}`,
+                description: `Your location has been set to ${matchingDistrict.name}${detectedState ? `, ${detectedState}` : ''}`,
               });
             } else {
               // If location is outside Tamil Nadu, suggest nearest major district
@@ -325,12 +343,12 @@ export default function Home() {
                 setSearchForm(prev => ({ ...prev, district: chennaiDistrict.id }));
                 toast({
                   title: "Location detected",
-                  description: "Set to Chennai (nearest major district)",
+                  description: `Set to Chennai (nearest major district)${detectedState ? `, ${detectedState}` : ''}`,
                 });
               } else {
                 toast({
                   title: "District not found",
-                  description: "Please select your district manually",
+                  description: "Please select your location manually",
                   variant: "destructive",
                 });
               }
@@ -383,7 +401,6 @@ export default function Home() {
       service: "",
       state: "",
       district: "",
-      area: "",
       description: ""
     });
   };
@@ -681,65 +698,7 @@ export default function Home() {
                         )}
                       </div>
                       
-                      {/* Area Selection - only show if district is selected */}
-                      {searchForm.district && (
-                        <div>
-                          <label className="block text-sm font-medium mb-1 text-foreground">
-                            Area (Optional)
-                          </label>
-                          <Popover open={areaOpen} onOpenChange={setAreaOpen}>
-                            <PopoverTrigger asChild>
-                              <Button
-                                variant="outline"
-                                role="combobox"
-                                aria-expanded={areaOpen}
-                                className="w-full justify-between"
-                              >
-                                {searchForm.area
-                                  ? (() => {
-                                      const selectedArea = (getAvailableAreasForSearch() as any[])?.find((area: any) => area.id === searchForm.area);
-                                      return selectedArea ? `${selectedArea.name}${selectedArea.tamilName ? ` (${selectedArea.tamilName})` : ''}` : "Select Area";
-                                    })()
-                                  : "Select Area"}
-                                <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                              </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-full p-0">
-                              <Command>
-                                <CommandInput placeholder="Search areas..." />
-                                <CommandList>
-                                  <CommandEmpty>No area found.</CommandEmpty>
-                                  <CommandGroup>
-                                    {getAvailableAreasForSearch().map((area: any) => (
-                                      <CommandItem
-                                        key={area.id}
-                                        value={area.name}
-                                        onSelect={() => {
-                                          setSearchForm(prev => ({ ...prev, area: area.id }));
-                                          setAreaOpen(false);
-                                        }}
-                                      >
-                                        {area.name} {area.tamilName && `(${area.tamilName})`}
-                                      </CommandItem>
-                                    ))}
-                                  </CommandGroup>
-                                </CommandList>
-                              </Command>
-                            </PopoverContent>
-                          </Popover>
-                          {searchForm.area && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="mt-1 h-6 px-2 text-xs"
-                              onClick={() => setSearchForm(prev => ({ ...prev, area: "" }))}
-                            >
-                              <X className="h-3 w-3 mr-1" />
-                              Clear
-                            </Button>
-                          )}
-                        </div>
-                      )}
+
                     
                       <div>
                         <label className="block text-sm font-medium mb-1 text-foreground">
