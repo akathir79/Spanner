@@ -529,10 +529,10 @@ export default function Home() {
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
               <h1 className="text-4xl lg:text-5xl font-bold mb-6">
-                Tamil Nadu's Most Trusted Blue-Collar Service Platform
+                India's Most Trusted Urban Services Platform
               </h1>
               <p className="text-xl mb-8 text-blue-100">
-                Connect with verified skilled workers across all 38 districts. From plumbing to electrical work, find the right professional for your needs with transparent pricing and secure booking.
+                Connect with verified skilled workers across all states and districts of India. From plumbing to electrical work, find the right professional for your needs with transparent pricing and secure booking.
               </p>
               
               <div className="flex flex-wrap gap-6 mb-8">
@@ -592,7 +592,7 @@ export default function Home() {
                       onServiceSelect={(serviceId) => setSearchForm(prev => ({ ...prev, service: serviceId }))}
                       onDistrictSelect={(districtId) => setSearchForm(prev => ({ ...prev, district: districtId }))}
                       onDescriptionUpdate={(description) => setSearchForm(prev => ({ ...prev, description }))}
-                      services={services}
+                      services={services || []}
                       districts={getAvailableDistricts()}
                       className="h-10 w-10 p-2 rounded-full"
                     />
