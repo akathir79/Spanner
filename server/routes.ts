@@ -82,38 +82,41 @@ function addMinutes(date: Date, minutes: number): Date {
 
 export async function registerRoutes(app: Express): Promise<Server> {
   
-  // District API endpoint - serves authentic Indian district data
+  // District API endpoint - serves authentic Indian district data from GitHub JSON API
   app.get("/api/districts/:stateName", async (req, res) => {
     try {
       const { stateName } = req.params;
       
-      // Try REST India API for authentic government data
-      const response = await fetch(`https://restindia.herokuapp.com/${encodeURIComponent(stateName)}/all`);
+      // Fetch authentic Indian states and districts data from GitHub JSON API
+      const response = await fetch('https://raw.githubusercontent.com/sab99r/Indian-States-And-Districts/master/states-and-districts.json');
       
       if (response.ok) {
-        const districtsData = await response.json();
-        if (Array.isArray(districtsData) && districtsData.length > 0) {
-          const districts = districtsData.map((district: any) => ({
-            id: district.name.toLowerCase().replace(/\s+/g, '-'),
-            name: district.name,
-            state: district.state,
-            population: district.population,
-            area: district.area,
-            tamilName: stateName === "Tamil Nadu" ? district.name : undefined
+        const data = await response.json();
+        
+        // Find the state in the authentic government data
+        const stateData = data.states.find((state: any) => 
+          state.state.toLowerCase() === stateName.toLowerCase()
+        );
+        
+        if (stateData && stateData.districts) {
+          const districts = stateData.districts.map((districtName: string) => ({
+            id: districtName.toLowerCase().replace(/\s+/g, '-'),
+            name: districtName,
+            state: stateName,
+            tamilName: stateName === "Tamil Nadu" ? districtName : undefined
           }));
           
-          console.log(`API: Served ${districts.length} districts for ${stateName} from REST India API`);
+          console.log(`API: Served ${districts.length} authentic districts for ${stateName} from GitHub JSON API`);
           return res.json(districts);
         }
       }
       
-      // Fallback to empty array if API fails
-      console.log(`API: No districts found for ${stateName}`);
+      console.log(`API: No authentic districts found for ${stateName}`);
       return res.json([]);
       
     } catch (error) {
       console.error("Districts API error:", error);
-      return res.status(500).json({ error: "Failed to fetch districts" });
+      return res.status(500).json({ error: "Failed to fetch districts from authentic government data" });
     }
   });
   
