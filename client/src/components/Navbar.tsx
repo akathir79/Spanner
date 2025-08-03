@@ -7,7 +7,7 @@ import { AuthModal } from "@/components/AuthModal";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useState, useEffect } from "react";
-import { Menu, Moon, Sun, Wrench, User, LogOut, Settings } from "lucide-react";
+import { Menu, Moon, Sun, Wrench, User, LogOut, Settings, History } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 
 export function Navbar() {
@@ -104,6 +104,10 @@ export function Navbar() {
                         <Settings className="mr-2 h-4 w-4" />
                         Dashboard
                       </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => window.location.href = "/service-history"} className="cursor-pointer">
+                        <History className="mr-2 h-4 w-4" />
+                        Service History
+                      </DropdownMenuItem>
                       <DropdownMenuItem onClick={logout} className="cursor-pointer">
                         <LogOut className="mr-2 h-4 w-4" />
                         Logout
@@ -174,6 +178,17 @@ export function Navbar() {
                     className="w-full"
                   >
                     Dashboard
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      window.location.href = "/service-history";
+                      setMobileMenuOpen(false);
+                    }}
+                    className="w-full"
+                  >
+                    Service History
                   </Button>
                   <Button
                     variant="ghost"

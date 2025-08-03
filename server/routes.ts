@@ -1390,6 +1390,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Service History API routes
+  
+  // Get service history for a user
+  app.get("/api/bookings/history", async (req, res) => {
+    try {
+      const userId = req.headers["user-id"] as string;
+      if (!userId) {
+        return res.status(401).json({ message: "User ID required" });
+      }
+
+      const bookings = await storage.getBookingsWithDetails(userId);
+      res.json(bookings);
+    } catch (error) {
+      console.error("Error fetching service history:", error);
+      res.status(500).json({ message: "Failed to fetch service history" });
+    }
+  });
+
+  // Add/update review for a booking
+  app.post("/api/bookings/:bookingId/review", async (req, res) => {
+    try {
+      const { bookingId } = req.params;
+      const { rating, review } = req.body;
+      
+      if (!rating || rating < 1 || rating > 5) {
+        return res.status(400).json({ message: "Rating must be between 1 and 5" });
+      }
+
+      const booking = await storage.updateBookingReview(bookingId, rating, review || "");
+      if (!booking) {
+        return res.status(404).json({ message: "Booking not found" });
+      }
+
+      res.json(booking);
+    } catch (error) {
+      console.error("Error updating booking review:", error);
+      res.status(500).json({ message: "Failed to update review" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

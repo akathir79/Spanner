@@ -15,6 +15,7 @@ import WorkerDashboard from "@/pages/WorkerDashboard";
 import AdminDashboard from "@/pages/AdminDashboard";
 import DistrictManager from "@/pages/DistrictManager";
 import Payment from "@/pages/Payment";
+import ServiceHistory from "@/pages/ServiceHistory";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -30,6 +31,7 @@ function Router() {
           <Route path="/admin-dashboard" component={AdminDashboard} />
           <Route path="/district-manager" component={DistrictManager} />
           <Route path="/payment/:bookingId" component={Payment} />
+          <Route path="/service-history" component={ServiceHistory} />
           <Route component={NotFound} />
         </Switch>
       </main>

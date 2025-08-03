@@ -45,7 +45,7 @@ import {
   type InsertMessage
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, sql, desc, ilike, inArray } from "drizzle-orm";
+import { eq, and, sql, desc, ilike, inArray, or } from "drizzle-orm";
 
 export interface IStorage {
   // User management
@@ -89,6 +89,8 @@ export interface IStorage {
   getClientBookings(clientId: string): Promise<Booking[]>;
   getWorkerBookings(workerId: string): Promise<Booking[]>;
   updateBookingStatus(id: string, status: string): Promise<Booking | undefined>;
+  getBookingsWithDetails(userId: string): Promise<any[]>;
+  updateBookingReview(bookingId: string, rating: number, review: string): Promise<Booking | undefined>;
   
   // OTP management
   createOtp(otp: InsertOtp): Promise<OtpVerification>;
@@ -488,6 +490,77 @@ export class DatabaseStorage implements IStorage {
       .update(bookings)
       .set({ status, updatedAt: new Date() })
       .where(eq(bookings.id, id))
+      .returning();
+    return booking || undefined;
+  }
+
+  async getBookingsWithDetails(userId: string): Promise<any[]> {
+    const results = await db
+      .select({
+        booking: bookings,
+        client: {
+          id: users.id,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          mobile: users.mobile,
+          profilePicture: users.profilePicture,
+        },
+        worker: {
+          id: users.id,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          mobile: users.mobile,
+          profilePicture: users.profilePicture,
+        }
+      })
+      .from(bookings)
+      .leftJoin(users, eq(bookings.clientId, users.id))
+      .leftJoin(users, eq(bookings.workerId, users.id))
+      .where(
+        or(
+          eq(bookings.clientId, userId),
+          eq(bookings.workerId, userId)
+        )
+      )
+      .orderBy(desc(bookings.createdAt));
+
+    // Need to do separate queries to get both client and worker info
+    const enrichedBookings = [];
+    for (const result of results) {
+      const [client] = await db.select().from(users).where(eq(users.id, result.booking.clientId));
+      const [worker] = await db.select().from(users).where(eq(users.id, result.booking.workerId));
+      
+      enrichedBookings.push({
+        ...result.booking,
+        client: client ? {
+          id: client.id,
+          firstName: client.firstName,
+          lastName: client.lastName,
+          mobile: client.mobile,
+          profilePicture: client.profilePicture,
+        } : null,
+        worker: worker ? {
+          id: worker.id,
+          firstName: worker.firstName,
+          lastName: worker.lastName,
+          mobile: worker.mobile,
+          profilePicture: worker.profilePicture,
+        } : null,
+      });
+    }
+
+    return enrichedBookings;
+  }
+
+  async updateBookingReview(bookingId: string, rating: number, review: string): Promise<Booking | undefined> {
+    const [booking] = await db
+      .update(bookings)
+      .set({ 
+        clientRating: rating,
+        clientReview: review,
+        updatedAt: new Date() 
+      })
+      .where(eq(bookings.id, bookingId))
       .returning();
     return booking || undefined;
   }
