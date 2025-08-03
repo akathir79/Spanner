@@ -56,7 +56,8 @@ import {
   Save,
   FileUp,
   FileDown,
-  RefreshCw
+  RefreshCw,
+  FileText
 } from "lucide-react";
 import { useLocation } from "wouter";
 import WorkerApprovalSection from "@/components/WorkerApprovalSection";
@@ -94,6 +95,7 @@ export default function AdminDashboard() {
   const [createAdminModalOpen, setCreateAdminModalOpen] = useState(false);
   const [districtDropdownOpen, setDistrictDropdownOpen] = useState(false);
   const [databaseManagementOpen, setDatabaseManagementOpen] = useState(false);
+  const [districtManagerOpen, setDistrictManagerOpen] = useState(false);
   const [adminProfilePreview, setAdminProfilePreview] = useState<string | null>(null);
   const [deleteConfirmUser, setDeleteConfirmUser] = useState<any>(null);
 
@@ -1431,6 +1433,14 @@ export default function AdminDashboard() {
                           <Database className="h-4 w-4 mr-2" />
                           Database Management
                         </Button>
+                        <Button 
+                          variant="outline" 
+                          className="justify-start"
+                          onClick={() => setDistrictManagerOpen(true)}
+                        >
+                          <FileText className="h-4 w-4 mr-2" />
+                          District Manager
+                        </Button>
                         <Button variant="outline" className="justify-start">
                           <Settings className="h-4 w-4 mr-2" />
                           System Configuration
@@ -1913,6 +1923,189 @@ export default function AdminDashboard() {
                 </>
               )}
             </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* District Manager Modal */}
+      <Dialog open={districtManagerOpen} onOpenChange={setDistrictManagerOpen}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              District Data Manager
+            </DialogTitle>
+            <DialogDescription>
+              Manage authentic Indian states and districts data used throughout the application
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Current Data Overview */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <FileText className="h-5 w-5" />
+                    Current Data File
+                  </CardTitle>
+                  <CardDescription>
+                    Location: <code className="bg-muted px-2 py-1 rounded">shared/states-districts.json</code>
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="bg-muted p-4 rounded-lg">
+                    <h4 className="font-semibold mb-2">Data Source Information:</h4>
+                    <ul className="text-sm space-y-1 text-muted-foreground">
+                      <li>• Authentic Indian government district data</li>
+                      <li>• 28 States + 8 Union Territories</li>
+                      <li>• 700+ Districts total</li>
+                      <li>• Source: GitHub sab99r/Indian-States-And-Districts</li>
+                    </ul>
+                  </div>
+
+                  <Button 
+                    onClick={() => {
+                      toast({
+                        title: "File Location",
+                        description: "Check the 'shared/states-districts.json' file in your project directory for the current data.",
+                      });
+                    }} 
+                    className="w-full" 
+                    variant="outline"
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    View Current Data File Location
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* File Operations */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Upload className="h-5 w-5" />
+                    Update Data File
+                  </CardTitle>
+                  <CardDescription>
+                    Instructions for updating the districts data
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="bg-blue-50 dark:bg-blue-950 p-4 rounded-lg border">
+                    <div className="flex items-start gap-2">
+                      <AlertCircle className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5" />
+                      <div className="text-sm">
+                        <h4 className="font-semibold text-blue-800 dark:text-blue-200 mb-2">
+                          How to Update Districts Data:
+                        </h4>
+                        <ol className="space-y-2 text-blue-700 dark:text-blue-300">
+                          <li>1. Navigate to <code className="bg-blue-100 dark:bg-blue-900 px-1 rounded">shared/states-districts.json</code></li>
+                          <li>2. Edit the JSON file directly in the file explorer</li>
+                          <li>3. Add/remove states or districts as needed</li>
+                          <li>4. Save the file - changes take effect immediately</li>
+                          <li>5. Test by selecting states in the registration forms</li>
+                        </ol>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-yellow-50 dark:bg-yellow-950 p-4 rounded-lg border">
+                    <h4 className="font-semibold text-yellow-800 dark:text-yellow-200 mb-2">
+                      JSON Structure:
+                    </h4>
+                    <pre className="text-xs text-yellow-700 dark:text-yellow-300 overflow-x-auto">
+{`{
+  "states": [
+    {
+      "state": "Tamil Nadu",
+      "districts": [
+        "Chennai",
+        "Coimbatore",
+        "Madurai",
+        ...
+      ]
+    }
+  ]
+}`}
+                    </pre>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* API Test Section */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Test Districts API</CardTitle>
+                <CardDescription>
+                  Verify that the districts API is working with the current data
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex gap-4">
+                  <div className="flex-1">
+                    <Label htmlFor="test-state">Test State Name</Label>
+                    <Input
+                      id="test-state"
+                      placeholder="e.g., Tamil Nadu, Telangana, Maharashtra"
+                      onKeyPress={async (e) => {
+                        if (e.key === 'Enter') {
+                          const stateName = (e.target as HTMLInputElement).value;
+                          if (!stateName.trim()) return;
+                          try {
+                            const response = await fetch(`/api/districts/${encodeURIComponent(stateName)}`);
+                            const districts = await response.json();
+                            toast({
+                              title: "API Test Result",
+                              description: `Found ${districts.length} districts for ${stateName}`,
+                            });
+                          } catch (error) {
+                            toast({
+                              title: "API Test Failed",
+                              description: "Could not fetch districts",
+                              variant: "destructive",
+                            });
+                          }
+                        }
+                      }}
+                    />
+                  </div>
+                  <div className="flex items-end">
+                    <Button 
+                      onClick={async () => {
+                        const testInput = document.getElementById('test-state') as HTMLInputElement;
+                        const stateName = testInput?.value;
+                        if (!stateName?.trim()) {
+                          toast({
+                            title: "Enter State Name",
+                            description: "Please enter a state name to test",
+                            variant: "destructive",
+                          });
+                          return;
+                        }
+                        try {
+                          const response = await fetch(`/api/districts/${encodeURIComponent(stateName)}`);
+                          const districts = await response.json();
+                          toast({
+                            title: "API Test Result",
+                            description: `Found ${districts.length} districts for ${stateName}`,
+                          });
+                        } catch (error) {
+                          toast({
+                            title: "API Test Failed",
+                            description: "Could not fetch districts",
+                            variant: "destructive",
+                          });
+                        }
+                      }}
+                    >
+                      Test API
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </DialogContent>
       </Dialog>
