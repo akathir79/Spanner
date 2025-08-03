@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -163,44 +163,82 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
     },
   });
 
-  // Fetch districts based on selected state
+  // State for districts (consistent with Home page)
+  const [apiDistricts, setApiDistricts] = useState<Array<{id: string, name: string, tamilName?: string}>>([]);
+  const [isLoadingDistricts, setIsLoadingDistricts] = useState(false);
+
+  // Watch for state changes in forms
   const selectedClientState = clientForm.watch("state");
   const selectedWorkerState = workerForm.watch("state");
   const currentState = selectedClientState || selectedWorkerState;
-  
-  const { data: districts } = useQuery({
-    queryKey: ["/api/districts", currentState],
-    queryFn: async () => {
-      if (!currentState) return [];
-      
-      const response = await fetch(`https://api.postalpincode.in/postoffice/${encodeURIComponent(currentState)}`);
-      const data = await response.json();
-      
-      if (data && data[0] && data[0].PostOffice) {
-        const uniqueDistricts = new Set();
-        const districts = data[0].PostOffice
-          .map((office: any) => ({
-            id: office.District,
-            name: office.District,
-            tamilName: office.District,
-            state: office.State
-          }))
-          .filter((district: any) => {
-            if (!uniqueDistricts.has(district.name)) {
-              uniqueDistricts.add(district.name);
-              return true;
-            }
-            return false;
-          })
-          .sort((a: any, b: any) => a.name.localeCompare(b.name));
-        
-        return districts;
+
+  // Fallback districts function (same as Home page)
+  const getFallbackDistricts = async (stateName: string): Promise<Array<{id: string, name: string, tamilName?: string}>> => {
+    // Fallback static data for major states
+    const majorDistricts: Record<string, string[]> = {
+      "Tamil Nadu": ["Chennai", "Coimbatore", "Salem", "Madurai", "Tiruchirappalli", "Tirunelveli", "Erode", "Vellore", "Thoothukudi", "Dindigul", "Thanjavur", "Kanchipuram", "Tiruppur", "Cuddalore", "Karur", "Dharmapuri", "Nagapattinam", "Krishnagiri", "Sivaganga", "Namakkal", "Virudhunagar", "Villupuram", "Ramanathapuram", "Theni", "Pudukkottai", "Tiruvannamalai", "Kanyakumari", "Nilgiris", "Perambalur", "Ariyalur", "Kallakurichi", "Chengalpattu", "Tenkasi", "Tirupathur", "Ranipet", "Mayiladuthurai", "Tiruvallur"],
+      "Karnataka": ["Bangalore Urban", "Mysore", "Hubli", "Mangalore", "Belgaum", "Gulbarga", "Shimoga", "Tumkur"],
+      "Maharashtra": ["Mumbai", "Pune", "Nashik", "Nagpur", "Aurangabad", "Solapur", "Kolhapur", "Satara"],
+      "Uttar Pradesh": ["Lucknow", "Kanpur", "Agra", "Varanasi", "Meerut", "Allahabad", "Bareilly", "Ghaziabad"],
+      "West Bengal": ["Kolkata", "Howrah", "Darjeeling", "Asansol", "Siliguri", "Durgapur", "Bardhaman", "Malda"],
+      "Gujarat": ["Ahmedabad", "Surat", "Vadodara", "Rajkot", "Bhavnagar", "Jamnagar", "Gandhinagar", "Anand"],
+      "Rajasthan": ["Jaipur", "Jodhpur", "Udaipur", "Kota", "Bikaner", "Ajmer", "Bharatpur", "Alwar"],
+      "Madhya Pradesh": ["Bhopal", "Indore", "Gwalior", "Jabalpur", "Ujjain", "Sagar", "Ratlam", "Satna"],
+      "Kerala": ["Thiruvananthapuram", "Kochi", "Kozhikode", "Thrissur", "Kollam", "Kottayam", "Palakkad", "Kannur"],
+      "Andhra Pradesh": ["Hyderabad", "Visakhapatnam", "Vijayawada", "Guntur", "Nellore", "Kurnool", "Rajahmundry", "Tirupati"],
+      "Telangana": ["Hyderabad", "Warangal", "Nizamabad", "Khammam", "Karimnagar", "Ramagundam", "Mahbubnagar", "Nalgonda"],
+      "Odisha": ["Bhubaneswar", "Cuttack", "Rourkela", "Berhampur", "Sambalpur", "Puri", "Balasore", "Baripada"],
+      "Punjab": ["Ludhiana", "Amritsar", "Jalandhar", "Patiala", "Bathinda", "Mohali", "Firozpur", "Hoshiarpur"],
+      "Haryana": ["Gurgaon", "Faridabad", "Hisar", "Panipat", "Karnal", "Ambala", "Yamunanagar", "Rohtak"],
+      "Bihar": ["Patna", "Gaya", "Bhagalpur", "Muzaffarpur", "Purnia", "Darbhanga", "Bihar Sharif", "Arrah"],
+      "Jharkhand": ["Ranchi", "Jamshedpur", "Dhanbad", "Bokaro", "Deoghar", "Phusro", "Hazaribagh", "Giridih"],
+      "Assam": ["Guwahati", "Silchar", "Dibrugarh", "Jorhat", "Nagaon", "Tinsukia", "Tezpur", "Bongaigaon"],
+      "Himachal Pradesh": ["Shimla", "Dharamshala", "Solan", "Mandi", "Palampur", "Nahan", "Kullu", "Hamirpur"],
+      "Uttarakhand": ["Dehradun", "Haridwar", "Haldwani", "Roorkee", "Rudrapur", "Kashipur", "Rishikesh", "Pithoragarh"],
+      "Goa": ["North Goa", "South Goa"],
+      "Manipur": ["Imphal East", "Imphal West", "Thoubal", "Bishnupur", "Churachandpur", "Senapati", "Ukhrul", "Chandel"],
+      "Tripura": ["West Tripura", "South Tripura", "North Tripura", "Dhalai"],
+      "Meghalaya": ["East Khasi Hills", "West Khasi Hills", "East Garo Hills", "West Garo Hills", "South Garo Hills"],
+      "Nagaland": ["Kohima", "Dimapur", "Mokokchung", "Tuensang", "Mon", "Wokha", "Zunheboto", "Phek"]
+    };
+
+    const districtNames = majorDistricts[stateName] || [];
+    return districtNames.map(name => ({
+      id: name.toLowerCase().replace(/\s+/g, ''),
+      name: name,
+      tamilName: stateName === "Tamil Nadu" ? name : undefined
+    }));
+  };
+
+  // Fetch districts when state changes (consistent with Home page)
+  useEffect(() => {
+    if (currentState) {
+      fetchDistrictsFromAPI(currentState);
+      // Clear district selections when state changes to maintain consistency
+      if (selectedClientState) {
+        clientForm.setValue("districtId", "");
       }
-      return [];
-    },
-    enabled: !!currentState,
-    staleTime: 1000 * 60 * 60, // 1 hour
-  });
+      if (selectedWorkerState) {
+        workerForm.setValue("districtId", "");
+      }
+    } else {
+      setApiDistricts([]);
+    }
+  }, [currentState]);
+
+  const fetchDistrictsFromAPI = async (stateName: string) => {
+    setIsLoadingDistricts(true);
+    try {
+      // Use reliable fallback data directly for better user experience
+      const districts = await getFallbackDistricts(stateName);
+      setApiDistricts(districts);
+    } catch (error) {
+      console.error("Error loading districts:", error);
+      setApiDistricts([]);
+    } finally {
+      setIsLoadingDistricts(false);
+    }
+  };
 
   const { data: rawServices = [] } = useQuery({
     queryKey: ["/api/services"],
@@ -399,7 +437,7 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
             const detectedPincode = locationData.postcode || '';
             
             // Find matching district with improved logic - including pincode area lookup
-            let matchingDistrict = (districts as any)?.find((district: any) => {
+            let matchingDistrict = apiDistricts?.find((district: any) => {
               const districtName = district.name.toLowerCase();
               const detectedName = detectedLocation?.toLowerCase() || '';
               const detectedCity = locationData.city?.toLowerCase() || '';
@@ -438,7 +476,7 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
                 area.pincode === detectedPincode
               );
               if (matchingArea) {
-                matchingDistrict = (districts as any)?.find((district: any) => 
+                matchingDistrict = apiDistricts?.find((district: any) => 
                   district.id === matchingArea.districtId
                 );
               }
@@ -1130,11 +1168,17 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
                       } />
                     </SelectTrigger>
                     <SelectContent>
-                      {(districts as any)?.map((district: any) => (
-                        <SelectItem key={district.id} value={district.id}>
-                          {district.name} ({district.tamilName})
-                        </SelectItem>
-                      ))}
+                      {isLoadingDistricts ? (
+                        <SelectItem value="loading" disabled>Loading districts...</SelectItem>
+                      ) : apiDistricts.length > 0 ? (
+                        apiDistricts.map((district: any) => (
+                          <SelectItem key={district.id} value={district.id}>
+                            {district.name} {district.tamilName && `(${district.tamilName})`}
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <SelectItem value="no-districts" disabled>No districts found</SelectItem>
+                      )}
                     </SelectContent>
                   </Select>
                   {clientForm.formState.errors.districtId && (
@@ -1539,21 +1583,27 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
                           <CommandList>
                             <CommandEmpty>No district found.</CommandEmpty>
                             <CommandGroup>
-                              {districts && Array.isArray(districts) ? districts.map((district: any) => (
-                                <CommandItem
-                                  key={district.id}
-                                  value={district.name}
-                                  onSelect={() => {
-                                    const currentDistricts = workerForm.getValues("serviceDistricts") || [];
-                                    if (!currentDistricts.includes(district.id)) {
-                                      workerForm.setValue("serviceDistricts", [...currentDistricts, district.id]);
-                                    }
-                                    setDistrictPopoverOpen(false);
-                                  }}
-                                >
-                                  {district.name} ({district.tamilName})
-                                </CommandItem>
-                              )) : null}
+                              {isLoadingDistricts ? (
+                                <CommandItem disabled>Loading districts...</CommandItem>
+                              ) : apiDistricts.length > 0 ? (
+                                apiDistricts.map((district: any) => (
+                                  <CommandItem
+                                    key={district.id}
+                                    value={district.name}
+                                    onSelect={() => {
+                                      const currentDistricts = workerForm.getValues("serviceDistricts") || [];
+                                      if (!currentDistricts.includes(district.id)) {
+                                        workerForm.setValue("serviceDistricts", [...currentDistricts, district.id]);
+                                      }
+                                      setDistrictPopoverOpen(false);
+                                    }}
+                                  >
+                                    {district.name} {district.tamilName && `(${district.tamilName})`}
+                                  </CommandItem>
+                                ))
+                              ) : (
+                                <CommandItem disabled>No districts found</CommandItem>
+                              )}
                             </CommandGroup>
                           </CommandList>
                         </Command>
@@ -1565,7 +1615,7 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
                   </div>
                   <div className="flex flex-wrap gap-1 mt-2">
                     {workerForm.watch("serviceDistricts")?.map((districtId: string) => {
-                      const district = districts && Array.isArray(districts) ? districts.find((d: any) => d.id === districtId) : null;
+                      const district = apiDistricts.find((d: any) => d.id === districtId) || null;
                       return district ? (
                         <div key={districtId} className="flex items-center gap-1 bg-secondary text-secondary-foreground px-2 py-1 rounded-md text-xs">
                           <span>{district.name}</span>
@@ -1896,7 +1946,7 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
                           disabled={!workerForm.watch("state")}
                         >
                           {workerForm.watch("districtId") 
-                            ? (districts as any[])?.find((d: any) => d.id === workerForm.watch("districtId"))?.name || "Select District"
+                            ? apiDistricts?.find((d: any) => d.id === workerForm.watch("districtId"))?.name || "Select District"
                             : (!workerForm.watch("state") ? "Select state first" : "Select District")
                           }
                           <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -1908,21 +1958,29 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
                           <CommandList>
                             <CommandEmpty>No district found.</CommandEmpty>
                             <CommandGroup>
-                              {districts && Array.isArray(districts) ? districts.map((district: any) => (
-                                <CommandItem
-                                  key={district.id}
-                                  value={district.name}
-                                  onSelect={() => {
-                                    workerForm.setValue("districtId", district.id);
-                                    setHomeDistrictPopoverOpen(false);
-                                  }}
-                                >
-                                  <div className="flex flex-col">
-                                    <span className="font-medium">{district.name}</span>
-                                    <span className="text-sm text-muted-foreground">({district.tamilName})</span>
-                                  </div>
-                                </CommandItem>
-                              )) : null}
+                              {isLoadingDistricts ? (
+                                <CommandItem disabled>Loading districts...</CommandItem>
+                              ) : apiDistricts.length > 0 ? (
+                                apiDistricts.map((district: any) => (
+                                  <CommandItem
+                                    key={district.id}
+                                    value={district.name}
+                                    onSelect={() => {
+                                      workerForm.setValue("districtId", district.id);
+                                      setHomeDistrictPopoverOpen(false);
+                                    }}
+                                  >
+                                    <div className="flex flex-col">
+                                      <span className="font-medium">{district.name}</span>
+                                      {district.tamilName && (
+                                        <span className="text-sm text-muted-foreground">({district.tamilName})</span>
+                                      )}
+                                    </div>
+                                  </CommandItem>
+                                ))
+                              ) : (
+                                <CommandItem disabled>No districts found</CommandItem>
+                              )}
                             </CommandGroup>
                           </CommandList>
                         </Command>
