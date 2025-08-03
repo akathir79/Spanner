@@ -81,6 +81,7 @@ type CreateAdminForm = z.infer<typeof createAdminSchema>;
 
 export default function AdminDashboard() {
   const { user } = useAuth();
+  const currentUser = user; // Reference for clarity in nested components
   const { t } = useLanguage();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
@@ -863,15 +864,27 @@ export default function AdminDashboard() {
                                     <Ban className="mr-2 h-4 w-4" />
                                     Suspend User
                                   </DropdownMenuItem>
-                                  {user.role !== 'super_admin' && (
-                                    <DropdownMenuItem 
-                                      className="text-red-600"
-                                      onClick={() => setDeleteConfirmUser(user)}
-                                    >
-                                      <Trash2 className="mr-2 h-4 w-4" />
-                                      Delete User
-                                    </DropdownMenuItem>
-                                  )}
+                                  {(() => {
+                                    // Only show delete option for appropriate user types based on admin level
+                                    const canDelete = 
+                                      // Super admin can delete anyone except other super admins
+                                      (currentUser?.role === 'super_admin' && user.role !== 'super_admin') ||
+                                      // Regular admin can delete clients and workers only
+                                      (currentUser?.role === 'admin' && (user.role === 'client' || user.role === 'worker'));
+                                    
+                                    if (canDelete) {
+                                      return (
+                                        <DropdownMenuItem 
+                                          className="text-red-600"
+                                          onClick={() => setDeleteConfirmUser(user)}
+                                        >
+                                          <Trash2 className="mr-2 h-4 w-4" />
+                                          Delete User
+                                        </DropdownMenuItem>
+                                      );
+                                    }
+                                    return null;
+                                  })()}
                                 </DropdownMenuContent>
                               </DropdownMenu>
                             </TableCell>
