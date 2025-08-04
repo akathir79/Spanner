@@ -52,7 +52,6 @@ async function exportDatabase(): Promise<void> {
       usersData,
       serviceCategoriesData,
       workerProfilesData,
-      otpVerificationsData,
       bookingsData,
       jobPostingsData,
       bidsData,
@@ -61,7 +60,6 @@ async function exportDatabase(): Promise<void> {
       db.select().from(users),
       db.select().from(serviceCategories),
       db.select().from(workerProfiles),
-      db.select().from(otpVerifications),
       db.select().from(bookings),
       db.select().from(jobPostings),
       db.select().from(bids),
@@ -73,13 +71,13 @@ async function exportDatabase(): Promise<void> {
       metadata: {
         exportDate: new Date().toISOString(),
         version: '1.0.0',
-        description: 'SPANNER Tamil Nadu Blue-Collar Service Marketplace Database Backup'
+        description: 'SPANNER India-Wide Urban Services Marketplace Database Backup'
       },
       schema: {
         users: usersData,
         serviceCategories: serviceCategoriesData,
         workerProfiles: workerProfilesData,
-        otpVerifications: otpVerificationsData,
+        otpVerifications: [], // Skip OTP verifications - they should not be persisted in production
         bookings: bookingsData,
         jobPostings: jobPostingsData,
         bids: bidsData,

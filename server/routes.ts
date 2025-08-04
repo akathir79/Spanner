@@ -51,6 +51,10 @@ const workerSignupSchema = insertUserSchema.extend({
 // Helper function to generate OTP
 function generateOTP(): string {
   // Generate random 6-digit OTP
+  // NOTE: In production, OTPs should be:
+  // 1. Stored temporarily in memory/cache (Redis) with short TTL (5-10 minutes)
+  // 2. Never persisted in database for security reasons
+  // 3. Generated fresh for each request
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
   return otp;
 }
