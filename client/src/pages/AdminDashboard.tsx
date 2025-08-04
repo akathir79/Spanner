@@ -343,71 +343,7 @@ export default function AdminDashboard() {
     }
   };
 
-  // Quick login for demo purposes
-  const quickLogin = async () => {
-    try {
-      setIsLoading(true);
-      
-      // Step 1: Request OTP for super admin
-      const loginResponse = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          mobile: "9000000001", // Super admin mobile
-          role: "super_admin"
-        })
-      });
-      
-      const loginResult = await loginResponse.json();
-      
-      if (loginResult.success && loginResult.otp) {
-        // Step 2: Verify OTP automatically (since we got it from the response)
-        const verifyResponse = await fetch("/api/auth/verify-otp", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            mobile: "9000000001",
-            otp: loginResult.otp,
-            type: "login"
-          })
-        });
-        
-        const verifyResult = await verifyResponse.json();
-        
-        if (verifyResponse.ok && verifyResult.user) {
-          // Update auth context with the user
-          login(verifyResult.user);
-          toast({
-            title: "Success",
-            description: "Super admin login successful!",
-          });
-          // Force page refresh to trigger proper redirection
-          window.location.reload();
-        } else {
-          toast({
-            title: "Error",
-            description: "Failed to verify super admin login",
-            variant: "destructive",
-          });
-        }
-      } else {
-        toast({
-          title: "Error", 
-          description: loginResult.message || "Failed to send super admin OTP",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      console.error("Quick login failed:", error);
-      toast({
-        title: "Error",
-        description: "Super admin login failed",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+
 
   // Redirect if not authenticated or wrong role
   if (authLoading || !user) {
@@ -421,13 +357,6 @@ export default function AdminDashboard() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <Button 
-              onClick={quickLogin} 
-              className="w-full"
-              disabled={isLoading}
-            >
-              {isLoading ? "Logging in..." : "Quick Login as Super Admin"}
-            </Button>
             <Button 
               variant="outline" 
               onClick={() => setLocation("/")} 
