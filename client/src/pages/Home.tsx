@@ -840,7 +840,7 @@ export default function Home() {
                               {searchForm.district
                                 ? (() => {
                                     const selectedDistrict = getAvailableDistricts().find((district: any) => district.id === searchForm.district);
-                                    return selectedDistrict ? `${selectedDistrict.name}${selectedDistrict.tamilName ? ` (${selectedDistrict.tamilName})` : ''}` : "Select District";
+                                    return selectedDistrict ? selectedDistrict.name : "Select District";
                                   })()
                                 : isLoadingDistricts ? "Loading districts..." : "Select District"}
                               <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -873,7 +873,7 @@ export default function Home() {
                                       }}
                                     >
                                       <span className="transition-all duration-150">
-                                        {district.name} {district.tamilName && `(${district.tamilName})`}
+                                        {district.name}
                                       </span>
                                     </CommandItem>
                                   ))}

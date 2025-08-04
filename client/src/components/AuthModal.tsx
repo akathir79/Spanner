@@ -1367,9 +1367,7 @@ export function AuthModal({ isOpen, onClose, mode, initialTab }: AuthModalProps)
                                 >
                                   <span className="transition-all duration-150">
                                     {district.name}
-                                    {district.tamilName && district.tamilName !== district.name && (
-                                      <span className="text-muted-foreground ml-2">({district.tamilName})</span>
-                                    )}
+
                                   </span>
                                 </CommandItem>
                               ))}
@@ -1807,7 +1805,7 @@ export function AuthModal({ isOpen, onClose, mode, initialTab }: AuthModalProps)
                                     }}
                                   >
                                     <span className="transition-all duration-150">
-                                      {district.name} {district.tamilName && `(${district.tamilName})`}
+                                      {district.name}
                                     </span>
                                   </CommandItem>
                                 ))
@@ -2208,9 +2206,7 @@ export function AuthModal({ isOpen, onClose, mode, initialTab }: AuthModalProps)
                                   >
                                     <div className="flex flex-col">
                                       <span className="font-medium">{district.name}</span>
-                                      {district.tamilName && (
-                                        <span className="text-sm text-muted-foreground">({district.tamilName})</span>
-                                      )}
+
                                     </div>
                                   </CommandItem>
                                 ))
