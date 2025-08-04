@@ -688,17 +688,6 @@ export default function Home() {
                             </Command>
                           </PopoverContent>
                         </Popover>
-                        {searchForm.service && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="mt-1 h-6 px-2 text-xs"
-                            onClick={() => setSearchForm(prev => ({ ...prev, service: "" }))}
-                          >
-                            <X className="h-3 w-3 mr-1" />
-                            Clear
-                          </Button>
-                        )}
                       </div>
 
                       <div>
