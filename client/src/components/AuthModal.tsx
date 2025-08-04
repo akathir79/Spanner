@@ -615,6 +615,13 @@ export function AuthModal({ isOpen, onClose, mode, initialTab }: AuthModalProps)
               setTimeout(() => {
                 // After districts are loaded, find and set the matching district
                 const districts = formType === "client" ? clientApiDistricts : workerApiDistricts;
+                console.log('AuthModal District matching - districts array length:', districts.length);
+                console.log('AuthModal District matching - first 3 districts:', districts.slice(0, 3));
+                console.log('AuthModal Location data for matching:', {
+                  state_district: locationData.state_district,
+                  county: locationData.county
+                });
+                
                 const foundDistrict = districts.find((district: any) => {
                   const districtName = district.name.toLowerCase();
                   const detectedStateDistrict = locationData.state_district?.toLowerCase() || '';
