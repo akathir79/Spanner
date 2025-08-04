@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -844,20 +844,32 @@ export default function Dashboard() {
     }
   };
 
-  // CONDITIONAL RETURNS AFTER ALL HOOKS ARE DECLARED
-  // Redirect if not authenticated or wrong role
-  if (!user) {
-    setLocation("/login");
-    return null;
-  }
-
-  if (user.role !== "client") {
-    if (user.role === "worker") {
-      setLocation("/worker-dashboard");
-    } else if (user.role === "admin" || user.role === "super_admin") {
-      setLocation("/admin-dashboard");
+  // Handle redirects in useEffect to avoid setState during render
+  useEffect(() => {
+    if (!user) {
+      setLocation("/");
+      return;
     }
-    return null;
+
+    if (user.role !== "client") {
+      if (user.role === "worker") {
+        setLocation("/worker-dashboard");
+      } else if (user.role === "admin" || user.role === "super_admin") {
+        setLocation("/admin-dashboard");
+      }
+    }
+  }, [user, setLocation]);
+
+  // Show loading while user is being fetched or redirecting
+  if (!user || user.role !== "client") {
+    return (
+      <div className="min-h-screen bg-muted/30 pt-20 pb-8 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
