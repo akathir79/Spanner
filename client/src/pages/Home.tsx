@@ -604,8 +604,8 @@ export default function Home() {
                     size="lg"
                     className="bg-white text-primary border-primary hover:bg-primary hover:text-white"
                     onClick={() => {
-                      // This will trigger the register modal
-                      const event = new CustomEvent('openRegisterModal');
+                      // This will trigger the register modal with client tab
+                      const event = new CustomEvent('openRegisterModal', { detail: { tab: 'client' } });
                       window.dispatchEvent(event);
                     }}
                   >
@@ -616,8 +616,8 @@ export default function Home() {
                     size="lg"
                     className="bg-yellow-500 hover:bg-yellow-600 text-black font-medium"
                     onClick={() => {
-                      // This will trigger the register modal
-                      const event = new CustomEvent('openRegisterModal');
+                      // This will trigger the register modal with worker tab
+                      const event = new CustomEvent('openRegisterModal', { detail: { tab: 'worker' } });
                       window.dispatchEvent(event);
                     }}
                   >
@@ -1041,11 +1041,28 @@ export default function Home() {
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" variant="secondary">
+            <Button 
+              size="lg" 
+              variant="secondary"
+              onClick={() => {
+                // This will trigger the register modal with client tab
+                const event = new CustomEvent('openRegisterModal', { detail: { tab: 'client' } });
+                window.dispatchEvent(event);
+              }}
+            >
               <Users className="h-5 w-5 mr-2" />
               Sign Up as Client
             </Button>
-            <Button size="lg" variant="outline" className="bg-yellow-500 text-white border-yellow-500 hover:bg-yellow-600">
+            <Button 
+              size="lg" 
+              variant="outline" 
+              className="bg-yellow-500 text-white border-yellow-500 hover:bg-yellow-600"
+              onClick={() => {
+                // This will trigger the register modal with worker tab
+                const event = new CustomEvent('openRegisterModal', { detail: { tab: 'worker' } });
+                window.dispatchEvent(event);
+              }}
+            >
               <Users className="h-5 w-5 mr-2" />
               Join as Worker
             </Button>

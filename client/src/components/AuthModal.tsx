@@ -70,13 +70,14 @@ interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
   mode: "login" | "signup";
+  initialTab?: "client" | "worker";
 }
 
-export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
+export function AuthModal({ isOpen, onClose, mode, initialTab }: AuthModalProps) {
   const [step, setStep] = useState(1);
   const [pendingLogin, setPendingLogin] = useState<{ mobile: string; role: string } | null>(null);
   const [developmentOtp, setDevelopmentOtp] = useState<string>("");
-  const [signupType, setSignupType] = useState<"client" | "worker">("client");
+  const [signupType, setSignupType] = useState<"client" | "worker">(initialTab || "client");
   const [loginRole, setLoginRole] = useState<"client" | "worker">("client");
   const [isLocationLoading, setIsLocationLoading] = useState(false);
   const [clientProfilePreview, setClientProfilePreview] = useState<string>("");
@@ -233,6 +234,13 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
       fetchDistrictsFromAPI(currentState);
     }
   }, []);
+
+  // Update signupType when initialTab changes and modal is opened
+  useEffect(() => {
+    if (isOpen && initialTab) {
+      setSignupType(initialTab);
+    }
+  }, [isOpen, initialTab]);
 
   const fetchDistrictsFromAPI = async (stateName: string) => {
     setIsLoadingDistricts(true);

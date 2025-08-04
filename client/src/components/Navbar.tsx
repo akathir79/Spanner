@@ -17,6 +17,7 @@ export function Navbar() {
   const { user, logout } = useAuth();
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showSignupModal, setShowSignupModal] = useState(false);
+  const [signupInitialTab, setSignupInitialTab] = useState<"client" | "worker">("client");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Fetch worker profile if user is a worker
@@ -42,7 +43,9 @@ export function Navbar() {
   };
 
   useEffect(() => {
-    const handleOpenRegisterModal = () => {
+    const handleOpenRegisterModal = (event: any) => {
+      const tabType = event.detail?.tab || "client";
+      setSignupInitialTab(tabType);
       setShowSignupModal(true);
     };
 
@@ -239,6 +242,7 @@ export function Navbar() {
         isOpen={showSignupModal}
         onClose={() => setShowSignupModal(false)}
         mode="signup"
+        initialTab={signupInitialTab}
       />
     </>
   );
