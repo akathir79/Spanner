@@ -1209,7 +1209,7 @@ export function AuthModal({ isOpen, onClose, mode, initialTab }: AuthModalProps)
                           className="transition-all duration-200"
                         />
                         <CommandEmpty>No state found.</CommandEmpty>
-                        <CommandList className="max-h-40 overflow-y-auto">
+                        <CommandList className="max-h-40 overflow-y-auto dropdown-scrollbar">
                           <CommandGroup heading="States">
                             {INDIAN_STATES_AND_UTS
                               .filter(state => state.type === "state")
@@ -1309,7 +1309,7 @@ export function AuthModal({ isOpen, onClose, mode, initialTab }: AuthModalProps)
                           className="transition-all duration-200"
                         />
                         <CommandEmpty>No district found.</CommandEmpty>
-                        <CommandList className="max-h-40 overflow-y-auto">
+                        <CommandList className="max-h-40 overflow-y-auto dropdown-scrollbar">
                           <CommandGroup>
                             {clientApiDistricts
                               .filter(district => 
@@ -1747,7 +1747,7 @@ export function AuthModal({ isOpen, onClose, mode, initialTab }: AuthModalProps)
                             placeholder="Search districts..." 
                             className="transition-all duration-200"
                           />
-                          <CommandList>
+                          <CommandList className="dropdown-scrollbar">
                             <CommandEmpty>No district found.</CommandEmpty>
                             <CommandGroup>
                               {isWorkerLoadingDistricts ? (
@@ -2052,7 +2052,7 @@ export function AuthModal({ isOpen, onClose, mode, initialTab }: AuthModalProps)
                           className="transition-all duration-200"
                         />
                         <CommandEmpty>No state found.</CommandEmpty>
-                        <CommandList className="max-h-40 overflow-y-auto">
+                        <CommandList className="max-h-40 overflow-y-auto dropdown-scrollbar">
                           <CommandGroup heading="States">
                             {INDIAN_STATES_AND_UTS
                               .filter(state => state.type === "state")

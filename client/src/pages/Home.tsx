@@ -671,7 +671,7 @@ export default function Home() {
                                 placeholder="Search services..." 
                                 className="transition-all duration-200"
                               />
-                              <CommandList>
+                              <CommandList className="dropdown-scrollbar">
                                 <CommandEmpty>No service found.</CommandEmpty>
                                 <CommandGroup>
                                   {services?.map((service: any, index) => (
@@ -738,7 +738,7 @@ export default function Home() {
                                 placeholder="Search states..." 
                                 className="transition-all duration-200"
                               />
-                              <CommandList>
+                              <CommandList className="dropdown-scrollbar">
                                 <CommandEmpty>No state found.</CommandEmpty>
                                 <CommandGroup heading="States">
                                   {INDIAN_STATES_AND_UTS.filter(item => item.type === 'state').map((state, index) => (
@@ -818,7 +818,7 @@ export default function Home() {
                                 placeholder="Search districts..." 
                                 className="transition-all duration-200"
                               />
-                              <CommandList>
+                              <CommandList className="dropdown-scrollbar">
                                 <CommandEmpty>No district found.</CommandEmpty>
                                 <CommandGroup>
                                   {getAvailableDistricts().map((district: any, index) => (
