@@ -1,6 +1,6 @@
 {
   "metadata": {
-    "exportDate": "2025-08-03T08:13:21.633Z",
+    "exportDate": "2025-08-04T11:34:05.174Z",
     "version": "1.0.0",
     "description": "SPANNER Tamil Nadu Blue-Collar Service Marketplace Database Backup"
   },
@@ -47,7 +47,6 @@
       {
         "id": "4423648c-2bb0-4d04-9c29-8e66aac22f1e",
         "name": "Plumbing",
-        "tamilName": "குழாய் வேலை",
         "description": "Water pipe repairs, installations, and maintenance",
         "icon": "wrench",
         "isActive": true,
@@ -56,7 +55,6 @@
       {
         "id": "b0bb60cb-c391-438b-9090-aef98baa41fa",
         "name": "Electrical",
-        "tamilName": "மின்சார வேலை",
         "description": "Electrical repairs, installations, and wiring",
         "icon": "zap",
         "isActive": true,
@@ -65,7 +63,6 @@
       {
         "id": "94b31b66-af96-4c23-b3b2-7fad8b450644",
         "name": "Painting",
-        "tamilName": "ஓவியம்",
         "description": "House painting, wall coloring, and decoration",
         "icon": "palette",
         "isActive": true,
@@ -74,7 +71,6 @@
       {
         "id": "dba9d98e-03bb-4002-a33c-cadd9b1a5350",
         "name": "Carpentry",
-        "tamilName": "தச்சு வேலை",
         "description": "Furniture making, wood work, and repairs",
         "icon": "hammer",
         "isActive": true,
@@ -83,7 +79,6 @@
       {
         "id": "83b3b71a-42fc-4a8a-9973-6daf7bbcc248",
         "name": "AC Repair",
-        "tamilName": "ஏசி பழுது",
         "description": "Air conditioner servicing, repair, and installation",
         "icon": "snowflake",
         "isActive": true,
@@ -92,7 +87,6 @@
       {
         "id": "8ab441d0-936d-4015-9b6d-feb96730b920",
         "name": "Cleaning",
-        "tamilName": "சுத்தம்",
         "description": "House cleaning, deep cleaning services",
         "icon": "sparkles",
         "isActive": true,
@@ -101,7 +95,6 @@
       {
         "id": "a3c2137c-13a7-409a-a028-68b00209969d",
         "name": "Mechanic",
-        "tamilName": "மெக்கானிக்",
         "description": "Vehicle repair and maintenance services",
         "icon": "car",
         "isActive": true,
@@ -110,7 +103,6 @@
       {
         "id": "dfdcfa66-bac3-48e7-88d1-93f5f9e570bc",
         "name": "Gardening",
-        "tamilName": "தோட்டக்கலை",
         "description": "Garden maintenance and landscaping",
         "icon": "flower",
         "isActive": true,
@@ -119,7 +111,6 @@
       {
         "id": "183c9efa-5f97-46ec-8251-a07b42215290",
         "name": "BathRoom cleaning",
-        "tamilName": "BathRoom cleaning",
         "description": "BathRoom cleaning services",
         "icon": "wrench",
         "isActive": true,
@@ -181,6 +172,51 @@
         "expiresAt": "2025-08-03T05:20:23.810Z",
         "isUsed": true,
         "createdAt": "2025-08-03T05:10:23.822Z"
+      },
+      {
+        "id": "5c8918d7-222c-409d-8b4f-9403e1af10ed",
+        "mobile": "9000000001",
+        "otp": "122930",
+        "purpose": "login",
+        "expiresAt": "2025-08-03T11:32:04.707Z",
+        "isUsed": true,
+        "createdAt": "2025-08-03T11:22:05.188Z"
+      },
+      {
+        "id": "00e5c594-b68d-4a70-8177-79d7c5624b49",
+        "mobile": "9000000001",
+        "otp": "433841",
+        "purpose": "login",
+        "expiresAt": "2025-08-04T09:11:03.499Z",
+        "isUsed": true,
+        "createdAt": "2025-08-04T09:01:03.588Z"
+      },
+      {
+        "id": "baa7baa7-2224-4647-a477-e4145e8af635",
+        "mobile": "9000000001",
+        "otp": "177886",
+        "purpose": "login",
+        "expiresAt": "2025-08-04T09:11:43.106Z",
+        "isUsed": false,
+        "createdAt": "2025-08-04T09:01:43.187Z"
+      },
+      {
+        "id": "1368e1a7-2e86-48cd-b19e-a2204707b40a",
+        "mobile": "9000000001",
+        "otp": "963977",
+        "purpose": "login",
+        "expiresAt": "2025-08-04T09:37:36.045Z",
+        "isUsed": true,
+        "createdAt": "2025-08-04T09:27:36.615Z"
+      },
+      {
+        "id": "ddab14a6-2341-4324-acba-ab44e9933de0",
+        "mobile": "9000000001",
+        "otp": "434626",
+        "purpose": "login",
+        "expiresAt": "2025-08-04T09:38:55.524Z",
+        "isUsed": true,
+        "createdAt": "2025-08-04T09:28:55.623Z"
       }
     ],
     "bookings": [],

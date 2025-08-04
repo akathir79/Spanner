@@ -41,8 +41,9 @@ Preferred communication style: Simple, everyday language.
 Complete database backup and restore utilities in `database/` folder:
 - **backup-export.ts**: Export complete database to JSON backup files
 - **backup-restore.ts**: Restore database from JSON backup files  
-- **auto-setup.ts**: Automatically setup database on fresh deployments
-- **backups/**: Directory containing backup JSON files (71K+ lines of authentic Tamil Nadu data)
+- **auto-setup.ts**: Automatically setup database on fresh deployments (now integrated into server startup)
+- **backups/**: Directory containing backup JSON files with current India-wide platform data
+- **Fresh Backup Created**: Latest backup contains clean database without Tamil references (August 4, 2025)
 
 ### Database Schema
 Located in `shared/schema.ts`, the database includes:

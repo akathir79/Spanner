@@ -12,12 +12,12 @@ import fs from 'fs';
 
 async function checkDatabaseExists(): Promise<boolean> {
   try {
-    // Try to query a simple table to check if database is set up
+    // Check if service_categories table exists and has data (core table for the platform)
     const result = await db.execute(sql`
       SELECT COUNT(*) as count 
       FROM information_schema.tables 
       WHERE table_schema = 'public' 
-      AND table_name = 'districts'
+      AND table_name = 'service_categories'
     `);
     
     const tableExists = (result.rows[0] as any)?.count > 0;
@@ -26,9 +26,9 @@ async function checkDatabaseExists(): Promise<boolean> {
       return false;
     }
 
-    // Check if districts table has data
-    const districtCount = await db.execute(sql`SELECT COUNT(*) as count FROM districts`);
-    const hasData = (districtCount.rows[0] as any)?.count > 0;
+    // Check if service_categories table has data
+    const serviceCount = await db.execute(sql`SELECT COUNT(*) as count FROM service_categories`);
+    const hasData = (serviceCount.rows[0] as any)?.count > 0;
     
     return hasData;
   } catch (error) {
