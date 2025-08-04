@@ -576,8 +576,8 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
             const setDistrictWhenLoaded = (retryCount = 0, maxRetries = 10) => {
               console.log(`Trying to set district, attempt ${retryCount + 1}, districts available: ${apiDistricts?.length || 0}`);
               
-              // If districts are loaded, try to find and set the district
-              if (apiDistricts && apiDistricts.length > 0) {
+              // Check if districts are loaded and not loading
+              if (apiDistricts && apiDistricts.length > 0 && !isLoadingDistricts) {
                 let foundDistrict = null;
                 
                 // If we had a temporary district, find the real one
@@ -636,7 +636,7 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
               } else if (retryCount < maxRetries) {
                 // Districts not loaded yet, retry with exponential backoff
                 const delay = Math.min(200 * Math.pow(1.5, retryCount), 2000);
-                console.log(`Districts not loaded yet, retrying in ${delay}ms`);
+                console.log(`Districts not loaded yet (loading: ${isLoadingDistricts}, length: ${apiDistricts?.length || 0}), retrying in ${delay}ms`);
                 setTimeout(() => setDistrictWhenLoaded(retryCount + 1, maxRetries), delay);
               } else {
                 console.log('Max retries reached, districts could not be loaded');
@@ -645,7 +645,14 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
             
             // Start trying to set the district immediately if we have location data
             if (matchingDistrict || locationData.state_district || locationData.county) {
-              setDistrictWhenLoaded();
+              // Immediate attempt if districts are already loaded
+              if (apiDistricts && apiDistricts.length > 0 && !isLoadingDistricts) {
+                console.log('Districts already loaded, setting district immediately');
+                setDistrictWhenLoaded();
+              } else {
+                console.log('Waiting for districts to load before setting district');
+                setDistrictWhenLoaded();
+              }
             }
             
             toast({
