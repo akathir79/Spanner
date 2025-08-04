@@ -112,6 +112,14 @@ export function AuthModal({ isOpen, onClose, mode, initialTab, setMode }: AuthMo
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  // Reset modal state when it opens
+  useEffect(() => {
+    if (isOpen) {
+      setCurrentMode(mode);
+      setStep(1);
+    }
+  }, [isOpen, mode]);
+
   const loginForm = useForm({
     resolver: zodResolver(loginSchema),
     defaultValues: {
