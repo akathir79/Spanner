@@ -510,47 +510,49 @@
   background: hsl(var(--muted-foreground) / 0.6);
 }
 
-/* Dropdown specific scrollbar styling */
+/* Dropdown specific scrollbar styling - Enhanced visibility */
 .dropdown-scrollbar::-webkit-scrollbar {
-  width: 8px !important;
+  width: 12px !important;
   display: block !important;
 }
 
 .dropdown-scrollbar::-webkit-scrollbar-track {
-  background: hsl(var(--muted) / 0.5) !important;
-  border-radius: 3px;
+  background: rgba(0, 0, 0, 0.1) !important;
+  border-radius: 6px;
   margin: 4px 0;
 }
 
 .dropdown-scrollbar::-webkit-scrollbar-thumb {
-  background: hsl(var(--muted-foreground) / 0.7) !important;
-  border-radius: 3px;
+  background: rgba(0, 0, 0, 0.4) !important;
+  border-radius: 6px;
   transition: all 0.2s ease;
+  border: 2px solid transparent;
+  background-clip: padding-box;
 }
 
 .dropdown-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: hsl(var(--primary) / 0.8) !important;
+  background: rgba(0, 0, 0, 0.6) !important;
   transform: scaleX(1.1);
 }
 
-/* Firefox scrollbar styling */
+/* Firefox scrollbar styling - Enhanced visibility */
 .dropdown-scrollbar {
-  scrollbar-width: thin !important;
-  scrollbar-color: hsl(var(--muted-foreground) / 0.7) transparent !important;
+  scrollbar-width: auto !important;
+  scrollbar-color: rgba(0, 0, 0, 0.4) transparent !important;
 }
 
 .dropdown-scrollbar:hover {
-  scrollbar-color: hsl(var(--primary) / 0.8) transparent !important;
+  scrollbar-color: rgba(0, 0, 0, 0.6) transparent !important;
 }
 
 /* Force scrollbar visibility for Command components */
 [cmdk-list].dropdown-scrollbar {
   overflow-y: scroll !important;
-  scrollbar-width: thin !important;
+  scrollbar-width: auto !important;
 }
 
 [cmdk-list].dropdown-scrollbar::-webkit-scrollbar {
-  width: 8px !important;
+  width: 12px !important;
   display: block !important;
 }
 
