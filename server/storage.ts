@@ -62,16 +62,7 @@ export interface IStorage {
   getWorkersByDistrict(districtId: string): Promise<(User & { workerProfile: WorkerProfile })[]>;
   getWorkersByService(service: string): Promise<(User & { workerProfile: WorkerProfile })[]>;
   
-  // Districts
-  getAllDistricts(): Promise<District[]>;
-  getDistrictById(id: string): Promise<District | undefined>;
-  getDistrictByCode(code: string): Promise<District | undefined>;
-  
-  // Areas
-  getAreasByDistrict(districtId: string): Promise<Area[]>;
-  getAllAreas(): Promise<Area[]>;
-  createArea(area: InsertArea): Promise<Area>;
-  getAreaById(id: string): Promise<Area | undefined>;
+  // Districts and Areas now handled via API - removed from storage
   
   // Service categories
   getAllServiceCategories(): Promise<ServiceCategory[]>;
@@ -117,8 +108,8 @@ export interface IStorage {
   markOtpAsUsed(id: string): Promise<void>;
   
   // Job postings
-  getAllJobPostings(): Promise<(JobPosting & { client: User; district: District; bids?: Bid[] })[]>;
-  getJobPostingsByClient(clientId: string): Promise<(JobPosting & { district: District; bids?: Bid[] })[]>;
+  getAllJobPostings(): Promise<(JobPosting & { client: User; bids?: Bid[] })[]>;
+  getJobPostingsByClient(clientId: string): Promise<(JobPosting & { bids?: Bid[] })[]>;
   createJobPosting(jobPosting: InsertJobPosting): Promise<JobPosting>;
   updateJobPosting(id: string, updates: Partial<JobPosting>): Promise<JobPosting | undefined>;
   deleteJobPosting(id: string): Promise<void>;
@@ -133,7 +124,7 @@ export interface IStorage {
   // Admin functions
   getAllUsers(): Promise<User[]>;
   getUsersWithProfiles(): Promise<(User & { workerProfile?: WorkerProfile })[]>;
-  getBookingsWithDetails(): Promise<(Booking & { client: User; worker: User; district: District })[]>;
+  getBookingsWithDetails(): Promise<(Booking & { client: User; worker: User })[]>;
   
   // Worker Bank Details
   createWorkerBankDetails(bankDetails: InsertWorkerBankDetails): Promise<WorkerBankDetails>;
@@ -325,19 +316,7 @@ export class DatabaseStorage implements IStorage {
     }));
   }
 
-  async getAllDistricts(): Promise<District[]> {
-    return db.select().from(districts).orderBy(districts.name);
-  }
-
-  async getDistrictById(id: string): Promise<District | undefined> {
-    const [district] = await db.select().from(districts).where(eq(districts.id, id));
-    return district || undefined;
-  }
-
-  async getDistrictByCode(code: string): Promise<District | undefined> {
-    const [district] = await db.select().from(districts).where(eq(districts.code, code));
-    return district || undefined;
-  }
+  // District methods removed - now handled via API
 
   async getAllServiceCategories(): Promise<ServiceCategory[]> {
     return db.select().from(serviceCategories).where(eq(serviceCategories.isActive, true));
@@ -349,31 +328,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Area management
-  async getAreasByDistrict(districtId: string): Promise<Area[]> {
-    return db
-      .select()
-      .from(areas)
-      .where(and(eq(areas.districtId, districtId), eq(areas.isActive, true)))
-      .orderBy(areas.name);
-  }
-
-  async getAllAreas(): Promise<Area[]> {
-    return db
-      .select()
-      .from(areas)
-      .where(eq(areas.isActive, true))
-      .orderBy(areas.name);
-  }
-
-  async createArea(area: InsertArea): Promise<Area> {
-    const [newArea] = await db.insert(areas).values(area).returning();
-    return newArea;
-  }
-
-  async getAreaById(id: string): Promise<Area | undefined> {
-    const [area] = await db.select().from(areas).where(eq(areas.id, id));
-    return area || undefined;
-  }
+  // Area methods removed - now handled via API
 
   async getPendingWorkers(): Promise<any[]> {
     return db
@@ -387,12 +342,8 @@ export class DatabaseStorage implements IStorage {
         status: users.status,
         address: users.address,
         pincode: users.pincode,
+        district: users.district, // District name stored as text
         createdAt: users.createdAt,
-        district: {
-          id: districts.id,
-          name: districts.name,
-          tamilName: districts.tamilName,
-        },
         workerProfile: {
           id: workerProfiles.id,
           primaryService: workerProfiles.primaryService,
@@ -410,7 +361,6 @@ export class DatabaseStorage implements IStorage {
         },
       })
       .from(users)
-      .leftJoin(districts, eq(users.districtId, districts.id))
       .leftJoin(workerProfiles, eq(users.id, workerProfiles.userId))
       .where(and(eq(users.role, "worker"), eq(users.status, "pending")))
       .orderBy(users.createdAt);
@@ -620,7 +570,7 @@ export class DatabaseStorage implements IStorage {
     }));
   }
 
-  async getBookingsWithDetails(): Promise<(Booking & { client: User; worker: User; district: District })[]> {
+  async getBookingsWithDetails(): Promise<(Booking & { client: User; worker: User })[]> {
     // Get all bookings first
     const allBookings = await db
       .select()
@@ -632,13 +582,11 @@ export class DatabaseStorage implements IStorage {
       allBookings.map(async (booking) => {
         const [client] = await db.select().from(users).where(eq(users.id, booking.clientId));
         const [worker] = await db.select().from(users).where(eq(users.id, booking.workerId));
-        const [district] = await db.select().from(districts).where(eq(districts.id, booking.districtId));
         
         return {
           ...booking,
           client: client!,
-          worker: worker!,
-          district: district!
+          worker: worker!
         };
       })
     );
@@ -646,30 +594,26 @@ export class DatabaseStorage implements IStorage {
     return enrichedBookings;
   }
   // Job posting methods
-  async getAllJobPostings(): Promise<(JobPosting & { client: User; district: District; bids?: Bid[] })[]> {
+  async getAllJobPostings(): Promise<(JobPosting & { client: User; bids?: Bid[] })[]> {
     const result = await db.select()
       .from(jobPostings)
       .leftJoin(users, eq(jobPostings.clientId, users.id))
-      .leftJoin(districts, eq(jobPostings.districtId, districts.id))
       .orderBy(desc(jobPostings.createdAt));
     
     return result.map(row => ({
       ...row.job_postings,
-      client: row.users!,
-      district: row.districts!
+      client: row.users!
     }));
   }
 
-  async getJobPostingsByClient(clientId: string): Promise<(JobPosting & { district: District; bids?: Bid[] })[]> {
+  async getJobPostingsByClient(clientId: string): Promise<(JobPosting & { bids?: Bid[] })[]> {
     const result = await db.select()
       .from(jobPostings)
-      .leftJoin(districts, eq(jobPostings.districtId, districts.id))
       .where(eq(jobPostings.clientId, clientId))
       .orderBy(desc(jobPostings.createdAt));
     
     return result.map(row => ({
-      ...row.job_postings,
-      district: row.districts!
+      ...row.job_postings
     }));
   }
 

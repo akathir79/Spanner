@@ -53,7 +53,6 @@ export const workerProfiles = pgTable("worker_profiles", {
 export const serviceCategories = pgTable("service_categories", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   name: text("name").notNull(),
-  tamilName: text("tamil_name").notNull(),
   description: text("description"),
   icon: text("icon").notNull(),
   isActive: boolean("is_active").default(true),

@@ -637,7 +637,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create new service category
   app.post("/api/services", async (req, res) => {
     try {
-      const { name, tamilName, description, icon, isActive } = req.body;
+      const { name, description, icon, isActive } = req.body;
       
       // Validate required fields
       if (!name) {
@@ -656,7 +656,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const newService = await storage.createServiceCategory({
         name: name.trim(),
-        tamilName: tamilName?.trim() || name.trim(),
         description: description?.trim() || `${name.trim()} services`,
         icon: icon || "wrench",
         isActive: isActive !== false, // Default to true
