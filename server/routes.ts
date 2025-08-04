@@ -495,7 +495,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             firstName: "Admin",
             lastName: "User",
             role: "admin",
-            districtId: "76a03385-6ce1-4749-9ae5-67f192b1db7f",
+            district: "Chennai",
             isVerified: true,
             status: "approved"
           });
@@ -511,7 +511,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             firstName: "Super",
             lastName: "Admin",
             role: "super_admin",
-            districtId: "76a03385-6ce1-4749-9ae5-67f192b1db7f",
+            district: "Chennai",
             isVerified: true,
             status: "approved"
           });
@@ -531,7 +531,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           firstName: user.firstName,
           lastName: user.lastName,
           role: user.role,
-          districtId: user.districtId,
+          district: user.district,
           isVerified: user.isVerified,
           status: user.status,
           createdAt: user.createdAt,
@@ -683,11 +683,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get worker profile
       const workerProfile = await storage.getWorkerProfile(userId);
       
-      // Get district name if districtId exists
+      // Get district name if district exists
       let district = null;
-      if (user.districtId) {
-        const districts = await storage.getAllDistricts();
-        district = districts.find((d: any) => d.id === user.districtId);
+      if (user.district) {
+        district = { name: user.district };
       }
       
       // Get area names for service areas if they exist
@@ -811,10 +810,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create admin user (super admin only)
   app.post("/api/admin/create-admin", async (req, res) => {
     try {
-      const { firstName, lastName, mobile, email, address, districtId, profilePicture } = req.body;
+      const { firstName, lastName, mobile, email, address, district, profilePicture } = req.body;
       
       // Validate required fields
-      if (!firstName || !lastName || !mobile || !email || !address || !districtId) {
+      if (!firstName || !lastName || !mobile || !email || !address || !district) {
         return res.status(400).json({ message: "All required fields must be provided" });
       }
 
@@ -831,7 +830,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         mobile,
         email,
         address,
-        districtId,
+        district,
         profilePicture: profilePicture || null,
         role: "admin",
         isVerified: true, // Admins are pre-verified

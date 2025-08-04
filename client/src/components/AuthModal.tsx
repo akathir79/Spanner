@@ -577,15 +577,9 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
             // Simple approach: Set district directly if we have matching district
             if (matchingDistrict) {
               if (formType === "client") {
-                console.log('Setting district for client BEFORE:', clientForm.getValues("districtId"));
-                clientForm.setValue("districtId", matchingDistrict.id, { shouldValidate: true, shouldDirty: true });
-                console.log('Setting district for client AFTER:', clientForm.getValues("districtId"));
-                console.log('District set directly for client:', matchingDistrict.name, 'with ID:', matchingDistrict.id);
-                
-                // Force a re-render by updating a different field and then resetting it
-                setTimeout(() => {
-                  console.log('Checking district persistence:', clientForm.getValues("districtId"));
-                }, 100);
+                // For client form, set district name directly
+                clientForm.setValue("district", matchingDistrict.name);
+                console.log('District set for client:', matchingDistrict.name);
               } else {
                 workerForm.setValue("districtId", matchingDistrict.id);
                 workerForm.trigger("districtId");
@@ -1227,60 +1221,17 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
                 </div>
 
                 <div>
-                  <Label htmlFor="district">District</Label>
-                  <Popover open={clientDistrictPopoverOpen} onOpenChange={setClientDistrictPopoverOpen}>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        role="combobox"
-                        aria-expanded={clientDistrictPopoverOpen}
-                        className="w-full justify-between"
-                        disabled={!clientForm.watch("state")}
-                      >
-                        {clientForm.watch("districtId") 
-                          ? apiDistricts?.find((d: any) => d.id === clientForm.watch("districtId"))?.name || "Select District"
-                          : (!clientForm.watch("state") ? "Select state first" : "Select District")
-                        }
-                        <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-full p-0">
-                      <Command>
-                        <CommandInput placeholder="Search districts..." />
-                        <CommandList>
-                          <CommandEmpty>No district found.</CommandEmpty>
-                          <CommandGroup>
-                            {isLoadingDistricts ? (
-                              <CommandItem disabled>Loading districts...</CommandItem>
-                            ) : apiDistricts.length > 0 ? (
-                              apiDistricts.map((district: any) => (
-                                <CommandItem
-                                  key={district.id}
-                                  value={district.name}
-                                  onSelect={() => {
-                                    clientForm.setValue("districtId", district.id);
-                                    setClientDistrictPopoverOpen(false);
-                                  }}
-                                >
-                                  <div className="flex flex-col">
-                                    <span className="font-medium">{district.name}</span>
-                                    {district.tamilName && (
-                                      <span className="text-sm text-muted-foreground">({district.tamilName})</span>
-                                    )}
-                                  </div>
-                                </CommandItem>
-                              ))
-                            ) : (
-                              <CommandItem disabled>No districts found</CommandItem>
-                            )}
-                          </CommandGroup>
-                        </CommandList>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
-                  {clientForm.formState.errors.districtId && (
+                  <Label htmlFor="clientDistrict">District</Label>
+                  <Input
+                    id="clientDistrict"
+                    placeholder="District will be auto-filled using location"
+                    {...clientForm.register("district")}
+                    readOnly
+                    className="bg-gray-50"
+                  />
+                  {clientForm.formState.errors.district && (
                     <p className="text-sm text-destructive mt-1">
-                      {clientForm.formState.errors.districtId.message}
+                      {clientForm.formState.errors.district.message}
                     </p>
                   )}
                 </div>
