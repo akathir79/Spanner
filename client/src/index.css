@@ -561,6 +561,21 @@
   display: block !important;
 }
 
+/* Ensure PopoverContent doesn't clip scrollbars */
+[data-radix-popper-content-wrapper] {
+  overflow: visible !important;
+}
+
+[data-radix-popper-content-wrapper] > div {
+  overflow: visible !important;
+}
+
+/* Specific fix for district dropdown scrollbar visibility */
+.dropdown-scrollbar {
+  padding-right: 4px !important;
+  margin-right: -4px !important;
+}
+
 /* Font loading optimization */
 @font-face {
   font-family: 'Inter';

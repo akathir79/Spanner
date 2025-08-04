@@ -1803,7 +1803,7 @@ export function AuthModal({ isOpen, onClose, mode, initialTab }: AuthModalProps)
                           <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-full p-0 animate-dropdown-open">
+                      <PopoverContent className="w-full p-0 animate-dropdown-open" style={{ overflow: 'visible' }}>
                         <div className="flex flex-col">
                           <div className="px-3 py-2 border-b">
                             <input
