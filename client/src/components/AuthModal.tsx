@@ -461,7 +461,16 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
                                    locationData.town ||
                                    locationData.village;
             
-            const detectedAddress = `${locationData.house_number || ''} ${locationData.road || ''} ${locationData.suburb || ''} ${locationData.city || ''}`.trim();
+            // Build a more accurate address with better locality detection
+            const addressParts = [
+              locationData.house_number,
+              locationData.road,
+              locationData.village || locationData.suburb || locationData.neighbourhood,
+              locationData.city || locationData.town,
+              locationData.county
+            ].filter(part => part && part.trim() !== '');
+            
+            const detectedAddress = addressParts.join(', ');
             const detectedPincode = locationData.postcode || '';
             
             // Find matching district with improved logic - including all location components
@@ -471,48 +480,49 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
             if (apiDistricts && apiDistricts.length > 0) {
               matchingDistrict = apiDistricts.find((district: any) => {
                 const districtName = district.name.toLowerCase();
-                const detectedName = detectedLocation?.toLowerCase() || '';
-                const detectedCity = locationData.city?.toLowerCase() || '';
-                const detectedCounty = locationData.county?.toLowerCase() || '';
                 const detectedStateDistrict = locationData.state_district?.toLowerCase() || '';
+                const detectedCounty = locationData.county?.toLowerCase() || '';
+                const detectedCity = locationData.city?.toLowerCase() || '';
                 
-                // Check for exact matches first (most reliable)
-                if (districtName === detectedStateDistrict || 
-                    districtName === detectedCounty ||
-                    districtName === detectedCity ||
-                    districtName === detectedName) {
+                // Priority 1: Exact match with state_district (most reliable for Indian addresses)
+                if (districtName === detectedStateDistrict) {
                   return true;
                 }
                 
-                // Check if detected location contains the district name
-                if (detectedStateDistrict.includes(districtName) ||
-                    detectedCounty.includes(districtName) ||
-                    detectedCity.includes(districtName) ||
-                    detectedName.includes(districtName)) {
+                // Priority 2: Exact match with county
+                if (districtName === detectedCounty) {
                   return true;
                 }
                 
-                // Check reverse - if district name contains detected location
-                if (districtName.includes(detectedName) ||
-                    districtName.includes(detectedCity) ||
-                    districtName.includes(detectedCounty)) {
+                // Priority 3: Check if state_district contains district name
+                if (detectedStateDistrict && detectedStateDistrict.includes(districtName)) {
                   return true;
                 }
                 
-                // Check Tamil/local name matches if available
-                if (district.tamilName?.toLowerCase().includes(detectedName) ||
-                    district.tamilName?.toLowerCase().includes(detectedStateDistrict) ||
-                    district.tamilName?.toLowerCase().includes(detectedCounty)) {
+                // Priority 4: Check if county contains district name  
+                if (detectedCounty && detectedCounty.includes(districtName)) {
+                  return true;
+                }
+                
+                // Priority 5: Check city match
+                if (districtName === detectedCity) {
+                  return true;
+                }
+                
+                // Priority 6: Check Tamil name matches
+                if (district.tamilName?.toLowerCase() === detectedStateDistrict ||
+                    district.tamilName?.toLowerCase() === detectedCounty) {
                   return true;
                 }
                 
                 return false;
               });
             } else {
-              // If no districts loaded yet, create a temporary district object for later matching
+              // If no districts loaded yet, create a temporary district object using most reliable data
+              const tempDistrictName = locationData.state_district || locationData.county || locationData.city || 'Unknown';
               matchingDistrict = {
-                id: detectedLocation?.toLowerCase().replace(/\s+/g, '') || 'temp',
-                name: detectedLocation || locationData.state_district || locationData.county || locationData.city || 'Unknown',
+                id: tempDistrictName.toLowerCase().replace(/\s+/g, '') || 'temp',
+                name: tempDistrictName,
                 isTemporary: true
               };
             }
@@ -559,7 +569,7 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
               // Function to set district once districts are loaded
               const setDistrictWhenLoaded = () => {
                 // If we have a temporary district, we need to wait for real districts to load
-                if (matchingDistrict.isTemporary) {
+                if ((matchingDistrict as any).isTemporary) {
                   if (apiDistricts && apiDistricts.length > 0) {
                     // Try to find the real district from the loaded list
                     const realDistrict = apiDistricts.find((district: any) => {
@@ -616,8 +626,8 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
             toast({
               title: "Location detected",
               description: matchingDistrict 
-                ? `Address, pincode, and district (${matchingDistrict.name}) updated automatically`
-                : `Address and pincode updated. Please select district manually.`,
+                ? `Address, pincode, and district (${matchingDistrict.name}) detected automatically`
+                : `Address and pincode detected. District will be set after loading.`,
             });
             
             console.log('Location detection results:', {
