@@ -51,6 +51,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = () => {
     setUser(null);
     localStorage.removeItem("user");
+    // Navigate to home page after logout
+    window.location.href = "/";
   };
 
   const loginWithOtp = async (mobile: string, role: string) => {
