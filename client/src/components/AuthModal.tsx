@@ -575,9 +575,15 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
             // Simple approach: Set district directly if we have matching district
             if (matchingDistrict) {
               if (formType === "client") {
-                clientForm.setValue("districtId", matchingDistrict.id);
-                clientForm.trigger("districtId");
+                console.log('Setting district for client BEFORE:', clientForm.getValues("districtId"));
+                clientForm.setValue("districtId", matchingDistrict.id, { shouldValidate: true, shouldDirty: true });
+                console.log('Setting district for client AFTER:', clientForm.getValues("districtId"));
                 console.log('District set directly for client:', matchingDistrict.name, 'with ID:', matchingDistrict.id);
+                
+                // Force a re-render by updating a different field and then resetting it
+                setTimeout(() => {
+                  console.log('Checking district persistence:', clientForm.getValues("districtId"));
+                }, 100);
               } else {
                 workerForm.setValue("districtId", matchingDistrict.id);
                 workerForm.trigger("districtId");
@@ -1232,14 +1238,24 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
                         {(() => {
                           const districtId = clientForm.watch("districtId");
                           const state = clientForm.watch("state");
-                          console.log('Button render - districtId:', districtId, 'state:', state, 'apiDistricts length:', apiDistricts.length);
                           
                           if (!state) return "Select state first";
                           if (!districtId) return "Select your district";
                           
+                          // Try to find district name from apiDistricts first
                           const foundDistrict = apiDistricts.find((district: any) => district.id === districtId);
-                          console.log('Button render - found district:', foundDistrict?.name);
-                          return foundDistrict?.name || `District selected (${districtId})`;
+                          if (foundDistrict) {
+                            return foundDistrict.name;
+                          }
+                          
+                          // If not found in apiDistricts, check if it's a known district (like Salem)
+                          if (districtId === "salem") return "Salem";
+                          if (districtId === "chennai") return "Chennai";
+                          if (districtId === "coimbatore") return "Coimbatore";
+                          if (districtId === "madurai") return "Madurai";
+                          
+                          // Fallback to showing ID
+                          return `District selected (${districtId})`;
                         })()}
                         <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                       </Button>
