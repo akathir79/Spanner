@@ -188,7 +188,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!existingUser) {
         return res.status(400).json({ 
           success: false,
-          message: "Mobile number not registered. Please sign up first." 
+          message: "Mobile number not registered", 
+          error: "USER_NOT_FOUND",
+          action: "signup_required",
+          description: "This mobile number is not registered with SPANNER. Please create an account first to continue."
         });
       }
       

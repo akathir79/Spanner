@@ -71,9 +71,11 @@ interface AuthModalProps {
   onClose: () => void;
   mode: "login" | "signup";
   initialTab?: "client" | "worker";
+  setMode?: (mode: "login" | "signup") => void;
 }
 
-export function AuthModal({ isOpen, onClose, mode, initialTab }: AuthModalProps) {
+export function AuthModal({ isOpen, onClose, mode, initialTab, setMode }: AuthModalProps) {
+  const [currentMode, setCurrentMode] = useState<"login" | "signup">(mode);
   const [step, setStep] = useState(1);
   const [pendingLogin, setPendingLogin] = useState<{ mobile: string; role: string } | null>(null);
   const [developmentOtp, setDevelopmentOtp] = useState<string>("");
@@ -765,6 +767,41 @@ export function AuthModal({ isOpen, onClose, mode, initialTab }: AuthModalProps)
       setPendingLogin({ mobile: data.mobile, role: loginRole });
       setDevelopmentOtp(result.otp || "");
       setStep(2);
+    } else if (result.needsSignup) {
+      // Show signup prompt for unregistered users
+      toast({
+        title: "Account Not Found",
+        description: result.description || "This mobile number is not registered. Please create an account first.",
+        variant: "default",
+        action: (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              // Switch to signup tab and pre-fill mobile number
+              setStep(1);
+              setCurrentMode("signup");
+              setMode?.("signup");
+              if (loginRole === "client") {
+                clientForm.setValue("mobile", data.mobile);
+                setSignupType("client");
+              } else if (loginRole === "worker") {
+                workerForm.setValue("mobile", data.mobile);
+                setSignupType("worker");
+              }
+            }}
+          >
+            Sign Up Now
+          </Button>
+        ),
+      });
+    } else {
+      // Show generic error for other issues
+      toast({
+        title: "Login Failed",
+        description: result.error || "Unable to send OTP. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -964,7 +1001,7 @@ export function AuthModal({ isOpen, onClose, mode, initialTab }: AuthModalProps)
       <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center space-x-2">
-            {mode === "login" ? (
+            {currentMode === "login" ? (
               <>
                 <LogIn className="h-5 w-5" />
                 <span>Login to SPANNER</span>
@@ -978,7 +1015,7 @@ export function AuthModal({ isOpen, onClose, mode, initialTab }: AuthModalProps)
           </DialogTitle>
         </DialogHeader>
 
-        {mode === "login" ? (
+        {currentMode === "login" ? (
           <>
             {step === 1 && (
               <div className="space-y-4">

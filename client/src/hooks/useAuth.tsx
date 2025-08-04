@@ -17,7 +17,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   login: (userData: User) => void;
   logout: () => void;
-  loginWithOtp: (mobile: string, role: string) => Promise<{ success: boolean; otp?: string; error?: string }>;
+  loginWithOtp: (mobile: string, role: string) => Promise<{ success: boolean; otp?: string; error?: string; needsSignup?: boolean; description?: string }>;
   verifyOtp: (mobile: string, otp: string, type: string) => Promise<User | null>;
   signupClient: (data: any) => Promise<User | null>;
   signupWorker: (data: any) => Promise<{ user: User } | null>;
@@ -68,7 +68,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (response.ok) {
         return { success: true, otp: result.otp };
       } else {
-        return { success: false, error: result.message };
+        return { 
+          success: false, 
+          error: result.message,
+          needsSignup: result.error === "USER_NOT_FOUND",
+          description: result.description
+        };
       }
     } catch (error) {
       return { success: false, error: "Network error" };
