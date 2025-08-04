@@ -1274,6 +1274,7 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
                   <Select 
                     value={clientForm.watch("districtId")} 
                     onValueChange={(value) => {
+                      console.log('District selected manually:', value);
                       clientForm.setValue("districtId", value);
                     }}
                     disabled={!clientForm.watch("state")}
@@ -1289,11 +1290,17 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
                       {isLoadingDistricts ? (
                         <SelectItem value="loading" disabled>Loading districts...</SelectItem>
                       ) : apiDistricts.length > 0 ? (
-                        apiDistricts.map((district: any) => (
-                          <SelectItem key={district.id} value={district.id}>
-                            {district.name} {district.tamilName && `(${district.tamilName})`}
-                          </SelectItem>
-                        ))
+                        apiDistricts.map((district: any) => {
+                          const isSelected = district.id === clientForm.watch("districtId");
+                          if (isSelected) {
+                            console.log('Found matching district option:', district.name, 'for form value:', clientForm.watch("districtId"));
+                          }
+                          return (
+                            <SelectItem key={district.id} value={district.id}>
+                              {district.name} {district.tamilName && `(${district.tamilName})`}
+                            </SelectItem>
+                          );
+                        })
                       ) : (
                         <SelectItem value="no-districts" disabled>
                           {clientForm.watch("state") ? "No districts found" : "Select state first"}
