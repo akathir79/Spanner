@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Plus } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -516,6 +516,17 @@ export default function WorkerDashboard() {
   const isWorkerApproved = user?.status === "approved";
   const [, setLocation] = useLocation();
 
+  // Use effect for redirects to avoid calling setLocation during render
+  useEffect(() => {
+    if (user && user.role !== "worker") {
+      if (user.role === "client") {
+        setLocation("/dashboard");
+      } else if (user.role === "admin" || user.role === "super_admin") {
+        setLocation("/admin-dashboard");
+      }
+    }
+  }, [user, setLocation]);
+
   // Redirect if not authenticated or wrong role
   if (authLoading || !user) {
     return (
@@ -528,12 +539,7 @@ export default function WorkerDashboard() {
     );
   }
 
-  if (user.role !== "worker") {
-    if (user.role === "client") {
-      setLocation("/dashboard");
-    } else if (user.role === "admin" || user.role === "super_admin") {
-      setLocation("/admin-dashboard");
-    }
+  if (user && user.role !== "worker") {
     return null;
   }
 

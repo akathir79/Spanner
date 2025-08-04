@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -86,6 +86,17 @@ export default function AdminDashboard() {
   const { t } = useLanguage();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
+
+  // Use effect for redirects to avoid calling setLocation during render
+  useEffect(() => {
+    if (user && user.role !== "admin" && user.role !== "super_admin") {
+      if (user.role === "client") {
+        setLocation("/dashboard");
+      } else if (user.role === "worker") {
+        setLocation("/worker-dashboard");
+      }
+    }
+  }, [user, setLocation]);
   const [userFilter, setUserFilter] = useState("");
   const [bookingFilter, setBookingFilter] = useState("");
   const [selectedUserType, setSelectedUserType] = useState<string | null>(null);
@@ -98,7 +109,7 @@ export default function AdminDashboard() {
   const [districtManagerOpen, setDistrictManagerOpen] = useState(false);
   const [adminProfilePreview, setAdminProfilePreview] = useState<string | null>(null);
   const [deleteConfirmUser, setDeleteConfirmUser] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(false);
+
 
   // Create admin form
   const createAdminForm = useForm<CreateAdminForm>({
@@ -370,12 +381,7 @@ export default function AdminDashboard() {
     );
   }
 
-  if (user.role !== "admin" && user.role !== "super_admin") {
-    if (user.role === "client") {
-      setLocation("/dashboard");
-    } else if (user.role === "worker") {
-      setLocation("/worker-dashboard");
-    }
+  if (user && user.role !== "admin" && user.role !== "super_admin") {
     return null;
   }
 
