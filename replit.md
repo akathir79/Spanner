@@ -70,6 +70,8 @@ Located in `shared/schema.ts`, the database includes:
 - Bank details required and integrated directly into registration flow with real Razorpay IFSC API
 - Workers cannot skip bank details during registration - must complete to proceed
 - Real SMS OTP integration ready for Twilio implementation when needed
+- **Location Detection System**: Automatic GPS-based district detection working perfectly on first click for both client and worker registration forms
+- **UI Improvements**: All dropdowns have consistent scrollbar functionality with enhanced visibility (August 4, 2025)
 
 ### User Interfaces
 - **Home Page**: Service discovery with search and filters
