@@ -583,15 +583,19 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
                     if (realDistrict) {
                       if (formType === "client") {
                         clientForm.setValue("districtId", realDistrict.id);
+                        // Force form re-render
+                        clientForm.trigger("districtId");
                       } else {
                         workerForm.setValue("districtId", realDistrict.id);
+                        workerForm.trigger("districtId");
                         setHomeDistrictPopoverOpen(false);
                         const currentDistricts: string[] = workerForm.getValues("serviceDistricts") || [];
                         if (!currentDistricts.includes(realDistrict.id)) {
                           workerForm.setValue("serviceDistricts", [...currentDistricts, realDistrict.id]);
                         }
                       }
-                      console.log('District set successfully:', realDistrict.name);
+                      console.log('District set successfully:', realDistrict.name, 'with ID:', realDistrict.id);
+                      console.log('Form value after setting:', formType === "client" ? clientForm.getValues("districtId") : workerForm.getValues("districtId"));
                     } else {
                       console.log('No matching district found in loaded districts for:', matchingDistrict.name);
                     }
@@ -606,15 +610,18 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
                   if (districtExists) {
                     if (formType === "client") {
                       clientForm.setValue("districtId", matchingDistrict.id);
+                      clientForm.trigger("districtId");
                     } else {
                       workerForm.setValue("districtId", matchingDistrict.id);
+                      workerForm.trigger("districtId");
                       setHomeDistrictPopoverOpen(false);
                       const currentDistricts: string[] = workerForm.getValues("serviceDistricts") || [];
                       if (!currentDistricts.includes(matchingDistrict.id)) {
                         workerForm.setValue("serviceDistricts", [...currentDistricts, matchingDistrict.id]);
                       }
                     }
-                    console.log('District set successfully:', matchingDistrict.name);
+                    console.log('District set successfully:', matchingDistrict.name, 'with ID:', matchingDistrict.id);
+                    console.log('Form value after setting:', formType === "client" ? clientForm.getValues("districtId") : workerForm.getValues("districtId"));
                   }
                 }
               };
@@ -637,7 +644,9 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
               detectedStateDistrict: locationData.state_district,
               detectedPincode,
               matchingDistrict: matchingDistrict?.name,
-              allLocationData: locationData
+              matchingDistrictId: matchingDistrict?.id,
+              allLocationData: locationData,
+              availableDistricts: apiDistricts?.slice(0, 5) // Show first 5 for debugging
             });
           }
         } catch (error) {
