@@ -777,8 +777,14 @@ export function AuthModal({ isOpen, onClose, mode, initialTab }: AuthModalProps)
       setStep(1);
       setPendingLogin(null);
       
-      // Force page refresh to trigger proper redirection
-      window.location.reload();
+      // Navigate to appropriate dashboard based on user role
+      if (result.role === "super_admin" || result.role === "admin") {
+        window.location.href = "/admin-dashboard";
+      } else if (result.role === "worker") {
+        window.location.href = "/worker-dashboard";
+      } else {
+        window.location.href = "/dashboard";
+      }
     }
   };
 
@@ -805,7 +811,8 @@ export function AuthModal({ isOpen, onClose, mode, initialTab }: AuthModalProps)
     // Close modal and redirect to worker dashboard
     setTimeout(() => {
       onClose();
-      window.location.reload(); // Force page refresh to trigger proper redirection
+      // Navigate to worker dashboard after successful registration
+      window.location.href = "/worker-dashboard";
     }, 2000);
   };
 
