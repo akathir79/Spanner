@@ -510,39 +510,44 @@
   background: hsl(var(--muted-foreground) / 0.6);
 }
 
-/* Dropdown specific scrollbar styling - Enhanced visibility */
+/* Dropdown specific scrollbar styling - Maximum visibility */
+.dropdown-scrollbar {
+  overflow-y: scroll !important;
+  scrollbar-width: thick !important;
+  scrollbar-color: #666666 #e0e0e0 !important;
+}
+
 .dropdown-scrollbar::-webkit-scrollbar {
-  width: 12px !important;
+  width: 16px !important;
+  height: 16px !important;
   display: block !important;
+  -webkit-appearance: none !important;
 }
 
 .dropdown-scrollbar::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.1) !important;
-  border-radius: 6px;
-  margin: 4px 0;
+  background: #f0f0f0 !important;
+  border-radius: 8px !important;
+  border: 1px solid #ddd !important;
+  margin: 2px !important;
 }
 
 .dropdown-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.4) !important;
-  border-radius: 6px;
-  transition: all 0.2s ease;
-  border: 2px solid transparent;
-  background-clip: padding-box;
+  background: linear-gradient(180deg, #888 0%, #666 100%) !important;
+  border-radius: 8px !important;
+  border: 2px solid #f0f0f0 !important;
+  min-height: 20px !important;
 }
 
 .dropdown-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 0, 0, 0.6) !important;
-  transform: scaleX(1.1);
+  background: linear-gradient(180deg, #666 0%, #444 100%) !important;
 }
 
-/* Firefox scrollbar styling - Enhanced visibility */
-.dropdown-scrollbar {
-  scrollbar-width: auto !important;
-  scrollbar-color: rgba(0, 0, 0, 0.4) transparent !important;
+.dropdown-scrollbar::-webkit-scrollbar-thumb:active {
+  background: linear-gradient(180deg, #444 0%, #222 100%) !important;
 }
 
-.dropdown-scrollbar:hover {
-  scrollbar-color: rgba(0, 0, 0, 0.6) transparent !important;
+.dropdown-scrollbar::-webkit-scrollbar-corner {
+  background: #f0f0f0 !important;
 }
 
 /* Force scrollbar visibility for Command components */

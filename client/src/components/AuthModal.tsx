@@ -1825,7 +1825,7 @@ export function AuthModal({ isOpen, onClose, mode, initialTab }: AuthModalProps)
                               }}
                             />
                           </div>
-                          <div className="max-h-40 overflow-y-auto dropdown-scrollbar">
+                          <div className="max-h-40 overflow-y-scroll dropdown-scrollbar" style={{ overflowY: 'scroll' }}>
                             {isWorkerLoadingDistricts ? (
                               <div className="px-3 py-2 text-sm animate-pulse">Loading districts...</div>
                             ) : workerApiDistricts.length > 0 ? (
