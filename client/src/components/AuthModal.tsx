@@ -1122,7 +1122,20 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
                 </div>
 
                 <div>
-                  <Label htmlFor="address">Full Address</Label>
+                  <div className="flex items-center justify-between mb-1">
+                    <Label htmlFor="address">Full Address</Label>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 px-2 text-xs"
+                      onClick={() => handleLocationDetection("client")}
+                      disabled={isLocationLoading}
+                    >
+                      <MapPin className="h-3 w-3 mr-1" />
+                      {isLocationLoading ? "Finding..." : "Use Location"}
+                    </Button>
+                  </div>
                   <Input
                     id="address"
                     placeholder="House/Building number, Street, Area"
