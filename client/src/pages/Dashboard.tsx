@@ -522,8 +522,10 @@ const JobPostingForm = () => {
 };
 
 export default function Dashboard() {
+  console.log("Dashboard component rendering...");
   // ALL HOOKS MUST BE DECLARED FIRST - BEFORE ANY CONDITIONAL RETURNS
   const { user } = useAuth();
+  console.log("Dashboard user:", user);
   const { t } = useLanguage();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
