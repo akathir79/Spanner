@@ -1355,39 +1355,23 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
                         aria-expanded={clientDistrictPopoverOpen}
                         className="w-full justify-between"
                         disabled={!clientForm.watch("state")}
+                        key={`district-button-${clientDistrictSelected}-${clientForm.watch("districtId")}`}
                       >
-                        {(() => {
+                        {clientDistrictSelected || (() => {
                           const districtId = clientForm.watch("districtId");
                           const state = clientForm.watch("state");
                           
-                          console.log('BUTTON RENDER - districtId:', districtId, 'clientDistrictSelected:', clientDistrictSelected, 'state:', state);
-                          
                           if (!state) return "Select state first";
-                          if (!districtId && !clientDistrictSelected) return "Select your district";
+                          if (!districtId) return "Select your district";
                           
-                          // If we have a selected district name from location detection, use it
-                          if (clientDistrictSelected) {
-                            console.log('SHOWING FROM STATE:', clientDistrictSelected);
-                            return clientDistrictSelected;
-                          }
-                          
-                          // Try to find district name from apiDistricts
                           const foundDistrict = apiDistricts.find((district: any) => district.id === districtId);
-                          if (foundDistrict) {
-                            console.log('SHOWING FROM API:', foundDistrict.name);
-                            return foundDistrict.name;
-                          }
+                          if (foundDistrict) return foundDistrict.name;
                           
-                          // Fallback for known districts
-                          if (districtId === "salem") {
-                            console.log('SHOWING SALEM FALLBACK');
-                            return "Salem";
-                          }
+                          if (districtId === "salem") return "Salem";
                           if (districtId === "chennai") return "Chennai";
                           if (districtId === "coimbatore") return "Coimbatore";
                           if (districtId === "madurai") return "Madurai";
                           
-                          console.log('SHOWING FALLBACK ID:', districtId);
                           return `District selected (${districtId})`;
                         })()}
                         <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
