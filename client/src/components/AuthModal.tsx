@@ -439,6 +439,13 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
 
     setIsLocationLoading(true);
     const currentForm = formType === "client" ? clientForm : workerForm;
+    
+    // Clear current state to ensure fresh data loading
+    if (formType === "client") {
+      clientForm.setValue("districtId", "");
+    } else {
+      workerForm.setValue("districtId", "");
+    }
 
     navigator.geolocation.getCurrentPosition(
       async (position) => {
@@ -564,70 +571,74 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
               workerForm.setValue("state", detectedState);
             }
             
-            // Wait for districts to load, then set the matching district
-            if (matchingDistrict) {
-              // Function to set district once districts are loaded
-              const setDistrictWhenLoaded = () => {
-                // If we have a temporary district, we need to wait for real districts to load
-                if ((matchingDistrict as any).isTemporary) {
-                  if (apiDistricts && apiDistricts.length > 0) {
-                    // Try to find the real district from the loaded list
-                    const realDistrict = apiDistricts.find((district: any) => {
-                      const districtName = district.name.toLowerCase();
-                      const tempName = matchingDistrict.name.toLowerCase();
-                      return districtName === tempName || 
-                             districtName.includes(tempName) || 
-                             tempName.includes(districtName);
-                    });
-                    
-                    if (realDistrict) {
-                      if (formType === "client") {
-                        clientForm.setValue("districtId", realDistrict.id);
-                        // Force form re-render
-                        clientForm.trigger("districtId");
-                      } else {
-                        workerForm.setValue("districtId", realDistrict.id);
-                        workerForm.trigger("districtId");
-                        setHomeDistrictPopoverOpen(false);
-                        const currentDistricts: string[] = workerForm.getValues("serviceDistricts") || [];
-                        if (!currentDistricts.includes(realDistrict.id)) {
-                          workerForm.setValue("serviceDistricts", [...currentDistricts, realDistrict.id]);
-                        }
-                      }
-                      console.log('District set successfully:', realDistrict.name, 'with ID:', realDistrict.id);
-                      console.log('Form value after setting:', formType === "client" ? clientForm.getValues("districtId") : workerForm.getValues("districtId"));
-                    } else {
-                      console.log('No matching district found in loaded districts for:', matchingDistrict.name);
-                    }
-                  } else {
-                    // Districts not loaded yet, try again
-                    setTimeout(setDistrictWhenLoaded, 300);
-                  }
-                } else {
-                  // We have a real district, set it directly
-                  const districtExists = apiDistricts.some(d => d.id === matchingDistrict.id || d.name.toLowerCase() === matchingDistrict.name.toLowerCase());
-                  
-                  if (districtExists) {
-                    if (formType === "client") {
-                      clientForm.setValue("districtId", matchingDistrict.id);
-                      clientForm.trigger("districtId");
-                    } else {
-                      workerForm.setValue("districtId", matchingDistrict.id);
-                      workerForm.trigger("districtId");
-                      setHomeDistrictPopoverOpen(false);
-                      const currentDistricts: string[] = workerForm.getValues("serviceDistricts") || [];
-                      if (!currentDistricts.includes(matchingDistrict.id)) {
-                        workerForm.setValue("serviceDistricts", [...currentDistricts, matchingDistrict.id]);
-                      }
-                    }
-                    console.log('District set successfully:', matchingDistrict.name, 'with ID:', matchingDistrict.id);
-                    console.log('Form value after setting:', formType === "client" ? clientForm.getValues("districtId") : workerForm.getValues("districtId"));
-                  }
-                }
-              };
+            // Function to set district once districts are loaded - improved with better retry logic
+            const setDistrictWhenLoaded = (retryCount = 0, maxRetries = 10) => {
+              console.log(`Trying to set district, attempt ${retryCount + 1}, districts available: ${apiDistricts?.length || 0}`);
               
-              // Start trying to set the district with a small delay to allow state to trigger district loading
-              setTimeout(setDistrictWhenLoaded, 200);
+              // If districts are loaded, try to find and set the district
+              if (apiDistricts && apiDistricts.length > 0) {
+                let foundDistrict = null;
+                
+                // If we had a temporary district, find the real one
+                if (matchingDistrict && (matchingDistrict as any).isTemporary) {
+                  foundDistrict = apiDistricts.find((district: any) => {
+                    const districtName = district.name.toLowerCase();
+                    const tempName = matchingDistrict.name.toLowerCase();
+                    return districtName === tempName || 
+                           districtName.includes(tempName) || 
+                           tempName.includes(districtName);
+                  });
+                } else if (matchingDistrict) {
+                  // If we had a real district match, verify it exists in loaded districts
+                  foundDistrict = apiDistricts.find((district: any) => 
+                    district.id === matchingDistrict.id || 
+                    district.name.toLowerCase() === matchingDistrict.name.toLowerCase()
+                  );
+                }
+                
+                // If no district found yet, try matching by location data directly
+                if (!foundDistrict) {
+                  foundDistrict = apiDistricts.find((district: any) => {
+                    const districtName = district.name.toLowerCase();
+                    const detectedStateDistrict = locationData.state_district?.toLowerCase() || '';
+                    const detectedCounty = locationData.county?.toLowerCase() || '';
+                    
+                    return districtName === detectedStateDistrict || districtName === detectedCounty;
+                  });
+                }
+                
+                if (foundDistrict) {
+                  if (formType === "client") {
+                    clientForm.setValue("districtId", foundDistrict.id);
+                    clientForm.trigger("districtId");
+                  } else {
+                    workerForm.setValue("districtId", foundDistrict.id);
+                    workerForm.trigger("districtId");
+                    setHomeDistrictPopoverOpen(false);
+                    const currentDistricts: string[] = workerForm.getValues("serviceDistricts") || [];
+                    if (!currentDistricts.includes(foundDistrict.id)) {
+                      workerForm.setValue("serviceDistricts", [...currentDistricts, foundDistrict.id]);
+                    }
+                  }
+                  console.log('District set successfully:', foundDistrict.name, 'with ID:', foundDistrict.id);
+                  console.log('Form value after setting:', formType === "client" ? clientForm.getValues("districtId") : workerForm.getValues("districtId"));
+                  return; // Success, exit
+                } else {
+                  console.log('No matching district found in loaded districts');
+                }
+              } else if (retryCount < maxRetries) {
+                // Districts not loaded yet, retry with exponential backoff
+                const delay = Math.min(200 * Math.pow(1.5, retryCount), 2000);
+                console.log(`Districts not loaded yet, retrying in ${delay}ms`);
+                setTimeout(() => setDistrictWhenLoaded(retryCount + 1, maxRetries), delay);
+              } else {
+                console.log('Max retries reached, districts could not be loaded');
+              }
+            };
+            
+            // Start trying to set the district immediately if we have location data
+            if (matchingDistrict || locationData.state_district || locationData.county) {
+              setDistrictWhenLoaded();
             }
             
             toast({
