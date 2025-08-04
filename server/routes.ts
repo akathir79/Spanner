@@ -159,7 +159,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // For super admin mobiles, always send OTP
-      if (["9000000002"].includes(mobile)) {
+      if (mobile === "9000000002") {
         const otp = generateOTP();
         const expiresAt = addMinutes(new Date(), 10);
         
@@ -406,7 +406,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // For super admin mobiles, always send OTP
-      if (["9000000002"].includes(mobile)) {
+      if (mobile === "9000000002") {
         const otp = generateOTP();
         const expiresAt = addMinutes(new Date(), 10);
         
