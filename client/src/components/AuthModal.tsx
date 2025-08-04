@@ -215,16 +215,23 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
     if (currentState) {
       fetchDistrictsFromAPI(currentState);
       // Clear district selections when state changes to maintain consistency
-      if (selectedClientState) {
+      if (selectedClientState && clientForm.getValues("districtId")) {
         clientForm.setValue("districtId", "");
       }
-      if (selectedWorkerState) {
+      if (selectedWorkerState && workerForm.getValues("districtId")) {
         workerForm.setValue("districtId", "");
       }
     } else {
       setApiDistricts([]);
     }
   }, [currentState]);
+
+  // Also fetch districts when component mounts if state is already set
+  useEffect(() => {
+    if (currentState && apiDistricts.length === 0) {
+      fetchDistrictsFromAPI(currentState);
+    }
+  }, []);
 
   const fetchDistrictsFromAPI = async (stateName: string) => {
     setIsLoadingDistricts(true);
@@ -457,39 +464,58 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
             const detectedAddress = `${locationData.house_number || ''} ${locationData.road || ''} ${locationData.suburb || ''} ${locationData.city || ''}`.trim();
             const detectedPincode = locationData.postcode || '';
             
-            // Find matching district with improved logic - including pincode area lookup
-            let matchingDistrict = apiDistricts?.find((district: any) => {
-              const districtName = district.name.toLowerCase();
-              const detectedName = detectedLocation?.toLowerCase() || '';
-              const detectedCity = locationData.city?.toLowerCase() || '';
-              const detectedCounty = locationData.county?.toLowerCase() || '';
-              const detectedStateDistrict = locationData.state_district?.toLowerCase() || '';
-              
-              // Check for exact matches first (most reliable)
-              if (districtName === detectedStateDistrict || 
-                  districtName === detectedCounty ||
-                  districtName === detectedCity ||
-                  districtName === detectedName) {
-                return true;
-              }
-              
-              // Check if detected location contains the district name
-              if (detectedStateDistrict.includes(districtName) ||
-                  detectedCounty.includes(districtName) ||
-                  detectedCity.includes(districtName) ||
-                  detectedName.includes(districtName)) {
-                return true;
-              }
-              
-              // Check Tamil name matches
-              if (district.tamilName?.toLowerCase().includes(detectedName) ||
-                  district.tamilName?.toLowerCase().includes(detectedStateDistrict) ||
-                  district.tamilName?.toLowerCase().includes(detectedCounty)) {
-                return true;
-              }
-              
-              return false;
-            });
+            // Find matching district with improved logic - including all location components
+            let matchingDistrict = null;
+            
+            // First try to find district from currently loaded districts (if state is already set)
+            if (apiDistricts && apiDistricts.length > 0) {
+              matchingDistrict = apiDistricts.find((district: any) => {
+                const districtName = district.name.toLowerCase();
+                const detectedName = detectedLocation?.toLowerCase() || '';
+                const detectedCity = locationData.city?.toLowerCase() || '';
+                const detectedCounty = locationData.county?.toLowerCase() || '';
+                const detectedStateDistrict = locationData.state_district?.toLowerCase() || '';
+                
+                // Check for exact matches first (most reliable)
+                if (districtName === detectedStateDistrict || 
+                    districtName === detectedCounty ||
+                    districtName === detectedCity ||
+                    districtName === detectedName) {
+                  return true;
+                }
+                
+                // Check if detected location contains the district name
+                if (detectedStateDistrict.includes(districtName) ||
+                    detectedCounty.includes(districtName) ||
+                    detectedCity.includes(districtName) ||
+                    detectedName.includes(districtName)) {
+                  return true;
+                }
+                
+                // Check reverse - if district name contains detected location
+                if (districtName.includes(detectedName) ||
+                    districtName.includes(detectedCity) ||
+                    districtName.includes(detectedCounty)) {
+                  return true;
+                }
+                
+                // Check Tamil/local name matches if available
+                if (district.tamilName?.toLowerCase().includes(detectedName) ||
+                    district.tamilName?.toLowerCase().includes(detectedStateDistrict) ||
+                    district.tamilName?.toLowerCase().includes(detectedCounty)) {
+                  return true;
+                }
+                
+                return false;
+              });
+            } else {
+              // If no districts loaded yet, create a temporary district object for later matching
+              matchingDistrict = {
+                id: detectedLocation?.toLowerCase().replace(/\s+/g, '') || 'temp',
+                name: detectedLocation || locationData.state_district || locationData.county || locationData.city || 'Unknown',
+                isTemporary: true
+              };
+            }
             
             // If no district match found, try to find by pincode from areas
             if (!matchingDistrict && detectedPincode && allAreas) {
@@ -521,27 +547,70 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
             // Detect state from location data
             const detectedState = detectStateFromLocation(locationData);
             
-            if (matchingDistrict) {
-              if (formType === "client") {
-                clientForm.setValue("districtId", matchingDistrict.id);
-                clientForm.setValue("state", detectedState);
-              } else {
-                // For worker form, set both home district and add to service districts
-                workerForm.setValue("districtId", matchingDistrict.id);
-                workerForm.setValue("state", detectedState);
-                setHomeDistrictPopoverOpen(false); // Close the popover
-                const currentDistricts: string[] = workerForm.getValues("serviceDistricts") || [];
-                if (!currentDistricts.includes(matchingDistrict.id)) {
-                  workerForm.setValue("serviceDistricts", [...currentDistricts, matchingDistrict.id]);
-                }
-              }
+            // First set the state to trigger district loading
+            if (formType === "client") {
+              clientForm.setValue("state", detectedState);
             } else {
-              // Even if district is not found, set the detected state
-              if (formType === "client") {
-                clientForm.setValue("state", detectedState);
-              } else {
-                workerForm.setValue("state", detectedState);
-              }
+              workerForm.setValue("state", detectedState);
+            }
+            
+            // Wait for districts to load, then set the matching district
+            if (matchingDistrict) {
+              // Function to set district once districts are loaded
+              const setDistrictWhenLoaded = () => {
+                // If we have a temporary district, we need to wait for real districts to load
+                if (matchingDistrict.isTemporary) {
+                  if (apiDistricts && apiDistricts.length > 0) {
+                    // Try to find the real district from the loaded list
+                    const realDistrict = apiDistricts.find((district: any) => {
+                      const districtName = district.name.toLowerCase();
+                      const tempName = matchingDistrict.name.toLowerCase();
+                      return districtName === tempName || 
+                             districtName.includes(tempName) || 
+                             tempName.includes(districtName);
+                    });
+                    
+                    if (realDistrict) {
+                      if (formType === "client") {
+                        clientForm.setValue("districtId", realDistrict.id);
+                      } else {
+                        workerForm.setValue("districtId", realDistrict.id);
+                        setHomeDistrictPopoverOpen(false);
+                        const currentDistricts: string[] = workerForm.getValues("serviceDistricts") || [];
+                        if (!currentDistricts.includes(realDistrict.id)) {
+                          workerForm.setValue("serviceDistricts", [...currentDistricts, realDistrict.id]);
+                        }
+                      }
+                      console.log('District set successfully:', realDistrict.name);
+                    } else {
+                      console.log('No matching district found in loaded districts for:', matchingDistrict.name);
+                    }
+                  } else {
+                    // Districts not loaded yet, try again
+                    setTimeout(setDistrictWhenLoaded, 300);
+                  }
+                } else {
+                  // We have a real district, set it directly
+                  const districtExists = apiDistricts.some(d => d.id === matchingDistrict.id || d.name.toLowerCase() === matchingDistrict.name.toLowerCase());
+                  
+                  if (districtExists) {
+                    if (formType === "client") {
+                      clientForm.setValue("districtId", matchingDistrict.id);
+                    } else {
+                      workerForm.setValue("districtId", matchingDistrict.id);
+                      setHomeDistrictPopoverOpen(false);
+                      const currentDistricts: string[] = workerForm.getValues("serviceDistricts") || [];
+                      if (!currentDistricts.includes(matchingDistrict.id)) {
+                        workerForm.setValue("serviceDistricts", [...currentDistricts, matchingDistrict.id]);
+                      }
+                    }
+                    console.log('District set successfully:', matchingDistrict.name);
+                  }
+                }
+              };
+              
+              // Start trying to set the district with a small delay to allow state to trigger district loading
+              setTimeout(setDistrictWhenLoaded, 200);
             }
             
             toast({
