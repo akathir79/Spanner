@@ -625,7 +625,7 @@ export default function Dashboard() {
         title: "Job Deleted",
         description: "Your job posting has been removed.",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/job-postings/client", user.id] });
+      queryClient.invalidateQueries({ queryKey: ["/api/job-postings/client", user?.id] });
       setSelectedJobPosting(null);
     },
     onError: (error: any) => {
@@ -649,7 +649,7 @@ export default function Dashboard() {
         description: "The worker has been notified and can now start the job.",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/bids/job", selectedJobPosting?.id] });
-      queryClient.invalidateQueries({ queryKey: ["/api/job-postings/client", user.id] });
+      queryClient.invalidateQueries({ queryKey: ["/api/job-postings/client", user?.id] });
     },
     onError: (error: any) => {
       toast({
@@ -803,7 +803,7 @@ export default function Dashboard() {
   };
 
   const handleCreateBooking = (data: any) => {
-    if (!selectedWorker) return;
+    if (!selectedWorker || !user?.id) return;
 
     createBookingMutation.mutate({
       clientId: user.id,
