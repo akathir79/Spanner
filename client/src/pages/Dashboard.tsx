@@ -522,6 +522,7 @@ const JobPostingForm = () => {
 };
 
 export default function Dashboard() {
+  // ALL HOOKS MUST BE DECLARED FIRST - BEFORE ANY CONDITIONAL RETURNS
   const { user } = useAuth();
   const { t } = useLanguage();
   const { toast } = useToast();
@@ -539,31 +540,18 @@ export default function Dashboard() {
   const [isLocationLoading, setIsLocationLoading] = useState(false);
   const [selectedJobPosting, setSelectedJobPosting] = useState<any>(null);
 
-  // Redirect if not authenticated or wrong role
-  if (!user) {
-    setLocation("/login");
-    return null;
-  }
-
-  if (user.role !== "client") {
-    if (user.role === "worker") {
-      setLocation("/worker-dashboard");
-    } else if (user.role === "admin" || user.role === "super_admin") {
-      setLocation("/admin-dashboard");
-    }
-    return null;
-  }
-
-  // Fetch user's bookings
+  // Fetch user's bookings - enabled only when user exists
   const { data: bookings = [], isLoading: bookingsLoading } = useQuery({
-    queryKey: ["/api/bookings/user", user.id, "client"],
-    queryFn: () => fetch(`/api/bookings/user/${user.id}?role=client`).then(res => res.json())
+    queryKey: ["/api/bookings/user", user?.id, "client"],
+    queryFn: () => fetch(`/api/bookings/user/${user!.id}?role=client`).then(res => res.json()),
+    enabled: !!user?.id
   });
 
-  // Fetch user's job postings
+  // Fetch user's job postings - enabled only when user exists
   const { data: jobPostings = [], isLoading: jobPostingsLoading } = useQuery({
-    queryKey: ["/api/job-postings/client", user.id],
-    queryFn: () => fetch(`/api/job-postings/client/${user.id}`).then(res => res.json())
+    queryKey: ["/api/job-postings/client", user?.id],
+    queryFn: () => fetch(`/api/job-postings/client/${user!.id}`).then(res => res.json()),
+    enabled: !!user?.id
   });
 
   // Fetch bids for selected job posting
@@ -822,7 +810,7 @@ export default function Dashboard() {
       workerId: selectedWorker.id,
       serviceCategory: selectedWorker.workerProfile.primaryService,
       description: data.description,
-      districtId: user.districtId || selectedWorker.districtId,
+      districtId: (user as any).districtId || selectedWorker.districtId,
       scheduledDate: new Date(data.scheduledDate).toISOString(),
     });
   };
@@ -853,6 +841,22 @@ export default function Dashboard() {
       default: return <AlertCircle className="h-4 w-4" />;
     }
   };
+
+  // CONDITIONAL RETURNS AFTER ALL HOOKS ARE DECLARED
+  // Redirect if not authenticated or wrong role
+  if (!user) {
+    setLocation("/login");
+    return null;
+  }
+
+  if (user.role !== "client") {
+    if (user.role === "worker") {
+      setLocation("/worker-dashboard");
+    } else if (user.role === "admin" || user.role === "super_admin") {
+      setLocation("/admin-dashboard");
+    }
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-muted/30 pt-20 pb-8">
@@ -1284,7 +1288,7 @@ export default function Dashboard() {
                     <div>
                       <Label>Account Status</Label>
                       <div className="flex items-center space-x-2 mt-1">
-                        {user.isVerified ? (
+                        {(user as any).isVerified ? (
                           <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100">
                             <CheckCircle className="h-3 w-3 mr-1" />
                             Verified
