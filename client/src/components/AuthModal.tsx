@@ -1810,7 +1810,7 @@ export function AuthModal({ isOpen, onClose, mode, initialTab }: AuthModalProps)
                             className="transition-all duration-200"
                           />
                           <CommandEmpty>No district found.</CommandEmpty>
-                          <CommandList className="max-h-40 overflow-y-auto dropdown-scrollbar">
+                          <CommandList className="max-h-[160px] overflow-y-scroll dropdown-scrollbar">
                             <CommandGroup>
                               {isWorkerLoadingDistricts ? (
                                 <CommandItem disabled className="animate-pulse">Loading districts...</CommandItem>
