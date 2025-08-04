@@ -620,10 +620,27 @@ export function AuthModal({ isOpen, onClose, mode, initialTab }: AuthModalProps)
                   const detectedStateDistrict = locationData.state_district?.toLowerCase() || '';
                   const detectedCounty = locationData.county?.toLowerCase() || '';
                   
-                  return districtName === detectedStateDistrict || 
-                         districtName === detectedCounty || 
-                         detectedStateDistrict.includes(districtName) ||
-                         detectedCounty.includes(districtName);
+                  // Direct matches
+                  if (districtName === detectedStateDistrict || districtName === detectedCounty) {
+                    return true;
+                  }
+                  
+                  // Check if detected location contains district name
+                  if (detectedStateDistrict.includes(districtName) || detectedCounty.includes(districtName)) {
+                    return true;
+                  }
+                  
+                  // Check if district name contains detected location (handles "Salem West" -> "Salem")
+                  if (districtName.includes(detectedStateDistrict) || districtName.includes(detectedCounty)) {
+                    return true;
+                  }
+                  
+                  // Remove common suffixes for better matching
+                  const cleanDistrict = districtName.replace(/\s+(district|west|east|north|south)$/i, '');
+                  const cleanDetectedState = detectedStateDistrict.replace(/\s+(district|west|east|north|south)$/i, '');
+                  const cleanDetectedCounty = detectedCounty.replace(/\s+(district|west|east|north|south)$/i, '');
+                  
+                  return cleanDistrict === cleanDetectedState || cleanDistrict === cleanDetectedCounty;
                 });
                 
                 if (foundDistrict) {
