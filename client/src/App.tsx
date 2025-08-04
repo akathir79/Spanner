@@ -9,7 +9,7 @@ import { AuthProvider } from "@/hooks/useAuth";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import Home from "@/pages/Home";
-import Login from "@/pages/Login";
+
 import Dashboard from "@/pages/Dashboard";
 import WorkerDashboard from "@/pages/WorkerDashboard";
 import AdminDashboard from "@/pages/AdminDashboard";
@@ -25,7 +25,6 @@ function Router() {
       <main className="flex-1">
         <Switch>
           <Route path="/" component={Home} />
-          <Route path="/login" component={Login} />
           <Route path="/dashboard" component={Dashboard} />
           <Route path="/worker-dashboard" component={WorkerDashboard} />
           <Route path="/admin-dashboard" component={AdminDashboard} />
