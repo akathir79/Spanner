@@ -609,7 +609,10 @@ export function AuthModal({ isOpen, onClose, mode, initialTab }: AuthModalProps)
             // Trigger district loading and wait for completion
             if (detectedState) {
               const fetchFunction = formType === "client" ? fetchClientDistrictsFromAPI : fetchWorkerDistrictsFromAPI;
-              fetchFunction(detectedState).then(() => {
+              await fetchFunction(detectedState);
+              
+              // Small delay to ensure districts are fully loaded
+              setTimeout(() => {
                 // After districts are loaded, find and set the matching district
                 const districts = formType === "client" ? clientApiDistricts : workerApiDistricts;
                 const foundDistrict = districts.find((district: any) => {
@@ -624,19 +627,32 @@ export function AuthModal({ isOpen, onClose, mode, initialTab }: AuthModalProps)
                 });
                 
                 if (foundDistrict) {
+                  // Force trigger form updates immediately
                   if (formType === "client") {
-                    clientForm.setValue("districtId", foundDistrict.id);
+                    clientForm.setValue("districtId", foundDistrict.id, { shouldDirty: true, shouldTouch: true });
+                    setClientDistrictPopoverOpen(false);
+                    setClientDistrictSearchInput("");
                     console.log('District set for client:', foundDistrict.name, 'with ID:', foundDistrict.id);
                   } else {
-                    workerForm.setValue("districtId", foundDistrict.id);
+                    workerForm.setValue("districtId", foundDistrict.id, { shouldDirty: true, shouldTouch: true });
                     const currentDistricts: string[] = workerForm.getValues("serviceDistricts") || [];
                     if (!currentDistricts.includes(foundDistrict.id)) {
-                      workerForm.setValue("serviceDistricts", [...currentDistricts, foundDistrict.id]);
+                      workerForm.setValue("serviceDistricts", [...currentDistricts, foundDistrict.id], { shouldDirty: true, shouldTouch: true });
                     }
+                    setDistrictPopoverOpen(false);
                     console.log('District set for worker:', foundDistrict.name, 'with ID:', foundDistrict.id);
                   }
+                  
+                  // Trigger form validation to ensure state is updated
+                  if (formType === "client") {
+                    clientForm.trigger(["state", "districtId"]);
+                  } else {
+                    workerForm.trigger(["state", "districtId", "serviceDistricts"]);
+                  }
+                } else {
+                  console.log('No matching district found for:', locationData.state_district, 'or', locationData.county);
                 }
-              });
+              }, 200);
             }
             
             toast({
