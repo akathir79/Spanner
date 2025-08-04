@@ -611,10 +611,16 @@ export function AuthModal({ isOpen, onClose, mode, initialTab }: AuthModalProps)
               const fetchFunction = formType === "client" ? fetchClientDistrictsFromAPI : fetchWorkerDistrictsFromAPI;
               await fetchFunction(detectedState);
               
-              // Small delay to ensure districts are fully loaded
-              setTimeout(() => {
-                // After districts are loaded, find and set the matching district
+              // Wait for districts to be actually loaded in state with a more robust check
+              const checkDistrictsAndMatch = () => {
                 const districts = formType === "client" ? clientApiDistricts : workerApiDistricts;
+                
+                if (districts.length === 0) {
+                  // Districts not loaded yet, wait and retry
+                  setTimeout(checkDistrictsAndMatch, 100);
+                  return;
+                }
+                
                 console.log('AuthModal District matching - districts array length:', districts.length);
                 console.log('AuthModal District matching - first 3 districts:', districts.slice(0, 3));
                 console.log('AuthModal Location data for matching:', {
@@ -691,7 +697,10 @@ export function AuthModal({ isOpen, onClose, mode, initialTab }: AuthModalProps)
                 } else {
                   console.log('No matching district found for:', locationData.state_district, 'or', locationData.county);
                 }
-              }, 200);
+              };
+              
+              // Start the district checking and matching process
+              checkDistrictsAndMatch();
             }
             
             toast({
