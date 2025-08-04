@@ -773,18 +773,22 @@ export function AuthModal({ isOpen, onClose, mode, initialTab }: AuthModalProps)
     
     const result = await verifyOtp(pendingLogin.mobile, data.otp, "login");
     if (result) {
-      onClose();
+      // Reset modal state first
       setStep(1);
       setPendingLogin(null);
       
-      // Navigate to appropriate dashboard based on user role
-      if (result.role === "super_admin" || result.role === "admin") {
-        window.location.href = "/admin-dashboard";
-      } else if (result.role === "worker") {
-        window.location.href = "/worker-dashboard";
-      } else {
-        window.location.href = "/dashboard";
-      }
+      // Close modal and use a small delay before redirect to ensure state is stable
+      onClose();
+      setTimeout(() => {
+        // Navigate to appropriate dashboard based on user role
+        if (result.role === "super_admin" || result.role === "admin") {
+          window.location.href = "/admin-dashboard";
+        } else if (result.role === "worker") {
+          window.location.href = "/worker-dashboard";
+        } else {
+          window.location.href = "/dashboard";
+        }
+      }, 100);
     }
   };
 

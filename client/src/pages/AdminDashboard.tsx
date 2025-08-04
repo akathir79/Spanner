@@ -81,7 +81,7 @@ const createAdminSchema = z.object({
 type CreateAdminForm = z.infer<typeof createAdminSchema>;
 
 export default function AdminDashboard() {
-  const { user, login } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const currentUser = user; // Reference for clarity in nested components
   const { t } = useLanguage();
   const { toast } = useToast();
@@ -410,7 +410,7 @@ export default function AdminDashboard() {
   };
 
   // Redirect if not authenticated or wrong role
-  if (!user) {
+  if (authLoading || !user) {
     return (
       <div className="min-h-screen bg-muted/30 flex items-center justify-center">
         <Card className="w-full max-w-md p-8">
