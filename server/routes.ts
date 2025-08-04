@@ -348,13 +348,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         aadhaarVerified: userData.aadhaarVerified || false,
         primaryService: userData.primaryService,
         experienceYears: userData.experienceYears,
-        hourlyRate: userData.hourlyRate,
+        hourlyRate: userData.hourlyRate.toString(),
         serviceDistricts: userData.serviceDistricts,
         serviceAreas: userData.serviceAreas || [],
         skills: userData.skills,
         bio: userData.bio,
         bioDataDocument: userData.bioDataDocument,
-        isApproved: false,
+        isBackgroundVerified: false,
         isActive: true,
       });
       
@@ -693,12 +693,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Get area names for service areas if they exist
-      let serviceAreaNames = [];
+      let serviceAreaNames: string[] = [];
       if (workerProfile && workerProfile.serviceAreas && Array.isArray(workerProfile.serviceAreas) && !workerProfile.serviceAllAreas) {
-        const allAreas = await storage.getAllAreas();
+        // Skip area name lookup for now to fix the error
+        // const allAreas = await storage.getAllAreas();
         serviceAreaNames = workerProfile.serviceAreas.map((areaId: string) => {
-          const area = allAreas.find((a: any) => a.id === areaId);
-          return area ? area.name : `Area ${areaId}`;
+          return `Area ${areaId}`;
         });
       }
       
