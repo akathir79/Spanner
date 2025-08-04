@@ -97,6 +97,23 @@ export default function AdminDashboard() {
       }
     }
   }, [user, setLocation]);
+
+  // Show loading while authentication is being checked
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render anything if user is not authenticated or being redirected
+  if (!user || (user.role !== "admin" && user.role !== "super_admin")) {
+    return null;
+  }
   const [userFilter, setUserFilter] = useState("");
   const [bookingFilter, setBookingFilter] = useState("");
   const [selectedUserType, setSelectedUserType] = useState<string | null>(null);
