@@ -620,6 +620,21 @@ export function AuthModal({ isOpen, onClose, mode, initialTab }: AuthModalProps)
                   const detectedStateDistrict = locationData.state_district?.toLowerCase() || '';
                   const detectedCounty = locationData.county?.toLowerCase() || '';
                   
+                  // Debug logging
+                  if (districtName === 'salem') {
+                    console.log('Checking Salem district:', {
+                      districtName,
+                      detectedStateDistrict,
+                      detectedCounty,
+                      directMatch1: districtName === detectedStateDistrict,
+                      directMatch2: districtName === detectedCounty,
+                      includes1: detectedStateDistrict.includes(districtName),
+                      includes2: detectedCounty.includes(districtName),
+                      includes3: districtName.includes(detectedStateDistrict),
+                      includes4: districtName.includes(detectedCounty)
+                    });
+                  }
+                  
                   // Direct matches
                   if (districtName === detectedStateDistrict || districtName === detectedCounty) {
                     return true;
