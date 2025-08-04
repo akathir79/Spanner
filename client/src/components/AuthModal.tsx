@@ -1206,7 +1206,7 @@ export function AuthModal({ isOpen, onClose, mode, initialTab }: AuthModalProps)
                           placeholder="Search states..." 
                           value={stateSearchInput}
                           onValueChange={setStateSearchInput}
-                          className="transition-all duration-200 focus:ring-2 focus:ring-primary/20"
+                          className="transition-all duration-200"
                         />
                         <CommandEmpty>No state found.</CommandEmpty>
                         <CommandList className="max-h-40 overflow-y-auto">
@@ -1306,7 +1306,7 @@ export function AuthModal({ isOpen, onClose, mode, initialTab }: AuthModalProps)
                           placeholder="Search districts..." 
                           value={clientDistrictSearchInput}
                           onValueChange={setClientDistrictSearchInput}
-                          className="transition-all duration-200 focus:ring-2 focus:ring-primary/20"
+                          className="transition-all duration-200"
                         />
                         <CommandEmpty>No district found.</CommandEmpty>
                         <CommandList className="max-h-40 overflow-y-auto">
@@ -1745,7 +1745,7 @@ export function AuthModal({ isOpen, onClose, mode, initialTab }: AuthModalProps)
                         <Command>
                           <CommandInput 
                             placeholder="Search districts..." 
-                            className="transition-all duration-200 focus:ring-2 focus:ring-primary/20"
+                            className="transition-all duration-200"
                           />
                           <CommandList>
                             <CommandEmpty>No district found.</CommandEmpty>
@@ -1806,7 +1806,11 @@ export function AuthModal({ isOpen, onClose, mode, initialTab }: AuthModalProps)
                             size="sm"
                             className="h-4 w-4 p-0 transition-all duration-150 hover:bg-destructive/20"
                             onClick={(e) => {
-                              e.target.closest('.animate-tag-appear').classList.add('animate-tag-remove');
+                              const target = e.target as HTMLElement;
+                              const tagElement = target.closest('.animate-tag-appear') as HTMLElement;
+                              if (tagElement) {
+                                tagElement.classList.add('animate-tag-remove');
+                              }
                               setTimeout(() => {
                                 const currentDistricts = workerForm.getValues("serviceDistricts") || [];
                                 workerForm.setValue("serviceDistricts", currentDistricts.filter(id => id !== districtId));
@@ -2045,7 +2049,7 @@ export function AuthModal({ isOpen, onClose, mode, initialTab }: AuthModalProps)
                           placeholder="Search states..." 
                           value={workerStateSearchInput}
                           onValueChange={setWorkerStateSearchInput}
-                          className="transition-all duration-200 focus:ring-2 focus:ring-primary/20"
+                          className="transition-all duration-200"
                         />
                         <CommandEmpty>No state found.</CommandEmpty>
                         <CommandList className="max-h-40 overflow-y-auto">

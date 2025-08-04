@@ -669,7 +669,7 @@ export default function Home() {
                             <Command>
                               <CommandInput 
                                 placeholder="Search services..." 
-                                className="transition-all duration-200 focus:ring-2 focus:ring-primary/20"
+                                className="transition-all duration-200"
                               />
                               <CommandList>
                                 <CommandEmpty>No service found.</CommandEmpty>
@@ -736,7 +736,7 @@ export default function Home() {
                             <Command>
                               <CommandInput 
                                 placeholder="Search states..." 
-                                className="transition-all duration-200 focus:ring-2 focus:ring-primary/20"
+                                className="transition-all duration-200"
                               />
                               <CommandList>
                                 <CommandEmpty>No state found.</CommandEmpty>
@@ -816,7 +816,7 @@ export default function Home() {
                             <Command>
                               <CommandInput 
                                 placeholder="Search districts..." 
-                                className="transition-all duration-200 focus:ring-2 focus:ring-primary/20"
+                                className="transition-all duration-200"
                               />
                               <CommandList>
                                 <CommandEmpty>No district found.</CommandEmpty>
