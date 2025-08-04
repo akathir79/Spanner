@@ -102,7 +102,7 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
   const [registeredWorkerId, setRegisteredWorkerId] = useState<string>("");
   const [workerRegistrationStep, setWorkerRegistrationStep] = useState<"details" | "bank" | "complete">("details");
   const [showBankDetailsModal, setShowBankDetailsModal] = useState(false);
-  const { login, verifyOtp, signupClient, signupWorker, isLoading } = useAuth();
+  const { loginWithOtp, verifyOtp, signupClient, signupWorker, isLoading } = useAuth();
   const { t } = useLanguage();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -604,7 +604,7 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
   };
 
   const handleLogin = async (data: z.infer<typeof loginSchema>) => {
-    const result = await login(data.mobile, loginRole);
+    const result = await loginWithOtp(data.mobile, loginRole);
     if (result.success) {
       setPendingLogin({ mobile: data.mobile, role: loginRole });
       setDevelopmentOtp(result.otp || "");

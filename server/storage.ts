@@ -95,6 +95,7 @@ export interface IStorage {
   // OTP management
   createOtp(otp: InsertOtp): Promise<OtpVerification>;
   getValidOtp(mobile: string, otp: string, purpose: string): Promise<OtpVerification | undefined>;
+  verifyOtp(mobile: string, otp: string, purpose: string): Promise<boolean>;
   
   // Location Tracking
   createLocationTracking(tracking: InsertLocationTracking): Promise<LocationTracking>;
@@ -591,6 +592,15 @@ export class DatabaseStorage implements IStorage {
       .update(otpVerifications)
       .set({ isUsed: true })
       .where(eq(otpVerifications.id, id));
+  }
+
+  async verifyOtp(mobile: string, otp: string, purpose: string): Promise<boolean> {
+    const otpRecord = await this.getValidOtp(mobile, otp, purpose);
+    if (otpRecord) {
+      await this.markOtpAsUsed(otpRecord.id);
+      return true;
+    }
+    return false;
   }
 
   async getAllUsers(): Promise<User[]> {

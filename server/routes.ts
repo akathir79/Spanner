@@ -125,7 +125,255 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Authentication routes
+  // Authentication routes - New endpoints for useAuth hook
+  app.post("/api/auth/login", async (req, res) => {
+    try {
+      const { mobile, role } = req.body;
+      
+      // For admin mobile, always send OTP
+      if (mobile === "9000000001") {
+        const otp = generateOTP();
+        const expiresAt = addMinutes(new Date(), 10);
+        
+        await storage.createOtp({
+          mobile,
+          otp,
+          purpose: "login",
+          expiresAt,
+        });
+        
+        const smsMessage = `Your SPANNER admin login OTP is: ${otp}. Valid for 10 minutes.`;
+        await sendSMS(mobile, smsMessage);
+        console.log(`OTP for ${mobile}: ${otp}`);
+        
+        return res.json({ 
+          success: true,
+          message: "OTP sent successfully", 
+          otp: otp,
+          userRole: "admin"
+        });
+      }
+      
+      // For super admin mobiles, always send OTP
+      if (["9000000002"].includes(mobile)) {
+        const otp = generateOTP();
+        const expiresAt = addMinutes(new Date(), 10);
+        
+        await storage.createOtp({
+          mobile,
+          otp,
+          purpose: "login",
+          expiresAt,
+        });
+        
+        const smsMessage = `Your SPANNER super admin login OTP is: ${otp}. Valid for 10 minutes.`;
+        await sendSMS(mobile, smsMessage);
+        console.log(`OTP for ${mobile}: ${otp}`);
+        
+        return res.json({ 
+          success: true,
+          message: "OTP sent successfully", 
+          otp: otp,
+          userRole: "super_admin"
+        });
+      }
+      
+      // Check if user exists for clients and workers
+      const existingUser = await storage.getUserByMobile(mobile);
+      
+      if (!existingUser) {
+        return res.status(400).json({ 
+          success: false,
+          message: "Mobile number not registered. Please sign up first." 
+        });
+      }
+      
+      // Generate and send OTP
+      const otp = generateOTP();
+      const expiresAt = addMinutes(new Date(), 10);
+      
+      await storage.createOtp({
+        mobile,
+        otp,
+        purpose: "login",
+        expiresAt,
+      });
+      
+      const smsMessage = `Your SPANNER login OTP is: ${otp}. Valid for 10 minutes.`;
+      await sendSMS(mobile, smsMessage);
+      console.log(`OTP for ${mobile}: ${otp}`);
+      
+      return res.json({ 
+        success: true,
+        message: "OTP sent successfully", 
+        otp: otp,
+        userRole: existingUser.role
+      });
+      
+    } catch (error) {
+      console.error("Login error:", error);
+      return res.status(500).json({ 
+        success: false,
+        message: "Failed to send OTP" 
+      });
+    }
+  });
+
+  app.post("/api/auth/verify-otp", async (req, res) => {
+    try {
+      const { mobile, otp, type } = req.body;
+      
+      // Verify OTP
+      const isValidOtp = await storage.verifyOtp(mobile, otp, type || "login");
+      
+      if (!isValidOtp) {
+        return res.status(400).json({ message: "Invalid or expired OTP" });
+      }
+      
+      // Get user by mobile
+      let user = await storage.getUserByMobile(mobile);
+      
+      // Special handling for admin/super admin mobiles
+      if (mobile === "9000000001" && !user) {
+        user = await storage.createUser({
+          firstName: "Admin",
+          lastName: "User",
+          mobile,
+          role: "admin",
+          isVerified: true,
+        });
+      } else if (mobile === "9000000002" && !user) {
+        user = await storage.createUser({
+          firstName: "Super",
+          lastName: "Admin",
+          mobile,
+          role: "super_admin",
+          isVerified: true,
+        });
+      }
+      
+      if (!user) {
+        return res.status(400).json({ message: "User not found" });
+      }
+      
+      // Update user verification status
+      if (!user.isVerified) {
+        await storage.updateUser(user.id, { isVerified: true });
+        user = { ...user, isVerified: true };
+      }
+      
+      return res.json({ 
+        message: "OTP verified successfully",
+        user: {
+          id: user.id,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          email: user.email,
+          mobile: user.mobile,
+          role: user.role,
+          profilePicture: user.profilePicture,
+        }
+      });
+      
+    } catch (error) {
+      console.error("OTP verification error:", error);
+      return res.status(500).json({ message: "Failed to verify OTP" });
+    }
+  });
+
+  app.post("/api/auth/signup-client", async (req, res) => {
+    try {
+      const userData = clientSignupSchema.parse(req.body);
+      
+      // Check if user already exists
+      const existingUser = await storage.getUserByMobile(userData.mobile);
+      if (existingUser) {
+        return res.status(400).json({ message: "Mobile number already registered" });
+      }
+      
+      // Create new user
+      const user = await storage.createUser({
+        ...userData,
+        isVerified: false,
+      });
+      
+      return res.json({ 
+        message: "Client registered successfully",
+        user: {
+          id: user.id,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          email: user.email,
+          mobile: user.mobile,
+          role: user.role,
+          profilePicture: user.profilePicture,
+        }
+      });
+      
+    } catch (error) {
+      console.error("Client signup error:", error);
+      return res.status(500).json({ message: "Failed to register client" });
+    }
+  });
+
+  app.post("/api/auth/signup-worker", async (req, res) => {
+    try {
+      const userData = workerSignupSchema.parse(req.body);
+      
+      // Check if user already exists
+      const existingUser = await storage.getUserByMobile(userData.mobile);
+      if (existingUser) {
+        return res.status(400).json({ message: "Mobile number already registered" });
+      }
+      
+      // Create new user
+      const user = await storage.createUser({
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        email: userData.email,
+        mobile: userData.mobile,
+        role: userData.role,
+        profilePicture: userData.profilePicture,
+        isVerified: false,
+      });
+      
+      // Create worker profile
+      await storage.createWorkerProfile({
+        userId: user.id,
+        aadhaarNumber: userData.aadhaarNumber,
+        aadhaarVerified: userData.aadhaarVerified || false,
+        primaryService: userData.primaryService,
+        experienceYears: userData.experienceYears,
+        hourlyRate: userData.hourlyRate,
+        serviceDistricts: userData.serviceDistricts,
+        serviceAreas: userData.serviceAreas || [],
+        skills: userData.skills,
+        bio: userData.bio,
+        bioDataDocument: userData.bioDataDocument,
+        isApproved: false,
+        isActive: true,
+      });
+      
+      return res.json({ 
+        message: "Worker registered successfully",
+        user: {
+          id: user.id,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          email: user.email,
+          mobile: user.mobile,
+          role: user.role,
+          profilePicture: user.profilePicture,
+        }
+      });
+      
+    } catch (error) {
+      console.error("Worker signup error:", error);
+      return res.status(500).json({ message: "Failed to register worker" });
+    }
+  });
+
+  // Legacy authentication routes (keeping for backward compatibility)
   app.post("/api/auth/send-otp", async (req, res) => {
     try {
       const { mobile, userType, role } = loginSchema.parse(req.body);

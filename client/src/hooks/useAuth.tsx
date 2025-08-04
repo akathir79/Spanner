@@ -17,6 +17,10 @@ interface AuthContextType {
   isAuthenticated: boolean;
   login: (userData: User) => void;
   logout: () => void;
+  loginWithOtp: (mobile: string, role: string) => Promise<{ success: boolean; otp?: string; error?: string }>;
+  verifyOtp: (mobile: string, otp: string, type: string) => Promise<User | null>;
+  signupClient: (data: any) => Promise<User | null>;
+  signupWorker: (data: any) => Promise<{ user: User } | null>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -49,12 +53,99 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem("user");
   };
 
+  const loginWithOtp = async (mobile: string, role: string) => {
+    try {
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mobile, role }),
+      });
+
+      const result = await response.json();
+      
+      if (response.ok) {
+        return { success: true, otp: result.otp };
+      } else {
+        return { success: false, error: result.message };
+      }
+    } catch (error) {
+      return { success: false, error: "Network error" };
+    }
+  };
+
+  const verifyOtp = async (mobile: string, otp: string, type: string) => {
+    try {
+      const response = await fetch("/api/auth/verify-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mobile, otp, type }),
+      });
+
+      const result = await response.json();
+      
+      if (response.ok && result.user) {
+        login(result.user);
+        return result.user;
+      } else {
+        return null;
+      }
+    } catch (error) {
+      return null;
+    }
+  };
+
+  const signupClient = async (data: any) => {
+    try {
+      const response = await fetch("/api/auth/signup-client", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+
+      const result = await response.json();
+      
+      if (response.ok && result.user) {
+        login(result.user);
+        return result.user;
+      } else {
+        return null;
+      }
+    } catch (error) {
+      return null;
+    }
+  };
+
+  const signupWorker = async (data: any) => {
+    try {
+      const response = await fetch("/api/auth/signup-worker", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+
+      const result = await response.json();
+      
+      if (response.ok && result.user) {
+        login(result.user);
+        return { user: result.user };
+      } else {
+        return null;
+      }
+    } catch (error) {
+      return null;
+    }
+  };
+
   const value = {
     user,
     isLoading,
     isAuthenticated: !!user,
     login,
     logout,
+    loginWithOtp,
+    verifyOtp,
+    signupClient,
+    signupWorker,
   };
 
   return (
