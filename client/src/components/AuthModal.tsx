@@ -428,120 +428,7 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
     }
   };
 
-  const handleClientLocationDetection = async () => {
-    if (!navigator.geolocation) {
-      toast({
-        title: "Location not supported",
-        description: "Your browser doesn't support location detection",
-        variant: "destructive",
-      });
-      return;
-    }
 
-    setIsLocationLoading(true);
-
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        try {
-          const { latitude, longitude } = position.coords;
-          
-          const response = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1&accept-language=en`
-          );
-          
-          if (!response.ok) throw new Error('Failed to get location data');
-          
-          const data = await response.json();
-          
-          if (data && data.address) {
-            const locationData = data.address;
-            
-            // Build address
-            const addressParts = [
-              locationData.house_number,
-              locationData.road,
-              locationData.village || locationData.suburb || locationData.neighbourhood,
-              locationData.city || locationData.town,
-              locationData.county
-            ].filter(part => part && part.trim() !== '');
-            
-            const detectedAddress = addressParts.join(', ');
-            const detectedPincode = locationData.postcode || '';
-            const detectedState = locationData.state || '';
-            
-            // Set the basic fields
-            if (detectedAddress) {
-              clientForm.setValue("address", detectedAddress);
-            }
-            if (detectedPincode) {
-              clientForm.setValue("pincode", detectedPincode);
-            }
-            if (detectedState) {
-              clientForm.setValue("state", detectedState);
-            }
-            
-            // Find matching district from the loaded districts
-            if (apiDistricts && apiDistricts.length > 0) {
-              const detectedDistrict = locationData.state_district?.toLowerCase() || locationData.county?.toLowerCase() || '';
-              
-              if (detectedDistrict) {
-                const matchingDistrict = apiDistricts.find((district: any) => 
-                  district.name.toLowerCase() === detectedDistrict
-                );
-                
-                if (matchingDistrict) {
-                  clientForm.setValue("districtId", matchingDistrict.id);
-                  console.log('Client district set:', matchingDistrict.name, 'with ID:', matchingDistrict.id);
-                }
-              }
-            }
-            
-            toast({
-              title: "Location detected",
-              description: `Address, pincode, and district (${locationData.state_district || locationData.county || 'not found'}) detected automatically`,
-            });
-          }
-        } catch (error) {
-          console.error('Location detection error:', error);
-          toast({
-            title: "Location detection failed",
-            description: "Could not detect your location. Please enter manually.",
-            variant: "destructive",
-          });
-        } finally {
-          setIsLocationLoading(false);
-        }
-      },
-      (error) => {
-        console.error('Geolocation error:', error);
-        let errorMessage = "Location access denied. Please enable location access and try again.";
-        
-        switch (error.code) {
-          case error.PERMISSION_DENIED:
-            errorMessage = "Location access denied. Please enable location access and try again.";
-            break;
-          case error.POSITION_UNAVAILABLE:
-            errorMessage = "Location information unavailable. Please enter address manually.";
-            break;
-          case error.TIMEOUT:
-            errorMessage = "Location request timed out. Please try again or enter manually.";
-            break;
-        }
-        
-        toast({
-          title: "Location access required",
-          description: errorMessage,
-          variant: "destructive",
-        });
-        setIsLocationLoading(false);
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 15000,
-        maximumAge: 300000,
-      }
-    );
-  };
 
   const handleLocationDetection = async (formType: "client" | "worker") => {
     if (!navigator.geolocation) {
@@ -1235,20 +1122,7 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
                 </div>
 
                 <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <Label htmlFor="address">Full Address</Label>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="h-6 px-2 text-xs"
-                      onClick={handleClientLocationDetection}
-                      disabled={isLocationLoading}
-                    >
-                      <MapPin className="h-3 w-3 mr-1" />
-                      {isLocationLoading ? "Finding..." : "Use Location"}
-                    </Button>
-                  </div>
+                  <Label htmlFor="address">Full Address</Label>
                   <Input
                     id="address"
                     placeholder="House/Building number, Street, Area"
