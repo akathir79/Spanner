@@ -612,7 +612,12 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
                   if (formType === "client") {
                     clientForm.setValue("districtId", foundDistrict.id);
                     clientForm.trigger("districtId");
+                    // Force re-render by toggling the popover state
                     setClientDistrictPopoverOpen(false);
+                    // Force form to refresh
+                    setTimeout(() => {
+                      clientForm.trigger("districtId");
+                    }, 100);
                   } else {
                     workerForm.setValue("districtId", foundDistrict.id);
                     workerForm.trigger("districtId");
@@ -1282,9 +1287,18 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
                         className="w-full justify-between"
                         disabled={!clientForm.watch("state")}
                       >
-                        {clientForm.watch("districtId") 
-                          ? apiDistricts.find((district: any) => district.id === clientForm.watch("districtId"))?.name || "District selected"
-                          : (!clientForm.watch("state") ? "Select state first" : "Select your district")}
+                        {(() => {
+                          const districtId = clientForm.watch("districtId");
+                          const state = clientForm.watch("state");
+                          console.log('Button render - districtId:', districtId, 'state:', state, 'apiDistricts length:', apiDistricts.length);
+                          
+                          if (!state) return "Select state first";
+                          if (!districtId) return "Select your district";
+                          
+                          const foundDistrict = apiDistricts.find((district: any) => district.id === districtId);
+                          console.log('Button render - found district:', foundDistrict?.name);
+                          return foundDistrict?.name || `District selected (${districtId})`;
+                        })()}
                         <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                       </Button>
                     </PopoverTrigger>
