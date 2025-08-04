@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { Mic, MicOff, Volume2 } from "lucide-react";
+import statesDistrictsData from "@shared/states-districts.json";
 
 // Extend Window interface for speech recognition
 declare global {
@@ -14,16 +15,16 @@ declare global {
 
 interface VoiceAssistantProps {
   onServiceSelect: (serviceId: string) => void;
-  onDistrictSelect: (districtId: string) => void;
+  onStateSelect: (stateName: string) => void;
+  onDistrictSelect: (districtName: string) => void;
   onDescriptionUpdate: (description: string) => void;
   services: Array<{ id: string; name: string; tamil_name?: string }>;
-  districts: Array<{ id: string; name: string; tamil_name?: string }>;
   className?: string;
 }
 
 interface ConversationStep {
   step: number;
-  field: 'service' | 'district' | 'description';
+  field: 'service' | 'state' | 'district' | 'description';
   question: {
     english: string;
     tamil: string;
@@ -42,14 +43,22 @@ const conversationSteps: ConversationStep[] = [
   },
   {
     step: 1,
-    field: 'district',
+    field: 'state',
     question: {
-      english: "Which district are you in? Please say your district name.",
+      english: "Which state are you in? Please say your state name clearly.",
       tamil: ""
     }
   },
   {
     step: 2,
+    field: 'district',
+    question: {
+      english: "Which district are you in? Please say your district name clearly.",
+      tamil: ""
+    }
+  },
+  {
+    step: 3,
     field: 'description',
     question: {
       english: "Please describe your service requirement in detail.",
@@ -60,10 +69,10 @@ const conversationSteps: ConversationStep[] = [
 
 export function VoiceAssistant({
   onServiceSelect,
+  onStateSelect,
   onDistrictSelect,
   onDescriptionUpdate,
   services,
-  districts,
   className = ""
 }: VoiceAssistantProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -168,6 +177,102 @@ export function VoiceAssistant({
     }
   };
 
+  // Helper function to calculate string similarity for fuzzy matching
+  const calculateSimilarity = (str1: string, str2: string): number => {
+    str1 = str1.toLowerCase();
+    str2 = str2.toLowerCase();
+    
+    if (str1 === str2) return 1;
+    if (str1.includes(str2) || str2.includes(str1)) return 0.8;
+    
+    // Calculate Levenshtein distance
+    const matrix = Array(str2.length + 1).fill(null).map(() => Array(str1.length + 1).fill(null));
+    for (let i = 0; i <= str1.length; i++) matrix[0][i] = i;
+    for (let j = 0; j <= str2.length; j++) matrix[j][0] = j;
+    
+    for (let j = 1; j <= str2.length; j++) {
+      for (let i = 1; i <= str1.length; i++) {
+        const indicator = str1[i - 1] === str2[j - 1] ? 0 : 1;
+        matrix[j][i] = Math.min(
+          matrix[j][i - 1] + 1,
+          matrix[j - 1][i] + 1,
+          matrix[j - 1][i - 1] + indicator
+        );
+      }
+    }
+    
+    const distance = matrix[str2.length][str1.length];
+    const maxLength = Math.max(str1.length, str2.length);
+    return (maxLength - distance) / maxLength;
+  };
+
+  // Find matching state with fuzzy search
+  const findState = (userInput: string) => {
+    const input = userInput.toLowerCase().trim();
+    console.log('🔍 findState called with:', input);
+    
+    const allStates = statesDistrictsData.states.map(s => s.state);
+    
+    // First try exact match
+    for (const state of allStates) {
+      if (state.toLowerCase() === input) {
+        console.log('✅ Exact state match found:', state);
+        return { state, confidence: 1.0 };
+      }
+    }
+    
+    // Then try partial matches and fuzzy search
+    let bestMatch = { state: '', confidence: 0 };
+    for (const state of allStates) {
+      const similarity = calculateSimilarity(input, state);
+      if (similarity > bestMatch.confidence) {
+        bestMatch = { state, confidence: similarity };
+      }
+    }
+    
+    console.log('🔍 Best state match:', bestMatch);
+    return bestMatch.confidence > 0.6 ? bestMatch : null;
+  };
+
+  // Find matching district with fuzzy search
+  const findDistrict = (userInput: string, selectedState?: string) => {
+    const input = userInput.toLowerCase().trim();
+    console.log('🔍 findDistrict called with:', input, 'selected state:', selectedState);
+    
+    let districtsToSearch: string[] = [];
+    
+    if (selectedState) {
+      // Search only in the selected state
+      const stateData = statesDistrictsData.states.find(s => s.state === selectedState);
+      if (stateData) {
+        districtsToSearch = stateData.districts;
+      }
+    } else {
+      // Search across all districts
+      districtsToSearch = statesDistrictsData.states.flatMap(s => s.districts);
+    }
+    
+    // First try exact match
+    for (const district of districtsToSearch) {
+      if (district.toLowerCase() === input) {
+        console.log('✅ Exact district match found:', district);
+        return { district, confidence: 1.0 };
+      }
+    }
+    
+    // Then try partial matches and fuzzy search
+    let bestMatch = { district: '', confidence: 0 };
+    for (const district of districtsToSearch) {
+      const similarity = calculateSimilarity(input, district);
+      if (similarity > bestMatch.confidence) {
+        bestMatch = { district, confidence: similarity };
+      }
+    }
+    
+    console.log('🔍 Best district match:', bestMatch);
+    return bestMatch.confidence > 0.6 ? bestMatch : null;
+  };
+
   // Find matching service
   const findService = (userInput: string) => {
     const input = userInput.toLowerCase().trim();
@@ -217,26 +322,10 @@ export function VoiceAssistant({
     return foundService;
   };
 
-  // Find matching district
-  const findDistrict = (userInput: string) => {
-    const input = userInput.toLowerCase().trim();
-    
-    return districts.find(district => {
-      const englishMatch = district.name.toLowerCase().includes(input) || 
-                          input.includes(district.name.toLowerCase());
-      const tamilMatch = district.tamil_name && 
-                        (district.tamil_name.includes(input) || input.includes(district.tamil_name));
-      
-      // Also check for partial matches and common variations
-      const nameWords = district.name.toLowerCase().split(' ');
-      const inputWords = input.split(' ');
-      const hasPartialMatch = nameWords.some(word => 
-        inputWords.some(inputWord => word.includes(inputWord) || inputWord.includes(word))
-      );
-      
-      return englishMatch || tamilMatch || hasPartialMatch;
-    });
-  };
+
+
+  // Store selected state for district search
+  const [selectedState, setSelectedState] = useState<string>('');
 
   // Process user response
   const processResponse = (transcript: string) => {
@@ -258,7 +347,7 @@ export function VoiceAssistant({
           setConversation(prev => [...prev, `Assistant: ${response}`]);
           speak(response, 'english', false);
           setTimeout(() => {
-            console.log('🔄 Moving to step 1 (district selection)');
+            console.log('🔄 Moving to step 1 (state selection)');
             setCurrentStep(1);
             currentStepRef.current = 1; // Update ref immediately
             const nextQuestion = conversationSteps[1].question.english;
@@ -273,23 +362,54 @@ export function VoiceAssistant({
         }
         break;
 
-      case 'district':
-        const foundDistrict = findDistrict(input);
-        if (foundDistrict) {
-          onDistrictSelect(foundDistrict.id);
-          const response = `Great! I've selected ${foundDistrict.name} district.`;
+      case 'state':
+        const foundState = findState(input);
+        if (foundState && foundState.confidence > 0.7) {
+          setSelectedState(foundState.state);
+          onStateSelect(foundState.state);
+          const response = `Great! I've selected ${foundState.state} state.`;
           setConversation(prev => [...prev, `Assistant: ${response}`]);
           speak(response, 'english', false);
           setTimeout(() => {
-            console.log('🔄 Moving to step 2 (description)');
+            console.log('🔄 Moving to step 2 (district selection)');
             setCurrentStep(2);
             currentStepRef.current = 2; // Update ref immediately
             const nextQuestion = conversationSteps[2].question.english;
             setConversation(prev => [...prev, `Assistant: ${nextQuestion}`]);
             speak(nextQuestion, 'english', true);
           }, 1500);
+        } else if (foundState && foundState.confidence > 0.6) {
+          const confirmResponse = `Do you mean ${foundState.state}? Please say yes or no.`;
+          setConversation(prev => [...prev, `Assistant: ${confirmResponse}`]);
+          speak(confirmResponse, 'english', true);
         } else {
-          const retry = "Sorry, I couldn't find that district. Try saying district names like Mumbai, Delhi, or Bangalore.";
+          const retry = "Sorry, I couldn't find that state. Try saying state names like Karnataka, Maharashtra, or Tamil Nadu.";
+          setConversation(prev => [...prev, `Assistant: ${retry}`]);
+          speak(retry, 'english', true);
+        }
+        break;
+
+      case 'district':
+        const foundDistrict = findDistrict(input, selectedState);
+        if (foundDistrict && foundDistrict.confidence > 0.7) {
+          onDistrictSelect(foundDistrict.district);
+          const response = `Great! I've selected ${foundDistrict.district} district.`;
+          setConversation(prev => [...prev, `Assistant: ${response}`]);
+          speak(response, 'english', false);
+          setTimeout(() => {
+            console.log('🔄 Moving to step 3 (description)');
+            setCurrentStep(3);
+            currentStepRef.current = 3; // Update ref immediately
+            const nextQuestion = conversationSteps[3].question.english;
+            setConversation(prev => [...prev, `Assistant: ${nextQuestion}`]);
+            speak(nextQuestion, 'english', true);
+          }, 1500);
+        } else if (foundDistrict && foundDistrict.confidence > 0.6) {
+          const confirmResponse = `Do you mean ${foundDistrict.district}? Please say yes or no.`;
+          setConversation(prev => [...prev, `Assistant: ${confirmResponse}`]);
+          speak(confirmResponse, 'english', true);
+        } else {
+          const retry = `Sorry, I couldn't find that district in ${selectedState}. Please try saying the district name clearly, like Salem or Bangalore.`;
           setConversation(prev => [...prev, `Assistant: ${retry}`]);
           speak(retry, 'english', true);
         }

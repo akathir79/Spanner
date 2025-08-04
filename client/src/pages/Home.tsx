@@ -637,10 +637,10 @@ export default function Home() {
                     </h3>
                     <VoiceAssistant
                       onServiceSelect={(serviceId) => setSearchForm(prev => ({ ...prev, service: serviceId }))}
-                      onDistrictSelect={(districtId) => setSearchForm(prev => ({ ...prev, district: districtId }))}
+                      onStateSelect={(stateName) => setSearchForm(prev => ({ ...prev, state: stateName }))}
+                      onDistrictSelect={(districtName) => setSearchForm(prev => ({ ...prev, district: districtName }))}
                       onDescriptionUpdate={(description) => setSearchForm(prev => ({ ...prev, description }))}
                       services={services || []}
-                      districts={getAvailableDistricts()}
                       className="h-10 w-10 p-2 rounded-full"
                     />
                   </div>
