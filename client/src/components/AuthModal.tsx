@@ -1200,12 +1200,13 @@ export function AuthModal({ isOpen, onClose, mode, initialTab }: AuthModalProps)
                         <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-full p-0">
+                    <PopoverContent className="w-full p-0 animate-dropdown-open">
                       <Command>
                         <CommandInput 
                           placeholder="Search states..." 
                           value={stateSearchInput}
                           onValueChange={setStateSearchInput}
+                          className="transition-all duration-200 focus:ring-2 focus:ring-primary/20"
                         />
                         <CommandEmpty>No state found.</CommandEmpty>
                         <CommandList className="max-h-40 overflow-y-auto">
@@ -1215,18 +1216,26 @@ export function AuthModal({ isOpen, onClose, mode, initialTab }: AuthModalProps)
                               .filter(state => 
                                 state.name.toLowerCase().includes(stateSearchInput.toLowerCase())
                               )
-                              .map((state) => (
+                              .map((state, index) => (
                                 <CommandItem
                                   key={state.id}
+                                  className="transition-all duration-150 hover:bg-accent/80 data-[selected=true]:bg-accent animate-district-load"
+                                  style={{ animationDelay: `${index * 15}ms` }}
                                   onSelect={() => {
-                                    clientForm.setValue("state", state.name);
-                                    // Clear district when state changes
-                                    clientForm.setValue("districtId", "");
-                                    setStatePopoverOpen(false);
-                                    setStateSearchInput("");
+                                    const item = document.querySelector(`[data-value="${state.name}"]`);
+                                    if (item) {
+                                      item.classList.add('animate-selection-highlight');
+                                    }
+                                    setTimeout(() => {
+                                      clientForm.setValue("state", state.name);
+                                      // Clear district when state changes
+                                      clientForm.setValue("districtId", "");
+                                      setStatePopoverOpen(false);
+                                      setStateSearchInput("");
+                                    }, 80);
                                   }}
                                 >
-                                  {state.name}
+                                  <span className="transition-all duration-150">{state.name}</span>
                                 </CommandItem>
                               ))}
                           </CommandGroup>
@@ -1236,18 +1245,26 @@ export function AuthModal({ isOpen, onClose, mode, initialTab }: AuthModalProps)
                               .filter(state => 
                                 state.name.toLowerCase().includes(stateSearchInput.toLowerCase())
                               )
-                              .map((state) => (
+                              .map((state, index) => (
                                 <CommandItem
                                   key={state.id}
+                                  className="transition-all duration-150 hover:bg-accent/80 data-[selected=true]:bg-accent animate-district-load"
+                                  style={{ animationDelay: `${(INDIAN_STATES_AND_UTS.filter(item => item.type === 'state').length + index) * 15}ms` }}
                                   onSelect={() => {
-                                    clientForm.setValue("state", state.name);
-                                    // Clear district when state changes
-                                    clientForm.setValue("districtId", "");
-                                    setStatePopoverOpen(false);
-                                    setStateSearchInput("");
+                                    const item = document.querySelector(`[data-value="${state.name}"]`);
+                                    if (item) {
+                                      item.classList.add('animate-selection-highlight');
+                                    }
+                                    setTimeout(() => {
+                                      clientForm.setValue("state", state.name);
+                                      // Clear district when state changes
+                                      clientForm.setValue("districtId", "");
+                                      setStatePopoverOpen(false);
+                                      setStateSearchInput("");
+                                    }, 80);
                                   }}
                                 >
-                                  {state.name}
+                                  <span className="transition-all duration-150">{state.name}</span>
                                 </CommandItem>
                               ))}
                           </CommandGroup>
@@ -1283,12 +1300,13 @@ export function AuthModal({ isOpen, onClose, mode, initialTab }: AuthModalProps)
                         <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-full p-0">
+                    <PopoverContent className="w-full p-0 animate-dropdown-open">
                       <Command>
                         <CommandInput 
                           placeholder="Search districts..." 
                           value={clientDistrictSearchInput}
                           onValueChange={setClientDistrictSearchInput}
+                          className="transition-all duration-200 focus:ring-2 focus:ring-primary/20"
                         />
                         <CommandEmpty>No district found.</CommandEmpty>
                         <CommandList className="max-h-40 overflow-y-auto">
@@ -1297,19 +1315,29 @@ export function AuthModal({ isOpen, onClose, mode, initialTab }: AuthModalProps)
                               .filter(district => 
                                 district.name.toLowerCase().includes(clientDistrictSearchInput.toLowerCase())
                               )
-                              .map((district) => (
+                              .map((district, index) => (
                                 <CommandItem
                                   key={district.id}
+                                  className="transition-all duration-150 hover:bg-accent/80 data-[selected=true]:bg-accent animate-district-load"
+                                  style={{ animationDelay: `${index * 20}ms` }}
                                   onSelect={() => {
-                                    clientForm.setValue("districtId", district.id);
-                                    setClientDistrictPopoverOpen(false);
-                                    setClientDistrictSearchInput("");
+                                    const item = document.querySelector(`[data-value="${district.name}"]`);
+                                    if (item) {
+                                      item.classList.add('animate-selection-highlight');
+                                    }
+                                    setTimeout(() => {
+                                      clientForm.setValue("districtId", district.id);
+                                      setClientDistrictPopoverOpen(false);
+                                      setClientDistrictSearchInput("");
+                                    }, 80);
                                   }}
                                 >
-                                  {district.name}
-                                  {district.tamilName && district.tamilName !== district.name && (
-                                    <span className="text-muted-foreground ml-2">({district.tamilName})</span>
-                                  )}
+                                  <span className="transition-all duration-150">
+                                    {district.name}
+                                    {district.tamilName && district.tamilName !== district.name && (
+                                      <span className="text-muted-foreground ml-2">({district.tamilName})</span>
+                                    )}
+                                  </span>
                                 </CommandItem>
                               ))}
                           </CommandGroup>
@@ -1713,28 +1741,41 @@ export function AuthModal({ isOpen, onClose, mode, initialTab }: AuthModalProps)
                           <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-full p-0">
+                      <PopoverContent className="w-full p-0 animate-dropdown-open">
                         <Command>
-                          <CommandInput placeholder="Search districts..." />
+                          <CommandInput 
+                            placeholder="Search districts..." 
+                            className="transition-all duration-200 focus:ring-2 focus:ring-primary/20"
+                          />
                           <CommandList>
                             <CommandEmpty>No district found.</CommandEmpty>
                             <CommandGroup>
                               {isWorkerLoadingDistricts ? (
-                                <CommandItem disabled>Loading districts...</CommandItem>
+                                <CommandItem disabled className="animate-pulse">Loading districts...</CommandItem>
                               ) : workerApiDistricts.length > 0 ? (
-                                workerApiDistricts.map((district: any) => (
+                                workerApiDistricts.map((district: any, index) => (
                                   <CommandItem
                                     key={district.id}
                                     value={district.name}
+                                    className="transition-all duration-150 hover:bg-accent/80 data-[selected=true]:bg-accent animate-district-load"
+                                    style={{ animationDelay: `${index * 20}ms` }}
                                     onSelect={() => {
-                                      const currentDistricts = workerForm.getValues("serviceDistricts") || [];
-                                      if (!currentDistricts.includes(district.id)) {
-                                        workerForm.setValue("serviceDistricts", [...currentDistricts, district.id]);
+                                      const item = document.querySelector(`[data-value="${district.name}"]`);
+                                      if (item) {
+                                        item.classList.add('animate-selection-highlight');
                                       }
-                                      setDistrictPopoverOpen(false);
+                                      setTimeout(() => {
+                                        const currentDistricts = workerForm.getValues("serviceDistricts") || [];
+                                        if (!currentDistricts.includes(district.id)) {
+                                          workerForm.setValue("serviceDistricts", [...currentDistricts, district.id]);
+                                        }
+                                        setDistrictPopoverOpen(false);
+                                      }, 80);
                                     }}
                                   >
-                                    {district.name} {district.tamilName && `(${district.tamilName})`}
+                                    <span className="transition-all duration-150">
+                                      {district.name} {district.tamilName && `(${district.tamilName})`}
+                                    </span>
                                   </CommandItem>
                                 ))
                               ) : (
@@ -1750,22 +1791,29 @@ export function AuthModal({ isOpen, onClose, mode, initialTab }: AuthModalProps)
                     </p>
                   </div>
                   <div className="flex flex-wrap gap-1 mt-2">
-                    {workerForm.watch("serviceDistricts")?.map((districtId: string) => {
+                    {workerForm.watch("serviceDistricts")?.map((districtId: string, index) => {
                       const district = workerApiDistricts.find((d: any) => d.id === districtId) || null;
                       return district ? (
-                        <div key={districtId} className="flex items-center gap-1 bg-secondary text-secondary-foreground px-2 py-1 rounded-md text-xs">
-                          <span>{district.name}</span>
+                        <div 
+                          key={districtId} 
+                          className="flex items-center gap-1 bg-secondary text-secondary-foreground px-2 py-1 rounded-md text-xs animate-tag-appear transition-all duration-150 hover:bg-secondary/80"
+                          style={{ animationDelay: `${index * 50}ms` }}
+                        >
+                          <span className="transition-all duration-150">{district.name}</span>
                           <Button
                             type="button"
                             variant="ghost"
                             size="sm"
-                            className="h-4 w-4 p-0"
-                            onClick={() => {
-                              const currentDistricts = workerForm.getValues("serviceDistricts") || [];
-                              workerForm.setValue("serviceDistricts", currentDistricts.filter(id => id !== districtId));
+                            className="h-4 w-4 p-0 transition-all duration-150 hover:bg-destructive/20"
+                            onClick={(e) => {
+                              e.target.closest('.animate-tag-appear').classList.add('animate-tag-remove');
+                              setTimeout(() => {
+                                const currentDistricts = workerForm.getValues("serviceDistricts") || [];
+                                workerForm.setValue("serviceDistricts", currentDistricts.filter(id => id !== districtId));
+                              }, 150);
                             }}
                           >
-                            <X className="h-3 w-3" />
+                            <X className="h-3 w-3 transition-all duration-150" />
                           </Button>
                         </div>
                       ) : null;
@@ -1991,12 +2039,13 @@ export function AuthModal({ isOpen, onClose, mode, initialTab }: AuthModalProps)
                         <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-full p-0">
+                    <PopoverContent className="w-full p-0 animate-dropdown-open">
                       <Command>
                         <CommandInput 
                           placeholder="Search states..." 
                           value={workerStateSearchInput}
                           onValueChange={setWorkerStateSearchInput}
+                          className="transition-all duration-200 focus:ring-2 focus:ring-primary/20"
                         />
                         <CommandEmpty>No state found.</CommandEmpty>
                         <CommandList className="max-h-40 overflow-y-auto">
@@ -2006,18 +2055,26 @@ export function AuthModal({ isOpen, onClose, mode, initialTab }: AuthModalProps)
                               .filter(state => 
                                 state.name.toLowerCase().includes(workerStateSearchInput.toLowerCase())
                               )
-                              .map((state) => (
+                              .map((state, index) => (
                                 <CommandItem
                                   key={state.id}
+                                  className="transition-all duration-150 hover:bg-accent/80 data-[selected=true]:bg-accent animate-district-load"
+                                  style={{ animationDelay: `${index * 15}ms` }}
                                   onSelect={() => {
-                                    workerForm.setValue("state", state.name);
-                                    // Clear district when state changes
-                                    workerForm.setValue("districtId", "");
-                                    setWorkerStatePopoverOpen(false);
-                                    setWorkerStateSearchInput("");
+                                    const item = document.querySelector(`[data-value="${state.name}"]`);
+                                    if (item) {
+                                      item.classList.add('animate-selection-highlight');
+                                    }
+                                    setTimeout(() => {
+                                      workerForm.setValue("state", state.name);
+                                      // Clear district when state changes
+                                      workerForm.setValue("districtId", "");
+                                      setWorkerStatePopoverOpen(false);
+                                      setWorkerStateSearchInput("");
+                                    }, 80);
                                   }}
                                 >
-                                  {state.name}
+                                  <span className="transition-all duration-150">{state.name}</span>
                                 </CommandItem>
                               ))}
                           </CommandGroup>
@@ -2027,18 +2084,26 @@ export function AuthModal({ isOpen, onClose, mode, initialTab }: AuthModalProps)
                               .filter(state => 
                                 state.name.toLowerCase().includes(workerStateSearchInput.toLowerCase())
                               )
-                              .map((state) => (
+                              .map((state, index) => (
                                 <CommandItem
                                   key={state.id}
+                                  className="transition-all duration-150 hover:bg-accent/80 data-[selected=true]:bg-accent animate-district-load"
+                                  style={{ animationDelay: `${(INDIAN_STATES_AND_UTS.filter(item => item.type === 'state').length + index) * 15}ms` }}
                                   onSelect={() => {
-                                    workerForm.setValue("state", state.name);
-                                    // Clear district when state changes
-                                    workerForm.setValue("districtId", "");
-                                    setWorkerStatePopoverOpen(false);
-                                    setWorkerStateSearchInput("");
+                                    const item = document.querySelector(`[data-value="${state.name}"]`);
+                                    if (item) {
+                                      item.classList.add('animate-selection-highlight');
+                                    }
+                                    setTimeout(() => {
+                                      workerForm.setValue("state", state.name);
+                                      // Clear district when state changes
+                                      workerForm.setValue("districtId", "");
+                                      setWorkerStatePopoverOpen(false);
+                                      setWorkerStateSearchInput("");
+                                    }, 80);
                                   }}
                                 >
-                                  {state.name}
+                                  <span className="transition-all duration-150">{state.name}</span>
                                 </CommandItem>
                               ))}
                           </CommandGroup>

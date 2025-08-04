@@ -2,6 +2,103 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Smooth animations for dropdowns and selections */
+@layer utilities {
+  .animate-dropdown-open {
+    animation: dropdown-open 0.15s ease-out forwards;
+  }
+  
+  .animate-dropdown-close {
+    animation: dropdown-close 0.15s ease-in forwards;
+  }
+  
+  .animate-selection-highlight {
+    animation: selection-highlight 0.2s ease-out;
+  }
+  
+  .animate-district-load {
+    animation: district-load 0.3s ease-out;
+  }
+  
+  .animate-tag-appear {
+    animation: tag-appear 0.2s ease-out;
+  }
+  
+  .animate-tag-remove {
+    animation: tag-remove 0.15s ease-in forwards;
+  }
+}
+
+@keyframes dropdown-open {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes dropdown-close {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.95);
+  }
+}
+
+@keyframes selection-highlight {
+  0% {
+    background-color: hsl(var(--accent));
+    transform: scale(1);
+  }
+  50% {
+    background-color: hsl(var(--accent) / 0.8);
+    transform: scale(1.02);
+  }
+  100% {
+    background-color: transparent;
+    transform: scale(1);
+  }
+}
+
+@keyframes district-load {
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes tag-appear {
+  from {
+    opacity: 0;
+    transform: scale(0.8) translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes tag-remove {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+}
+
 :root {
   --background: hsl(0, 0%, 100%);
   --foreground: hsl(20, 14.3%, 4.1%);
@@ -424,6 +521,38 @@
 /* Focus visible for better accessibility */
 .focus-visible:focus-visible {
   @apply outline-none ring-2 ring-primary ring-offset-2 ring-offset-background;
+}
+
+/* Tag appear animation */
+@keyframes tag-appear {
+  from {
+    opacity: 0;
+    transform: scale(0.8) translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Tag remove animation */
+@keyframes tag-remove {
+  from {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.8) translateY(-10px);
+  }
+}
+
+.animate-tag-appear {
+  animation: tag-appear 0.3s ease-out forwards;
+}
+
+.animate-tag-remove {
+  animation: tag-remove 0.2s ease-in forwards;
 }
 
 /* Dark mode improvements */

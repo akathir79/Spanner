@@ -665,22 +665,33 @@ export default function Home() {
                               <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                             </Button>
                           </PopoverTrigger>
-                          <PopoverContent className="w-full p-0">
+                          <PopoverContent className="w-full p-0 animate-dropdown-open">
                             <Command>
-                              <CommandInput placeholder="Search services..." />
+                              <CommandInput 
+                                placeholder="Search services..." 
+                                className="transition-all duration-200 focus:ring-2 focus:ring-primary/20"
+                              />
                               <CommandList>
                                 <CommandEmpty>No service found.</CommandEmpty>
                                 <CommandGroup>
-                                  {services?.map((service: any) => (
+                                  {services?.map((service: any, index) => (
                                     <CommandItem
                                       key={service.id}
                                       value={service.name}
+                                      className="transition-all duration-150 hover:bg-accent/80 data-[selected=true]:bg-accent animate-district-load"
+                                      style={{ animationDelay: `${index * 30}ms` }}
                                       onSelect={() => {
-                                        setSearchForm(prev => ({ ...prev, service: service.id }));
-                                        setServiceOpen(false);
+                                        const item = document.querySelector(`[data-value="${service.name}"]`);
+                                        if (item) {
+                                          item.classList.add('animate-selection-highlight');
+                                        }
+                                        setTimeout(() => {
+                                          setSearchForm(prev => ({ ...prev, service: service.id }));
+                                          setServiceOpen(false);
+                                        }, 100);
                                       }}
                                     >
-                                      {service.name}
+                                      <span className="transition-all duration-150">{service.name}</span>
                                     </CommandItem>
                                   ))}
                                 </CommandGroup>
@@ -721,36 +732,55 @@ export default function Home() {
                               <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                             </Button>
                           </PopoverTrigger>
-                          <PopoverContent className="w-full p-0">
+                          <PopoverContent className="w-full p-0 animate-dropdown-open">
                             <Command>
-                              <CommandInput placeholder="Search states..." />
+                              <CommandInput 
+                                placeholder="Search states..." 
+                                className="transition-all duration-200 focus:ring-2 focus:ring-primary/20"
+                              />
                               <CommandList>
                                 <CommandEmpty>No state found.</CommandEmpty>
                                 <CommandGroup heading="States">
-                                  {INDIAN_STATES_AND_UTS.filter(item => item.type === 'state').map((state) => (
+                                  {INDIAN_STATES_AND_UTS.filter(item => item.type === 'state').map((state, index) => (
                                     <CommandItem
                                       key={state.name}
                                       value={state.name}
+                                      className="transition-all duration-150 hover:bg-accent/80 data-[selected=true]:bg-accent animate-district-load"
+                                      style={{ animationDelay: `${index * 20}ms` }}
                                       onSelect={() => {
-                                        setSearchForm(prev => ({ ...prev, state: state.name }));
-                                        setStateOpen(false);
+                                        const item = document.querySelector(`[data-value="${state.name}"]`);
+                                        if (item) {
+                                          item.classList.add('animate-selection-highlight');
+                                        }
+                                        setTimeout(() => {
+                                          setSearchForm(prev => ({ ...prev, state: state.name }));
+                                          setStateOpen(false);
+                                        }, 100);
                                       }}
                                     >
-                                      {state.name}
+                                      <span className="transition-all duration-150">{state.name}</span>
                                     </CommandItem>
                                   ))}
                                 </CommandGroup>
                                 <CommandGroup heading="Union Territories">
-                                  {INDIAN_STATES_AND_UTS.filter(item => item.type === 'ut').map((ut) => (
+                                  {INDIAN_STATES_AND_UTS.filter(item => item.type === 'ut').map((ut, index) => (
                                     <CommandItem
                                       key={ut.name}
                                       value={ut.name}
+                                      className="transition-all duration-150 hover:bg-accent/80 data-[selected=true]:bg-accent animate-district-load"
+                                      style={{ animationDelay: `${(INDIAN_STATES_AND_UTS.filter(item => item.type === 'state').length + index) * 20}ms` }}
                                       onSelect={() => {
-                                        setSearchForm(prev => ({ ...prev, state: ut.name }));
-                                        setStateOpen(false);
+                                        const item = document.querySelector(`[data-value="${ut.name}"]`);
+                                        if (item) {
+                                          item.classList.add('animate-selection-highlight');
+                                        }
+                                        setTimeout(() => {
+                                          setSearchForm(prev => ({ ...prev, state: ut.name }));
+                                          setStateOpen(false);
+                                        }, 100);
                                       }}
                                     >
-                                      {ut.name}
+                                      <span className="transition-all duration-150">{ut.name}</span>
                                     </CommandItem>
                                   ))}
                                 </CommandGroup>
@@ -782,22 +812,35 @@ export default function Home() {
                               <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                             </Button>
                           </PopoverTrigger>
-                          <PopoverContent className="w-full p-0">
+                          <PopoverContent className="w-full p-0 animate-dropdown-open">
                             <Command>
-                              <CommandInput placeholder="Search districts..." />
+                              <CommandInput 
+                                placeholder="Search districts..." 
+                                className="transition-all duration-200 focus:ring-2 focus:ring-primary/20"
+                              />
                               <CommandList>
                                 <CommandEmpty>No district found.</CommandEmpty>
                                 <CommandGroup>
-                                  {getAvailableDistricts().map((district: any) => (
+                                  {getAvailableDistricts().map((district: any, index) => (
                                     <CommandItem
                                       key={district.id}
                                       value={district.name}
+                                      className="transition-all duration-150 hover:bg-accent/80 data-[selected=true]:bg-accent animate-district-load"
+                                      style={{ animationDelay: `${index * 25}ms` }}
                                       onSelect={() => {
-                                        setSearchForm(prev => ({ ...prev, district: district.id }));
-                                        setDistrictOpen(false);
+                                        const item = document.querySelector(`[data-value="${district.name}"]`);
+                                        if (item) {
+                                          item.classList.add('animate-selection-highlight');
+                                        }
+                                        setTimeout(() => {
+                                          setSearchForm(prev => ({ ...prev, district: district.id }));
+                                          setDistrictOpen(false);
+                                        }, 100);
                                       }}
                                     >
-                                      {district.name} {district.tamilName && `(${district.tamilName})`}
+                                      <span className="transition-all duration-150">
+                                        {district.name} {district.tamilName && `(${district.tamilName})`}
+                                      </span>
                                     </CommandItem>
                                   ))}
                                 </CommandGroup>
