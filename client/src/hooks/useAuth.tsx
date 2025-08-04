@@ -86,6 +86,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const result = await response.json();
       
       if (response.ok && result.user) {
+        // Use a small delay to prevent state conflicts during authentication
+        await new Promise(resolve => setTimeout(resolve, 50));
         login(result.user);
         return result.user;
       } else {
