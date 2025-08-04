@@ -606,101 +606,101 @@ export function AuthModal({ isOpen, onClose, mode, initialTab }: AuthModalProps)
               workerForm.setValue("state", detectedState);
             }
             
-            // Trigger district loading and wait for completion
+            // Load districts and match - using the exact same logic as Home page
             if (detectedState) {
-              const fetchFunction = formType === "client" ? fetchClientDistrictsFromAPI : fetchWorkerDistrictsFromAPI;
-              await fetchFunction(detectedState);
-              
-              // Wait for districts to be actually loaded in state with a more robust check
-              const checkDistrictsAndMatch = () => {
-                const districts = formType === "client" ? clientApiDistricts : workerApiDistricts;
-                
-                if (districts.length === 0) {
-                  // Districts not loaded yet, wait and retry
-                  setTimeout(checkDistrictsAndMatch, 100);
-                  return;
-                }
-                
-                console.log('AuthModal District matching - districts array length:', districts.length);
-                console.log('AuthModal District matching - first 3 districts:', districts.slice(0, 3));
-                console.log('AuthModal Location data for matching:', {
-                  state_district: locationData.state_district,
-                  county: locationData.county
-                });
-                
-                const foundDistrict = districts.find((district: any) => {
-                  const districtName = district.name.toLowerCase();
-                  const detectedStateDistrict = locationData.state_district?.toLowerCase() || '';
-                  const detectedCounty = locationData.county?.toLowerCase() || '';
-                  
-                  // Debug logging
-                  if (districtName === 'salem') {
-                    console.log('Checking Salem district:', {
-                      districtName,
-                      detectedStateDistrict,
-                      detectedCounty,
-                      directMatch1: districtName === detectedStateDistrict,
-                      directMatch2: districtName === detectedCounty,
-                      includes1: detectedStateDistrict.includes(districtName),
-                      includes2: detectedCounty.includes(districtName),
-                      includes3: districtName.includes(detectedStateDistrict),
-                      includes4: districtName.includes(detectedCounty)
-                    });
-                  }
-                  
-                  // Direct matches
-                  if (districtName === detectedStateDistrict || districtName === detectedCounty) {
-                    return true;
-                  }
-                  
-                  // Check if detected location contains district name
-                  if (detectedStateDistrict.includes(districtName) || detectedCounty.includes(districtName)) {
-                    return true;
-                  }
-                  
-                  // Check if district name contains detected location (handles "Salem West" -> "Salem")
-                  if (districtName.includes(detectedStateDistrict) || districtName.includes(detectedCounty)) {
-                    return true;
-                  }
-                  
-                  // Remove common suffixes for better matching
-                  const cleanDistrict = districtName.replace(/\s+(district|west|east|north|south)$/i, '');
-                  const cleanDetectedState = detectedStateDistrict.replace(/\s+(district|west|east|north|south)$/i, '');
-                  const cleanDetectedCounty = detectedCounty.replace(/\s+(district|west|east|north|south)$/i, '');
-                  
-                  return cleanDistrict === cleanDetectedState || cleanDistrict === cleanDetectedCounty;
-                });
-                
-                if (foundDistrict) {
-                  // Force trigger form updates immediately
-                  if (formType === "client") {
-                    clientForm.setValue("districtId", foundDistrict.id, { shouldDirty: true, shouldTouch: true });
-                    setClientDistrictPopoverOpen(false);
-                    setClientDistrictSearchInput("");
-                    console.log('District set for client:', foundDistrict.name, 'with ID:', foundDistrict.id);
-                  } else {
-                    workerForm.setValue("districtId", foundDistrict.id, { shouldDirty: true, shouldTouch: true });
-                    const currentDistricts: string[] = workerForm.getValues("serviceDistricts") || [];
-                    if (!currentDistricts.includes(foundDistrict.id)) {
-                      workerForm.setValue("serviceDistricts", [...currentDistricts, foundDistrict.id], { shouldDirty: true, shouldTouch: true });
+              try {
+                // Load districts for the detected state
+                const response = await fetch(`/api/districts/${encodeURIComponent(detectedState)}`);
+                if (response.ok) {
+                  const districtsData = await response.json();
+                  if (Array.isArray(districtsData) && districtsData.length > 0) {
+                    // Update the district arrays
+                    if (formType === "client") {
+                      setClientApiDistricts(districtsData);
+                    } else {
+                      setWorkerApiDistricts(districtsData);
                     }
-                    setDistrictPopoverOpen(false);
-                    console.log('District set for worker:', foundDistrict.name, 'with ID:', foundDistrict.id);
+                    
+                    console.log('AuthModal: Districts loaded, now matching...', districtsData.length);
+                    
+                    // Small delay to ensure state is updated - SAME AS HOME PAGE
+                    setTimeout(() => {
+                      // Find matching district with improved matching logic - EXACT SAME AS HOME PAGE
+                      const matchingDistrict = districtsData.find((district: any) => {
+                        const districtName = district.name.toLowerCase();
+                        const detectedStateDistrict = locationData.state_district?.toLowerCase() || '';
+                        const detectedCounty = locationData.county?.toLowerCase() || '';
+                        
+                        // Debug logging
+                        if (districtName === 'salem') {
+                          console.log('Checking Salem district:', {
+                            districtName,
+                            detectedStateDistrict,
+                            detectedCounty,
+                            directMatch1: districtName === detectedStateDistrict,
+                            directMatch2: districtName === detectedCounty,
+                            includes1: detectedStateDistrict.includes(districtName),
+                            includes2: detectedCounty.includes(districtName),
+                            includes3: districtName.includes(detectedStateDistrict),
+                            includes4: districtName.includes(detectedCounty)
+                          });
+                        }
+                        
+                        // Direct matches
+                        if (districtName === detectedStateDistrict || districtName === detectedCounty) {
+                          return true;
+                        }
+                        
+                        // Check if detected location contains district name
+                        if (detectedStateDistrict.includes(districtName) || detectedCounty.includes(districtName)) {
+                          return true;
+                        }
+                        
+                        // Check if district name contains detected location (handles "Salem West" -> "Salem")
+                        if (districtName.includes(detectedStateDistrict) || districtName.includes(detectedCounty)) {
+                          return true;
+                        }
+                        
+                        // Remove common suffixes for better matching
+                        const cleanDistrict = districtName.replace(/\s+(district|west|east|north|south)$/i, '');
+                        const cleanDetectedState = detectedStateDistrict.replace(/\s+(district|west|east|north|south)$/i, '');
+                        const cleanDetectedCounty = detectedCounty.replace(/\s+(district|west|east|north|south)$/i, '');
+                        
+                        return cleanDistrict === cleanDetectedState || cleanDistrict === cleanDetectedCounty;
+                      });
+                      
+                      if (matchingDistrict) {
+                        // Set district using the matching district data
+                        if (formType === "client") {
+                          clientForm.setValue("districtId", matchingDistrict.id, { shouldDirty: true, shouldTouch: true });
+                          setClientDistrictPopoverOpen(false);
+                          setClientDistrictSearchInput("");
+                          console.log('District set for client:', matchingDistrict.name, 'with ID:', matchingDistrict.id);
+                        } else {
+                          workerForm.setValue("districtId", matchingDistrict.id, { shouldDirty: true, shouldTouch: true });
+                          const currentDistricts: string[] = workerForm.getValues("serviceDistricts") || [];
+                          if (!currentDistricts.includes(matchingDistrict.id)) {
+                            workerForm.setValue("serviceDistricts", [...currentDistricts, matchingDistrict.id], { shouldDirty: true, shouldTouch: true });
+                          }
+                          setDistrictPopoverOpen(false);
+                          console.log('District set for worker:', matchingDistrict.name, 'with ID:', matchingDistrict.id);
+                        }
+                        
+                        // Trigger form validation
+                        if (formType === "client") {
+                          clientForm.trigger(["state", "districtId"]);
+                        } else {
+                          workerForm.trigger(["state", "districtId", "serviceDistricts"]);
+                        }
+                      } else {
+                        console.log('No matching district found for:', locationData.state_district, 'or', locationData.county);
+                      }
+                    }, 300); // Same 300ms delay as Home page
                   }
-                  
-                  // Trigger form validation to ensure state is updated
-                  if (formType === "client") {
-                    clientForm.trigger(["state", "districtId"]);
-                  } else {
-                    workerForm.trigger(["state", "districtId", "serviceDistricts"]);
-                  }
-                } else {
-                  console.log('No matching district found for:', locationData.state_district, 'or', locationData.county);
                 }
-              };
-              
-              // Start the district checking and matching process
-              checkDistrictsAndMatch();
+              } catch (error) {
+                console.error('Error loading districts:', error);
+              }
             }
             
             toast({
