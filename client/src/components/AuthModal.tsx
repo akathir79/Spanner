@@ -166,14 +166,93 @@ export function AuthModal({ isOpen, onClose, mode, initialTab }: AuthModalProps)
     },
   });
 
-  // State for districts (consistent with Home page)
-  const [apiDistricts, setApiDistricts] = useState<Array<{id: string, name: string, tamilName?: string}>>([]);
-  const [isLoadingDistricts, setIsLoadingDistricts] = useState(false);
+  // Simple state management like home page
+  const [clientDistrictOpen, setClientDistrictOpen] = useState(false);
+  const [workerDistrictOpen, setWorkerDistrictOpen] = useState(false);
+  const [clientApiDistricts, setClientApiDistricts] = useState<Array<{id: string, name: string, tamilName?: string}>>([]);
+  const [workerApiDistricts, setWorkerApiDistricts] = useState<Array<{id: string, name: string, tamilName?: string}>>([]);
+  const [isClientLoadingDistricts, setIsClientLoadingDistricts] = useState(false);
+  const [isWorkerLoadingDistricts, setIsWorkerLoadingDistricts] = useState(false);
 
   // Watch for state changes in forms
   const selectedClientState = clientForm.watch("state");
   const selectedWorkerState = workerForm.watch("state");
-  const currentState = selectedClientState || selectedWorkerState;
+
+  // Simple useEffect patterns like home page
+  useEffect(() => {
+    if (selectedClientState) {
+      fetchClientDistrictsFromAPI(selectedClientState);
+    } else {
+      setClientApiDistricts([]);
+    }
+  }, [selectedClientState]);
+
+  useEffect(() => {
+    if (selectedWorkerState) {
+      fetchWorkerDistrictsFromAPI(selectedWorkerState);
+    } else {
+      setWorkerApiDistricts([]);
+    }
+  }, [selectedWorkerState]);
+
+  // Simple API fetching functions like home page
+  const fetchClientDistrictsFromAPI = async (stateName: string) => {
+    setIsClientLoadingDistricts(true);
+    try {
+      const response = await fetch(`/api/districts/${encodeURIComponent(stateName)}`);
+      if (response.ok) {
+        const districtsData = await response.json();
+        if (Array.isArray(districtsData) && districtsData.length > 0) {
+          setClientApiDistricts(districtsData);
+          console.log(`AuthModal: Loaded ${districtsData.length} districts from API for ${stateName}`, districtsData);
+          return;
+        }
+      }
+      const districts = await getFallbackDistricts(stateName);
+      setClientApiDistricts(districts);
+      console.log(`Loaded ${districts.length} districts from fallback data for ${stateName}`);
+    } catch (error) {
+      console.error("Error loading districts from API, using fallback:", error);
+      try {
+        const districts = await getFallbackDistricts(stateName);
+        setClientApiDistricts(districts);
+      } catch (fallbackError) {
+        console.error("Even fallback failed:", fallbackError);
+        setClientApiDistricts([]);
+      }
+    } finally {
+      setIsClientLoadingDistricts(false);
+    }
+  };
+
+  const fetchWorkerDistrictsFromAPI = async (stateName: string) => {
+    setIsWorkerLoadingDistricts(true);
+    try {
+      const response = await fetch(`/api/districts/${encodeURIComponent(stateName)}`);
+      if (response.ok) {
+        const districtsData = await response.json();
+        if (Array.isArray(districtsData) && districtsData.length > 0) {
+          setWorkerApiDistricts(districtsData);
+          console.log(`AuthModal: Loaded ${districtsData.length} districts from API for ${stateName}`, districtsData);
+          return;
+        }
+      }
+      const districts = await getFallbackDistricts(stateName);
+      setWorkerApiDistricts(districts);
+      console.log(`Loaded ${districts.length} districts from fallback data for ${stateName}`);
+    } catch (error) {
+      console.error("Error loading districts from API, using fallback:", error);
+      try {
+        const districts = await getFallbackDistricts(stateName);
+        setWorkerApiDistricts(districts);
+      } catch (fallbackError) {
+        console.error("Even fallback failed:", fallbackError);
+        setWorkerApiDistricts([]);
+      }
+    } finally {
+      setIsWorkerLoadingDistricts(false);
+    }
+  };
 
   // Fallback districts function (same as Home page)
   const getFallbackDistricts = async (stateName: string): Promise<Array<{id: string, name: string, tamilName?: string}>> => {
@@ -213,70 +292,12 @@ export function AuthModal({ isOpen, onClose, mode, initialTab }: AuthModalProps)
     }));
   };
 
-  // Fetch districts when state changes (consistent with Home page)
-  useEffect(() => {
-    if (currentState) {
-      fetchDistrictsFromAPI(currentState);
-      // Clear district selections when state changes to maintain consistency
-      if (selectedClientState && clientForm.getValues("districtId")) {
-        clientForm.setValue("districtId", "");
-      }
-      if (selectedWorkerState && workerForm.getValues("districtId")) {
-        workerForm.setValue("districtId", "");
-      }
-    } else {
-      setApiDistricts([]);
-    }
-  }, [currentState]);
-
-  // Also fetch districts when component mounts if state is already set
-  useEffect(() => {
-    if (currentState && apiDistricts.length === 0) {
-      fetchDistrictsFromAPI(currentState);
-    }
-  }, []);
-
   // Update signupType when initialTab changes and modal is opened
   useEffect(() => {
     if (isOpen && initialTab) {
       setSignupType(initialTab);
     }
   }, [isOpen, initialTab]);
-
-  const fetchDistrictsFromAPI = async (stateName: string) => {
-    setIsLoadingDistricts(true);
-    try {
-      // Use our backend API endpoint which connects to REST India API
-      const response = await fetch(`/api/districts/${encodeURIComponent(stateName)}`);
-      
-      if (response.ok) {
-        const districtsData = await response.json();
-        if (Array.isArray(districtsData) && districtsData.length > 0) {
-          setApiDistricts(districtsData);
-          console.log(`AuthModal: Loaded ${districtsData.length} districts from API for ${stateName}`, districtsData);
-          return;
-        }
-      }
-      
-      // Fallback to static data if API fails or returns no data
-      const districts = await getFallbackDistricts(stateName);
-      setApiDistricts(districts);
-      console.log(`Loaded ${districts.length} districts from fallback data for ${stateName}`);
-      
-    } catch (error) {
-      console.error("Error loading districts from API, using fallback:", error);
-      // Use fallback data if API fails
-      try {
-        const districts = await getFallbackDistricts(stateName);
-        setApiDistricts(districts);
-      } catch (fallbackError) {
-        console.error("Even fallback failed:", fallbackError);
-        setApiDistricts([]);
-      }
-    } finally {
-      setIsLoadingDistricts(false);
-    }
-  };
 
   const { data: rawServices = [] } = useQuery({
     queryKey: ["/api/services"],
@@ -496,8 +517,10 @@ export function AuthModal({ isOpen, onClose, mode, initialTab }: AuthModalProps)
             let matchingDistrict = null;
             
             // First try to find district from currently loaded districts (if state is already set)
-            if (apiDistricts && apiDistricts.length > 0) {
-              matchingDistrict = apiDistricts.find((district: any) => {
+            // Use appropriate districts based on form type
+            const currentDistricts = formType === "client" ? clientApiDistricts : workerApiDistricts;
+            if (currentDistricts && currentDistricts.length > 0) {
+              matchingDistrict = currentDistricts.find((district: any) => {
                 const districtName = district.name.toLowerCase();
                 const detectedStateDistrict = locationData.state_district?.toLowerCase() || '';
                 const detectedCounty = locationData.county?.toLowerCase() || '';
@@ -552,7 +575,7 @@ export function AuthModal({ isOpen, onClose, mode, initialTab }: AuthModalProps)
                 area.pincode === detectedPincode
               );
               if (matchingArea) {
-                matchingDistrict = apiDistricts?.find((district: any) => 
+                matchingDistrict = currentDistricts?.find((district: any) => 
                   district.id === matchingArea.districtId
                 );
               }
@@ -585,9 +608,11 @@ export function AuthModal({ isOpen, onClose, mode, initialTab }: AuthModalProps)
             
             // Trigger district loading and wait for completion
             if (detectedState) {
-              fetchDistrictsFromAPI(detectedState).then(() => {
+              const fetchFunction = formType === "client" ? fetchClientDistrictsFromAPI : fetchWorkerDistrictsFromAPI;
+              fetchFunction(detectedState).then(() => {
                 // After districts are loaded, find and set the matching district
-                const foundDistrict = apiDistricts.find((district: any) => {
+                const districts = formType === "client" ? clientApiDistricts : workerApiDistricts;
+                const foundDistrict = districts.find((district: any) => {
                   const districtName = district.name.toLowerCase();
                   const detectedStateDistrict = locationData.state_district?.toLowerCase() || '';
                   const detectedCounty = locationData.county?.toLowerCase() || '';
@@ -625,7 +650,7 @@ export function AuthModal({ isOpen, onClose, mode, initialTab }: AuthModalProps)
               detectedStateDistrict: locationData.state_district,
               detectedPincode,
               allLocationData: locationData,
-              availableDistricts: apiDistricts?.slice(0, 5) // Show first 5 for debugging
+              availableDistricts: currentDistricts?.slice(0, 5) // Show first 5 for debugging
             });
           }
         } catch (error) {
@@ -1246,11 +1271,11 @@ export function AuthModal({ isOpen, onClose, mode, initialTab }: AuthModalProps)
                         role="combobox"
                         aria-expanded={clientDistrictPopoverOpen}
                         className="w-full justify-between"
-                        disabled={!clientForm.watch("state") || isLoadingDistricts}
+                        disabled={!clientForm.watch("state") || isClientLoadingDistricts}
                       >
                         {clientForm.watch("districtId") 
-                          ? apiDistricts.find(district => district.id === clientForm.watch("districtId"))?.name || "Select district"
-                          : isLoadingDistricts
+                          ? clientApiDistricts.find(district => district.id === clientForm.watch("districtId"))?.name || "Select district"
+                          : isClientLoadingDistricts
                           ? "Loading districts..."
                           : !clientForm.watch("state")
                           ? "Select state first"
@@ -1268,7 +1293,7 @@ export function AuthModal({ isOpen, onClose, mode, initialTab }: AuthModalProps)
                         <CommandEmpty>No district found.</CommandEmpty>
                         <CommandList className="max-h-40 overflow-y-auto">
                           <CommandGroup>
-                            {apiDistricts
+                            {clientApiDistricts
                               .filter(district => 
                                 district.name.toLowerCase().includes(clientDistrictSearchInput.toLowerCase())
                               )
@@ -1694,10 +1719,10 @@ export function AuthModal({ isOpen, onClose, mode, initialTab }: AuthModalProps)
                           <CommandList>
                             <CommandEmpty>No district found.</CommandEmpty>
                             <CommandGroup>
-                              {isLoadingDistricts ? (
+                              {isWorkerLoadingDistricts ? (
                                 <CommandItem disabled>Loading districts...</CommandItem>
-                              ) : apiDistricts.length > 0 ? (
-                                apiDistricts.map((district: any) => (
+                              ) : workerApiDistricts.length > 0 ? (
+                                workerApiDistricts.map((district: any) => (
                                   <CommandItem
                                     key={district.id}
                                     value={district.name}
@@ -1726,7 +1751,7 @@ export function AuthModal({ isOpen, onClose, mode, initialTab }: AuthModalProps)
                   </div>
                   <div className="flex flex-wrap gap-1 mt-2">
                     {workerForm.watch("serviceDistricts")?.map((districtId: string) => {
-                      const district = apiDistricts.find((d: any) => d.id === districtId) || null;
+                      const district = workerApiDistricts.find((d: any) => d.id === districtId) || null;
                       return district ? (
                         <div key={districtId} className="flex items-center gap-1 bg-secondary text-secondary-foreground px-2 py-1 rounded-md text-xs">
                           <span>{district.name}</span>
@@ -2055,7 +2080,7 @@ export function AuthModal({ isOpen, onClose, mode, initialTab }: AuthModalProps)
                           disabled={!workerForm.watch("state")}
                         >
                           {workerForm.watch("districtId") 
-                            ? apiDistricts?.find((d: any) => d.id === workerForm.watch("districtId"))?.name || "Select District"
+                            ? workerApiDistricts?.find((d: any) => d.id === workerForm.watch("districtId"))?.name || "Select District"
                             : (!workerForm.watch("state") ? "Select state first" : "Select District")
                           }
                           <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -2067,10 +2092,10 @@ export function AuthModal({ isOpen, onClose, mode, initialTab }: AuthModalProps)
                           <CommandList>
                             <CommandEmpty>No district found.</CommandEmpty>
                             <CommandGroup>
-                              {isLoadingDistricts ? (
+                              {isWorkerLoadingDistricts ? (
                                 <CommandItem disabled>Loading districts...</CommandItem>
-                              ) : apiDistricts.length > 0 ? (
-                                apiDistricts.map((district: any) => (
+                              ) : workerApiDistricts.length > 0 ? (
+                                workerApiDistricts.map((district: any) => (
                                   <CommandItem
                                     key={district.id}
                                     value={district.name}
