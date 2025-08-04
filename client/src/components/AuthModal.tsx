@@ -95,7 +95,6 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
   const [areasPopoverOpen, setAreasPopoverOpen] = useState(false);
   const [homeDistrictPopoverOpen, setHomeDistrictPopoverOpen] = useState(false);
   const [serviceAllAreas, setServiceAllAreas] = useState(false);
-  const [clientDistrictSelected, setClientDistrictSelected] = useState<string>("");
   const [aadhaarVerificationStep, setAadhaarVerificationStep] = useState<"input" | "verify" | "verified">("input");
   const [aadhaarOtp, setAadhaarOtp] = useState("");
   const [generatedAadhaarOtp, setGeneratedAadhaarOtp] = useState("");
@@ -491,13 +490,8 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
                 );
                 
                 if (matchingDistrict) {
-                  console.log('BEFORE setting - form value:', clientForm.getValues("districtId"), 'state value:', clientDistrictSelected);
                   clientForm.setValue("districtId", matchingDistrict.id);
-                  setClientDistrictSelected(matchingDistrict.name);
-                  console.log('AFTER setting - form value:', clientForm.getValues("districtId"), 'state value:', matchingDistrict.name);
                   console.log('Client district set:', matchingDistrict.name, 'with ID:', matchingDistrict.id);
-                } else {
-                  console.log('NO MATCHING DISTRICT FOUND - detectedDistrict:', detectedDistrict, 'available districts:', apiDistricts.map(d => d.name.toLowerCase()));
                 }
               }
             }
@@ -1355,25 +1349,11 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
                         aria-expanded={clientDistrictPopoverOpen}
                         className="w-full justify-between"
                         disabled={!clientForm.watch("state")}
-                        key={`district-button-${clientDistrictSelected}-${clientForm.watch("districtId")}`}
                       >
-                        {clientDistrictSelected || (() => {
-                          const districtId = clientForm.watch("districtId");
-                          const state = clientForm.watch("state");
-                          
-                          if (!state) return "Select state first";
-                          if (!districtId) return "Select your district";
-                          
-                          const foundDistrict = apiDistricts.find((district: any) => district.id === districtId);
-                          if (foundDistrict) return foundDistrict.name;
-                          
-                          if (districtId === "salem") return "Salem";
-                          if (districtId === "chennai") return "Chennai";
-                          if (districtId === "coimbatore") return "Coimbatore";
-                          if (districtId === "madurai") return "Madurai";
-                          
-                          return `District selected (${districtId})`;
-                        })()}
+                        {clientForm.watch("districtId") 
+                          ? apiDistricts?.find((d: any) => d.id === clientForm.watch("districtId"))?.name || "Select District"
+                          : (!clientForm.watch("state") ? "Select state first" : "Select District")
+                        }
                         <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                       </Button>
                     </PopoverTrigger>
@@ -1391,19 +1371,20 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
                                   key={district.id}
                                   value={district.name}
                                   onSelect={() => {
-                                    console.log('District selected manually:', district.name, 'with ID:', district.id);
                                     clientForm.setValue("districtId", district.id);
-                                    setClientDistrictSelected(""); // Clear location-detected district
                                     setClientDistrictPopoverOpen(false);
                                   }}
                                 >
-                                  {district.name} {district.tamilName && `(${district.tamilName})`}
+                                  <div className="flex flex-col">
+                                    <span className="font-medium">{district.name}</span>
+                                    {district.tamilName && (
+                                      <span className="text-sm text-muted-foreground">({district.tamilName})</span>
+                                    )}
+                                  </div>
                                 </CommandItem>
                               ))
                             ) : (
-                              <CommandItem disabled>
-                                {clientForm.watch("state") ? "No districts found" : "Select state first"}
-                              </CommandItem>
+                              <CommandItem disabled>No districts found</CommandItem>
                             )}
                           </CommandGroup>
                         </CommandList>
