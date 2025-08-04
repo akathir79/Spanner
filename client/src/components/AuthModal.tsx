@@ -95,6 +95,7 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
   const [areasPopoverOpen, setAreasPopoverOpen] = useState(false);
   const [homeDistrictPopoverOpen, setHomeDistrictPopoverOpen] = useState(false);
   const [serviceAllAreas, setServiceAllAreas] = useState(false);
+  const [clientDistrictSelected, setClientDistrictSelected] = useState<string>("");
   const [aadhaarVerificationStep, setAadhaarVerificationStep] = useState<"input" | "verify" | "verified">("input");
   const [aadhaarOtp, setAadhaarOtp] = useState("");
   const [generatedAadhaarOtp, setGeneratedAadhaarOtp] = useState("");
@@ -491,12 +492,8 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
                 
                 if (matchingDistrict) {
                   clientForm.setValue("districtId", matchingDistrict.id);
-                  clientForm.trigger("districtId"); // Trigger validation and re-render
+                  setClientDistrictSelected(matchingDistrict.name); // Force UI update
                   console.log('Client district set:', matchingDistrict.name, 'with ID:', matchingDistrict.id);
-                  // Log the form value immediately after setting
-                  setTimeout(() => {
-                    console.log('Form value after 50ms:', clientForm.getValues("districtId"));
-                  }, 50);
                 }
               }
             }
@@ -1359,28 +1356,26 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
                           const districtId = clientForm.watch("districtId");
                           const state = clientForm.watch("state");
                           
-                          console.log('Button render - districtId:', districtId, 'state:', state, 'apiDistricts length:', apiDistricts.length);
-                          
                           if (!state) return "Select state first";
-                          if (!districtId) return "Select your district";
+                          if (!districtId && !clientDistrictSelected) return "Select your district";
                           
-                          // Try to find district name from apiDistricts first
+                          // If we have a selected district name from location detection, use it
+                          if (clientDistrictSelected) {
+                            return clientDistrictSelected;
+                          }
+                          
+                          // Try to find district name from apiDistricts
                           const foundDistrict = apiDistricts.find((district: any) => district.id === districtId);
                           if (foundDistrict) {
-                            console.log('Found district in apiDistricts:', foundDistrict.name);
                             return foundDistrict.name;
                           }
                           
-                          // If not found in apiDistricts, check if it's a known district (like Salem)
-                          if (districtId === "salem") {
-                            console.log('Showing Salem from fallback');
-                            return "Salem";
-                          }
+                          // Fallback for known districts
+                          if (districtId === "salem") return "Salem";
                           if (districtId === "chennai") return "Chennai";
                           if (districtId === "coimbatore") return "Coimbatore";
                           if (districtId === "madurai") return "Madurai";
                           
-                          console.log('Fallback to showing ID:', districtId);
                           return `District selected (${districtId})`;
                         })()}
                         <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -1402,7 +1397,7 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
                                   onSelect={() => {
                                     console.log('District selected manually:', district.name, 'with ID:', district.id);
                                     clientForm.setValue("districtId", district.id);
-                                    clientForm.trigger("districtId");
+                                    setClientDistrictSelected(""); // Clear location-detected district
                                     setClientDistrictPopoverOpen(false);
                                   }}
                                 >
