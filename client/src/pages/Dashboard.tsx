@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -522,10 +522,9 @@ const JobPostingForm = () => {
 };
 
 export default function Dashboard() {
-  console.log("Dashboard component rendering...");
   // ALL HOOKS MUST BE DECLARED FIRST - BEFORE ANY CONDITIONAL RETURNS
-  const { user } = useAuth();
-  console.log("Dashboard user:", user);
+  const { user, isLoading } = useAuth();
+  const hasRenderedRef = useRef(false);
   const { t } = useLanguage();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
@@ -846,22 +845,29 @@ export default function Dashboard() {
 
   // Handle redirects in useEffect to avoid setState during render
   useEffect(() => {
-    if (!user) {
+    if (!isLoading && !user && !hasRenderedRef.current) {
       setLocation("/");
       return;
     }
 
-    if (user.role !== "client") {
+    if (!isLoading && user && user.role !== "client" && !hasRenderedRef.current) {
       if (user.role === "worker") {
         setLocation("/worker-dashboard");
       } else if (user.role === "admin" || user.role === "super_admin") {
         setLocation("/admin-dashboard");
       }
     }
-  }, [user, setLocation]);
+  }, [user, isLoading, setLocation]);
+
+  // Mark as rendered once we have a valid client user
+  useEffect(() => {
+    if (!isLoading && user && user.role === "client") {
+      hasRenderedRef.current = true;
+    }
+  }, [user, isLoading]);
 
   // Show loading while user is being fetched or redirecting
-  if (!user || user.role !== "client") {
+  if (isLoading || !user || (user.role !== "client" && !hasRenderedRef.current)) {
     return (
       <div className="min-h-screen bg-muted/30 pt-20 pb-8 flex items-center justify-center">
         <div className="text-center">
