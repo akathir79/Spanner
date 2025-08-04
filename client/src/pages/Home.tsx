@@ -932,42 +932,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Tamil Nadu Districts Section */}
-      <section className="py-16" id="districts">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">{t("districts.title")}</h2>
-            <p className="text-xl text-muted-foreground">
-              We serve all 38 districts with verified professionals
-            </p>
-          </div>
-          
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            {allTamilNaduDistricts.slice(0, 12).map((district) => (
-              <div key={district.id} className="text-center">
-                <Button
-                  variant="outline"
-                  className="w-full mb-2 bg-gradient-to-r from-yellow-500 to-orange-500 text-white border-none hover:from-yellow-600 hover:to-orange-600"
-                  onClick={() => handleDistrictClick(district.name)}
-                >
-                  {district.name}
-                </Button>
-                <small className="text-muted-foreground">
-                  {district.tamilName}
-                </small>
-              </div>
-            ))}
-          </div>
-          
-          <div className="text-center mt-8">
-            <Button variant="outline">
-              <MapPin className="h-4 w-4 mr-2" />
-              View All 38 Districts
-            </Button>
-          </div>
-        </div>
-      </section>
-
       {/* Features Section */}
       <section className="py-16 bg-muted/30">
         <div className="container mx-auto px-4">
