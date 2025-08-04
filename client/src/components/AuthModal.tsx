@@ -491,9 +491,13 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
                 );
                 
                 if (matchingDistrict) {
+                  console.log('BEFORE setting - form value:', clientForm.getValues("districtId"), 'state value:', clientDistrictSelected);
                   clientForm.setValue("districtId", matchingDistrict.id);
-                  setClientDistrictSelected(matchingDistrict.name); // Force UI update
+                  setClientDistrictSelected(matchingDistrict.name);
+                  console.log('AFTER setting - form value:', clientForm.getValues("districtId"), 'state value:', matchingDistrict.name);
                   console.log('Client district set:', matchingDistrict.name, 'with ID:', matchingDistrict.id);
+                } else {
+                  console.log('NO MATCHING DISTRICT FOUND - detectedDistrict:', detectedDistrict, 'available districts:', apiDistricts.map(d => d.name.toLowerCase()));
                 }
               }
             }
@@ -1356,26 +1360,34 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
                           const districtId = clientForm.watch("districtId");
                           const state = clientForm.watch("state");
                           
+                          console.log('BUTTON RENDER - districtId:', districtId, 'clientDistrictSelected:', clientDistrictSelected, 'state:', state);
+                          
                           if (!state) return "Select state first";
                           if (!districtId && !clientDistrictSelected) return "Select your district";
                           
                           // If we have a selected district name from location detection, use it
                           if (clientDistrictSelected) {
+                            console.log('SHOWING FROM STATE:', clientDistrictSelected);
                             return clientDistrictSelected;
                           }
                           
                           // Try to find district name from apiDistricts
                           const foundDistrict = apiDistricts.find((district: any) => district.id === districtId);
                           if (foundDistrict) {
+                            console.log('SHOWING FROM API:', foundDistrict.name);
                             return foundDistrict.name;
                           }
                           
                           // Fallback for known districts
-                          if (districtId === "salem") return "Salem";
+                          if (districtId === "salem") {
+                            console.log('SHOWING SALEM FALLBACK');
+                            return "Salem";
+                          }
                           if (districtId === "chennai") return "Chennai";
                           if (districtId === "coimbatore") return "Coimbatore";
                           if (districtId === "madurai") return "Madurai";
                           
+                          console.log('SHOWING FALLBACK ID:', districtId);
                           return `District selected (${districtId})`;
                         })()}
                         <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
