@@ -576,46 +576,54 @@ export function AuthModal({ isOpen, onClose, mode, initialTab }: AuthModalProps)
             // Detect state from location data
             const detectedState = detectStateFromLocation(locationData);
             
-            // First set the state to trigger district loading
+            // Set state first to trigger district loading
             if (formType === "client") {
               clientForm.setValue("state", detectedState);
             } else {
               workerForm.setValue("state", detectedState);
             }
             
-            // Simple approach: Set district directly if we have matching district
-            if (matchingDistrict) {
-              if (formType === "client") {
-                // For client form, set districtId (now uses searchable dropdown)
-                clientForm.setValue("districtId", matchingDistrict.id);
-                console.log('District set for client:', matchingDistrict.name, 'with ID:', matchingDistrict.id);
-              } else {
-                workerForm.setValue("districtId", matchingDistrict.id);
-                workerForm.trigger("districtId");
-                setHomeDistrictPopoverOpen(false);
-                const currentDistricts: string[] = workerForm.getValues("serviceDistricts") || [];
-                if (!currentDistricts.includes(matchingDistrict.id)) {
-                  workerForm.setValue("serviceDistricts", [...currentDistricts, matchingDistrict.id]);
+            // Trigger district loading and wait for completion
+            if (detectedState) {
+              fetchDistrictsFromAPI(detectedState).then(() => {
+                // After districts are loaded, find and set the matching district
+                const foundDistrict = apiDistricts.find((district: any) => {
+                  const districtName = district.name.toLowerCase();
+                  const detectedStateDistrict = locationData.state_district?.toLowerCase() || '';
+                  const detectedCounty = locationData.county?.toLowerCase() || '';
+                  
+                  return districtName === detectedStateDistrict || 
+                         districtName === detectedCounty || 
+                         detectedStateDistrict.includes(districtName) ||
+                         detectedCounty.includes(districtName);
+                });
+                
+                if (foundDistrict) {
+                  if (formType === "client") {
+                    clientForm.setValue("districtId", foundDistrict.id);
+                    console.log('District set for client:', foundDistrict.name, 'with ID:', foundDistrict.id);
+                  } else {
+                    workerForm.setValue("districtId", foundDistrict.id);
+                    const currentDistricts: string[] = workerForm.getValues("serviceDistricts") || [];
+                    if (!currentDistricts.includes(foundDistrict.id)) {
+                      workerForm.setValue("serviceDistricts", [...currentDistricts, foundDistrict.id]);
+                    }
+                    console.log('District set for worker:', foundDistrict.name, 'with ID:', foundDistrict.id);
+                  }
                 }
-                console.log('District set directly for worker:', matchingDistrict.name, 'with ID:', matchingDistrict.id);
-              }
+              });
             }
             
             toast({
               title: "Location detected",
-              description: matchingDistrict 
-                ? `Address, pincode, and district (${matchingDistrict.name}) detected automatically`
-                : `Address and pincode detected. District will be set after loading.`,
+              description: "Address, state, and pincode detected. District will be set automatically.",
             });
             
             console.log('Location detection results:', {
               detectedLocation,
-              detectedCity: locationData.city,
               detectedCounty: locationData.county,
               detectedStateDistrict: locationData.state_district,
               detectedPincode,
-              matchingDistrict: matchingDistrict?.name,
-              matchingDistrictId: matchingDistrict?.id,
               allLocationData: locationData,
               availableDistricts: apiDistricts?.slice(0, 5) // Show first 5 for debugging
             });
