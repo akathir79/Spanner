@@ -86,6 +86,7 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
   const [newSkillInput, setNewSkillInput] = useState("");
   const [districtSearchInput, setDistrictSearchInput] = useState("");
   const [districtPopoverOpen, setDistrictPopoverOpen] = useState(false);
+  const [clientDistrictPopoverOpen, setClientDistrictPopoverOpen] = useState(false);
   const [statePopoverOpen, setStatePopoverOpen] = useState(false);
   const [workerStatePopoverOpen, setWorkerStatePopoverOpen] = useState(false);
   const [stateSearchInput, setStateSearchInput] = useState("");
@@ -611,6 +612,7 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
                   if (formType === "client") {
                     clientForm.setValue("districtId", foundDistrict.id);
                     clientForm.trigger("districtId");
+                    setClientDistrictPopoverOpen(false);
                   } else {
                     workerForm.setValue("districtId", foundDistrict.id);
                     workerForm.trigger("districtId");
@@ -1271,43 +1273,54 @@ export function AuthModal({ isOpen, onClose, mode }: AuthModalProps) {
 
                 <div>
                   <Label htmlFor="district">District</Label>
-                  <Select 
-                    value={clientForm.watch("districtId")} 
-                    onValueChange={(value) => {
-                      console.log('District selected manually:', value);
-                      clientForm.setValue("districtId", value);
-                    }}
-                    disabled={!clientForm.watch("state")}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder={
-                        !clientForm.watch("state") 
-                          ? "Select state first" 
-                          : "Select your district"
-                      } />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {isLoadingDistricts ? (
-                        <SelectItem value="loading" disabled>Loading districts...</SelectItem>
-                      ) : apiDistricts.length > 0 ? (
-                        apiDistricts.map((district: any) => {
-                          const isSelected = district.id === clientForm.watch("districtId");
-                          if (isSelected) {
-                            console.log('Found matching district option:', district.name, 'for form value:', clientForm.watch("districtId"));
-                          }
-                          return (
-                            <SelectItem key={district.id} value={district.id}>
-                              {district.name} {district.tamilName && `(${district.tamilName})`}
-                            </SelectItem>
-                          );
-                        })
-                      ) : (
-                        <SelectItem value="no-districts" disabled>
-                          {clientForm.watch("state") ? "No districts found" : "Select state first"}
-                        </SelectItem>
-                      )}
-                    </SelectContent>
-                  </Select>
+                  <Popover open={clientDistrictPopoverOpen} onOpenChange={setClientDistrictPopoverOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={clientDistrictPopoverOpen}
+                        className="w-full justify-between"
+                        disabled={!clientForm.watch("state")}
+                      >
+                        {clientForm.watch("districtId") 
+                          ? apiDistricts.find((district: any) => district.id === clientForm.watch("districtId"))?.name || "District selected"
+                          : (!clientForm.watch("state") ? "Select state first" : "Select your district")}
+                        <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-full p-0">
+                      <Command>
+                        <CommandInput placeholder="Search districts..." />
+                        <CommandList>
+                          <CommandEmpty>No district found.</CommandEmpty>
+                          <CommandGroup>
+                            {isLoadingDistricts ? (
+                              <CommandItem disabled>Loading districts...</CommandItem>
+                            ) : apiDistricts.length > 0 ? (
+                              apiDistricts.map((district: any) => (
+                                <CommandItem
+                                  key={district.id}
+                                  value={district.name}
+                                  onSelect={() => {
+                                    console.log('District selected manually:', district.name, 'with ID:', district.id);
+                                    clientForm.setValue("districtId", district.id);
+                                    clientForm.trigger("districtId");
+                                    setClientDistrictPopoverOpen(false);
+                                  }}
+                                >
+                                  {district.name} {district.tamilName && `(${district.tamilName})`}
+                                </CommandItem>
+                              ))
+                            ) : (
+                              <CommandItem disabled>
+                                {clientForm.watch("state") ? "No districts found" : "Select state first"}
+                              </CommandItem>
+                            )}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
                   {clientForm.formState.errors.districtId && (
                     <p className="text-sm text-destructive mt-1">
                       {clientForm.formState.errors.districtId.message}
