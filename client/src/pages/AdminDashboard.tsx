@@ -86,24 +86,6 @@ export default function AdminDashboard() {
   const { t } = useLanguage();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
-
-  // Authentication check with loading state
-  if (authLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4" />
-          <p className="text-muted-foreground">Loading dashboard...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Redirect non-admin users
-  if (!user || (user.role !== "admin" && user.role !== "super_admin")) {
-    setLocation("/");
-    return null;
-  }
   const [userFilter, setUserFilter] = useState("");
   const [bookingFilter, setBookingFilter] = useState("");
   const [selectedUserType, setSelectedUserType] = useState<string | null>(null);
@@ -360,6 +342,23 @@ export default function AdminDashboard() {
       fileInput.value = "";
     }
   };
+
+  // Authentication checks - MUST be after all hooks
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4" />
+          <p className="text-muted-foreground">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user || (user.role !== "admin" && user.role !== "super_admin")) {
+    setLocation("/");
+    return null;
+  }
 
   // Quick login for demo purposes
   const quickLogin = async () => {

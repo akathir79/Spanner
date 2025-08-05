@@ -516,24 +516,6 @@ export default function WorkerDashboard() {
   const isWorkerApproved = user?.status === "approved";
   const [, setLocation] = useLocation();
 
-  // Show loading state while auth is loading
-  if (authLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading dashboard...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Redirect if not authenticated or wrong role
-  if (!user) {
-    setLocation("/");
-    return null;
-  }
-
   if (user.role !== "worker") {
     if (user.role === "client") {
       setLocation("/dashboard");
@@ -602,6 +584,32 @@ export default function WorkerDashboard() {
       default: return <AlertCircle className="h-4 w-4" />;
     }
   };
+
+  // Authentication checks - MUST be after all hooks
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    setLocation("/");
+    return null;
+  }
+
+  if (user.role !== "worker") {
+    if (user.role === "client") {
+      setLocation("/dashboard");
+    } else if (user.role === "admin" || user.role === "super_admin") {
+      setLocation("/admin-dashboard");
+    }
+    return null;
+  }
 
   // Calculate stats
   const stats = {

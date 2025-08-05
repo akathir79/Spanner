@@ -539,24 +539,6 @@ export default function Dashboard() {
   const [isLocationLoading, setIsLocationLoading] = useState(false);
   const [selectedJobPosting, setSelectedJobPosting] = useState<any>(null);
 
-  // Show loading state while auth is loading
-  if (authLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading dashboard...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Redirect if not authenticated or wrong role
-  if (!user) {
-    setLocation("/");
-    return null;
-  }
-
   if (user.role !== "client") {
     if (user.role === "worker") {
       setLocation("/worker-dashboard");
@@ -865,6 +847,32 @@ export default function Dashboard() {
       default: return <AlertCircle className="h-4 w-4" />;
     }
   };
+
+  // Authentication checks - MUST be after all hooks
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    setLocation("/");
+    return null;
+  }
+
+  if (user.role !== "client") {
+    if (user.role === "worker") {
+      setLocation("/worker-dashboard");
+    } else if (user.role === "admin" || user.role === "super_admin") {
+      setLocation("/admin-dashboard");
+    }
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-muted/30 pt-20 pb-8">
