@@ -1,9 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/components/LanguageProvider";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
+import { AuthGuard } from "@/components/AuthGuard";
 import {
   Card,
   CardContent,
@@ -86,7 +87,6 @@ import {
   Mail,
   MapPin,
 } from "lucide-react";
-import { useLocation } from "wouter";
 import WorkerApprovalSection from "@/components/WorkerApprovalSection";
 import { MessagingSystem } from "@/components/MessagingSystem";
 import { useForm } from "react-hook-form";
@@ -107,13 +107,10 @@ const createAdminSchema = z.object({
 
 type CreateAdminForm = z.infer<typeof createAdminSchema>;
 
-export default function AdminDashboard() {
-  // ALL HOOKS MUST BE DECLARED FIRST - BEFORE ANY CONDITIONAL RETURNS
-  const { user, isLoading: authLoading } = useAuth();
-  const currentUser = user; // Reference for clarity in nested components
+function AdminDashboardContent() {
+  const { user } = useAuth();
   const { t } = useLanguage();
   const { toast } = useToast();
-  const [, setLocation] = useLocation();
   const [userFilter, setUserFilter] = useState("");
   const [bookingFilter, setBookingFilter] = useState("");
   const [selectedUserType, setSelectedUserType] = useState<string | null>(null);
@@ -141,26 +138,20 @@ export default function AdminDashboard() {
     }
   });
 
-  // Fetch admin data (hooks must be called unconditionally)
-  const { data: users = [], isLoading: usersLoading } = useQuery({
+  // Fetch admin data - now user is guaranteed to exist and have correct role
+  const { data: users = [] } = useQuery({
     queryKey: ["/api/admin/users"],
-    queryFn: () => fetch("/api/admin/users").then(res => res.json()),
-    enabled: !authLoading && !!user && (user.role === "admin" || user.role === "super_admin"),
-    staleTime: 30000, // Cache for 30 seconds to reduce re-fetching
+    staleTime: 30000,
   });
 
-  const { data: bookings = [], isLoading: bookingsLoading } = useQuery({
+  const { data: bookings = [] } = useQuery({
     queryKey: ["/api/admin/bookings"],
-    queryFn: () => fetch("/api/admin/bookings").then(res => res.json()),
-    enabled: !authLoading && !!user && (user.role === "admin" || user.role === "super_admin"),
     staleTime: 30000,
   });
 
   const { data: districts = [] } = useQuery({
     queryKey: ["/api/districts"],
-    queryFn: () => fetch("/api/districts").then(res => res.json()),
-    enabled: !authLoading && !!user && (user.role === "admin" || user.role === "super_admin"),
-    staleTime: 300000, // Cache districts for 5 minutes as they don't change often
+    staleTime: 300000,
   });
 
   // ALL MUTATIONS MUST BE DECLARED BEFORE CONDITIONAL RETURNS
@@ -313,34 +304,7 @@ export default function AdminDashboard() {
     },
   });
 
-  // Use effect for redirects to avoid calling setLocation during render
-  useEffect(() => {
-    if (!authLoading && user && user.role !== "admin" && user.role !== "super_admin") {
-      // Only redirect if user is not an admin/super_admin
-      if (user.role === "client") {
-        setLocation("/dashboard");
-      } else if (user.role === "worker") {
-        setLocation("/worker-dashboard");
-      }
-    }
-  }, [user, authLoading, setLocation]);
-
-  // Show loading while authentication is being checked
-  if (authLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading dashboard...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Don't render anything if user is not authenticated or being redirected
-  if (!user || (user.role !== "admin" && user.role !== "super_admin")) {
-    return null;
-  }
+  // User is guaranteed to exist and have correct role due to AuthGuard
 
   // Helper functions and handlers
   
@@ -652,5 +616,13 @@ export default function AdminDashboard() {
         </Dialog>
       </div>
     </div>
+  );
+}
+
+export default function AdminDashboard() {
+  return (
+    <AuthGuard allowedRoles={["admin", "super_admin"]}>
+      <AdminDashboardContent />
+    </AuthGuard>
   );
 }
