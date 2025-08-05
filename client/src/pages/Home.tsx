@@ -197,23 +197,24 @@ const testimonials = [
 
 export default function Home() {
   const { t } = useLanguage();
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
 
-  // Redirect authenticated users to their appropriate dashboards
-  useEffect(() => {
-    if (user) {
-      const userRole = user.role;
-      if (userRole === "admin" || userRole === "super_admin") {
-        setLocation("/admin-dashboard");
-      } else if (userRole === "worker") {
-        setLocation("/worker-dashboard");
-      } else if (userRole === "client") {
-        setLocation("/dashboard");
-      }
+  // For authenticated users, show a redirect message instead of the home page
+  if (user && window.location.pathname === '/') {
+    const userRole = user.role;
+    if (userRole === "admin" || userRole === "super_admin") {
+      setLocation("/admin-dashboard");
+      return null;
+    } else if (userRole === "worker") {
+      setLocation("/worker-dashboard");
+      return null;
+    } else if (userRole === "client") {
+      setLocation("/dashboard");
+      return null;
     }
-  }, [user, setLocation]);
+  }
   const [searchForm, setSearchForm] = useState({
     service: "",
     state: "",

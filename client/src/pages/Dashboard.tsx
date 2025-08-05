@@ -522,7 +522,7 @@ const JobPostingForm = () => {
 };
 
 export default function Dashboard() {
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const { t } = useLanguage();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
@@ -539,9 +539,21 @@ export default function Dashboard() {
   const [isLocationLoading, setIsLocationLoading] = useState(false);
   const [selectedJobPosting, setSelectedJobPosting] = useState<any>(null);
 
+  // Show loading state while auth is loading
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
   // Redirect if not authenticated or wrong role
   if (!user) {
-    setLocation("/login");
+    setLocation("/");
     return null;
   }
 
