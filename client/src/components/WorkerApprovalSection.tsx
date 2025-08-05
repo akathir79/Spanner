@@ -52,10 +52,25 @@ export default function WorkerApprovalSection() {
 
   // Approve worker mutation
   const approveWorkerMutation = useMutation({
-    mutationFn: (workerId: string) => 
-      fetch(`/api/admin/approve-worker/${workerId}`, {
-        method: "POST",
-      }).then(res => res.json()),
+    mutationFn: async (workerId: string) => {
+      const response = await apiRequest("POST", `/api/admin/approve-worker/${workerId}`);
+      return response.json();
+    },
+    onMutate: async (workerId: string) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ["/api/admin/pending-workers"] });
+      
+      // Snapshot the previous value
+      const previousWorkers = queryClient.getQueryData(["/api/admin/pending-workers"]);
+      
+      // Optimistically update by removing the worker from pending list
+      queryClient.setQueryData(["/api/admin/pending-workers"], (old: any[]) => 
+        old ? old.filter(worker => worker.id !== workerId) : []
+      );
+      
+      // Return a context object with the snapshotted value
+      return { previousWorkers };
+    },
     onSuccess: () => {
       toast({
         title: "Worker Approved",
@@ -64,10 +79,14 @@ export default function WorkerApprovalSection() {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/pending-workers"] });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
     },
-    onError: () => {
+    onError: (error: any, workerId: string, context: any) => {
+      // Rollback on error
+      if (context?.previousWorkers) {
+        queryClient.setQueryData(["/api/admin/pending-workers"], context.previousWorkers);
+      }
       toast({
         title: "Error",
-        description: "Failed to approve worker. Please try again.",
+        description: error.message || "Failed to approve worker. Please try again.",
         variant: "destructive",
       });
     },
@@ -75,10 +94,25 @@ export default function WorkerApprovalSection() {
 
   // Reject worker (delete from database)
   const rejectWorkerMutation = useMutation({
-    mutationFn: (workerId: string) => 
-      fetch(`/api/admin/reject-worker/${workerId}`, {
-        method: "DELETE",
-      }).then(res => res.json()),
+    mutationFn: async (workerId: string) => {
+      const response = await apiRequest("DELETE", `/api/admin/reject-worker/${workerId}`);
+      return response.json();
+    },
+    onMutate: async (workerId: string) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ["/api/admin/pending-workers"] });
+      
+      // Snapshot the previous value
+      const previousWorkers = queryClient.getQueryData(["/api/admin/pending-workers"]);
+      
+      // Optimistically update by removing the worker immediately
+      queryClient.setQueryData(["/api/admin/pending-workers"], (old: any[]) => 
+        old ? old.filter(worker => worker.id !== workerId) : []
+      );
+      
+      // Return a context object with the snapshotted value
+      return { previousWorkers };
+    },
     onSuccess: () => {
       toast({
         title: "Worker Rejected",
@@ -87,10 +121,14 @@ export default function WorkerApprovalSection() {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/pending-workers"] });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
     },
-    onError: () => {
+    onError: (error: any, workerId: string, context: any) => {
+      // Rollback on error
+      if (context?.previousWorkers) {
+        queryClient.setQueryData(["/api/admin/pending-workers"], context.previousWorkers);
+      }
       toast({
         title: "Error",
-        description: "Failed to reject worker. Please try again.",
+        description: error.message || "Failed to reject worker. Please try again.",
         variant: "destructive",
       });
     },
