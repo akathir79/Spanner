@@ -145,19 +145,22 @@ export default function AdminDashboard() {
   const { data: users = [], isLoading: usersLoading } = useQuery({
     queryKey: ["/api/admin/users"],
     queryFn: () => fetch("/api/admin/users").then(res => res.json()),
-    enabled: !!user && (user.role === "admin" || user.role === "super_admin")
+    enabled: !authLoading && !!user && (user.role === "admin" || user.role === "super_admin"),
+    staleTime: 30000, // Cache for 30 seconds to reduce re-fetching
   });
 
   const { data: bookings = [], isLoading: bookingsLoading } = useQuery({
     queryKey: ["/api/admin/bookings"],
     queryFn: () => fetch("/api/admin/bookings").then(res => res.json()),
-    enabled: !!user && (user.role === "admin" || user.role === "super_admin")
+    enabled: !authLoading && !!user && (user.role === "admin" || user.role === "super_admin"),
+    staleTime: 30000,
   });
 
   const { data: districts = [] } = useQuery({
     queryKey: ["/api/districts"],
     queryFn: () => fetch("/api/districts").then(res => res.json()),
-    enabled: !!user && (user.role === "admin" || user.role === "super_admin")
+    enabled: !authLoading && !!user && (user.role === "admin" || user.role === "super_admin"),
+    staleTime: 300000, // Cache districts for 5 minutes as they don't change often
   });
 
   // ALL MUTATIONS MUST BE DECLARED BEFORE CONDITIONAL RETURNS
@@ -312,14 +315,15 @@ export default function AdminDashboard() {
 
   // Use effect for redirects to avoid calling setLocation during render
   useEffect(() => {
-    if (user && user.role !== "admin" && user.role !== "super_admin") {
+    if (!authLoading && user && user.role !== "admin" && user.role !== "super_admin") {
+      // Only redirect if user is not an admin/super_admin
       if (user.role === "client") {
         setLocation("/dashboard");
       } else if (user.role === "worker") {
         setLocation("/worker-dashboard");
       }
     }
-  }, [user, setLocation]);
+  }, [user, authLoading, setLocation]);
 
   // Show loading while authentication is being checked
   if (authLoading) {
