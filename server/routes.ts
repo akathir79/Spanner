@@ -159,7 +159,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // For super admin mobiles, always send OTP
-      if (mobile === "9000000002") {
+      if (["9000000002"].includes(mobile)) {
         const otp = generateOTP();
         const expiresAt = addMinutes(new Date(), 10);
         
@@ -188,10 +188,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!existingUser) {
         return res.status(400).json({ 
           success: false,
-          message: "Mobile number not registered", 
-          error: "USER_NOT_FOUND",
-          action: "signup_required",
-          description: "This mobile number is not registered with SPANNER. Please create an account first to continue."
+          message: "Mobile number not registered. Please sign up first." 
         });
       }
       
@@ -351,13 +348,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         aadhaarVerified: userData.aadhaarVerified || false,
         primaryService: userData.primaryService,
         experienceYears: userData.experienceYears,
-        hourlyRate: userData.hourlyRate.toString(),
+        hourlyRate: userData.hourlyRate,
         serviceDistricts: userData.serviceDistricts,
         serviceAreas: userData.serviceAreas || [],
         skills: userData.skills,
         bio: userData.bio,
         bioDataDocument: userData.bioDataDocument,
-        isBackgroundVerified: false,
+        isApproved: false,
         isActive: true,
       });
       
@@ -409,7 +406,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // For super admin mobiles, always send OTP
-      if (mobile === "9000000002") {
+      if (["9000000002"].includes(mobile)) {
         const otp = generateOTP();
         const expiresAt = addMinutes(new Date(), 10);
         
@@ -696,12 +693,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Get area names for service areas if they exist
-      let serviceAreaNames: string[] = [];
+      let serviceAreaNames = [];
       if (workerProfile && workerProfile.serviceAreas && Array.isArray(workerProfile.serviceAreas) && !workerProfile.serviceAllAreas) {
-        // Skip area name lookup for now to fix the error
-        // const allAreas = await storage.getAllAreas();
+        const allAreas = await storage.getAllAreas();
         serviceAreaNames = workerProfile.serviceAreas.map((areaId: string) => {
-          return `Area ${areaId}`;
+          const area = allAreas.find((a: any) => a.id === areaId);
+          return area ? area.name : `Area ${areaId}`;
         });
       }
       

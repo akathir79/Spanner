@@ -71,11 +71,9 @@ interface AuthModalProps {
   onClose: () => void;
   mode: "login" | "signup";
   initialTab?: "client" | "worker";
-  setMode?: (mode: "login" | "signup") => void;
 }
 
-export function AuthModal({ isOpen, onClose, mode, initialTab, setMode }: AuthModalProps) {
-  const [currentMode, setCurrentMode] = useState<"login" | "signup">(mode);
+export function AuthModal({ isOpen, onClose, mode, initialTab }: AuthModalProps) {
   const [step, setStep] = useState(1);
   const [pendingLogin, setPendingLogin] = useState<{ mobile: string; role: string } | null>(null);
   const [developmentOtp, setDevelopmentOtp] = useState<string>("");
@@ -111,14 +109,6 @@ export function AuthModal({ isOpen, onClose, mode, initialTab, setMode }: AuthMo
   const { t } = useLanguage();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-
-  // Reset modal state when it opens
-  useEffect(() => {
-    if (isOpen) {
-      setCurrentMode(mode);
-      setStep(1);
-    }
-  }, [isOpen, mode]);
 
   const loginForm = useForm({
     resolver: zodResolver(loginSchema),
@@ -775,41 +765,6 @@ export function AuthModal({ isOpen, onClose, mode, initialTab, setMode }: AuthMo
       setPendingLogin({ mobile: data.mobile, role: loginRole });
       setDevelopmentOtp(result.otp || "");
       setStep(2);
-    } else if (result.needsSignup) {
-      // Show signup prompt for unregistered users
-      toast({
-        title: "Account Not Found",
-        description: result.description || "This mobile number is not registered. Please create an account first.",
-        variant: "default",
-        action: (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              // Switch to signup tab and pre-fill mobile number
-              setStep(1);
-              setCurrentMode("signup");
-              setMode?.("signup");
-              if (loginRole === "client") {
-                clientForm.setValue("mobile", data.mobile);
-                setSignupType("client");
-              } else if (loginRole === "worker") {
-                workerForm.setValue("mobile", data.mobile);
-                setSignupType("worker");
-              }
-            }}
-          >
-            Sign Up Now
-          </Button>
-        ),
-      });
-    } else {
-      // Show generic error for other issues
-      toast({
-        title: "Login Failed",
-        description: result.error || "Unable to send OTP. Please try again.",
-        variant: "destructive",
-      });
     }
   };
 
@@ -818,23 +773,12 @@ export function AuthModal({ isOpen, onClose, mode, initialTab, setMode }: AuthMo
     
     const result = await verifyOtp(pendingLogin.mobile, data.otp, "login");
     if (result) {
-      // Reset modal state
+      onClose();
       setStep(1);
       setPendingLogin(null);
-      onClose();
       
-      // Use a longer delay and navigate after React has processed the state change
-      setTimeout(() => {
-        // Force a clean page navigation to prevent double rendering
-        const targetUrl = result.role === "super_admin" || result.role === "admin" 
-          ? "/admin-dashboard" 
-          : result.role === "worker" 
-            ? "/worker-dashboard" 
-            : "/dashboard";
-        
-        // Use location.replace instead of href to avoid potential race conditions
-        window.location.replace(targetUrl);
-      }, 500);
+      // Force page refresh to trigger proper redirection
+      window.location.reload();
     }
   };
 
@@ -861,8 +805,7 @@ export function AuthModal({ isOpen, onClose, mode, initialTab, setMode }: AuthMo
     // Close modal and redirect to worker dashboard
     setTimeout(() => {
       onClose();
-      // Navigate to worker dashboard after successful registration
-      window.location.href = "/worker-dashboard";
+      window.location.reload(); // Force page refresh to trigger proper redirection
     }, 2000);
   };
 
@@ -1009,7 +952,7 @@ export function AuthModal({ isOpen, onClose, mode, initialTab, setMode }: AuthMo
       <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center space-x-2">
-            {currentMode === "login" ? (
+            {mode === "login" ? (
               <>
                 <LogIn className="h-5 w-5" />
                 <span>Login to SPANNER</span>
@@ -1023,7 +966,7 @@ export function AuthModal({ isOpen, onClose, mode, initialTab, setMode }: AuthMo
           </DialogTitle>
         </DialogHeader>
 
-        {currentMode === "login" ? (
+        {mode === "login" ? (
           <>
             {step === 1 && (
               <div className="space-y-4">

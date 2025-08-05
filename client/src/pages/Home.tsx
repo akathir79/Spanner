@@ -197,14 +197,13 @@ const testimonials = [
 
 export default function Home() {
   const { t } = useLanguage();
-  const { user, isLoading } = useAuth();
+  const { user } = useAuth();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
 
   // Redirect authenticated users to their appropriate dashboards
   useEffect(() => {
-    // Only redirect if not loading and user exists
-    if (!isLoading && user) {
+    if (user) {
       const userRole = user.role;
       if (userRole === "admin" || userRole === "super_admin") {
         setLocation("/admin-dashboard");
@@ -214,7 +213,7 @@ export default function Home() {
         setLocation("/dashboard");
       }
     }
-  }, [user, isLoading, setLocation]);
+  }, [user, setLocation]);
   const [searchForm, setSearchForm] = useState({
     service: "",
     state: "",

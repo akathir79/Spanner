@@ -17,7 +17,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   login: (userData: User) => void;
   logout: () => void;
-  loginWithOtp: (mobile: string, role: string) => Promise<{ success: boolean; otp?: string; error?: string; needsSignup?: boolean; description?: string }>;
+  loginWithOtp: (mobile: string, role: string) => Promise<{ success: boolean; otp?: string; error?: string }>;
   verifyOtp: (mobile: string, otp: string, type: string) => Promise<User | null>;
   signupClient: (data: any) => Promise<User | null>;
   signupWorker: (data: any) => Promise<{ user: User } | null>;
@@ -51,8 +51,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = () => {
     setUser(null);
     localStorage.removeItem("user");
-    // Navigate to home page after logout
-    window.location.href = "/";
   };
 
   const loginWithOtp = async (mobile: string, role: string) => {
@@ -68,12 +66,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (response.ok) {
         return { success: true, otp: result.otp };
       } else {
-        return { 
-          success: false, 
-          error: result.message,
-          needsSignup: result.error === "USER_NOT_FOUND",
-          description: result.description
-        };
+        return { success: false, error: result.message };
       }
     } catch (error) {
       return { success: false, error: "Network error" };
@@ -91,8 +84,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const result = await response.json();
       
       if (response.ok && result.user) {
-        // Use a small delay to prevent state conflicts during authentication
-        await new Promise(resolve => setTimeout(resolve, 50));
         login(result.user);
         return result.user;
       } else {

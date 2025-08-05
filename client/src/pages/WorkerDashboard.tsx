@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Plus } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,7 +12,6 @@ import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/components/LanguageProvider";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { useLocation } from "wouter";
 import { 
   User, 
   Calendar, 
@@ -506,9 +505,10 @@ const WorkerJobsTab = () => {
     </div>
   );
 };
+import { useLocation } from "wouter";
 
 export default function WorkerDashboard() {
-  const { user, isLoading: authLoading } = useAuth();
+  const { user } = useAuth();
   const { t } = useLanguage();
   const { toast } = useToast();
 
@@ -516,30 +516,18 @@ export default function WorkerDashboard() {
   const isWorkerApproved = user?.status === "approved";
   const [, setLocation] = useLocation();
 
-  // Use effect for redirects to avoid calling setLocation during render
-  useEffect(() => {
-    if (user && user.role !== "worker") {
-      if (user.role === "client") {
-        setLocation("/dashboard");
-      } else if (user.role === "admin" || user.role === "super_admin") {
-        setLocation("/admin-dashboard");
-      }
-    }
-  }, [user, setLocation]);
-
   // Redirect if not authenticated or wrong role
-  if (authLoading || !user) {
-    return (
-      <div className="min-h-screen bg-muted/30 pt-20 pb-8 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading...</p>
-        </div>
-      </div>
-    );
+  if (!user) {
+    setLocation("/login");
+    return null;
   }
 
-  if (user && user.role !== "worker") {
+  if (user.role !== "worker") {
+    if (user.role === "client") {
+      setLocation("/dashboard");
+    } else if (user.role === "admin" || user.role === "super_admin") {
+      setLocation("/admin-dashboard");
+    }
     return null;
   }
 

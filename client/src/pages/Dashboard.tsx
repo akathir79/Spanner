@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -522,9 +522,7 @@ const JobPostingForm = () => {
 };
 
 export default function Dashboard() {
-  // ALL HOOKS MUST BE DECLARED FIRST - BEFORE ANY CONDITIONAL RETURNS
-  const { user, isLoading } = useAuth();
-  const hasRenderedRef = useRef(false);
+  const { user } = useAuth();
   const { t } = useLanguage();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
@@ -541,18 +539,31 @@ export default function Dashboard() {
   const [isLocationLoading, setIsLocationLoading] = useState(false);
   const [selectedJobPosting, setSelectedJobPosting] = useState<any>(null);
 
-  // Fetch user's bookings - enabled only when user exists
+  // Redirect if not authenticated or wrong role
+  if (!user) {
+    setLocation("/login");
+    return null;
+  }
+
+  if (user.role !== "client") {
+    if (user.role === "worker") {
+      setLocation("/worker-dashboard");
+    } else if (user.role === "admin" || user.role === "super_admin") {
+      setLocation("/admin-dashboard");
+    }
+    return null;
+  }
+
+  // Fetch user's bookings
   const { data: bookings = [], isLoading: bookingsLoading } = useQuery({
-    queryKey: ["/api/bookings/user", user?.id, "client"],
-    queryFn: () => fetch(`/api/bookings/user/${user!.id}?role=client`).then(res => res.json()),
-    enabled: !!user?.id
+    queryKey: ["/api/bookings/user", user.id, "client"],
+    queryFn: () => fetch(`/api/bookings/user/${user.id}?role=client`).then(res => res.json())
   });
 
-  // Fetch user's job postings - enabled only when user exists
+  // Fetch user's job postings
   const { data: jobPostings = [], isLoading: jobPostingsLoading } = useQuery({
-    queryKey: ["/api/job-postings/client", user?.id],
-    queryFn: () => fetch(`/api/job-postings/client/${user!.id}`).then(res => res.json()),
-    enabled: !!user?.id
+    queryKey: ["/api/job-postings/client", user.id],
+    queryFn: () => fetch(`/api/job-postings/client/${user.id}`).then(res => res.json())
   });
 
   // Fetch bids for selected job posting
@@ -626,7 +637,7 @@ export default function Dashboard() {
         title: "Job Deleted",
         description: "Your job posting has been removed.",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/job-postings/client", user?.id] });
+      queryClient.invalidateQueries({ queryKey: ["/api/job-postings/client", user.id] });
       setSelectedJobPosting(null);
     },
     onError: (error: any) => {
@@ -650,7 +661,7 @@ export default function Dashboard() {
         description: "The worker has been notified and can now start the job.",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/bids/job", selectedJobPosting?.id] });
-      queryClient.invalidateQueries({ queryKey: ["/api/job-postings/client", user?.id] });
+      queryClient.invalidateQueries({ queryKey: ["/api/job-postings/client", user.id] });
     },
     onError: (error: any) => {
       toast({
@@ -804,14 +815,14 @@ export default function Dashboard() {
   };
 
   const handleCreateBooking = (data: any) => {
-    if (!selectedWorker || !user?.id) return;
+    if (!selectedWorker) return;
 
     createBookingMutation.mutate({
       clientId: user.id,
       workerId: selectedWorker.id,
       serviceCategory: selectedWorker.workerProfile.primaryService,
       description: data.description,
-      districtId: (user as any).districtId || selectedWorker.districtId,
+      districtId: user.districtId || selectedWorker.districtId,
       scheduledDate: new Date(data.scheduledDate).toISOString(),
     });
   };
@@ -842,41 +853,6 @@ export default function Dashboard() {
       default: return <AlertCircle className="h-4 w-4" />;
     }
   };
-
-  // Handle redirects in useEffect to avoid setState during render
-  useEffect(() => {
-    if (!isLoading && !user && !hasRenderedRef.current) {
-      setLocation("/");
-      return;
-    }
-
-    if (!isLoading && user && user.role !== "client" && !hasRenderedRef.current) {
-      if (user.role === "worker") {
-        setLocation("/worker-dashboard");
-      } else if (user.role === "admin" || user.role === "super_admin") {
-        setLocation("/admin-dashboard");
-      }
-    }
-  }, [user, isLoading, setLocation]);
-
-  // Mark as rendered once we have a valid client user
-  useEffect(() => {
-    if (!isLoading && user && user.role === "client") {
-      hasRenderedRef.current = true;
-    }
-  }, [user, isLoading]);
-
-  // Show loading while user is being fetched or redirecting
-  if (isLoading || !user || (user.role !== "client" && !hasRenderedRef.current)) {
-    return (
-      <div className="min-h-screen bg-muted/30 pt-20 pb-8 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-muted/30 pt-20 pb-8">
@@ -1308,7 +1284,7 @@ export default function Dashboard() {
                     <div>
                       <Label>Account Status</Label>
                       <div className="flex items-center space-x-2 mt-1">
-                        {(user as any).isVerified ? (
+                        {user.isVerified ? (
                           <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100">
                             <CheckCircle className="h-3 w-3 mr-1" />
                             Verified
