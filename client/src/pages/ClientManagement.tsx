@@ -61,6 +61,17 @@ export default function ClientManagement() {
     ? clients.filter((client: User) => client.district === selectedDistrict)
     : [];
 
+  // Get district count for each state
+  const getDistrictCountForState = (stateName: string) => {
+    const stateData = (statesDistrictsData.states as StateData[]).find(s => s.state === stateName);
+    return stateData ? stateData.districts.length : 0;
+  };
+
+  // Get client count for each district
+  const getClientCountForDistrict = (districtName: string) => {
+    return clients.filter((client: User) => client.district === districtName).length;
+  };
+
   // Handle navigation
   const handleTotalClientsClick = () => {
     setView("states");
@@ -133,13 +144,19 @@ export default function ClientManagement() {
                 <button
                   key={state}
                   onClick={() => handleStateClick(state)}
-                  className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors relative ${
                     selectedState === state
                       ? 'bg-blue-100 text-blue-900 dark:bg-blue-900 dark:text-blue-100'
                       : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                   }`}
                 >
-                  {state}
+                  <span className="pr-8">{state}</span>
+                  <Badge 
+                    variant="secondary" 
+                    className="absolute right-2 top-1/2 -translate-y-1/2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs bg-blue-500 text-white hover:bg-blue-600"
+                  >
+                    {getDistrictCountForState(state)}
+                  </Badge>
                 </button>
               ))}
             </div>
@@ -192,9 +209,15 @@ export default function ClientManagement() {
                       key={district}
                       variant="outline"
                       onClick={() => handleDistrictClick(district)}
-                      className="h-12 justify-start font-medium hover:bg-blue-50 hover:border-blue-200 dark:hover:bg-blue-900/20"
+                      className="h-12 justify-start font-medium hover:bg-blue-50 hover:border-blue-200 dark:hover:bg-blue-900/20 relative pr-10"
                     >
-                      {district}
+                      <span className="truncate">{district}</span>
+                      <Badge 
+                        variant="secondary" 
+                        className="absolute right-2 top-1/2 -translate-y-1/2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs bg-green-500 text-white hover:bg-green-600"
+                      >
+                        {getClientCountForDistrict(district)}
+                      </Badge>
                     </Button>
                   ))}
                 </div>
