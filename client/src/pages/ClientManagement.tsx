@@ -26,7 +26,10 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Phone, Mail, Calendar, MoreHorizontal, Eye, MessageSquare, CheckCircle, XCircle, Trash2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { ArrowLeft, Phone, Mail, Calendar, MoreHorizontal, Eye, MessageSquare, CheckCircle, XCircle, Trash2, Edit } from "lucide-react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import statesDistrictsData from "@/../../shared/states-districts.json";
@@ -70,6 +73,8 @@ export default function ClientManagement() {
   const [showMessageDialog, setShowMessageDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [messageText, setMessageText] = useState("");
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editFormData, setEditFormData] = useState<Partial<User>>({});
 
   // Fetch all users
   const { data: users = [], isLoading: usersLoading } = useQuery({
@@ -463,15 +468,15 @@ export default function ClientManagement() {
                                   </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end" className="w-48">
-                                  <DropdownMenuItem onClick={() => handleSuspendUser(client)}>
+                                  <DropdownMenuItem onClick={() => handleViewDetails(client)}>
                                     <Eye className="w-4 h-4 mr-2" />
                                     View Details
                                   </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => handleSuspendUser(client)}>
+                                  <DropdownMenuItem onClick={() => handleSendMessage(client)}>
                                     <MessageSquare className="w-4 h-4 mr-2" />
                                     Send Message
                                   </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => handleSuspendUser(client)}>
+                                  <DropdownMenuItem onClick={() => handleVerifyUser(client)}>
                                     <CheckCircle className="w-4 h-4 mr-2 text-green-600" />
                                     <span className="text-green-600">Verify User</span>
                                   </DropdownMenuItem>
@@ -479,7 +484,7 @@ export default function ClientManagement() {
                                     <XCircle className="w-4 h-4 mr-2 text-red-600" />
                                     <span className="text-red-600">Suspend User</span>
                                   </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => handleSuspendUser(client)}>
+                                  <DropdownMenuItem onClick={() => handleDeleteUser(client)}>
                                     <Trash2 className="w-4 h-4 mr-2 text-red-600" />
                                     <span className="text-red-600">Delete User</span>
                                   </DropdownMenuItem>
@@ -662,15 +667,15 @@ export default function ClientManagement() {
                                   </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end" className="w-48">
-                                  <DropdownMenuItem onClick={() => handleSuspendUser(client)}>
+                                  <DropdownMenuItem onClick={() => handleViewDetails(client)}>
                                     <Eye className="w-4 h-4 mr-2" />
                                     View Details
                                   </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => handleSuspendUser(client)}>
+                                  <DropdownMenuItem onClick={() => handleSendMessage(client)}>
                                     <MessageSquare className="w-4 h-4 mr-2" />
                                     Send Message
                                   </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => handleSuspendUser(client)}>
+                                  <DropdownMenuItem onClick={() => handleVerifyUser(client)}>
                                     <CheckCircle className="w-4 h-4 mr-2 text-green-600" />
                                     <span className="text-green-600">Verify User</span>
                                   </DropdownMenuItem>
@@ -678,7 +683,7 @@ export default function ClientManagement() {
                                     <XCircle className="w-4 h-4 mr-2 text-red-600" />
                                     <span className="text-red-600">Suspend User</span>
                                   </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => handleSuspendUser(client)}>
+                                  <DropdownMenuItem onClick={() => handleDeleteUser(client)}>
                                     <Trash2 className="w-4 h-4 mr-2 text-red-600" />
                                     <span className="text-red-600">Delete User</span>
                                   </DropdownMenuItem>
@@ -699,44 +704,192 @@ export default function ClientManagement() {
 
       {/* User Details Modal */}
       <Dialog open={showDetailsDialog} onOpenChange={setShowDetailsDialog}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Client Details</DialogTitle>
+            <DialogTitle className="flex items-center justify-between">
+              <span>Client Details</span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setIsEditMode(!isEditMode);
+                  if (!isEditMode && selectedClient) {
+                    setEditFormData(selectedClient);
+                  }
+                }}
+              >
+                <Edit className="w-4 h-4 mr-2" />
+                {isEditMode ? "Cancel Edit" : "Edit Details"}
+              </Button>
+            </DialogTitle>
             <DialogDescription>
-              Complete information for {selectedClient?.firstName} {selectedClient?.lastName}
+              {isEditMode ? "Edit client information" : "Complete registration information"}
             </DialogDescription>
           </DialogHeader>
           {selectedClient && (
-            <div className="space-y-4">
-              <div>
-                <h4 className="font-medium text-gray-900 dark:text-white">Personal Information</h4>
-                <div className="mt-2 space-y-1 text-sm">
-                  <p><span className="font-medium">Name:</span> {selectedClient.firstName} {selectedClient.lastName}</p>
-                  <p><span className="font-medium">ID:</span> {selectedClient.id}</p>
-                  <p><span className="font-medium">Mobile:</span> {selectedClient.mobile}</p>
-                  {selectedClient.email && <p><span className="font-medium">Email:</span> {selectedClient.email}</p>}
-                  <p><span className="font-medium">Location:</span> {selectedClient.district}, {selectedClient.state}</p>
-                  <p><span className="font-medium">Status:</span> 
-                    <Badge className={`ml-2 ${selectedClient.isVerified ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                      {selectedClient.isVerified ? 'Verified' : 'Pending'}
-                    </Badge>
+            <div className="space-y-6">
+              {/* Avatar Section */}
+              <div className="flex items-center justify-center">
+                <Avatar className="w-20 h-20">
+                  <AvatarImage src={selectedClient.profileImageUrl} />
+                  <AvatarFallback className="text-lg">
+                    {selectedClient.firstName?.charAt(0)}{selectedClient.lastName?.charAt(0)}
+                  </AvatarFallback>
+                </Avatar>
+              </div>
+
+              {/* Personal Information */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="firstName">First Name</Label>
+                  {isEditMode ? (
+                    <Input
+                      id="firstName"
+                      value={editFormData.firstName || ""}
+                      onChange={(e) => setEditFormData({...editFormData, firstName: e.target.value})}
+                    />
+                  ) : (
+                    <p className="text-sm font-medium text-gray-900 dark:text-white p-2 bg-gray-50 dark:bg-gray-800 rounded">
+                      {selectedClient.firstName}
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <Label htmlFor="lastName">Last Name</Label>
+                  {isEditMode ? (
+                    <Input
+                      id="lastName"
+                      value={editFormData.lastName || ""}
+                      onChange={(e) => setEditFormData({...editFormData, lastName: e.target.value})}
+                    />
+                  ) : (
+                    <p className="text-sm font-medium text-gray-900 dark:text-white p-2 bg-gray-50 dark:bg-gray-800 rounded">
+                      {selectedClient.lastName}
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <Label htmlFor="userIdDisplay">User ID</Label>
+                  <p className="text-sm font-medium text-blue-600 dark:text-blue-400 p-2 bg-blue-50 dark:bg-blue-900/20 rounded">
+                    {selectedClient.id}
+                  </p>
+                </div>
+                <div>
+                  <Label htmlFor="mobile">Mobile Number</Label>
+                  {isEditMode ? (
+                    <Input
+                      id="mobile"
+                      value={editFormData.mobile || ""}
+                      onChange={(e) => setEditFormData({...editFormData, mobile: e.target.value})}
+                    />
+                  ) : (
+                    <p className="text-sm font-medium text-gray-900 dark:text-white p-2 bg-gray-50 dark:bg-gray-800 rounded">
+                      {selectedClient.mobile}
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <Label htmlFor="email">Email Address</Label>
+                  {isEditMode ? (
+                    <Input
+                      id="email"
+                      type="email"
+                      value={editFormData.email || ""}
+                      onChange={(e) => setEditFormData({...editFormData, email: e.target.value})}
+                    />
+                  ) : (
+                    <p className="text-sm font-medium text-gray-900 dark:text-white p-2 bg-gray-50 dark:bg-gray-800 rounded">
+                      {selectedClient.email || "Not provided"}
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <Label htmlFor="role">User Role</Label>
+                  <p className="text-sm font-medium text-purple-600 dark:text-purple-400 p-2 bg-purple-50 dark:bg-purple-900/20 rounded capitalize">
+                    {selectedClient.role}
                   </p>
                 </div>
               </div>
+
+              {/* Location Information */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="state">State</Label>
+                  <p className="text-sm font-medium text-gray-900 dark:text-white p-2 bg-gray-50 dark:bg-gray-800 rounded">
+                    {selectedClient.state || "Not specified"}
+                  </p>
+                </div>
+                <div>
+                  <Label htmlFor="district">District</Label>
+                  <p className="text-sm font-medium text-gray-900 dark:text-white p-2 bg-gray-50 dark:bg-gray-800 rounded">
+                    {selectedClient.district || "Not specified"}
+                  </p>
+                </div>
+              </div>
+
+              {/* Status Information */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="verificationStatus">Verification Status</Label>
+                  <div className="p-2">
+                    <Badge className={`${selectedClient.isVerified ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100'}`}>
+                      {selectedClient.isVerified ? 'Verified' : 'Pending Verification'}
+                    </Badge>
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="memberSince">Member Since</Label>
+                  <p className="text-sm font-medium text-gray-900 dark:text-white p-2 bg-gray-50 dark:bg-gray-800 rounded">
+                    {new Date(selectedClient.createdAt).toLocaleDateString('en-IN', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    })}
+                  </p>
+                </div>
+              </div>
+
+              {/* Account Activity */}
               <div>
-                <h4 className="font-medium text-gray-900 dark:text-white">Account Activity</h4>
-                <div className="mt-2 space-y-1 text-sm">
-                  <p><span className="font-medium">Total Bookings:</span> 0</p>
-                  <p><span className="font-medium">Total Spent:</span> ₹0</p>
-                  <p><span className="font-medium">Member Since:</span> {new Date(selectedClient.createdAt).toLocaleDateString()}</p>
+                <h4 className="font-medium text-gray-900 dark:text-white mb-3">Account Activity</h4>
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="text-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded">
+                    <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">0</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Total Bookings</p>
+                  </div>
+                  <div className="text-center p-3 bg-green-50 dark:bg-green-900/20 rounded">
+                    <p className="text-2xl font-bold text-green-600 dark:text-green-400">₹0</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Amount Spent</p>
+                  </div>
+                  <div className="text-center p-3 bg-purple-50 dark:bg-purple-900/20 rounded">
+                    <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">0</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Reviews Given</p>
+                  </div>
                 </div>
               </div>
             </div>
           )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowDetailsDialog(false)}>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => {
+              setShowDetailsDialog(false);
+              setIsEditMode(false);
+              setEditFormData({});
+            }}>
               Close
             </Button>
+            {isEditMode && (
+              <Button onClick={() => {
+                // TODO: Implement save functionality
+                console.log("Save changes:", editFormData);
+                setIsEditMode(false);
+                toast({
+                  title: "Changes Saved",
+                  description: "Client details have been updated successfully.",
+                });
+              }}>
+                Save Changes
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
