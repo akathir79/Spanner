@@ -1373,7 +1373,7 @@ export default function Dashboard() {
         }
       }
     }
-  }, [user, authLoading, setLocation]);
+  }, [authLoading, user, setLocation]);
 
   // Authentication checks - MUST be after all hooks
   if (authLoading) {
