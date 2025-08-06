@@ -37,7 +37,7 @@ export default function ClientManagement() {
   const { user } = useAuth();
   const [selectedState, setSelectedState] = useState<string | null>(null);
   const [selectedDistrict, setSelectedDistrict] = useState<string | null>(null);
-  const [view, setView] = useState<"total" | "states" | "districts" | "clients">("total");
+  const [view, setView] = useState<"total" | "states" | "districts" | "clients">("states");
 
   // Fetch all users
   const { data: users = [], isLoading: usersLoading } = useQuery({
@@ -80,7 +80,7 @@ export default function ClientManagement() {
 
   // Handle navigation
   const handleTotalClientsClick = () => {
-    setView("states");
+    setView("total");
     setSelectedState(null);
     setSelectedDistrict(null);
   };
@@ -138,9 +138,22 @@ export default function ClientManagement() {
         <div className="w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col">
           <div className="p-4 border-b border-gray-200 dark:border-gray-700">
             {/* Total Client List Header */}
-            <div className="bg-gray-100 dark:bg-gray-700 rounded-lg p-3 text-center font-medium text-gray-900 dark:text-white border">
-              Total Client List
-            </div>
+            <button
+              onClick={handleTotalClientsClick}
+              className={`w-full bg-gray-100 dark:bg-gray-700 rounded-lg p-3 text-center font-medium border transition-colors relative ${
+                view === "total" 
+                  ? 'bg-blue-100 text-blue-900 dark:bg-blue-900 dark:text-blue-100 border-blue-300' 
+                  : 'text-gray-900 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-600'
+              }`}
+            >
+              <span className="pr-8">Total Client List</span>
+              <Badge 
+                variant="secondary" 
+                className="absolute right-2 top-1/2 -translate-y-1/2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs bg-purple-500 text-white hover:bg-purple-600"
+              >
+                {clients.length}
+              </Badge>
+            </button>
           </div>
           
           {/* Scrollable States List */}
@@ -181,8 +194,86 @@ export default function ClientManagement() {
             </div>
           )}
 
+          {/* Total Client List View */}
+          {!usersLoading && view === "total" && (
+            <div className="h-full flex flex-col">
+              <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-1">
+                  All Registered Clients
+                </h2>
+                <p className="text-gray-600 dark:text-gray-400">
+                  Complete client database • {clients.length} total clients
+                </p>
+              </div>
+              
+              <div className="flex-1 overflow-y-auto p-6">
+                {clients.length === 0 ? (
+                  <div className="text-center py-12">
+                    <div className="text-gray-400 mb-4">
+                      <svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+                      </svg>
+                    </div>
+                    <p className="text-gray-500 dark:text-gray-400 text-lg">No clients registered yet</p>
+                    <p className="text-gray-400 dark:text-gray-500 text-sm mt-1">Client registrations will appear here</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {clients.map((client) => (
+                      <Card key={client.id} className="hover:shadow-md transition-shadow">
+                        <CardContent className="p-4">
+                          <div className="flex justify-between items-start mb-3">
+                            <div>
+                              <h4 className="font-semibold text-gray-900 dark:text-white text-lg">
+                                {client.firstName} {client.lastName}
+                              </h4>
+                              {client.district && client.state && (
+                                <p className="text-sm text-gray-500 dark:text-gray-400">
+                                  {client.district}, {client.state}
+                                </p>
+                              )}
+                            </div>
+                            <Badge 
+                              variant={client.isVerified ? "default" : "destructive"}
+                              className={client.isVerified ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100" : ""}
+                            >
+                              {client.isVerified ? "Verified" : "Pending"}
+                            </Badge>
+                          </div>
+                          
+                          <div className="space-y-2 text-sm">
+                            <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+                              <Phone className="w-4 h-4 flex-shrink-0" />
+                              <span className="font-mono">{client.mobile}</span>
+                            </div>
+                            {client.email && (
+                              <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+                                <Mail className="w-4 h-4 flex-shrink-0" />
+                                <span className="truncate">{client.email}</span>
+                              </div>
+                            )}
+                            <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+                              <Calendar className="w-4 h-4 flex-shrink-0" />
+                              <span>Joined {new Date(client.createdAt).toLocaleDateString()}</span>
+                            </div>
+                          </div>
+                          
+                          <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
+                            <div className="text-xs text-gray-500 dark:text-gray-500 font-mono">
+                              ID: {client.id.slice(0, 8)}...
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Default State - No Selection */}
-          {!usersLoading && !selectedState && (
+          {!usersLoading && view === "states" && !selectedState && (
             <div className="flex items-center justify-center h-full">
               <div className="text-center">
                 <div className="text-gray-400 mb-4">
