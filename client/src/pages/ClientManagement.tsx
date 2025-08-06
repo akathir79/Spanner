@@ -64,16 +64,21 @@ interface StateData {
 }
 
 // Helper functions for date formatting and activity status
-function formatIndianDateTime(dateString: string): string {
+function formatIndianDateTime(dateString: string | Date): string {
   if (!dateString) return "Not available";
   try {
-    const date = new Date(dateString);
-    // Convert to Indian Standard Time (IST) - UTC+5:30
-    const istOffset = 5.5 * 60; // 5 hours 30 minutes in minutes
-    const utcTime = date.getTime() + (date.getTimezoneOffset() * 60000);
-    const istTime = new Date(utcTime + (istOffset * 60000));
-    return format(istTime, "yyyy-MM-dd'T'HH:mm:ss.SSSZ");
+    // Parse the UTC date string or Date object
+    const date = typeof dateString === 'string' ? new Date(dateString) : dateString;
+    console.log("formatIndianDateTime input:", dateString, "parsed date:", date, "is valid:", !isNaN(date.getTime()));
+    if (isNaN(date.getTime())) return "Invalid date";
+    
+    // Convert to IST by adding 5 hours 30 minutes
+    const istDate = new Date(date.getTime() + (5.5 * 60 * 60 * 1000));
+    
+    // Format as readable IST date-time
+    return format(istDate, "dd MMM yyyy, hh:mm a") + " IST";
   } catch (error) {
+    console.error("Date formatting error:", error);
     return "Invalid date";
   }
 }
