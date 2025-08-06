@@ -46,6 +46,7 @@ interface User {
   role: string;
   isVerified: boolean;
   createdAt: string;
+  updatedAt?: string;
   lastLoginAt?: string;
   district?: string;
   state?: string;
@@ -67,7 +68,11 @@ function formatIndianDateTime(dateString: string): string {
   if (!dateString) return "Not available";
   try {
     const date = new Date(dateString);
-    return format(date, "dd/MM/yyyy, HH:mm");
+    // Convert to Indian Standard Time (IST) - UTC+5:30
+    const istOffset = 5.5 * 60; // 5 hours 30 minutes in minutes
+    const utcTime = date.getTime() + (date.getTimezoneOffset() * 60000);
+    const istTime = new Date(utcTime + (istOffset * 60000));
+    return format(istTime, "yyyy-MM-dd'T'HH:mm:ss.SSSZ");
   } catch (error) {
     return "Invalid date";
   }
@@ -847,8 +852,9 @@ export default function ClientManagement() {
             // Status Information
             { key: "isVerified", label: "Verification Status", type: "badge", section: "status" },
             { key: "isActive", label: "Account Status", type: "display", section: "status" },
-            { key: "createdAt", label: "Member Since", type: "display", section: "status" },
-            { key: "updatedAt", label: "Last Updated", type: "display", section: "status" },
+            { key: "createdAt", label: "Member Since", type: "display", section: "status", value: formatIndianDateTime(selectedClient.createdAt) },
+            { key: "updatedAt", label: "Last Updated", type: "display", section: "status", value: formatIndianDateTime(selectedClient.updatedAt) },
+            { key: "lastLoginAt", label: "Last Login", type: "display", section: "status", value: selectedClient.lastLoginAt ? formatIndianDateTime(selectedClient.lastLoginAt) : "Never logged in" },
           ]}
           actions={[
             {
