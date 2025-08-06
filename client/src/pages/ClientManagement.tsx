@@ -28,9 +28,10 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { ArrowLeft, Phone, Mail, Calendar, MoreHorizontal, Eye, MessageSquare, CheckCircle, XCircle, Trash2, Edit, AlertCircle } from "lucide-react";
+import { ArrowLeft, Phone, Mail, Calendar, MoreHorizontal, Eye, MessageSquare, CheckCircle, XCircle, Trash2, Edit, AlertCircle, Search, X } from "lucide-react";
 import { format } from "date-fns";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
@@ -143,6 +144,10 @@ export default function ClientManagement() {
   const [selectedDistrict, setSelectedDistrict] = useState<string | null>(null);
   const [view, setView] = useState<"total" | "states" | "districts" | "clients">("states");
   
+  // Search states
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchFilter, setSearchFilter] = useState<"all" | "id" | "name" | "email" | "mobile" | "location">("all");
+  
   // Modal states
   const [selectedClient, setSelectedClient] = useState<User | null>(null);
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
@@ -164,7 +169,42 @@ export default function ClientManagement() {
   });
 
   // Filter only clients
-  const clients = (users as User[]).filter((u: User) => u.role === "client");
+  const allClients = (users as User[]).filter((u: User) => u.role === "client");
+
+  // Search filter function
+  const filterClients = (clientList: User[]) => {
+    if (!searchQuery.trim()) return clientList;
+
+    const query = searchQuery.toLowerCase().trim();
+    return clientList.filter(client => {
+      switch (searchFilter) {
+        case "id":
+          return client.id.toLowerCase().includes(query);
+        case "name":
+          return `${client.firstName} ${client.lastName}`.toLowerCase().includes(query);
+        case "email":
+          return client.email?.toLowerCase().includes(query) || false;
+        case "mobile":
+          return client.mobile.includes(query);
+        case "location":
+          return client.district?.toLowerCase().includes(query) || 
+                 client.state?.toLowerCase().includes(query) || false;
+        case "all":
+        default:
+          return (
+            client.id.toLowerCase().includes(query) ||
+            `${client.firstName} ${client.lastName}`.toLowerCase().includes(query) ||
+            client.email?.toLowerCase().includes(query) ||
+            client.mobile.includes(query) ||
+            client.district?.toLowerCase().includes(query) ||
+            client.state?.toLowerCase().includes(query)
+          );
+      }
+    });
+  };
+
+  // Apply search filter to clients
+  const clients = filterClients(allClients);
 
   // Get states from JSON file
   const states = (statesDistrictsData.states as StateData[]).map(s => s.state).sort();
@@ -174,19 +214,19 @@ export default function ClientManagement() {
     ? (statesDistrictsData.states as StateData[]).find(s => s.state === selectedState)?.districts || []
     : [];
 
-  // Get clients for selected district
+  // Get clients for selected district (with search applied)
   const clientsForDistrict = selectedDistrict 
-    ? clients.filter((client: User) => client.district === selectedDistrict)
+    ? filterClients(allClients.filter((client: User) => client.district === selectedDistrict))
     : [];
 
-  // Get client count for each state from database
+  // Get client count for each state from database (using allClients, not filtered)
   const getClientCountForState = (stateName: string) => {
-    return clients.filter((client: User) => client.state === stateName).length;
+    return allClients.filter((client: User) => client.state === stateName).length;
   };
 
-  // Get client count for each district from database
+  // Get client count for each district from database (using allClients, not filtered)
   const getClientCountForDistrict = (districtName: string) => {
-    return clients.filter((client: User) => client.district === districtName).length;
+    return allClients.filter((client: User) => client.district === districtName).length;
   };
 
   // Mutations for client actions
@@ -434,12 +474,50 @@ export default function ClientManagement() {
           {!usersLoading && view === "total" && (
             <div className="h-full flex flex-col">
               <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-1">
-                  All Registered Clients
-                </h2>
-                <p className="text-gray-600 dark:text-gray-400">
-                  Complete client database • {clients.length} total clients
-                </p>
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-1">
+                      All Registered Clients
+                    </h2>
+                    <p className="text-gray-600 dark:text-gray-400">
+                      Complete client database • {clients.length} total clients {searchQuery && `• ${clients.length} filtered results`}
+                    </p>
+                  </div>
+                </div>
+                
+                {/* Search Controls */}
+                <div className="flex gap-3 items-center">
+                  <div className="relative flex-1 max-w-md">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                    <Input
+                      placeholder="Search clients..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-10 pr-8"
+                    />
+                    {searchQuery && (
+                      <button
+                        onClick={() => setSearchQuery("")}
+                        className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                  <Select value={searchFilter} onValueChange={(value) => setSearchFilter(value as any)}>
+                    <SelectTrigger className="w-40">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Fields</SelectItem>
+                      <SelectItem value="id">User ID</SelectItem>
+                      <SelectItem value="name">Name</SelectItem>
+                      <SelectItem value="email">Email</SelectItem>
+                      <SelectItem value="mobile">Mobile</SelectItem>
+                      <SelectItem value="location">Location</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
               
               <div className="flex-1 overflow-y-auto p-6">
@@ -836,7 +914,7 @@ export default function ClientManagement() {
           subtitle="Complete registration information"
           data={selectedClient}
           avatar={{
-            src: selectedClient.profilePicture,
+            src: undefined, // profilePicture field not available in User interface
             fallback: `${selectedClient.firstName?.charAt(0)}${selectedClient.lastName?.charAt(0)}`
           }}
           fields={[
@@ -878,7 +956,7 @@ export default function ClientManagement() {
             { key: "isVerified", label: "Verification Status", type: "badge", section: "status" },
             { key: "isActive", label: "Account Status", type: "display", section: "status" },
             { key: "createdAt", label: "Member Since", type: "display", section: "status", value: formatIndianDateTime(selectedClient.createdAt) },
-            { key: "updatedAt", label: "Last Updated", type: "display", section: "status", value: formatIndianDateTime(selectedClient.updatedAt) },
+            { key: "updatedAt", label: "Last Updated", type: "display", section: "status", value: selectedClient.updatedAt ? formatIndianDateTime(selectedClient.updatedAt) : "Not available" },
             { key: "lastLoginAt", label: "Last Login", type: "display", section: "status", value: selectedClient.lastLoginAt ? formatIndianDateTime(selectedClient.lastLoginAt) : "Never logged in" },
           ]}
           actions={[
