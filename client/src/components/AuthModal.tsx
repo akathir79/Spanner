@@ -86,6 +86,7 @@ export function AuthModal({ isOpen, onClose, mode, initialTab, onSwitchToSignup 
   const [showNewServiceInput, setShowNewServiceInput] = useState(false);
   const [newServiceName, setNewServiceName] = useState("");
   const [newSkillInput, setNewSkillInput] = useState("");
+  const [newAreaInput, setNewAreaInput] = useState("");
   const [districtSearchInput, setDistrictSearchInput] = useState("");
   const [districtPopoverOpen, setDistrictPopoverOpen] = useState(false);
   const [clientDistrictPopoverOpen, setClientDistrictPopoverOpen] = useState(false);
@@ -2067,6 +2068,7 @@ export function AuthModal({ isOpen, onClose, mode, initialTab, onSwitchToSignup 
                             if (isChecked) {
                               // Clear specific areas when "All Areas" is selected
                               workerForm.setValue("serviceAreas", []);
+                              setNewAreaInput("");
                             }
                           }}
                         />
@@ -2076,81 +2078,75 @@ export function AuthModal({ isOpen, onClose, mode, initialTab, onSwitchToSignup 
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <Popover open={areasPopoverOpen} onOpenChange={setAreasPopoverOpen}>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant="outline"
-                            role="combobox"
-                            aria-expanded={areasPopoverOpen}
-                            className="w-full justify-between"
-                            disabled={serviceAllAreas}
-                          >
-                            {serviceAllAreas ? "All areas selected" : "Select specific areas"}
-                            <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-full p-0">
-                          <Command>
-                            <CommandInput placeholder="Search areas..." />
-                            <CommandList>
-                              <CommandEmpty>No area found.</CommandEmpty>
-                              <CommandGroup>
-                                {getAvailableAreas().map((area: any) => (
-                                  <CommandItem
-                                    key={area.id}
-                                    value={area.name}
-                                    onSelect={() => {
-                                      const currentAreas = workerForm.getValues("serviceAreas") || [];
-                                      if (!currentAreas.includes(area.id)) {
-                                        workerForm.setValue("serviceAreas", [...currentAreas, area.id]);
-                                        // Clear "All Areas" checkbox when specific area is selected
-                                        setServiceAllAreas(false);
-                                        workerForm.setValue("serviceAllAreas", false);
-                                      }
-                                      setAreasPopoverOpen(false);
-                                    }}
-                                  >
-                                    {area.name} {area.tamilName && `(${area.tamilName})`}
-                                  </CommandItem>
-                                ))}
-                              </CommandGroup>
-                            </CommandList>
-                          </Command>
-                        </PopoverContent>
-                      </Popover>
+                      <div className="flex gap-2">
+                        <Input
+                          placeholder="Type area name (e.g., Koramangala, Jayanagar, Anna Nagar)"
+                          value={newAreaInput}
+                          onChange={(e) => setNewAreaInput(e.target.value)}
+                          onKeyPress={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              if (newAreaInput.trim() && !serviceAllAreas) {
+                                const currentAreas = workerForm.getValues("serviceAreas") || [];
+                                if (!currentAreas.includes(newAreaInput.trim())) {
+                                  workerForm.setValue("serviceAreas", [...currentAreas, newAreaInput.trim()]);
+                                  setNewAreaInput("");
+                                  // Clear "All Areas" checkbox when specific area is added
+                                  setServiceAllAreas(false);
+                                  workerForm.setValue("serviceAllAreas", false);
+                                }
+                              }
+                            }
+                          }}
+                          disabled={serviceAllAreas}
+                          className={serviceAllAreas ? "bg-muted cursor-not-allowed" : ""}
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            if (newAreaInput.trim() && !serviceAllAreas) {
+                              const currentAreas = workerForm.getValues("serviceAreas") || [];
+                              if (!currentAreas.includes(newAreaInput.trim())) {
+                                workerForm.setValue("serviceAreas", [...currentAreas, newAreaInput.trim()]);
+                                setNewAreaInput("");
+                                // Clear "All Areas" checkbox when specific area is added
+                                setServiceAllAreas(false);
+                                workerForm.setValue("serviceAllAreas", false);
+                              }
+                            }
+                          }}
+                          disabled={!newAreaInput.trim() || serviceAllAreas}
+                        >
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                      </div>
                       <p className="text-xs text-muted-foreground">
                         {serviceAllAreas 
                           ? "You will serve all areas within your selected districts."
-                          : "Select specific areas within your service districts, or check 'All Areas' to serve everywhere in your districts."
+                          : "Type specific areas within your service districts, or check 'All Areas' to serve everywhere in your districts."
                         }
                       </p>
                     </div>
                     <div className="flex flex-wrap gap-1 mt-2">
-                      {workerForm.watch("serviceAreas")?.map((areaId: string) => {
-                        const area = (allAreas as any[]).find((a: any) => a.id === areaId);
-                        return area ? (
-                          <div key={areaId} className="flex items-center gap-1 bg-secondary text-secondary-foreground px-2 py-1 rounded-md text-xs">
-                            <span>{area.name}</span>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              className="h-4 w-4 p-0"
-                              onClick={() => {
-                                const currentAreas = workerForm.getValues("serviceAreas") || [];
-                                workerForm.setValue("serviceAreas", currentAreas.filter(id => id !== areaId));
-                                // Check if we need to show "All Areas" again after removing specific area
-                                const remainingAreas = currentAreas.filter(id => id !== areaId);
-                                if (remainingAreas.length === 0 && !serviceAllAreas) {
-                                  // Could auto-check "All Areas" if no specific areas are selected
-                                }
-                              }}
-                            >
-                              <X className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        ) : null;
-                      })}
+                      {workerForm.watch("serviceAreas")?.map((areaName: string, index: number) => (
+                        <div key={index} className="flex items-center gap-1 bg-secondary text-secondary-foreground px-2 py-1 rounded-md text-xs">
+                          <span>{areaName}</span>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="h-4 w-4 p-0"
+                            onClick={() => {
+                              const currentAreas = workerForm.getValues("serviceAreas") || [];
+                              workerForm.setValue("serviceAreas", currentAreas.filter((_, i) => i !== index));
+                            }}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 )}
