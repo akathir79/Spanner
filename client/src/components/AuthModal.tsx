@@ -2049,114 +2049,7 @@ export function AuthModal({ isOpen, onClose, mode, initialTab, onSwitchToSignup 
                   )}
                 </div>
 
-                <div>
-                  <Label htmlFor="serviceDistricts">Service Districts *</Label>
-                  <div className="space-y-2">
-                    <Popover open={districtPopoverOpen} onOpenChange={setDistrictPopoverOpen}>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          role="combobox"
-                          aria-expanded={districtPopoverOpen}
-                          className="w-full justify-between"
-                        >
-                          Select from dropdown
-                          <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-full p-0 animate-dropdown-open" style={{ overflow: 'visible' }}>
-                        <div className="flex flex-col">
-                          <div className="px-3 py-2 border-b">
-                            <input
-                              type="text"
-                              placeholder="Search districts..."
-                              className="w-full px-0 py-1 text-sm bg-transparent border-0 outline-none placeholder:text-muted-foreground"
-                              onChange={(e) => {
-                                // Simple search filter implementation
-                                const searchTerm = e.target.value.toLowerCase();
-                                const items = document.querySelectorAll('[data-district-item]');
-                                items.forEach(item => {
-                                  const text = item.textContent?.toLowerCase() || '';
-                                  if (text.includes(searchTerm)) {
-                                    (item as HTMLElement).style.display = 'block';
-                                  } else {
-                                    (item as HTMLElement).style.display = 'none';
-                                  }
-                                });
-                              }}
-                            />
-                          </div>
-                          <div className="max-h-40 overflow-y-scroll dropdown-scrollbar" style={{ overflowY: 'scroll' }}>
-                            {isWorkerLoadingDistricts ? (
-                              <div className="px-3 py-2 text-sm animate-pulse">Loading districts...</div>
-                            ) : workerApiDistricts.length > 0 ? (
-                              workerApiDistricts.map((district: any, index) => (
-                                <div
-                                  key={district.id}
-                                  data-district-item
-                                  className="px-3 py-2 text-sm cursor-pointer hover:bg-accent/80 transition-all duration-150 animate-district-load"
-                                  style={{ animationDelay: `${index * 20}ms` }}
-                                  onClick={() => {
-                                    const currentDistricts = workerForm.getValues("serviceDistricts") || [];
-                                    if (!currentDistricts.includes(district.id)) {
-                                      workerForm.setValue("serviceDistricts", [...currentDistricts, district.id]);
-                                    }
-                                    setDistrictPopoverOpen(false);
-                                  }}
-                                >
-                                  {district.name}
-                                </div>
-                              ))
-                            ) : (
-                              <div className="px-3 py-2 text-sm text-muted-foreground">No districts found</div>
-                            )}
-                          </div>
-                        </div>
-                      </PopoverContent>
-                    </Popover>
-                    <p className="text-xs text-muted-foreground">
-                      Select districts from dropdown or type to search (e.g., Chennai, Coimbatore, Salem)
-                    </p>
-                  </div>
-                  <div className="flex flex-wrap gap-1 mt-2">
-                    {workerForm.watch("serviceDistricts")?.map((districtId: string, index) => {
-                      const district = workerApiDistricts.find((d: any) => d.id === districtId) || null;
-                      return district ? (
-                        <div 
-                          key={districtId} 
-                          className="flex items-center gap-1 bg-secondary text-secondary-foreground px-2 py-1 rounded-md text-xs animate-tag-appear transition-all duration-150 hover:bg-secondary/80"
-                          style={{ animationDelay: `${index * 50}ms` }}
-                        >
-                          <span className="transition-all duration-150">{district.name}</span>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            className="h-4 w-4 p-0 transition-all duration-150 hover:bg-destructive/20"
-                            onClick={(e) => {
-                              const target = e.target as HTMLElement;
-                              const tagElement = target.closest('.animate-tag-appear') as HTMLElement;
-                              if (tagElement) {
-                                tagElement.classList.add('animate-tag-remove');
-                              }
-                              setTimeout(() => {
-                                const currentDistricts = workerForm.getValues("serviceDistricts") || [];
-                                workerForm.setValue("serviceDistricts", currentDistricts.filter(id => id !== districtId));
-                              }, 150);
-                            }}
-                          >
-                            <X className="h-3 w-3 transition-all duration-150" />
-                          </Button>
-                        </div>
-                      ) : null;
-                    })}
-                  </div>
-                  {workerForm.formState.errors.serviceDistricts && (
-                    <p className="text-sm text-destructive mt-1">
-                      {workerForm.formState.errors.serviceDistricts.message}
-                    </p>
-                  )}
-                </div>
+
 
                 {/* Service Areas - only show if districts are selected */}
                 {workerForm.watch("serviceDistricts")?.length > 0 && (
@@ -2446,6 +2339,115 @@ export function AuthModal({ isOpen, onClose, mode, initialTab, onSwitchToSignup 
                   {workerForm.formState.errors.state && (
                     <p className="text-sm text-destructive mt-1">
                       {workerForm.formState.errors.state.message}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <Label htmlFor="serviceDistricts">Service Districts *</Label>
+                  <div className="space-y-2">
+                    <Popover open={districtPopoverOpen} onOpenChange={setDistrictPopoverOpen}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          aria-expanded={districtPopoverOpen}
+                          className="w-full justify-between"
+                        >
+                          Select from dropdown
+                          <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-full p-0 animate-dropdown-open" style={{ overflow: 'visible' }}>
+                        <div className="flex flex-col">
+                          <div className="px-3 py-2 border-b">
+                            <input
+                              type="text"
+                              placeholder="Search districts..."
+                              className="w-full px-0 py-1 text-sm bg-transparent border-0 outline-none placeholder:text-muted-foreground"
+                              onChange={(e) => {
+                                // Simple search filter implementation
+                                const searchTerm = e.target.value.toLowerCase();
+                                const items = document.querySelectorAll('[data-district-item]');
+                                items.forEach(item => {
+                                  const text = item.textContent?.toLowerCase() || '';
+                                  if (text.includes(searchTerm)) {
+                                    (item as HTMLElement).style.display = 'block';
+                                  } else {
+                                    (item as HTMLElement).style.display = 'none';
+                                  }
+                                });
+                              }}
+                            />
+                          </div>
+                          <div className="max-h-40 overflow-y-scroll dropdown-scrollbar" style={{ overflowY: 'scroll' }}>
+                            {isWorkerLoadingDistricts ? (
+                              <div className="px-3 py-2 text-sm animate-pulse">Loading districts...</div>
+                            ) : workerApiDistricts.length > 0 ? (
+                              workerApiDistricts.map((district: any, index) => (
+                                <div
+                                  key={district.id}
+                                  data-district-item
+                                  className="px-3 py-2 text-sm cursor-pointer hover:bg-accent/80 transition-all duration-150 animate-district-load"
+                                  style={{ animationDelay: `${index * 20}ms` }}
+                                  onClick={() => {
+                                    const currentDistricts = workerForm.getValues("serviceDistricts") || [];
+                                    if (!currentDistricts.includes(district.id)) {
+                                      workerForm.setValue("serviceDistricts", [...currentDistricts, district.id]);
+                                    }
+                                    setDistrictPopoverOpen(false);
+                                  }}
+                                >
+                                  {district.name}
+                                </div>
+                              ))
+                            ) : (
+                              <div className="px-3 py-2 text-sm text-muted-foreground">No districts found</div>
+                            )}
+                          </div>
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+                    <p className="text-xs text-muted-foreground">
+                      Select districts from dropdown or type to search (e.g., Chennai, Coimbatore, Salem)
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap gap-1 mt-2">
+                    {workerForm.watch("serviceDistricts")?.map((districtId: string, index) => {
+                      const district = workerApiDistricts.find((d: any) => d.id === districtId) || null;
+                      return district ? (
+                        <div 
+                          key={districtId} 
+                          className="flex items-center gap-1 bg-secondary text-secondary-foreground px-2 py-1 rounded-md text-xs animate-tag-appear transition-all duration-150 hover:bg-secondary/80"
+                          style={{ animationDelay: `${index * 50}ms` }}
+                        >
+                          <span className="transition-all duration-150">{district.name}</span>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="h-4 w-4 p-0 transition-all duration-150 hover:bg-destructive/20"
+                            onClick={(e) => {
+                              const target = e.target as HTMLElement;
+                              const tagElement = target.closest('.animate-tag-appear') as HTMLElement;
+                              if (tagElement) {
+                                tagElement.classList.add('animate-tag-remove');
+                              }
+                              setTimeout(() => {
+                                const currentDistricts = workerForm.getValues("serviceDistricts") || [];
+                                workerForm.setValue("serviceDistricts", currentDistricts.filter(id => id !== districtId));
+                              }, 150);
+                            }}
+                          >
+                            <X className="h-3 w-3 transition-all duration-150" />
+                          </Button>
+                        </div>
+                      ) : null;
+                    })}
+                  </div>
+                  {workerForm.formState.errors.serviceDistricts && (
+                    <p className="text-sm text-destructive mt-1">
+                      {workerForm.formState.errors.serviceDistricts.message}
                     </p>
                   )}
                 </div>
