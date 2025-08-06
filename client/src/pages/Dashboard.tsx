@@ -539,25 +539,18 @@ export default function Dashboard() {
   const [isLocationLoading, setIsLocationLoading] = useState(false);
   const [selectedJobPosting, setSelectedJobPosting] = useState<any>(null);
 
-  if (user.role !== "client") {
-    if (user.role === "worker") {
-      setLocation("/worker-dashboard");
-    } else if (user.role === "admin" || user.role === "super_admin") {
-      setLocation("/admin-dashboard");
-    }
-    return null;
-  }
-
   // Fetch user's bookings
   const { data: bookings = [], isLoading: bookingsLoading } = useQuery({
-    queryKey: ["/api/bookings/user", user.id, "client"],
-    queryFn: () => fetch(`/api/bookings/user/${user.id}?role=client`).then(res => res.json())
+    queryKey: ["/api/bookings/user", user?.id, "client"],
+    queryFn: () => fetch(`/api/bookings/user/${user?.id}?role=client`).then(res => res.json()),
+    enabled: !!user?.id
   });
 
   // Fetch user's job postings
   const { data: jobPostings = [], isLoading: jobPostingsLoading } = useQuery({
-    queryKey: ["/api/job-postings/client", user.id],
-    queryFn: () => fetch(`/api/job-postings/client/${user.id}`).then(res => res.json())
+    queryKey: ["/api/job-postings/client", user?.id],
+    queryFn: () => fetch(`/api/job-postings/client/${user?.id}`).then(res => res.json()),
+    enabled: !!user?.id
   });
 
   // Fetch bids for selected job posting
@@ -631,7 +624,7 @@ export default function Dashboard() {
         title: "Job Deleted",
         description: "Your job posting has been removed.",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/job-postings/client", user.id] });
+      queryClient.invalidateQueries({ queryKey: ["/api/job-postings/client", user?.id] });
       setSelectedJobPosting(null);
     },
     onError: (error: any) => {
@@ -655,7 +648,7 @@ export default function Dashboard() {
         description: "The worker has been notified and can now start the job.",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/bids/job", selectedJobPosting?.id] });
-      queryClient.invalidateQueries({ queryKey: ["/api/job-postings/client", user.id] });
+      queryClient.invalidateQueries({ queryKey: ["/api/job-postings/client", user?.id] });
     },
     onError: (error: any) => {
       toast({
@@ -809,14 +802,14 @@ export default function Dashboard() {
   };
 
   const handleCreateBooking = (data: any) => {
-    if (!selectedWorker) return;
+    if (!selectedWorker || !user) return;
 
     createBookingMutation.mutate({
       clientId: user.id,
       workerId: selectedWorker.id,
       serviceCategory: selectedWorker.workerProfile.primaryService,
       description: data.description,
-      districtId: user.districtId || selectedWorker.districtId,
+      districtId: selectedWorker.districtId, // Remove user.districtId since it doesn't exist in schema
       scheduledDate: new Date(data.scheduledDate).toISOString(),
     });
   };
@@ -1309,17 +1302,10 @@ export default function Dashboard() {
                     <div>
                       <Label>Account Status</Label>
                       <div className="flex items-center space-x-2 mt-1">
-                        {user.isVerified ? (
-                          <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100">
-                            <CheckCircle className="h-3 w-3 mr-1" />
-                            Verified
-                          </Badge>
-                        ) : (
-                          <Badge variant="secondary">
-                            <AlertCircle className="h-3 w-3 mr-1" />
-                            Pending Verification
-                          </Badge>
-                        )}
+                        <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100">
+                          <CheckCircle className="h-3 w-3 mr-1" />
+                          Active
+                        </Badge>
                       </div>
                     </div>
                     <div>
