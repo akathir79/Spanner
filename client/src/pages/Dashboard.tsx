@@ -422,6 +422,7 @@ const BankDetailsCard = ({ user, onUpdate }: { user: any, onUpdate: () => void }
   const [ifscErrors, setIfscErrors] = useState<Record<string, string>>({});
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { refreshUser } = useAuth();
 
   useEffect(() => {
     setEditData(user || {});
@@ -514,13 +515,19 @@ const BankDetailsCard = ({ user, onUpdate }: { user: any, onUpdate: () => void }
       const response = await apiRequest("PUT", `/api/users/${user.id}`, updatedData);
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: async (data) => {
       toast({
         title: "Bank Details Updated",
         description: "Your bank details have been updated successfully.",
       });
       setIsEditing(false);
+      
+      // Force refresh user data from server
+      await refreshUser();
       onUpdate();
+      
+      // Also invalidate and refetch any user-related queries
+      queryClient.invalidateQueries({ queryKey: ['/api/user'] });
     },
     onError: (error: any) => {
       toast({

@@ -1227,7 +1227,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Remove undefined/null/empty fields and filter allowed fields
-      const allowedFields = ['firstName', 'lastName', 'email', 'mobile', 'address', 'profilePicture'];
+      const allowedFields = [
+        'firstName', 'lastName', 'email', 'mobile', 'address', 'profilePicture', 'pincode', 'state',
+        'bankAccountNumber', 'bankIFSC', 'bankAccountHolderName', 'bankName', 'bankBranch', 'bankAccountType', 'bankMICR'
+      ];
       const cleanData = Object.fromEntries(
         Object.entries(updateData)
           .filter(([key, value]) => 
