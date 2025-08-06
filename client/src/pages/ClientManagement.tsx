@@ -31,6 +31,7 @@ import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ArrowLeft, Phone, Mail, Calendar, MoreHorizontal, Eye, MessageSquare, CheckCircle, XCircle, Trash2, Edit, AlertCircle } from "lucide-react";
+import { format } from "date-fns";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import ViewDetailsModal, { getDistrictOptions, getRoleOptions } from "@/components/ViewDetailsModal";
@@ -45,6 +46,7 @@ interface User {
   role: string;
   isVerified: boolean;
   createdAt: string;
+  lastLoginAt?: string;
   district?: string;
   state?: string;
 }
@@ -58,6 +60,48 @@ interface District {
 interface StateData {
   state: string;
   districts: string[];
+}
+
+// Helper functions for date formatting and activity status
+function formatIndianDateTime(dateString: string): string {
+  if (!dateString) return "Not available";
+  try {
+    const date = new Date(dateString);
+    return format(date, "dd/MM/yyyy, HH:mm");
+  } catch (error) {
+    return "Invalid date";
+  }
+}
+
+function getActivityStatus(lastLoginAt?: string, createdAt?: string) {
+  if (!lastLoginAt) {
+    return {
+      label: "No Login",
+      variant: "secondary" as const,
+      icon: <AlertCircle className="w-3 h-3" />,
+      className: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100"
+    };
+  }
+
+  const lastLogin = new Date(lastLoginAt);
+  const now = new Date();
+  const daysSinceLogin = Math.floor((now.getTime() - lastLogin.getTime()) / (1000 * 60 * 60 * 24));
+
+  if (daysSinceLogin > 15) {
+    return {
+      label: "Inactive",
+      variant: "destructive" as const,
+      icon: <XCircle className="w-3 h-3" />,
+      className: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100"
+    };
+  }
+
+  return {
+    label: "Active",
+    variant: "default" as const,
+    icon: <CheckCircle className="w-3 h-3" />,
+    className: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100"
+  };
 }
 
 export default function ClientManagement() {
@@ -390,14 +434,18 @@ export default function ClientManagement() {
                           <TableHead>Location</TableHead>
                           <TableHead>Bookings/Earnings</TableHead>
                           <TableHead>Contact</TableHead>
+                          <TableHead>Registration Date</TableHead>
+                          <TableHead>Last Login</TableHead>
                           <TableHead>Status</TableHead>
                           <TableHead className="w-[50px]"></TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {clients.map((client) => (
-                          <TableRow key={client.id}>
-                            <TableCell>
+                        {clients.map((client) => {
+                          const activityStatus = getActivityStatus(client.lastLoginAt, client.createdAt);
+                          return (
+                            <TableRow key={client.id}>
+                              <TableCell>
                               <div>
                                 <div className="font-medium text-gray-900 dark:text-white">
                                   {client.firstName} {client.lastName}
@@ -485,7 +533,8 @@ export default function ClientManagement() {
                               </DropdownMenu>
                             </TableCell>
                           </TableRow>
-                        ))}
+                          );
+                        })}
                       </TableBody>
                     </Table>
                   </div>
@@ -589,14 +638,18 @@ export default function ClientManagement() {
                           <TableHead>Location</TableHead>
                           <TableHead>Bookings/Earnings</TableHead>
                           <TableHead>Contact</TableHead>
+                          <TableHead>Registration Date</TableHead>
+                          <TableHead>Last Login</TableHead>
                           <TableHead>Status</TableHead>
                           <TableHead className="w-[50px]"></TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {clientsForDistrict.map((client) => (
-                          <TableRow key={client.id}>
-                            <TableCell>
+                        {clientsForDistrict.map((client) => {
+                          const activityStatus = getActivityStatus(client.lastLoginAt, client.createdAt);
+                          return (
+                            <TableRow key={client.id}>
+                              <TableCell>
                               <div>
                                 <div className="font-medium text-gray-900 dark:text-white">
                                   {client.firstName} {client.lastName}
@@ -684,7 +737,8 @@ export default function ClientManagement() {
                               </DropdownMenu>
                             </TableCell>
                           </TableRow>
-                        ))}
+                          );
+                        })}
                       </TableBody>
                     </Table>
                   </div>
