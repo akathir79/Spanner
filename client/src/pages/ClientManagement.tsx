@@ -474,8 +474,9 @@ export default function ClientManagement() {
           {!usersLoading && view === "total" && (
             <div className="h-full flex flex-col">
               <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-                <div className="flex items-center justify-between mb-4">
-                  <div>
+                {/* Header with inline search */}
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex-1">
                     <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-1">
                       All Registered Clients
                     </h2>
@@ -483,40 +484,40 @@ export default function ClientManagement() {
                       Complete client database • {clients.length} total clients {searchQuery && `• ${clients.length} filtered results`}
                     </p>
                   </div>
-                </div>
-                
-                {/* Search Controls */}
-                <div className="flex gap-3 items-center">
-                  <div className="relative flex-1 max-w-md">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                    <Input
-                      placeholder="Search clients..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-10 pr-8"
-                    />
-                    {searchQuery && (
-                      <button
-                        onClick={() => setSearchQuery("")}
-                        className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    )}
+                  
+                  {/* Search Controls - moved inline */}
+                  <div className="flex gap-3 items-center ml-6">
+                    <div className="relative w-72">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                      <Input
+                        placeholder="Search clients..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="pl-10 pr-8"
+                      />
+                      {searchQuery && (
+                        <button
+                          onClick={() => setSearchQuery("")}
+                          className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                    <Select value={searchFilter} onValueChange={(value) => setSearchFilter(value as any)}>
+                      <SelectTrigger className="w-32">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Fields</SelectItem>
+                        <SelectItem value="id">User ID</SelectItem>
+                        <SelectItem value="name">Name</SelectItem>
+                        <SelectItem value="email">Email</SelectItem>
+                        <SelectItem value="mobile">Mobile</SelectItem>
+                        <SelectItem value="location">Location</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
-                  <Select value={searchFilter} onValueChange={(value) => setSearchFilter(value as any)}>
-                    <SelectTrigger className="w-40">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Fields</SelectItem>
-                      <SelectItem value="id">User ID</SelectItem>
-                      <SelectItem value="name">Name</SelectItem>
-                      <SelectItem value="email">Email</SelectItem>
-                      <SelectItem value="mobile">Mobile</SelectItem>
-                      <SelectItem value="location">Location</SelectItem>
-                    </SelectContent>
-                  </Select>
                 </div>
               </div>
               
@@ -728,23 +729,58 @@ export default function ClientManagement() {
           {!usersLoading && selectedDistrict && (
             <div className="h-full flex flex-col">
               <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-                <div className="flex items-center justify-between">
-                  <div>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex-1">
                     <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-1">
                       Clients in {selectedDistrict}
                     </h2>
                     <p className="text-gray-600 dark:text-gray-400">
-                      {selectedState} • {clientsForDistrict.length} clients found
+                      {selectedState} • {clientsForDistrict.length} clients found {searchQuery && `• ${clientsForDistrict.length} filtered results`}
                     </p>
                   </div>
-                  <Button 
-                    variant="outline" 
-                    onClick={handleBackClick}
-                    className="flex items-center gap-2"
-                  >
-                    <ArrowLeft className="w-4 h-4" />
-                    Back to Districts
-                  </Button>
+                  
+                  {/* Search Controls for District View */}
+                  <div className="flex gap-3 items-center ml-6">
+                    <div className="relative w-72">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                      <Input
+                        placeholder="Search in this district..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="pl-10 pr-8"
+                      />
+                      {searchQuery && (
+                        <button
+                          onClick={() => setSearchQuery("")}
+                          className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                    <Select value={searchFilter} onValueChange={(value) => setSearchFilter(value as any)}>
+                      <SelectTrigger className="w-32">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Fields</SelectItem>
+                        <SelectItem value="id">User ID</SelectItem>
+                        <SelectItem value="name">Name</SelectItem>
+                        <SelectItem value="email">Email</SelectItem>
+                        <SelectItem value="mobile">Mobile</SelectItem>
+                        <SelectItem value="location">Location</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    
+                    <Button 
+                      variant="outline" 
+                      onClick={handleBackClick}
+                      className="flex items-center gap-2"
+                    >
+                      <ArrowLeft className="w-4 h-4" />
+                      Back to Districts
+                    </Button>
+                  </div>
                 </div>
               </div>
               
