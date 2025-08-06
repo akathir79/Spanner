@@ -31,7 +31,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { ArrowLeft, Phone, Mail, Calendar, MoreHorizontal, Eye, MessageSquare, CheckCircle, XCircle, Trash2, Edit, AlertCircle, Search, X, Menu } from "lucide-react";
+import { ArrowLeft, Phone, Mail, Calendar, MoreHorizontal, Eye, MessageSquare, CheckCircle, XCircle, Trash2, Edit, AlertCircle, Search, X, Menu, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
@@ -148,6 +148,7 @@ export default function ClientManagement() {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchFilter, setSearchFilter] = useState<"all" | "id" | "name" | "email" | "mobile" | "location">("all");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarToggling, setSidebarToggling] = useState(false);
   
   // Modal states
   const [selectedClient, setSelectedClient] = useState<User | null>(null);
@@ -385,6 +386,16 @@ export default function ClientManagement() {
     }
   };
 
+  const handleSidebarToggle = async () => {
+    setSidebarToggling(true);
+    
+    // Add a small delay to show the loading state
+    setTimeout(() => {
+      setSidebarCollapsed(!sidebarCollapsed);
+      setSidebarToggling(false);
+    }, 200);
+  };
+
   if (!user || (user.role !== "admin" && user.role !== "super_admin")) {
     return <div>Access denied</div>;
   }
@@ -406,10 +417,15 @@ export default function ClientManagement() {
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+              onClick={handleSidebarToggle}
+              disabled={sidebarToggling}
               className="flex items-center justify-center w-8 h-8"
             >
-              <Menu className="w-4 h-4" />
+              {sidebarToggling ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Menu className="w-4 h-4" />
+              )}
             </Button>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Client Management</h1>
           </div>
