@@ -6,9 +6,19 @@ import { z } from "zod";
 
 // Note: Districts and areas now handled via API - no longer stored in database
 
+// Sequence counter for custom user IDs
+export const userSequence = pgTable("user_sequence", {
+  id: varchar("id").primaryKey(),
+  state: text("state").notNull(),
+  district: text("district").notNull(),
+  lastNumber: integer("last_number").default(0).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 // User roles: client, worker, admin, super_admin
 export const users = pgTable("users", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  id: varchar("id").primaryKey(),
   email: text("email"),
   mobile: text("mobile").notNull().unique(),
   firstName: text("first_name").notNull(),

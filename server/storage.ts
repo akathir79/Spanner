@@ -1,5 +1,6 @@
 import { 
-  users, 
+  users,
+  userSequence,
   workerProfiles, 
   bookings, 
   jobPostings,
@@ -46,6 +47,7 @@ import {
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, sql, desc, ilike, inArray, or } from "drizzle-orm";
+import { generateCustomUserId } from "./userIdGenerator";
 
 export interface IStorage {
   // User management
@@ -169,17 +171,6 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUserByMobileAndRole(mobile: string, role: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(and(eq(users.mobile, mobile), eq(users.role, role)));
-    return user || undefined;
-  }
-
-  async getUserByEmailAndRole(email: string, role: string): Promise<User | undefined> {
-    if (!email) return undefined;
-    const [user] = await db.select().from(users).where(and(eq(users.email, email), eq(users.role, role)));
-    return user || undefined;
-  }
-
-  async getUserByMobileAndRole(mobile: string, role: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(
       and(eq(users.mobile, mobile), eq(users.role, role))
     );
@@ -195,6 +186,16 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
+    // Generate custom user ID if not provided
+    if (!insertUser.id && insertUser.state && insertUser.district && insertUser.role) {
+      const customId = await generateCustomUserId({
+        state: insertUser.state,
+        district: insertUser.district,
+        role: insertUser.role as 'client' | 'worker' | 'admin' | 'super_admin'
+      });
+      insertUser.id = customId;
+    }
+    
     const [user] = await db.insert(users).values(insertUser).returning();
     return user;
   }
