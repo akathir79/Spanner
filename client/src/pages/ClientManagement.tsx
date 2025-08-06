@@ -119,7 +119,7 @@ export default function ClientManagement() {
   // Mutations for client actions
   const verifyUserMutation = useMutation({
     mutationFn: async (userId: string) => {
-      return await apiRequest(`/api/admin/verify-user/${userId}`, "PUT");
+      return await apiRequest("PUT", `/api/admin/verify-user/${userId}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
@@ -139,7 +139,7 @@ export default function ClientManagement() {
 
   const suspendUserMutation = useMutation({
     mutationFn: async (userId: string) => {
-      return await apiRequest(`/api/admin/suspend-user/${userId}`, "PUT");
+      return await apiRequest("PUT", `/api/admin/suspend-user/${userId}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
@@ -160,7 +160,7 @@ export default function ClientManagement() {
 
   const deleteUserMutation = useMutation({
     mutationFn: async (userId: string) => {
-      return await apiRequest(`/api/admin/delete-user/${userId}`, "DELETE");
+      return await apiRequest("DELETE", `/api/admin/delete-user/${userId}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
@@ -182,7 +182,7 @@ export default function ClientManagement() {
 
   const sendMessageMutation = useMutation({
     mutationFn: async ({ userId, message }: { userId: string; message: string }) => {
-      return await apiRequest("/api/admin/send-message", "POST", { userId, message });
+      return await apiRequest("POST", "/api/admin/send-message", { userId, message });
     },
     onSuccess: () => {
       setShowMessageDialog(false);
