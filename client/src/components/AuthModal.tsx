@@ -796,8 +796,15 @@ export function AuthModal({ isOpen, onClose, mode, initialTab, onSwitchToSignup 
       ...signupData,
       role: "client",
     });
-    if (result) {
+    if (result?.success) {
       onClose();
+    } else {
+      // Show error message to user
+      toast({
+        title: "Registration Failed",
+        description: result?.error || "Unable to create account. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
