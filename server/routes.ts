@@ -223,68 +223,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/auth/verify-otp", async (req, res) => {
-    try {
-      const { mobile, otp, type } = req.body;
-      
-      // Verify OTP
-      const isValidOtp = await storage.verifyOtp(mobile, otp, type || "login");
-      
-      if (!isValidOtp) {
-        return res.status(400).json({ message: "Invalid or expired OTP" });
-      }
-      
-      // Get user by mobile
-      let user = await storage.getUserByMobile(mobile);
-      
-      // Special handling for admin/super admin mobiles
-      if (mobile === "9000000001" && !user) {
-        user = await storage.createUser({
-          firstName: "Admin",
-          lastName: "User",
-          mobile,
-          role: "admin",
-          isVerified: true,
-        });
-      } else if (mobile === "9000000002" && !user) {
-        user = await storage.createUser({
-          firstName: "Super",
-          lastName: "Admin",
-          mobile,
-          role: "super_admin",
-          isVerified: true,
-        });
-      }
-      
-      if (!user) {
-        return res.status(400).json({ message: "User not found" });
-      }
-      
-      // Update user verification status
-      if (!user.isVerified) {
-        await storage.updateUser(user.id, { isVerified: true });
-        user = { ...user, isVerified: true };
-      }
-      
-      return res.json({ 
-        message: "OTP verified successfully",
-        user: {
-          id: user.id,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          email: user.email,
-          mobile: user.mobile,
-          role: user.role,
-          profilePicture: user.profilePicture,
-        }
-      });
-      
-    } catch (error) {
-      console.error("OTP verification error:", error);
-      return res.status(500).json({ message: "Failed to verify OTP" });
-    }
-  });
-
   // Check availability of mobile/email for a specific role
   app.post("/api/auth/check-availability", async (req, res) => {
     try {
