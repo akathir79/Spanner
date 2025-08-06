@@ -29,7 +29,7 @@ interface AuthContextType {
   login: (userData: User) => void;
   logout: () => void;
   loginWithOtp: (mobile: string, role: string) => Promise<{ success: boolean; otp?: string; error?: string }>;
-  verifyOtp: (mobile: string, otp: string, type: string) => Promise<User | null>;
+  verifyOtp: (mobile: string, otp: string, purpose: string) => Promise<User | null>;
   signupClient: (data: any) => Promise<{ success: boolean; user?: User; error?: string }>;
   signupWorker: (data: any) => Promise<{ user: User } | null>;
 }
@@ -85,12 +85,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const verifyOtp = async (mobile: string, otp: string, type: string) => {
+  const verifyOtp = async (mobile: string, otp: string, purpose: string) => {
     try {
       const response = await fetch("/api/auth/verify-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mobile, otp, type }),
+        body: JSON.stringify({ mobile, otp, purpose }),
       });
 
       const result = await response.json();

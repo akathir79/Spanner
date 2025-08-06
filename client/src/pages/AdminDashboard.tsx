@@ -370,7 +370,7 @@ export default function AdminDashboard() {
           body: JSON.stringify({
             mobile: "9000000001",
             otp: loginResult.otp,
-            type: "login"
+            purpose: "login"
           })
         });
         
