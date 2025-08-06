@@ -289,10 +289,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userData = clientSignupSchema.parse(req.body);
       
-      // Check if user already exists
-      const existingUser = await storage.getUserByMobile(userData.mobile);
-      if (existingUser) {
-        return res.status(400).json({ message: "Mobile number already registered" });
+      // Check if user already exists with this role
+      const existingUserByMobile = await storage.getUserByMobileAndRole(userData.mobile, userData.role);
+      if (existingUserByMobile) {
+        return res.status(400).json({ message: "Mobile number already registered for this role" });
+      }
+
+      // Check email if provided
+      if (userData.email) {
+        const existingUserByEmail = await storage.getUserByEmailAndRole(userData.email, userData.role);
+        if (existingUserByEmail) {
+          return res.status(400).json({ message: "Email address already registered for this role" });
+        }
       }
       
       // Create new user
@@ -324,10 +332,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userData = workerSignupSchema.parse(req.body);
       
-      // Check if user already exists
-      const existingUser = await storage.getUserByMobile(userData.mobile);
-      if (existingUser) {
-        return res.status(400).json({ message: "Mobile number already registered" });
+      // Check if user already exists with this role
+      const existingUserByMobile = await storage.getUserByMobileAndRole(userData.mobile, userData.role);
+      if (existingUserByMobile) {
+        return res.status(400).json({ message: "Mobile number already registered for this role" });
+      }
+
+      // Check email if provided
+      if (userData.email) {
+        const existingUserByEmail = await storage.getUserByEmailAndRole(userData.email, userData.role);
+        if (existingUserByEmail) {
+          return res.status(400).json({ message: "Email address already registered for this role" });
+        }
       }
       
       // Create new user
