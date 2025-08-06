@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -192,15 +192,17 @@ export default function ClientManagement() {
     enabled: !!user && (user.role === "admin" || user.role === "super_admin"),
   });
 
-  // Filter only clients
-  const allClients = (users as User[]).filter((u: User) => u.role === "client");
+  // Memoize filtered clients to prevent recalculation on every render
+  const allClients = useMemo(() => {
+    return (users as User[]).filter((u: User) => u.role === "client");
+  }, [users]);
 
-  // Search filter function
-  const filterClients = (clientList: User[]) => {
-    if (!searchQuery.trim()) return clientList;
+  // Memoized search filter function
+  const clients = useMemo(() => {
+    if (!searchQuery.trim()) return allClients;
 
     const query = searchQuery.toLowerCase().trim();
-    return clientList.filter(client => {
+    return allClients.filter(client => {
       switch (searchFilter) {
         case "id":
           return client.id.toLowerCase().includes(query);
@@ -225,10 +227,7 @@ export default function ClientManagement() {
           );
       }
     });
-  };
-
-  // Apply search filter to clients
-  const clients = filterClients(allClients);
+  }, [allClients, searchQuery, searchFilter]);
 
   // Get states from JSON file
   const states = (statesDistrictsData.states as StateData[]).map(s => s.state).sort();
@@ -238,10 +237,41 @@ export default function ClientManagement() {
     ? (statesDistrictsData.states as StateData[]).find(s => s.state === selectedState)?.districts || []
     : [];
 
-  // Get clients for selected district (with search applied)
-  const clientsForDistrict = selectedDistrict 
-    ? filterClients(allClients.filter((client: User) => client.district === selectedDistrict))
-    : [];
+  // Memoized clients for selected district
+  const clientsForDistrict = useMemo(() => {
+    if (!selectedDistrict) return [];
+    
+    const districtClients = allClients.filter((client: User) => client.district === selectedDistrict);
+    
+    if (!searchQuery.trim()) return districtClients;
+
+    const query = searchQuery.toLowerCase().trim();
+    return districtClients.filter(client => {
+      switch (searchFilter) {
+        case "id":
+          return client.id.toLowerCase().includes(query);
+        case "name":
+          return `${client.firstName} ${client.lastName}`.toLowerCase().includes(query);
+        case "email":
+          return client.email?.toLowerCase().includes(query) || false;
+        case "mobile":
+          return client.mobile.includes(query);
+        case "location":
+          return client.district?.toLowerCase().includes(query) || 
+                 client.state?.toLowerCase().includes(query) || false;
+        case "all":
+        default:
+          return (
+            client.id.toLowerCase().includes(query) ||
+            `${client.firstName} ${client.lastName}`.toLowerCase().includes(query) ||
+            client.email?.toLowerCase().includes(query) ||
+            client.mobile.includes(query) ||
+            client.district?.toLowerCase().includes(query) ||
+            client.state?.toLowerCase().includes(query)
+          );
+      }
+    });
+  }, [allClients, selectedDistrict, searchQuery, searchFilter]);
 
   // Get client count for each state from database (using allClients, not filtered)
   const getClientCountForState = (stateName: string) => {
@@ -398,12 +428,18 @@ export default function ClientManagement() {
     }
   };
 
-  // Handle navigation
+  // Handle navigation with proper batching
   const handleTotalClientsClick = () => {
+    // Set loading state immediately
     setLoadingState("total");
     
-    // Use requestAnimationFrame for smoother performance
-    requestAnimationFrame(() => {
+    // Use a more responsive approach with state batching
+    Promise.resolve().then(() => {
+      // Reset search and filters first to reduce rendering load
+      setSearchQuery("");
+      setSearchFilter("all");
+      
+      // Then update the main state
       setView("total");
       setSelectedState(null);
       setSelectedDistrict(null);
