@@ -148,7 +148,6 @@ export default function ClientManagement() {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchFilter, setSearchFilter] = useState<"all" | "id" | "name" | "email" | "mobile" | "location">("all");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [sidebarToggling, setSidebarToggling] = useState(false);
   const [loadingState, setLoadingState] = useState<string | null>(null);
   
   // Modal states
@@ -399,15 +398,7 @@ export default function ClientManagement() {
     }
   };
 
-  const handleSidebarToggle = async () => {
-    setSidebarToggling(true);
-    
-    // Add a small delay to show the loading state
-    setTimeout(() => {
-      setSidebarCollapsed(!sidebarCollapsed);
-      setSidebarToggling(false);
-    }, 200);
-  };
+
 
   if (!user || (user.role !== "admin" && user.role !== "super_admin")) {
     return <div>Access denied</div>;
@@ -430,15 +421,10 @@ export default function ClientManagement() {
             <Button
               variant="ghost"
               size="icon"
-              onClick={handleSidebarToggle}
-              disabled={sidebarToggling}
+              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
               className="flex items-center justify-center w-8 h-8"
             >
-              {sidebarToggling ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Menu className="w-4 h-4" />
-              )}
+              <Menu className="w-4 h-4" />
             </Button>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Client Management</h1>
           </div>
