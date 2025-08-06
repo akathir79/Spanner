@@ -581,7 +581,7 @@ export default function ClientManagement() {
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead className="w-[180px]">User</TableHead>
+                          <TableHead className="w-[160px]">User</TableHead>
                           <TableHead className="w-[80px]">Role</TableHead>
                           <TableHead className="w-[150px]">Location</TableHead>
                           <TableHead className="w-[120px]">Bookings/Earnings</TableHead>
@@ -856,7 +856,7 @@ export default function ClientManagement() {
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead className="w-[180px]">User</TableHead>
+                          <TableHead className="w-[160px]">User</TableHead>
                           <TableHead className="w-[80px]">Role</TableHead>
                           <TableHead className="w-[150px]">Location</TableHead>
                           <TableHead className="w-[120px]">Bookings/Earnings</TableHead>
