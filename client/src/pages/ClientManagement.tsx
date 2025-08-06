@@ -813,10 +813,14 @@ export default function ClientManagement() {
                                       handleViewFinancialStatements(client);
                                     }}
                                     onMouseEnter={(e) => {
-                                      e.currentTarget.querySelector('span')?.classList.add('animate-financial-bounce');
-                                      setTimeout(() => {
-                                        e.currentTarget.querySelector('span')?.classList.remove('animate-financial-bounce');
-                                      }, 600);
+                                      const button = e.currentTarget;
+                                      const span = button.querySelector('span');
+                                      if (span) {
+                                        span.classList.add('animate-financial-bounce');
+                                        setTimeout(() => {
+                                          span.classList.remove('animate-financial-bounce');
+                                        }, 600);
+                                      }
                                     }}
                                     title="Financial Statements"
                                   >
@@ -1494,10 +1498,14 @@ export default function ClientManagement() {
                                         handleViewFinancialStatements(client);
                                       }}
                                       onMouseEnter={(e) => {
-                                        e.currentTarget.querySelector('span')?.classList.add('animate-financial-bounce');
-                                        setTimeout(() => {
-                                          e.currentTarget.querySelector('span')?.classList.remove('animate-financial-bounce');
-                                        }, 600);
+                                        const button = e.currentTarget;
+                                        const span = button.querySelector('span');
+                                        if (span) {
+                                          span.classList.add('animate-financial-bounce');
+                                          setTimeout(() => {
+                                            span.classList.remove('animate-financial-bounce');
+                                          }, 600);
+                                        }
                                       }}
                                       title="Financial Statements"
                                     >
