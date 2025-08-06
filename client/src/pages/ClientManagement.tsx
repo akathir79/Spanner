@@ -607,7 +607,6 @@ export default function ClientManagement() {
                           <TableHead className="w-[120px]">Bookings/Earnings</TableHead>
                           <TableHead className="w-[130px]">Contact</TableHead>
                           <TableHead className="w-[140px]">Registration Date</TableHead>
-                          <TableHead className="w-[130px]">Last Login</TableHead>
                           <TableHead className="w-[90px]">Status</TableHead>
                           <TableHead className="w-[50px]"></TableHead>
                         </TableRow>
@@ -625,7 +624,7 @@ export default function ClientManagement() {
                                 <div className="text-sm text-green-800 dark:text-green-400 font-mono font-bold">
                                   ID: {client.id}
                                 </div>
-                                <div className="mt-1">
+                                <div className="mt-1 space-y-1">
                                   <Badge 
                                     variant={activityStatus.variant}
                                     className={activityStatus.className}
@@ -633,6 +632,15 @@ export default function ClientManagement() {
                                     {activityStatus.icon}
                                     <span className="ml-1">{activityStatus.label}</span>
                                   </Badge>
+                                  {client.lastLoginAt ? (
+                                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                                      Last: {formatIndianDateTime(client.lastLoginAt)}
+                                    </div>
+                                  ) : (
+                                    <div className="text-xs text-gray-400 dark:text-gray-500 italic">
+                                      Never logged in
+                                    </div>
+                                  )}
                                 </div>
                               </div>
                             </TableCell>
@@ -680,19 +688,6 @@ export default function ClientManagement() {
                                   <Calendar className="w-3 h-3" />
                                   <span>{formatIndianDateTime(client.createdAt)}</span>
                                 </div>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <div className="text-sm space-y-1">
-                                {client.lastLoginAt ? (
-                                  <div className="text-gray-600 dark:text-gray-400">
-                                    {formatIndianDateTime(client.lastLoginAt)}
-                                  </div>
-                                ) : (
-                                  <div className="text-gray-400 dark:text-gray-500 italic">
-                                    Never logged in
-                                  </div>
-                                )}
                               </div>
                             </TableCell>
                             <TableCell>
@@ -904,7 +899,6 @@ export default function ClientManagement() {
                           <TableHead className="w-[120px]">Bookings/Earnings</TableHead>
                           <TableHead className="w-[130px]">Contact</TableHead>
                           <TableHead className="w-[140px]">Registration Date</TableHead>
-                          <TableHead className="w-[130px]">Last Login</TableHead>
                           <TableHead className="w-[90px]">Status</TableHead>
                           <TableHead className="w-[50px]"></TableHead>
                         </TableRow>
@@ -922,7 +916,7 @@ export default function ClientManagement() {
                                   <div className="text-sm text-green-800 dark:text-green-400 font-mono font-bold">
                                     ID: {client.id}
                                   </div>
-                                  <div className="mt-1">
+                                  <div className="mt-1 space-y-1">
                                     <Badge 
                                       variant={activityStatus.variant}
                                       className={activityStatus.className}
@@ -930,6 +924,15 @@ export default function ClientManagement() {
                                       {activityStatus.icon}
                                       <span className="ml-1">{activityStatus.label}</span>
                                     </Badge>
+                                    {client.lastLoginAt ? (
+                                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                                        Last: {formatIndianDateTime(client.lastLoginAt)}
+                                      </div>
+                                    ) : (
+                                      <div className="text-xs text-gray-400 dark:text-gray-500 italic">
+                                        Never logged in
+                                      </div>
+                                    )}
                                   </div>
                                 </div>
                               </TableCell>
@@ -977,19 +980,6 @@ export default function ClientManagement() {
                                     <Calendar className="w-3 h-3" />
                                     <span>{formatIndianDateTime(client.createdAt)}</span>
                                   </div>
-                                </div>
-                              </TableCell>
-                              <TableCell>
-                                <div className="text-sm space-y-1">
-                                  {client.lastLoginAt ? (
-                                    <div className="text-gray-600 dark:text-gray-400">
-                                      {formatIndianDateTime(client.lastLoginAt)}
-                                    </div>
-                                  ) : (
-                                    <div className="text-gray-400 dark:text-gray-500 italic">
-                                      Never logged in
-                                    </div>
-                                  )}
                                 </div>
                               </TableCell>
                               <TableCell>
