@@ -201,9 +201,18 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateUser(id: string, updates: Partial<User>): Promise<User | undefined> {
+    // Ensure updatedAt is properly set as a Date object
+    const updateData = {
+      ...updates,
+      updatedAt: new Date()
+    };
+
+    // Remove any timestamp fields that might not be proper Date objects
+    delete (updateData as any).createdAt;
+    
     const [user] = await db
       .update(users)
-      .set({ ...updates, updatedAt: new Date() })
+      .set(updateData)
       .where(eq(users.id, id))
       .returning();
     return user || undefined;

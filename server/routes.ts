@@ -1226,10 +1226,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "User not found" });
       }
 
-      // Remove undefined/null fields
+      // Remove undefined/null/empty fields and filter allowed fields
+      const allowedFields = ['firstName', 'lastName', 'email', 'mobile', 'address', 'profilePicture'];
       const cleanData = Object.fromEntries(
-        Object.entries(updateData).filter(([_, value]) => value !== undefined && value !== null && value !== "")
+        Object.entries(updateData)
+          .filter(([key, value]) => 
+            allowedFields.includes(key) && 
+            value !== undefined && 
+            value !== null && 
+            value !== ""
+          )
       );
+
+      // Only update if there's data to update
+      if (Object.keys(cleanData).length === 0) {
+        return res.status(400).json({ error: "No valid fields to update" });
+      }
 
       // Update user
       const updatedUser = await storage.updateUser(id, cleanData);
