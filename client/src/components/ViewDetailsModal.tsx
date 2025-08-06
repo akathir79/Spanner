@@ -242,46 +242,15 @@ export default function ViewDetailsModal({
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="sm:max-w-2xl max-h-[95vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-4xl max-h-[95vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-xl font-semibold">{title}</DialogTitle>
             {subtitle && <p className="text-muted-foreground">{subtitle}</p>}
           </DialogHeader>
 
           <div className="space-y-6">
-            {/* Avatar Section */}
-            {avatar && (
-              <div className="text-center">
-                {renderField({ key: 'avatar', label: 'Avatar', type: 'avatar' })}
-              </div>
-            )}
-
-            {/* Render grouped sections */}
-            {Object.entries(groupedFields).map(([sectionName, sectionFields]) => (
-              <div key={sectionName}>
-                {sectionName !== 'main' && (
-                  <h3 className="text-lg font-medium mb-3 capitalize border-b pb-2">
-                    {sectionName.replace(/([A-Z])/g, ' $1').trim()}
-                  </h3>
-                )}
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {sectionFields.map((field) => (
-                    <div key={field.key} className={field.type === 'textarea' ? 'md:col-span-2' : ''}>
-                      <Label className="text-sm font-medium text-muted-foreground">
-                        {field.label}
-                      </Label>
-                      <div className="mt-1">
-                        {renderField(field)}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-
-            {/* Action buttons */}
-            <div className="flex flex-wrap gap-2 pt-4 border-t">
+            {/* Action buttons at the top */}
+            <div className="flex flex-wrap gap-2 pb-4 border-b">
               {isEditing ? (
                 <>
                   <Button
@@ -330,6 +299,37 @@ export default function ViewDetailsModal({
                 </>
               )}
             </div>
+
+            {/* Avatar Section */}
+            {avatar && (
+              <div className="text-center">
+                {renderField({ key: 'avatar', label: 'Avatar', type: 'avatar' })}
+              </div>
+            )}
+
+            {/* Render grouped sections */}
+            {Object.entries(groupedFields).map(([sectionName, sectionFields]) => (
+              <div key={sectionName}>
+                {sectionName !== 'main' && (
+                  <h3 className="text-lg font-medium mb-3 capitalize border-b pb-2">
+                    {sectionName.replace(/([A-Z])/g, ' $1').trim()}
+                  </h3>
+                )}
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {sectionFields.map((field) => (
+                    <div key={field.key} className={field.type === 'textarea' ? 'md:col-span-2' : ''}>
+                      <Label className="text-sm font-medium text-muted-foreground">
+                        {field.label}
+                      </Label>
+                      <div className="mt-1">
+                        {renderField(field)}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
         </DialogContent>
       </Dialog>
