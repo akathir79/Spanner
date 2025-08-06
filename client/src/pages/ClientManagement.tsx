@@ -29,7 +29,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ArrowLeft, Phone, Mail, Calendar, MoreHorizontal, Eye, MessageSquare, CheckCircle, XCircle, Trash2, Edit } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { ArrowLeft, Phone, Mail, Calendar, MoreHorizontal, Eye, MessageSquare, CheckCircle, XCircle, Trash2, Edit, AlertCircle } from "lucide-react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import statesDistrictsData from "@/../../shared/states-districts.json";
@@ -811,20 +812,114 @@ export default function ClientManagement() {
                 </div>
               </div>
 
-              {/* Location Information */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="state">State</Label>
-                  <p className="text-sm font-medium text-gray-900 dark:text-white p-2 bg-gray-50 dark:bg-gray-800 rounded">
-                    {selectedClient.state || "Not specified"}
-                  </p>
+              {/* Address Information */}
+              <div className="space-y-4">
+                <h4 className="font-medium text-gray-900 dark:text-white mb-3">Address Information</h4>
+                <div className="grid grid-cols-1 gap-4">
+                  <div>
+                    <Label htmlFor="fullAddress">Full Address</Label>
+                    {isEditMode ? (
+                      <Textarea
+                        id="fullAddress"
+                        rows={3}
+                        value={editFormData.address || ""}
+                        onChange={(e) => setEditFormData({...editFormData, address: e.target.value})}
+                        placeholder="Enter complete address"
+                      />
+                    ) : (
+                      <p className="text-sm font-medium text-gray-900 dark:text-white p-2 bg-gray-50 dark:bg-gray-800 rounded min-h-[60px]">
+                        {selectedClient.address || "Address not provided"}
+                      </p>
+                    )}
+                  </div>
                 </div>
-                <div>
-                  <Label htmlFor="district">District</Label>
-                  <p className="text-sm font-medium text-gray-900 dark:text-white p-2 bg-gray-50 dark:bg-gray-800 rounded">
-                    {selectedClient.district || "Not specified"}
-                  </p>
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <Label htmlFor="state">State</Label>
+                    {isEditMode ? (
+                      <Input
+                        id="state"
+                        value={editFormData.state || ""}
+                        onChange={(e) => setEditFormData({...editFormData, state: e.target.value})}
+                        placeholder="State"
+                      />
+                    ) : (
+                      <p className="text-sm font-medium text-gray-900 dark:text-white p-2 bg-gray-50 dark:bg-gray-800 rounded">
+                        {selectedClient.state || "Not specified"}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <Label htmlFor="district">District</Label>
+                    {isEditMode ? (
+                      <Input
+                        id="district"
+                        value={editFormData.district || ""}
+                        onChange={(e) => setEditFormData({...editFormData, district: e.target.value})}
+                        placeholder="District"
+                      />
+                    ) : (
+                      <p className="text-sm font-medium text-gray-900 dark:text-white p-2 bg-gray-50 dark:bg-gray-800 rounded">
+                        {selectedClient.district || "Not specified"}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <Label htmlFor="pincode">Pincode</Label>
+                    {isEditMode ? (
+                      <Input
+                        id="pincode"
+                        value={editFormData.pincode || ""}
+                        onChange={(e) => setEditFormData({...editFormData, pincode: e.target.value})}
+                        placeholder="Pincode"
+                        maxLength={6}
+                      />
+                    ) : (
+                      <p className="text-sm font-medium text-gray-900 dark:text-white p-2 bg-gray-50 dark:bg-gray-800 rounded">
+                        {selectedClient.pincode || "Not provided"}
+                      </p>
+                    )}
+                  </div>
                 </div>
+              </div>
+
+              {/* Bank Details Information */}
+              <div className="space-y-4">
+                <h4 className="font-medium text-gray-900 dark:text-white mb-3">Bank Details</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="bankAccountNumber">Account Number</Label>
+                    <p className="text-sm font-medium text-gray-900 dark:text-white p-2 bg-gray-50 dark:bg-gray-800 rounded">
+                      {selectedClient.bankAccountNumber ? "••••••••••••" + selectedClient.bankAccountNumber.slice(-4) : "Not provided"}
+                    </p>
+                  </div>
+                  <div>
+                    <Label htmlFor="bankIFSC">IFSC Code</Label>
+                    <p className="text-sm font-medium text-gray-900 dark:text-white p-2 bg-gray-50 dark:bg-gray-800 rounded">
+                      {selectedClient.bankIFSC || "Not provided"}
+                    </p>
+                  </div>
+                  <div>
+                    <Label htmlFor="bankAccountHolderName">Account Holder Name</Label>
+                    <p className="text-sm font-medium text-gray-900 dark:text-white p-2 bg-gray-50 dark:bg-gray-800 rounded">
+                      {selectedClient.bankAccountHolderName || "Not provided"}
+                    </p>
+                  </div>
+                  <div>
+                    <Label htmlFor="bankName">Bank Name</Label>
+                    <p className="text-sm font-medium text-gray-900 dark:text-white p-2 bg-gray-50 dark:bg-gray-800 rounded">
+                      {selectedClient.bankName || "Not provided"}
+                    </p>
+                  </div>
+                </div>
+                {(!selectedClient.bankAccountNumber) && (
+                  <Alert>
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>
+                      Bank details not provided. Client can add these in their dashboard.
+                    </AlertDescription>
+                  </Alert>
+                )}
               </div>
 
               {/* Status Information */}

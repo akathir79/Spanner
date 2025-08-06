@@ -1101,6 +1101,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update user bank details endpoint
+  app.put("/api/users/:userId/bank-details", async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const {
+        bankAccountNumber,
+        bankIFSC,
+        bankAccountHolderName,
+        bankName,
+        bankBranch,
+        bankAccountType
+      } = req.body;
+
+      // Validate required fields
+      if (!bankAccountNumber || !bankIFSC || !bankAccountHolderName || !bankAccountType) {
+        return res.status(400).json({ error: "Missing required bank details" });
+      }
+
+      // Validate IFSC format
+      if (bankIFSC.length !== 11) {
+        return res.status(400).json({ error: "Invalid IFSC code format" });
+      }
+
+      await storage.updateUser(userId, {
+        bankAccountNumber,
+        bankIFSC,
+        bankAccountHolderName,
+        bankName,
+        bankBranch,
+        bankAccountType
+      });
+
+      res.json({ message: "Bank details updated successfully" });
+    } catch (error) {
+      console.error("Error updating bank details:", error);
+      res.status(500).json({ error: "Failed to update bank details" });
+    }
+  });
+
   // Job postings routes
   app.get("/api/job-postings", async (req, res) => {
     try {

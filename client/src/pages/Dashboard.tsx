@@ -34,10 +34,12 @@ import {
   X,
   MapPin as MapPinIcon,
   Users,
-  DollarSign
+  DollarSign,
+  CreditCard
 } from "lucide-react";
 import { useLocation } from "wouter";
 import LocationViewer from "@/components/LocationViewer";
+import ClientBankDetailsForm from "@/components/ClientBankDetailsForm";
 // Services and districts are now fetched dynamically from database
 
 // Job posting form component
@@ -1531,6 +1533,97 @@ export default function Dashboard() {
                   )}
                 </CardContent>
               </Card>
+            </div>
+          </TabsContent>
+
+          {/* Profile Tab */}
+          <TabsContent value="profile" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* User Profile Information */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <User className="w-5 h-5" />
+                    Profile Information
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-3">
+                    <div>
+                      <Label className="text-sm font-medium text-muted-foreground">Name</Label>
+                      <p className="font-medium">{user?.firstName} {user?.lastName}</p>
+                    </div>
+                    <div>
+                      <Label className="text-sm font-medium text-muted-foreground">Email</Label>
+                      <p className="font-medium">{user?.email || 'Not provided'}</p>
+                    </div>
+                    <div>
+                      <Label className="text-sm font-medium text-muted-foreground">Mobile</Label>
+                      <p className="font-medium">{user?.mobile}</p>
+                    </div>
+                    <div>
+                      <Label className="text-sm font-medium text-muted-foreground">User ID</Label>
+                      <p className="font-medium text-xs bg-muted px-2 py-1 rounded">{user?.id}</p>
+                    </div>
+                    <div>
+                      <Label className="text-sm font-medium text-muted-foreground">Account Status</Label>
+                      <div className="flex items-center gap-2">
+                        {user?.isVerified ? (
+                          <Badge variant="default" className="bg-green-500">
+                            <CheckCircle className="w-3 h-3 mr-1" />
+                            Verified
+                          </Badge>
+                        ) : (
+                          <Badge variant="secondary">
+                            <AlertCircle className="w-3 h-3 mr-1" />
+                            Pending Verification
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                    {user?.fullAddress && (
+                      <div>
+                        <Label className="text-sm font-medium text-muted-foreground">Address</Label>
+                        <p className="font-medium">{user.fullAddress}</p>
+                        {user.district && user.state && (
+                          <p className="text-sm text-muted-foreground">
+                            {user.district}, {user.state} - {user.pincode || 'No pincode'}
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Bank Details Section */}
+              <div className="space-y-6">
+                {/* Bank Details Notice */}
+                {(!user?.bankAccountNumber) && (
+                  <Alert>
+                    <CreditCard className="h-4 w-4" />
+                    <AlertDescription>
+                      <strong>Complete your profile:</strong> Add your bank details for faster payment processing when using our services.
+                    </AlertDescription>
+                  </Alert>
+                )}
+
+                {/* Bank Details Form */}
+                <ClientBankDetailsForm
+                  userId={user?.id || ''}
+                  existingDetails={{
+                    bankAccountNumber: user?.bankAccountNumber,
+                    bankIFSC: user?.bankIFSC,
+                    bankAccountHolderName: user?.bankAccountHolderName,
+                    bankName: user?.bankName,
+                    bankBranch: user?.bankBranch,
+                    bankAccountType: user?.bankAccountType,
+                  }}
+                  onSuccess={() => {
+                    queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+                  }}
+                />
+              </div>
             </div>
           </TabsContent>
 

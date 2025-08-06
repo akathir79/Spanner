@@ -30,6 +30,13 @@ export const users = pgTable("users", {
   address: text("address"), // Physical address
   pincode: text("pincode"), // Area pincode
   state: text("state"), // State name
+  // Bank details for clients (added to dashboard only, not registration)
+  bankAccountNumber: text("bank_account_number"),
+  bankIFSC: text("bank_ifsc"),
+  bankAccountHolderName: text("bank_account_holder_name"),
+  bankName: text("bank_name"),
+  bankBranch: text("bank_branch"),
+  bankAccountType: text("bank_account_type"), // savings, current
   isVerified: boolean("is_verified").default(false),
   isActive: boolean("is_active").default(true),
   status: text("status").default("pending"), // pending, approved, rejected (for worker approval workflow)
