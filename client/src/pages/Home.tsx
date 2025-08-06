@@ -200,21 +200,6 @@ export default function Home() {
   const { user, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
-
-  // For authenticated users, show a redirect message instead of the home page
-  if (user && window.location.pathname === '/') {
-    const userRole = user.role;
-    if (userRole === "admin" || userRole === "super_admin") {
-      setLocation("/admin-dashboard");
-      return null;
-    } else if (userRole === "worker") {
-      setLocation("/worker-dashboard");
-      return null;
-    } else if (userRole === "client") {
-      setLocation("/dashboard");
-      return null;
-    }
-  }
   const [searchForm, setSearchForm] = useState({
     service: "",
     state: "",
@@ -602,6 +587,21 @@ export default function Home() {
     console.log("District clicked:", districtName);
     // Filter workers by district
   };
+
+  // Authentication checks - MUST be after all hooks
+  if (user && window.location.pathname === '/') {
+    const userRole = user.role;
+    if (userRole === "admin" || userRole === "super_admin") {
+      setLocation("/admin-dashboard");
+      return null;
+    } else if (userRole === "worker") {
+      setLocation("/worker-dashboard");
+      return null;
+    } else if (userRole === "client") {
+      setLocation("/dashboard");
+      return null;
+    }
+  }
 
   return (
     <div className="min-h-screen">
