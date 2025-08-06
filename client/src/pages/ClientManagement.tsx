@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger } from "@/components/ui/dropdown-menu";
 import {
   Dialog,
   DialogContent,
@@ -31,7 +31,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { ArrowLeft, Phone, Mail, Calendar, MoreHorizontal, Eye, MessageSquare, CheckCircle, XCircle, Trash2, Edit, AlertCircle, Search, X, Menu, Loader2 } from "lucide-react";
+import { ArrowLeft, Phone, Mail, Calendar, MoreHorizontal, Eye, MessageSquare, CheckCircle, XCircle, Trash2, Edit, AlertCircle, Search, X, Menu, Loader2, MessageCircle, Smartphone } from "lucide-react";
 import { format } from "date-fns";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
@@ -326,6 +326,26 @@ export default function ClientManagement() {
   const handleSendMessage = (client: User) => {
     setSelectedClient(client);
     setShowMessageDialog(true);
+  };
+
+  const handleSendDirectMessage = (client: User) => {
+    setSelectedClient(client);
+    setShowMessageDialog(true);
+  };
+
+  const handleSendSMS = (client: User) => {
+    // Handle SMS functionality
+    toast({
+      title: "SMS Feature",
+      description: `SMS will be sent to ${client.firstName} ${client.lastName} (${client.mobile})`,
+    });
+  };
+
+  const handleSendWhatsApp = (client: User) => {
+    // Handle WhatsApp functionality - open WhatsApp with phone number
+    const phoneNumber = client.mobile.replace(/\D/g, ''); // Remove non-digits
+    const whatsappUrl = `https://wa.me/${phoneNumber}`;
+    window.open(whatsappUrl, '_blank');
   };
 
   const handleVerifyUser = (client: User) => {
@@ -689,10 +709,26 @@ export default function ClientManagement() {
                                     <Eye className="w-4 h-4 mr-2" />
                                     View Details
                                   </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => handleSendMessage(client)}>
-                                    <MessageSquare className="w-4 h-4 mr-2" />
-                                    Send Message
-                                  </DropdownMenuItem>
+                                  <DropdownMenuSub>
+                                    <DropdownMenuSubTrigger>
+                                      <MessageSquare className="w-4 h-4 mr-2" />
+                                      Send Message
+                                    </DropdownMenuSubTrigger>
+                                    <DropdownMenuSubContent>
+                                      <DropdownMenuItem onClick={() => handleSendDirectMessage(client)}>
+                                        <MessageCircle className="w-4 h-4 mr-2" />
+                                        Message
+                                      </DropdownMenuItem>
+                                      <DropdownMenuItem onClick={() => handleSendSMS(client)}>
+                                        <Smartphone className="w-4 h-4 mr-2" />
+                                        SMS
+                                      </DropdownMenuItem>
+                                      <DropdownMenuItem onClick={() => handleSendWhatsApp(client)}>
+                                        <Phone className="w-4 h-4 mr-2 text-green-600" />
+                                        <span className="text-green-600">WhatsApp</span>
+                                      </DropdownMenuItem>
+                                    </DropdownMenuSubContent>
+                                  </DropdownMenuSub>
                                   <DropdownMenuItem onClick={() => handleVerifyUser(client)}>
                                     <CheckCircle className="w-4 h-4 mr-2 text-green-600" />
                                     <span className="text-green-600">Verify User</span>
@@ -964,10 +1000,26 @@ export default function ClientManagement() {
                                       <Eye className="w-4 h-4 mr-2" />
                                       View Details
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => handleSendMessage(client)}>
-                                      <MessageSquare className="w-4 h-4 mr-2" />
-                                      Send Message
-                                    </DropdownMenuItem>
+                                    <DropdownMenuSub>
+                                      <DropdownMenuSubTrigger>
+                                        <MessageSquare className="w-4 h-4 mr-2" />
+                                        Send Message
+                                      </DropdownMenuSubTrigger>
+                                      <DropdownMenuSubContent>
+                                        <DropdownMenuItem onClick={() => handleSendDirectMessage(client)}>
+                                          <MessageCircle className="w-4 h-4 mr-2" />
+                                          Message
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => handleSendSMS(client)}>
+                                          <Smartphone className="w-4 h-4 mr-2" />
+                                          SMS
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => handleSendWhatsApp(client)}>
+                                          <Phone className="w-4 h-4 mr-2 text-green-600" />
+                                          <span className="text-green-600">WhatsApp</span>
+                                        </DropdownMenuItem>
+                                      </DropdownMenuSubContent>
+                                    </DropdownMenuSub>
                                     <DropdownMenuItem onClick={() => handleVerifyUser(client)}>
                                       <CheckCircle className="w-4 h-4 mr-2 text-green-600" />
                                       <span className="text-green-600">Verify User</span>
