@@ -32,7 +32,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { ArrowLeft, Phone, Mail, Calendar, MoreHorizontal, Eye, MessageSquare, CheckCircle, XCircle, Trash2, Edit, AlertCircle, Search, X, Menu, Loader2, MessageCircle, Smartphone, CreditCard, Send, ArrowRightLeft, History, DollarSign } from "lucide-react";
+import { ArrowLeft, Phone, Mail, Calendar, MoreHorizontal, Eye, MessageSquare, CheckCircle, XCircle, Trash2, Edit, AlertCircle, Search, X, Menu, Loader2, MessageCircle, Smartphone, CreditCard, Send, ArrowRightLeft, History, DollarSign, Filter } from "lucide-react";
 import { format } from "date-fns";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
@@ -157,6 +157,33 @@ function getActivityStatus(lastLoginAt?: string, createdAt?: string) {
   };
 }
 
+// Helper function to get user status category for filtering
+function getUserStatusCategory(client: User): string {
+  if (!client.lastLoginAt) {
+    // Check if user was created recently (within 24 hours)
+    if (client.createdAt) {
+      const created = new Date(client.createdAt);
+      const now = new Date();
+      const hoursSinceCreation = (now.getTime() - created.getTime()) / (1000 * 60 * 60);
+      
+      if (hoursSinceCreation < 24) {
+        return "just_registered";
+      }
+    }
+    return "no_login";
+  }
+
+  const lastLogin = new Date(client.lastLoginAt);
+  const now = new Date();
+  const daysSinceLogin = Math.floor((now.getTime() - lastLogin.getTime()) / (1000 * 60 * 60 * 24));
+
+  if (daysSinceLogin > 15) {
+    return "inactive";
+  }
+
+  return "active";
+}
+
 export default function ClientManagement() {
   const [, setLocation] = useLocation();
   const { user } = useAuth();
@@ -172,6 +199,7 @@ export default function ClientManagement() {
   // Search and pagination states
   const [searchQuery, setSearchQuery] = useState("");
   const [searchFilter, setSearchFilter] = useState<"all" | "id" | "name" | "email" | "mobile" | "location">("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive" | "no_login" | "just_registered" | "verified" | "unverified">("all");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [loadingState, setLoadingState] = useState<string | null>(null);
   
@@ -226,10 +254,37 @@ export default function ClientManagement() {
 
   // Filtered clients (without pagination)
   const filteredClients = useMemo(() => {
-    if (!searchQuery.trim()) return allClients;
+    let filtered = allClients;
+
+    // Apply status filter
+    if (statusFilter !== "all") {
+      filtered = filtered.filter(client => {
+        const userStatus = getUserStatusCategory(client);
+        
+        switch (statusFilter) {
+          case "active":
+            return userStatus === "active";
+          case "inactive":
+            return userStatus === "inactive";
+          case "no_login":
+            return userStatus === "no_login";
+          case "just_registered":
+            return userStatus === "just_registered";
+          case "verified":
+            return client.isVerified === true;
+          case "unverified":
+            return client.isVerified === false;
+          default:
+            return true;
+        }
+      });
+    }
+
+    // Apply search filter
+    if (!searchQuery.trim()) return filtered;
 
     const query = searchQuery.toLowerCase().trim();
-    return allClients.filter(client => {
+    return filtered.filter(client => {
       switch (searchFilter) {
         case "id":
           return client.id.toLowerCase().includes(query);
@@ -254,7 +309,7 @@ export default function ClientManagement() {
           );
       }
     });
-  }, [allClients, searchQuery, searchFilter]);
+  }, [allClients, searchQuery, searchFilter, statusFilter]);
 
   // Paginated clients for current view
   const clients = useMemo(() => {
@@ -296,7 +351,31 @@ export default function ClientManagement() {
   const filteredDistrictClients = useMemo(() => {
     if (!selectedDistrict) return [];
     
-    const districtClients = allClients.filter((client: User) => client.district === selectedDistrict);
+    let districtClients = allClients.filter((client: User) => client.district === selectedDistrict);
+    
+    // Apply status filter
+    if (statusFilter !== "all") {
+      districtClients = districtClients.filter(client => {
+        const userStatus = getUserStatusCategory(client);
+        
+        switch (statusFilter) {
+          case "active":
+            return userStatus === "active";
+          case "inactive":
+            return userStatus === "inactive";
+          case "no_login":
+            return userStatus === "no_login";
+          case "just_registered":
+            return userStatus === "just_registered";
+          case "verified":
+            return client.isVerified === true;
+          case "unverified":
+            return client.isVerified === false;
+          default:
+            return true;
+        }
+      });
+    }
     
     if (!searchQuery.trim()) return districtClients;
 
@@ -326,7 +405,7 @@ export default function ClientManagement() {
           );
       }
     });
-  }, [allClients, selectedDistrict, searchQuery, searchFilter]);
+  }, [allClients, selectedDistrict, searchQuery, searchFilter, statusFilter]);
 
   // Paginated district clients for current view
   const clientsForDistrict = useMemo(() => {
@@ -713,7 +792,7 @@ export default function ClientManagement() {
                       All Registered Clients
                     </h2>
                     <p className="text-gray-600 dark:text-gray-400">
-                      Complete client database • {filteredClients.length} total clients • Showing {((currentPage - 1) * pageSize) + 1}-{Math.min(currentPage * pageSize, filteredClients.length)} of {filteredClients.length} {searchQuery && `filtered results`}
+                      Complete client database • {filteredClients.length} total clients • Showing {((currentPage - 1) * pageSize) + 1}-{Math.min(currentPage * pageSize, filteredClients.length)} of {filteredClients.length} {(searchQuery || statusFilter !== 'all') ? `filtered results` : ''}
                     </p>
                   </div>
                   
@@ -778,7 +857,28 @@ export default function ClientManagement() {
                           <TableHead className="w-[140px]">Bookings/Earnings</TableHead>
                           <TableHead className="w-[140px]">Contact</TableHead>
                           <TableHead className="w-[130px]">Bank Details</TableHead>
-                          <TableHead className="w-[90px]">Status</TableHead>
+                          <TableHead className="w-[90px]">
+                            <div className="flex items-center gap-1">
+                              <span>Status</span>
+                              <Select value={statusFilter} onValueChange={(value) => {
+                                setStatusFilter(value as any);
+                                setCurrentPage(1); // Reset to first page when filtering
+                              }}>
+                                <SelectTrigger className="w-6 h-6 p-0 border-none bg-transparent">
+                                  <Filter className="w-3 h-3" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="all">All Status</SelectItem>
+                                  <SelectItem value="active">Active</SelectItem>
+                                  <SelectItem value="inactive">Inactive</SelectItem>
+                                  <SelectItem value="no_login">No Login</SelectItem>
+                                  <SelectItem value="just_registered">Just Registered</SelectItem>
+                                  <SelectItem value="verified">Verified</SelectItem>
+                                  <SelectItem value="unverified">Unverified</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </TableHead>
                           <TableHead className="w-[50px]"></TableHead>
                         </TableRow>
                       </TableHeader>
@@ -1450,7 +1550,28 @@ export default function ClientManagement() {
                           <TableHead className="w-[140px]">Bookings/Earnings</TableHead>
                           <TableHead className="w-[140px]">Contact</TableHead>
                           <TableHead className="w-[130px]">Bank Details</TableHead>
-                          <TableHead className="w-[90px]">Status</TableHead>
+                          <TableHead className="w-[90px]">
+                            <div className="flex items-center gap-1">
+                              <span>Status</span>
+                              <Select value={statusFilter} onValueChange={(value) => {
+                                setStatusFilter(value as any);
+                                setDistrictCurrentPage(1); // Reset to first page when filtering
+                              }}>
+                                <SelectTrigger className="w-6 h-6 p-0 border-none bg-transparent">
+                                  <Filter className="w-3 h-3" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="all">All Status</SelectItem>
+                                  <SelectItem value="active">Active</SelectItem>
+                                  <SelectItem value="inactive">Inactive</SelectItem>
+                                  <SelectItem value="no_login">No Login</SelectItem>
+                                  <SelectItem value="just_registered">Just Registered</SelectItem>
+                                  <SelectItem value="verified">Verified</SelectItem>
+                                  <SelectItem value="unverified">Unverified</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </TableHead>
                           <TableHead className="w-[50px]"></TableHead>
                         </TableRow>
                       </TableHeader>
