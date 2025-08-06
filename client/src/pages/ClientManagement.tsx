@@ -1,10 +1,31 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, Phone, Mail, Calendar, MoreHorizontal, Eye, MessageSquare, CheckCircle, XCircle, Trash2 } from "lucide-react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
@@ -37,9 +58,18 @@ interface StateData {
 export default function ClientManagement() {
   const [, setLocation] = useLocation();
   const { user } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [selectedState, setSelectedState] = useState<string | null>(null);
   const [selectedDistrict, setSelectedDistrict] = useState<string | null>(null);
   const [view, setView] = useState<"total" | "states" | "districts" | "clients">("states");
+  
+  // Modal states
+  const [selectedClient, setSelectedClient] = useState<User | null>(null);
+  const [showDetailsDialog, setShowDetailsDialog] = useState(false);
+  const [showMessageDialog, setShowMessageDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [messageText, setMessageText] = useState("");
 
   // Fetch all users
   const { data: users = [], isLoading: usersLoading } = useQuery({
@@ -78,6 +108,139 @@ export default function ClientManagement() {
   // Get client count for each district from database
   const getClientCountForDistrict = (districtName: string) => {
     return clients.filter((client: User) => client.district === districtName).length;
+  };
+
+  // Mutations for client actions
+  const verifyUserMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      return await apiRequest(`/api/admin/verify-user/${userId}`, {
+        method: "PUT",
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      toast({
+        title: "Success",
+        description: "User verified successfully",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to verify user",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const suspendUserMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      return await apiRequest(`/api/admin/suspend-user/${userId}`, {
+        method: "PUT",
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      toast({
+        title: "Success",
+        description: "User suspended successfully",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to suspend user",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteUserMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      return await apiRequest(`/api/admin/delete-user/${userId}`, {
+        method: "DELETE",
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      setShowDeleteDialog(false);
+      setSelectedClient(null);
+      toast({
+        title: "Success",
+        description: "User deleted successfully",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to delete user",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const sendMessageMutation = useMutation({
+    mutationFn: async ({ userId, message }: { userId: string; message: string }) => {
+      return await apiRequest("/api/admin/send-message", {
+        method: "POST",
+        body: { userId, message },
+      });
+    },
+    onSuccess: () => {
+      setShowMessageDialog(false);
+      setMessageText("");
+      setSelectedClient(null);
+      toast({
+        title: "Success",
+        description: "Message sent successfully",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to send message",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Action handlers
+  const handleViewDetails = (client: User) => {
+    setSelectedClient(client);
+    setShowDetailsDialog(true);
+  };
+
+  const handleSendMessage = (client: User) => {
+    setSelectedClient(client);
+    setShowMessageDialog(true);
+  };
+
+  const handleVerifyUser = (client: User) => {
+    verifyUserMutation.mutate(client.id);
+  };
+
+  const handleSuspendUser = (client: User) => {
+    suspendUserMutation.mutate(client.id);
+  };
+
+  const handleDeleteUser = (client: User) => {
+    setSelectedClient(client);
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDeleteUser = () => {
+    if (selectedClient) {
+      deleteUserMutation.mutate(selectedClient.id);
+    }
+  };
+
+  const confirmSendMessage = () => {
+    if (selectedClient && messageText.trim()) {
+      sendMessageMutation.mutate({
+        userId: selectedClient.id,
+        message: messageText.trim(),
+      });
+    }
   };
 
   // Handle navigation
@@ -300,23 +463,23 @@ export default function ClientManagement() {
                                   </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end" className="w-48">
-                                  <DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => handleSuspendUser(client)}>
                                     <Eye className="w-4 h-4 mr-2" />
                                     View Details
                                   </DropdownMenuItem>
-                                  <DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => handleSuspendUser(client)}>
                                     <MessageSquare className="w-4 h-4 mr-2" />
                                     Send Message
                                   </DropdownMenuItem>
-                                  <DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => handleSuspendUser(client)}>
                                     <CheckCircle className="w-4 h-4 mr-2 text-green-600" />
                                     <span className="text-green-600">Verify User</span>
                                   </DropdownMenuItem>
-                                  <DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => handleSuspendUser(client)}>
                                     <XCircle className="w-4 h-4 mr-2 text-red-600" />
                                     <span className="text-red-600">Suspend User</span>
                                   </DropdownMenuItem>
-                                  <DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => handleSuspendUser(client)}>
                                     <Trash2 className="w-4 h-4 mr-2 text-red-600" />
                                     <span className="text-red-600">Delete User</span>
                                   </DropdownMenuItem>
@@ -499,23 +662,23 @@ export default function ClientManagement() {
                                   </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end" className="w-48">
-                                  <DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => handleSuspendUser(client)}>
                                     <Eye className="w-4 h-4 mr-2" />
                                     View Details
                                   </DropdownMenuItem>
-                                  <DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => handleSuspendUser(client)}>
                                     <MessageSquare className="w-4 h-4 mr-2" />
                                     Send Message
                                   </DropdownMenuItem>
-                                  <DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => handleSuspendUser(client)}>
                                     <CheckCircle className="w-4 h-4 mr-2 text-green-600" />
                                     <span className="text-green-600">Verify User</span>
                                   </DropdownMenuItem>
-                                  <DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => handleSuspendUser(client)}>
                                     <XCircle className="w-4 h-4 mr-2 text-red-600" />
                                     <span className="text-red-600">Suspend User</span>
                                   </DropdownMenuItem>
-                                  <DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => handleSuspendUser(client)}>
                                     <Trash2 className="w-4 h-4 mr-2 text-red-600" />
                                     <span className="text-red-600">Delete User</span>
                                   </DropdownMenuItem>
@@ -533,6 +696,124 @@ export default function ClientManagement() {
           )}
         </div>
       </div>
+
+      {/* User Details Modal */}
+      <Dialog open={showDetailsDialog} onOpenChange={setShowDetailsDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Client Details</DialogTitle>
+            <DialogDescription>
+              Complete information for {selectedClient?.firstName} {selectedClient?.lastName}
+            </DialogDescription>
+          </DialogHeader>
+          {selectedClient && (
+            <div className="space-y-4">
+              <div>
+                <h4 className="font-medium text-gray-900 dark:text-white">Personal Information</h4>
+                <div className="mt-2 space-y-1 text-sm">
+                  <p><span className="font-medium">Name:</span> {selectedClient.firstName} {selectedClient.lastName}</p>
+                  <p><span className="font-medium">ID:</span> {selectedClient.id}</p>
+                  <p><span className="font-medium">Mobile:</span> {selectedClient.mobile}</p>
+                  {selectedClient.email && <p><span className="font-medium">Email:</span> {selectedClient.email}</p>}
+                  <p><span className="font-medium">Location:</span> {selectedClient.district}, {selectedClient.state}</p>
+                  <p><span className="font-medium">Status:</span> 
+                    <Badge className={`ml-2 ${selectedClient.isVerified ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                      {selectedClient.isVerified ? 'Verified' : 'Pending'}
+                    </Badge>
+                  </p>
+                </div>
+              </div>
+              <div>
+                <h4 className="font-medium text-gray-900 dark:text-white">Account Activity</h4>
+                <div className="mt-2 space-y-1 text-sm">
+                  <p><span className="font-medium">Total Bookings:</span> 0</p>
+                  <p><span className="font-medium">Total Spent:</span> ₹0</p>
+                  <p><span className="font-medium">Member Since:</span> {new Date(selectedClient.createdAt).toLocaleDateString()}</p>
+                </div>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowDetailsDialog(false)}>
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Send Message Modal */}
+      <Dialog open={showMessageDialog} onOpenChange={setShowMessageDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Send Message</DialogTitle>
+            <DialogDescription>
+              Send a message to {selectedClient?.firstName} {selectedClient?.lastName}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <Textarea
+              placeholder="Type your message here..."
+              value={messageText}
+              onChange={(e) => setMessageText(e.target.value)}
+              className="min-h-[100px]"
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowMessageDialog(false)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={confirmSendMessage} 
+              disabled={!messageText.trim() || sendMessageMutation.isPending}
+            >
+              {sendMessageMutation.isPending ? "Sending..." : "Send Message"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Modal */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete User</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to permanently delete this user? This action cannot be undone and will remove:
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          {selectedClient && (
+            <div className="space-y-4">
+              <div>
+                <h4 className="font-medium text-gray-700">User Information:</h4>
+                <ul className="mt-1 text-sm text-gray-600 list-disc list-inside">
+                  <li>{selectedClient.firstName} {selectedClient.lastName}</li>
+                  <li>{selectedClient.mobile}</li>
+                  {selectedClient.email && <li>{selectedClient.email}</li>}
+                </ul>
+              </div>
+              <div>
+                <h4 className="font-medium text-gray-700">All Associated Data:</h4>
+                <ul className="mt-1 text-sm text-gray-600 list-disc list-inside">
+                  <li>Profile and account information</li>
+                  <li>All bookings and service history</li>
+                  <li>Payment records and transactions</li>
+                  <li>Messages and communications</li>
+                </ul>
+              </div>
+            </div>
+          )}
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmDeleteUser}
+              className="bg-red-600 hover:bg-red-700"
+              disabled={deleteUserMutation.isPending}
+            >
+              {deleteUserMutation.isPending ? "Deleting..." : "Delete Permanently"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

@@ -1057,6 +1057,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // User verification endpoint
+  app.put("/api/admin/verify-user/:userId", async (req, res) => {
+    try {
+      const { userId } = req.params;
+      await storage.updateUser(userId, { isVerified: true });
+      res.json({ message: "User verified successfully" });
+    } catch (error) {
+      console.error("Error verifying user:", error);
+      res.status(500).json({ error: "Failed to verify user" });
+    }
+  });
+
+  // User suspension endpoint
+  app.put("/api/admin/suspend-user/:userId", async (req, res) => {
+    try {
+      const { userId } = req.params;
+      await storage.updateUser(userId, { isVerified: false });
+      res.json({ message: "User suspended successfully" });
+    } catch (error) {
+      console.error("Error suspending user:", error);
+      res.status(500).json({ error: "Failed to suspend user" });
+    }
+  });
+
+  // Send message to user endpoint
+  app.post("/api/admin/send-message", async (req, res) => {
+    try {
+      const { userId, message } = req.body;
+      
+      if (!userId || !message) {
+        return res.status(400).json({ error: "userId and message are required" });
+      }
+
+      // Create a message record
+      const messageData = {
+        senderId: "admin", // Admin is the sender
+        receiverId: userId,
+        content: message,
+        isRead: false,
+      };
+
+      const savedMessage = await storage.createMessage(messageData);
+      res.json({ message: "Message sent successfully", messageId: savedMessage.id });
+    } catch (error) {
+      console.error("Error sending message:", error);
+      res.status(500).json({ error: "Failed to send message" });
+    }
+  });
+
   // Job postings routes
   app.get("/api/job-postings", async (req, res) => {
     try {
