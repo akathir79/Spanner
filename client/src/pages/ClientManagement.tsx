@@ -91,10 +91,24 @@ function formatIndianDateTime(dateString: string | Date): string {
 
 function getActivityStatus(lastLoginAt?: string, createdAt?: string) {
   if (!lastLoginAt) {
+    // Check if user was created recently (within 24 hours)
+    if (createdAt) {
+      const created = new Date(createdAt);
+      const now = new Date();
+      const hoursSinceCreation = (now.getTime() - created.getTime()) / (1000 * 60 * 60);
+      
+      if (hoursSinceCreation < 24) {
+        return {
+          label: "Just Registered",
+          variant: "secondary" as const,
+          icon: <AlertCircle className="w-3 h-3" />,
+        };
+      }
+    }
     return {
       label: "No Login",
       variant: "secondary" as const,
-      icon: <AlertCircle className="w-3 h-3" />,
+      icon: <XCircle className="w-3 h-3" />,
       className: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100"
     };
   }
