@@ -730,9 +730,19 @@ export default function ClientManagement() {
                                     <div className="text-xs text-gray-500 dark:text-gray-400">
                                       IFSC: {(client as any).bankIFSC}
                                     </div>
+                                    {(client as any).bankMICR && (
+                                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                                        MICR: {(client as any).bankMICR}
+                                      </div>
+                                    )}
                                     {(client as any).bankName && (
                                       <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
                                         {(client as any).bankName}
+                                      </div>
+                                    )}
+                                    {(client as any).bankAddress && (
+                                      <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                                        {(client as any).bankAddress}
                                       </div>
                                     )}
                                   </>
@@ -1054,9 +1064,19 @@ export default function ClientManagement() {
                                       <div className="text-xs text-gray-500 dark:text-gray-400">
                                         IFSC: {(client as any).bankIFSC}
                                       </div>
+                                      {(client as any).bankMICR && (
+                                        <div className="text-xs text-gray-500 dark:text-gray-400">
+                                          MICR: {(client as any).bankMICR}
+                                        </div>
+                                      )}
                                       {(client as any).bankName && (
                                         <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
                                           {(client as any).bankName}
+                                        </div>
+                                      )}
+                                      {(client as any).bankAddress && (
+                                        <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                                          {(client as any).bankAddress}
                                         </div>
                                       )}
                                     </>
