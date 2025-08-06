@@ -11,6 +11,7 @@ export const userSequence = pgTable("user_sequence", {
   id: varchar("id").primaryKey(),
   state: text("state").notNull(),
   district: text("district").notNull(),
+  role: text("role").notNull(), // client, worker, admin, super_admin
   lastNumber: integer("last_number").default(0).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),

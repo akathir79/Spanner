@@ -45,20 +45,21 @@ export async function generateCustomUserId(userData: UserData): Promise<string> 
   const stateAbbr = stateAbbreviations[state] || state.substring(0, 3).toUpperCase();
   const districtAbbr = districtAbbreviations[district] || district.substring(0, 3).toUpperCase();
   
-  // Role prefix
-  const rolePrefix = role === 'client' ? 'C' : role === 'worker' ? 'W' : role === 'admin' ? 'A' : 'S';
+  // Role suffix
+  const roleSuffix = role === 'client' ? 'C' : role === 'worker' ? 'W' : role === 'admin' ? 'A' : 'S';
   
-  // Create sequence key
-  const sequenceKey = `${stateAbbr}-${districtAbbr}`;
+  // Create sequence key for this state-district-role combination
+  const sequenceKey = `${stateAbbr}-${districtAbbr}-${roleSuffix}`;
   
   try {
-    // Check if sequence exists for this state-district combination
+    // Check if sequence exists for this state-district-role combination
     let sequence = await db
       .select()
       .from(userSequence)
       .where(and(
         eq(userSequence.state, state),
-        eq(userSequence.district, district)
+        eq(userSequence.district, district),
+        eq(userSequence.role, role)
       ))
       .limit(1);
     
@@ -71,6 +72,7 @@ export async function generateCustomUserId(userData: UserData): Promise<string> 
         id: sequenceKey,
         state: state,
         district: district,
+        role: role,
         lastNumber: nextNumber,
       });
     } else {
@@ -82,14 +84,18 @@ export async function generateCustomUserId(userData: UserData): Promise<string> 
           lastNumber: nextNumber,
           updatedAt: new Date()
         })
-        .where(eq(userSequence.id, sequenceKey));
+        .where(and(
+          eq(userSequence.state, state),
+          eq(userSequence.district, district),
+          eq(userSequence.role, role)
+        ));
     }
     
     // Format number with leading zeros (4 digits)
     const formattedNumber = nextNumber.toString().padStart(4, '0');
     
-    // Create final user ID: STATE-DISTRICT-ROLEXXXX
-    const customUserId = `${stateAbbr}-${districtAbbr}-${rolePrefix}${formattedNumber}`;
+    // Create final user ID: STATE-DISTRICT-XXXX-ROLE
+    const customUserId = `${stateAbbr}-${districtAbbr}-${formattedNumber}-${roleSuffix}`;
     
     return customUserId;
     
@@ -97,13 +103,13 @@ export async function generateCustomUserId(userData: UserData): Promise<string> 
     console.error('Error generating custom user ID:', error);
     // Fallback to timestamp-based ID if there's an error
     const timestamp = Date.now().toString().slice(-6);
-    return `${stateAbbr}-${districtAbbr}-${rolePrefix}${timestamp}`;
+    return `${stateAbbr}-${districtAbbr}-${timestamp}-${roleSuffix}`;
   }
 }
 
 // Helper function to validate custom user ID format
 export function validateCustomUserId(userId: string): boolean {
-  const pattern = /^[A-Z]{3}-[A-Z]{3}-[CWAS]\d{4}$/;
+  const pattern = /^[A-Z]{3}-[A-Z]{3}-\d{4}-[CWAS]$/;
   return pattern.test(userId);
 }
 
@@ -111,15 +117,16 @@ export function validateCustomUserId(userId: string): boolean {
 export function parseCustomUserId(userId: string): {
   stateAbbr: string;
   districtAbbr: string;
-  role: string;
   number: string;
+  role: string;
 } | null {
   if (!validateCustomUserId(userId)) return null;
   
   const parts = userId.split('-');
-  const roleAndNumber = parts[2];
-  const role = roleAndNumber.substring(0, 1);
-  const number = roleAndNumber.substring(1);
+  const stateAbbr = parts[0];
+  const districtAbbr = parts[1];
+  const number = parts[2];
+  const roleSuffix = parts[3];
   
   const roleMap: Record<string, string> = {
     'C': 'client',
@@ -129,9 +136,9 @@ export function parseCustomUserId(userId: string): {
   };
   
   return {
-    stateAbbr: parts[0],
-    districtAbbr: parts[1],
-    role: roleMap[role] || 'unknown',
-    number: number
+    stateAbbr,
+    districtAbbr,
+    number,
+    role: roleMap[roleSuffix] || 'unknown'
   };
 }
