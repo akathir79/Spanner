@@ -301,6 +301,8 @@ export function AuthModal({ isOpen, onClose, mode, initialTab, onSwitchToSignup 
     }
   }, [isOpen, initialTab]);
 
+
+
   const { data: rawServices = [] } = useQuery({
     queryKey: ["/api/services"],
     staleTime: 1000 * 60 * 60, // 1 hour
@@ -902,6 +904,16 @@ export function AuthModal({ isOpen, onClose, mode, initialTab, onSwitchToSignup 
     setNewSkillInput("");
     setDistrictSearchInput("");
     setDistrictPopoverOpen(false);
+    setClientDistrictPopoverOpen(false);
+    setClientDistrictSearchInput("");
+    setStatePopoverOpen(false);
+    setWorkerStatePopoverOpen(false);
+    setStateSearchInput("");
+    setWorkerStateSearchInput("");
+    setSelectedDistrictForAreas("");
+    setAreasPopoverOpen(false);
+    setHomeDistrictPopoverOpen(false);
+    setServiceAllAreas(false);
     setAadhaarVerificationStep("input");
     setAadhaarOtp("");
     setGeneratedAadhaarOtp("");
@@ -909,11 +921,22 @@ export function AuthModal({ isOpen, onClose, mode, initialTab, onSwitchToSignup 
     setRegistrationCompleted(false);
     setRegisteredWorkerId("");
     setWorkerRegistrationStep("details");
+    setClientDistrictOpen(false);
+    setWorkerDistrictOpen(false);
+    setClientApiDistricts([]);
+    setWorkerApiDistricts([]);
     loginForm.reset();
     otpForm.reset();
     clientForm.reset();
     workerForm.reset();
   };
+
+  // Reset forms whenever modal opens to ensure fresh fields
+  useEffect(() => {
+    if (isOpen) {
+      resetModal();
+    }
+  }, [isOpen]);
 
   const handleBioDataUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
