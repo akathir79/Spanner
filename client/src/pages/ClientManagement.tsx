@@ -33,6 +33,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ArrowLeft, Phone, Mail, Calendar, MoreHorizontal, Eye, MessageSquare, CheckCircle, XCircle, Trash2, Edit, AlertCircle, Search, X, Menu, Loader2, MessageCircle, Smartphone, CreditCard, Send, ArrowRightLeft, History, DollarSign, Filter } from "lucide-react";
+import { FaWhatsapp } from "react-icons/fa";
 import { format } from "date-fns";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
@@ -855,7 +856,76 @@ export default function ClientManagement() {
                           <TableHead className="w-[70px]">Role</TableHead>
                           <TableHead className="w-[140px]">Location</TableHead>
                           <TableHead className="w-[140px]">Bookings/Earnings</TableHead>
-                          <TableHead className="w-[140px]">Contact</TableHead>
+                          <TableHead className="w-[140px]">
+                            <div className="flex items-center gap-2">
+                              <span>Contact</span>
+                              <div className="flex items-center gap-1">
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      className="h-6 w-6 p-0 text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-900/20"
+                                      onClick={() => {
+                                        toast({ title: "WhatsApp", description: "Bulk WhatsApp messaging coming soon!" });
+                                      }}
+                                    >
+                                      <FaWhatsapp className="w-3 h-3" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>Bulk WhatsApp</TooltipContent>
+                                </Tooltip>
+                                
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      className="h-6 w-6 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                                      onClick={() => {
+                                        toast({ title: "SMS", description: "Bulk SMS messaging coming soon!" });
+                                      }}
+                                    >
+                                      <Smartphone className="w-3 h-3" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>Bulk SMS</TooltipContent>
+                                </Tooltip>
+                                
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      className="h-6 w-6 p-0 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
+                                      onClick={() => {
+                                        toast({ title: "Email", description: "Bulk email messaging coming soon!" });
+                                      }}
+                                    >
+                                      <Mail className="w-3 h-3" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>Bulk Email</TooltipContent>
+                                </Tooltip>
+                                
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      className="h-6 w-6 p-0 text-purple-600 hover:text-purple-700 hover:bg-purple-50 dark:hover:bg-purple-900/20"
+                                      onClick={() => {
+                                        toast({ title: "Message", description: "Bulk in-app messaging coming soon!" });
+                                      }}
+                                    >
+                                      <MessageSquare className="w-3 h-3" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>Bulk Message</TooltipContent>
+                                </Tooltip>
+                              </div>
+                            </div>
+                          </TableHead>
                           <TableHead className="w-[130px]">Bank Details</TableHead>
                           <TableHead className="w-[90px]">
                             <div className="flex items-center gap-2">
