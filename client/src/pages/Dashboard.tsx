@@ -84,13 +84,19 @@ const ProfileDetailsCard = ({ user, onUpdate }: { user: any, onUpdate: () => voi
       const response = await apiRequest("PUT", `/api/users/${user.id}`, updatedData);
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: async (data) => {
       toast({
         title: "Profile Updated",
         description: "Your profile has been updated successfully.",
       });
       setIsEditing(false);
+      
+      // Force refresh user data from server
+      await refreshUser();
       onUpdate();
+      
+      // Also invalidate and refetch any user-related queries
+      queryClient.invalidateQueries({ queryKey: ['/api/user'] });
     },
     onError: (error: any) => {
       toast({
@@ -1199,9 +1205,10 @@ const JobPostingForm = () => {
 };
 
 export default function Dashboard() {
-  const { user, isLoading: authLoading } = useAuth();
+  const { user, isLoading: authLoading, refreshUser } = useAuth();
   const { t } = useLanguage();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
   const [selectedWorker, setSelectedWorker] = useState<any>(null);
@@ -1940,7 +1947,11 @@ export default function Dashboard() {
               <ProfileDetailsCard
                 user={user}
                 onUpdate={() => {
+                  // Invalidate all user-related queries to force refresh
                   queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+                  queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+                  // Force re-render by updating the user data from auth context
+                  refreshUser();
                 }}
               />
 
@@ -1948,7 +1959,11 @@ export default function Dashboard() {
               <BankDetailsCard
                 user={user}
                 onUpdate={() => {
+                  // Invalidate all user-related queries to force refresh
                   queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+                  queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+                  // Force re-render by updating the user data from auth context
+                  refreshUser();
                 }}
               />
             </div>
