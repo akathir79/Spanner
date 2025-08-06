@@ -933,6 +933,10 @@ export default function ClientManagement() {
                                 <div>0 bookings</div>
                                 <div>Balance: ₹0</div>
                                 <div>Spent: ₹0</div>
+                                <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                  <div>Commission</div>
+                                  <div>GST</div>
+                                </div>
                                 <div className="flex items-center gap-1 mt-1">
                                   <Button
                                     size="sm"
@@ -1644,6 +1648,10 @@ export default function ClientManagement() {
                                   <div>0 bookings</div>
                                   <div>Balance: ₹0</div>
                                   <div>Spent: ₹0</div>
+                                  <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                    <div>Commission</div>
+                                    <div>GST</div>
+                                  </div>
                                   <div className="flex items-center gap-1 mt-1">
                                     <Button
                                       size="sm"
