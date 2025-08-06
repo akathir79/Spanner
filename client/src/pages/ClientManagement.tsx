@@ -3,7 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Phone, Mail, Calendar } from "lucide-react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { ArrowLeft, Phone, Mail, Calendar, MoreHorizontal } from "lucide-react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import statesDistrictsData from "@/../../shared/states-districts.json";
@@ -218,54 +219,87 @@ export default function ClientManagement() {
                     <p className="text-gray-400 dark:text-gray-500 text-sm mt-1">Client registrations will appear here</p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {clients.map((client) => (
-                      <Card key={client.id} className="hover:shadow-md transition-shadow">
-                        <CardContent className="p-4">
-                          <div className="flex justify-between items-start mb-3">
-                            <div>
-                              <h4 className="font-semibold text-gray-900 dark:text-white text-lg">
-                                {client.firstName} {client.lastName}
-                              </h4>
-                              {client.district && client.state && (
-                                <p className="text-sm text-gray-500 dark:text-gray-400">
-                                  {client.district}, {client.state}
-                                </p>
-                              )}
-                            </div>
-                            <Badge 
-                              variant={client.isVerified ? "default" : "destructive"}
-                              className={client.isVerified ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100" : ""}
-                            >
-                              {client.isVerified ? "Verified" : "Pending"}
-                            </Badge>
-                          </div>
-                          
-                          <div className="space-y-2 text-sm">
-                            <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-                              <Phone className="w-4 h-4 flex-shrink-0" />
-                              <span className="font-mono">{client.mobile}</span>
-                            </div>
-                            {client.email && (
-                              <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-                                <Mail className="w-4 h-4 flex-shrink-0" />
-                                <span className="truncate">{client.email}</span>
+                  <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="w-[200px]">User</TableHead>
+                          <TableHead>Role</TableHead>
+                          <TableHead>Location</TableHead>
+                          <TableHead>Bookings/Earnings</TableHead>
+                          <TableHead>Contact</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead className="w-[50px]"></TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {clients.map((client) => (
+                          <TableRow key={client.id}>
+                            <TableCell>
+                              <div>
+                                <div className="font-medium text-gray-900 dark:text-white">
+                                  {client.firstName} {client.lastName}
+                                </div>
+                                <div className="text-xs text-gray-500 dark:text-gray-400 font-mono">
+                                  ID: {client.id.slice(0, 8)}...
+                                </div>
                               </div>
-                            )}
-                            <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-                              <Calendar className="w-4 h-4 flex-shrink-0" />
-                              <span>Joined {new Date(client.createdAt).toLocaleDateString()}</span>
-                            </div>
-                          </div>
-                          
-                          <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
-                            <div className="text-xs text-gray-500 dark:text-gray-500 font-mono">
-                              ID: {client.id.slice(0, 8)}...
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900 dark:text-blue-100">
+                                Client
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <div className="text-sm">
+                                {client.district && client.state ? (
+                                  <span className="text-gray-900 dark:text-white">
+                                    {client.district}, {client.state}
+                                  </span>
+                                ) : (
+                                  <span className="text-gray-500 dark:text-gray-400">
+                                    Not specified
+                                  </span>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <div className="text-sm text-gray-600 dark:text-gray-400">
+                                <div>0 bookings</div>
+                                <div>Spent: ₹0</div>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <div className="text-sm space-y-1">
+                                <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
+                                  <Phone className="w-3 h-3" />
+                                  <span>{client.mobile}</span>
+                                </div>
+                                {client.email && (
+                                  <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
+                                    <Mail className="w-3 h-3" />
+                                    <span className="truncate max-w-[150px]">{client.email}</span>
+                                  </div>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <Badge 
+                                variant={client.isVerified ? "default" : "destructive"}
+                                className={client.isVerified ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100" : ""}
+                              >
+                                {client.isVerified ? "Verified" : "Pending"}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <Button variant="ghost" size="sm">
+                                <MoreHorizontal className="w-4 h-4" />
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
                   </div>
                 )}
               </div>
@@ -358,49 +392,87 @@ export default function ClientManagement() {
                     <p className="text-gray-400 dark:text-gray-500 text-sm mt-1">Clients will appear here once they register</p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {clientsForDistrict.map((client) => (
-                      <Card key={client.id} className="hover:shadow-md transition-shadow">
-                        <CardContent className="p-4">
-                          <div className="flex justify-between items-start mb-3">
-                            <div>
-                              <h4 className="font-semibold text-gray-900 dark:text-white text-lg">
-                                {client.firstName} {client.lastName}
-                              </h4>
-                            </div>
-                            <Badge 
-                              variant={client.isVerified ? "default" : "destructive"}
-                              className={client.isVerified ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100" : ""}
-                            >
-                              {client.isVerified ? "Verified" : "Pending"}
-                            </Badge>
-                          </div>
-                          
-                          <div className="space-y-2 text-sm">
-                            <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-                              <Phone className="w-4 h-4 flex-shrink-0" />
-                              <span className="font-mono">{client.mobile}</span>
-                            </div>
-                            {client.email && (
-                              <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-                                <Mail className="w-4 h-4 flex-shrink-0" />
-                                <span className="truncate">{client.email}</span>
+                  <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="w-[200px]">User</TableHead>
+                          <TableHead>Role</TableHead>
+                          <TableHead>Location</TableHead>
+                          <TableHead>Bookings/Earnings</TableHead>
+                          <TableHead>Contact</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead className="w-[50px]"></TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {clientsForDistrict.map((client) => (
+                          <TableRow key={client.id}>
+                            <TableCell>
+                              <div>
+                                <div className="font-medium text-gray-900 dark:text-white">
+                                  {client.firstName} {client.lastName}
+                                </div>
+                                <div className="text-xs text-gray-500 dark:text-gray-400 font-mono">
+                                  ID: {client.id.slice(0, 8)}...
+                                </div>
                               </div>
-                            )}
-                            <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-                              <Calendar className="w-4 h-4 flex-shrink-0" />
-                              <span>Joined {new Date(client.createdAt).toLocaleDateString()}</span>
-                            </div>
-                          </div>
-                          
-                          <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
-                            <div className="text-xs text-gray-500 dark:text-gray-500 font-mono">
-                              ID: {client.id.slice(0, 8)}...
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900 dark:text-blue-100">
+                                Client
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <div className="text-sm">
+                                {client.district && client.state ? (
+                                  <span className="text-gray-900 dark:text-white">
+                                    {client.district}, {client.state}
+                                  </span>
+                                ) : (
+                                  <span className="text-gray-500 dark:text-gray-400">
+                                    Not specified
+                                  </span>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <div className="text-sm text-gray-600 dark:text-gray-400">
+                                <div>0 bookings</div>
+                                <div>Spent: ₹0</div>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <div className="text-sm space-y-1">
+                                <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
+                                  <Phone className="w-3 h-3" />
+                                  <span>{client.mobile}</span>
+                                </div>
+                                {client.email && (
+                                  <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
+                                    <Mail className="w-3 h-3" />
+                                    <span className="truncate max-w-[150px]">{client.email}</span>
+                                  </div>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <Badge 
+                                variant={client.isVerified ? "default" : "destructive"}
+                                className={client.isVerified ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100" : ""}
+                              >
+                                {client.isVerified ? "Verified" : "Pending"}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <Button variant="ghost" size="sm">
+                                <MoreHorizontal className="w-4 h-4" />
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
                   </div>
                 )}
               </div>
