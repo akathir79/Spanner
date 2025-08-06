@@ -930,7 +930,11 @@ export default function ClientManagement() {
                             </TableCell>
                             <TableCell>
                               <div className="text-sm text-gray-600 dark:text-gray-400">
-                                <div>0 bookings</div>
+                                <div>Bookings: 0</div>
+                                <div className="text-xs text-gray-500 dark:text-gray-400 ml-2">
+                                  <div>In progress: 0</div>
+                                  <div>Completed: 0</div>
+                                </div>
                                 <div>Balance: ₹0</div>
                                 <div>Spent: ₹0</div>
                                 <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
@@ -1645,7 +1649,11 @@ export default function ClientManagement() {
                               </TableCell>
                               <TableCell>
                                 <div className="text-sm text-gray-600 dark:text-gray-400">
-                                  <div>0 bookings</div>
+                                  <div>Bookings: 0</div>
+                                  <div className="text-xs text-gray-500 dark:text-gray-400 ml-2">
+                                    <div>In progress: 0</div>
+                                    <div>Completed: 0</div>
+                                  </div>
                                   <div>Balance: ₹0</div>
                                   <div>Spent: ₹0</div>
                                   <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
