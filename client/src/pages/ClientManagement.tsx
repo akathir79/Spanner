@@ -31,7 +31,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { ArrowLeft, Phone, Mail, Calendar, MoreHorizontal, Eye, MessageSquare, CheckCircle, XCircle, Trash2, Edit, AlertCircle, Search, X, Menu, Loader2, MessageCircle, Smartphone } from "lucide-react";
+import { ArrowLeft, Phone, Mail, Calendar, MoreHorizontal, Eye, MessageSquare, CheckCircle, XCircle, Trash2, Edit, AlertCircle, Search, X, Menu, Loader2, MessageCircle, Smartphone, CreditCard } from "lucide-react";
 import { format } from "date-fns";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
@@ -627,6 +627,7 @@ export default function ClientManagement() {
                           <TableHead className="w-[140px]">Location</TableHead>
                           <TableHead className="w-[140px]">Bookings/Earnings</TableHead>
                           <TableHead className="w-[140px]">Contact</TableHead>
+                          <TableHead className="w-[130px]">Bank Details</TableHead>
                           <TableHead className="w-[90px]">Status</TableHead>
                           <TableHead className="w-[50px]"></TableHead>
                         </TableRow>
@@ -706,6 +707,30 @@ export default function ClientManagement() {
                                     <Mail className="w-3 h-3" />
                                     <span className="truncate max-w-[150px]">{client.email}</span>
                                   </div>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <div className="text-sm space-y-1">
+                                {(client as any).bankAccountNumber && (client as any).bankIFSC ? (
+                                  <>
+                                    <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
+                                      <CreditCard className="w-3 h-3" />
+                                      <span className="font-mono text-xs">{(client as any).bankAccountNumber.slice(-4)}</span>
+                                    </div>
+                                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                                      IFSC: {(client as any).bankIFSC}
+                                    </div>
+                                    {(client as any).bankName && (
+                                      <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                                        {(client as any).bankName}
+                                      </div>
+                                    )}
+                                  </>
+                                ) : (
+                                  <span className="text-gray-400 dark:text-gray-500 italic text-xs">
+                                    Not provided
+                                  </span>
                                 )}
                               </div>
                             </TableCell>
@@ -917,6 +942,7 @@ export default function ClientManagement() {
                           <TableHead className="w-[140px]">Location</TableHead>
                           <TableHead className="w-[140px]">Bookings/Earnings</TableHead>
                           <TableHead className="w-[140px]">Contact</TableHead>
+                          <TableHead className="w-[130px]">Bank Details</TableHead>
                           <TableHead className="w-[90px]">Status</TableHead>
                           <TableHead className="w-[50px]"></TableHead>
                         </TableRow>
@@ -996,6 +1022,30 @@ export default function ClientManagement() {
                                       <Mail className="w-3 h-3" />
                                       <span className="truncate max-w-[150px]">{client.email}</span>
                                     </div>
+                                  )}
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <div className="text-sm space-y-1">
+                                  {(client as any).bankAccountNumber && (client as any).bankIFSC ? (
+                                    <>
+                                      <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
+                                        <CreditCard className="w-3 h-3" />
+                                        <span className="font-mono text-xs">{(client as any).bankAccountNumber.slice(-4)}</span>
+                                      </div>
+                                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                                        IFSC: {(client as any).bankIFSC}
+                                      </div>
+                                      {(client as any).bankName && (
+                                        <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                                          {(client as any).bankName}
+                                        </div>
+                                      )}
+                                    </>
+                                  ) : (
+                                    <span className="text-gray-400 dark:text-gray-500 italic text-xs">
+                                      Not provided
+                                    </span>
                                   )}
                                 </div>
                               </TableCell>
