@@ -425,7 +425,7 @@ export default function ClientManagement() {
               <span className="pr-8">Total Client List</span>
               <Badge 
                 variant="secondary" 
-                className="absolute right-2 top-1/2 -translate-y-1/2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs bg-purple-500 text-white hover:bg-purple-600"
+                className="absolute right-2 top-1/2 -translate-y-1/2 h-5 px-2 min-w-[20px] rounded-md flex items-center justify-center text-xs bg-purple-500 text-white hover:bg-purple-600"
               >
                 {clients.length}
               </Badge>
@@ -448,7 +448,7 @@ export default function ClientManagement() {
                   <span className="pr-8">{state}</span>
                   <Badge 
                     variant="secondary" 
-                    className="absolute right-2 top-1/2 -translate-y-1/2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs bg-blue-500 text-white hover:bg-blue-600"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 h-5 px-2 min-w-[20px] rounded-md flex items-center justify-center text-xs bg-blue-500 text-white hover:bg-blue-600"
                   >
                     {getClientCountForState(state)}
                   </Badge>
@@ -714,7 +714,7 @@ export default function ClientManagement() {
                       <span className="truncate">{district}</span>
                       <Badge 
                         variant="secondary" 
-                        className="absolute right-2 top-1/2 -translate-y-1/2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs bg-green-500 text-white hover:bg-green-600"
+                        className="absolute right-2 top-1/2 -translate-y-1/2 h-5 px-2 min-w-[20px] rounded-md flex items-center justify-center text-xs bg-green-500 text-white hover:bg-green-600"
                       >
                         {getClientCountForDistrict(district)}
                       </Badge>
