@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -41,6 +41,25 @@ import { useLocation } from "wouter";
 import LocationViewer from "@/components/LocationViewer";
 import ClientBankDetailsForm from "@/components/ClientBankDetailsForm";
 // Services and districts are now fetched dynamically from database
+
+// Bank Info interface for IFSC API
+interface BankInfo {
+  BANK: string;
+  IFSC: string;
+  BRANCH: string;
+  ADDRESS: string;
+  CONTACT: string;
+  CITY: string;
+  RTGS: boolean;
+  NEFT: boolean;
+  SWIFT: string;
+  ISO3166: string;
+  BANKCODE: string;
+  CENTRE: string;
+  DISTRICT: string;
+  STATE: string;
+  MICR: string;
+}
 
 // Profile Details Card Component
 const ProfileDetailsCard = ({ user, onUpdate }: { user: any, onUpdate: () => void }) => {
@@ -174,13 +193,13 @@ const ProfileDetailsCard = ({ user, onUpdate }: { user: any, onUpdate: () => voi
             <Label className="text-sm font-medium text-muted-foreground">Full Address</Label>
             {isEditing ? (
               <Textarea
-                value={editData.fullAddress || ""}
-                onChange={(e) => setEditData(prev => ({ ...prev, fullAddress: e.target.value }))}
+                value={editData.address || ""}
+                onChange={(e) => setEditData(prev => ({ ...prev, address: e.target.value }))}
                 placeholder="Enter your full address"
                 rows={3}
               />
             ) : (
-              <p className="font-medium">{user?.fullAddress || 'Not provided'}</p>
+              <p className="font-medium">{user?.address || 'Not provided'}</p>
             )}
           </div>
 
@@ -232,32 +251,311 @@ const ProfileDetailsCard = ({ user, onUpdate }: { user: any, onUpdate: () => voi
 
 // Bank Details Card Component
 const BankDetailsCard = ({ user, onUpdate }: { user: any, onUpdate: () => void }) => {
-  return (
-    <div className="space-y-6">
-      {/* Bank Details Notice */}
-      {(!user?.bankAccountNumber) && (
-        <Alert>
-          <CreditCard className="h-4 w-4" />
-          <AlertDescription>
-            <strong>Complete your profile:</strong> Add your bank details for faster payment processing when using our services.
-          </AlertDescription>
-        </Alert>
-      )}
+  const [isEditing, setIsEditing] = useState(false);
+  const [editData, setEditData] = useState(user || {});
+  const [isSearchingIFSC, setIsSearchingIFSC] = useState(false);
+  const [bankInfo, setBankInfo] = useState<BankInfo | null>(null);
+  const [ifscErrors, setIfscErrors] = useState<Record<string, string>>({});
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-      {/* Bank Details Form */}
-      <ClientBankDetailsForm
-        userId={user?.id || ''}
-        existingDetails={{
-          bankAccountNumber: user?.bankAccountNumber,
-          bankIFSC: user?.bankIFSC,
-          bankAccountHolderName: user?.bankAccountHolderName,
-          bankName: user?.bankName,
-          bankBranch: user?.bankBranch,
-          bankAccountType: user?.bankAccountType,
-        }}
-        onSuccess={onUpdate}
-      />
-    </div>
+  useEffect(() => {
+    setEditData(user || {});
+  }, [user]);
+
+  // IFSC lookup function
+  const lookupIFSC = useCallback(async (ifscCode: string): Promise<BankInfo | null> => {
+    setIsSearchingIFSC(true);
+    
+    try {
+      const response = await fetch(`https://ifsc.razorpay.com/${ifscCode.toUpperCase()}`);
+      
+      if (!response.ok) {
+        if (response.status === 404) {
+          throw new Error('IFSC code not found');
+        }
+        throw new Error(`API Error: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      setIsSearchingIFSC(false);
+      return data;
+    } catch (error) {
+      setIsSearchingIFSC(false);
+      console.error('IFSC lookup error:', error);
+      throw error;
+    }
+  }, []);
+
+  // Handle IFSC lookup
+  const handleIFSCLookup = useCallback(async () => {
+    const ifscCode = editData.bankIFSC;
+    if (!ifscCode || ifscCode.length !== 11) {
+      setIfscErrors(prev => ({ ...prev, bankIFSC: 'Please enter a valid 11-character IFSC code' }));
+      return;
+    }
+
+    try {
+      const result = await lookupIFSC(ifscCode);
+      if (result) {
+        setBankInfo(result);
+        
+        // Format the address properly from the API response
+        const addressParts = [result.ADDRESS];
+        if (result.CITY && result.CITY !== result.CENTRE) {
+          addressParts.push(result.CITY);
+        }
+        if (result.STATE) {
+          addressParts.push(result.STATE);
+        }
+        
+        // Update form with bank details
+        setEditData(prev => ({
+          ...prev,
+          bankName: result.BANK,
+          bankBranch: result.BRANCH,
+          bankMICR: result.MICR || ''
+        }));
+        
+        setIfscErrors(prev => ({ ...prev, bankIFSC: '' }));
+        
+        toast({
+          title: "Bank Details Found",
+          description: `${result.BANK} - ${result.BRANCH}, ${result.CITY}`,
+        });
+      }
+    } catch (error: any) {
+      const errorMessage = error.message || 'Unknown error occurred';
+      
+      if (errorMessage.includes('IFSC code not found')) {
+        setIfscErrors(prev => ({ ...prev, bankIFSC: 'Invalid IFSC code. Please check and try again.' }));
+        toast({
+          title: "IFSC Not Found",
+          description: "The IFSC code you entered is not valid. Please verify and try again.",
+          variant: "destructive",
+        });
+      } else {
+        setIfscErrors(prev => ({ ...prev, bankIFSC: 'Failed to fetch bank details. Please try again.' }));
+        toast({
+          title: "Connection Error",
+          description: "Unable to fetch bank details at the moment. Please try again or enter manually.",
+          variant: "destructive",
+        });
+      }
+    }
+  }, [editData.bankIFSC, lookupIFSC, toast]);
+
+  const updateMutation = useMutation({
+    mutationFn: async (updatedData: any) => {
+      const response = await apiRequest("PUT", `/api/users/${user.id}`, updatedData);
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Bank Details Updated",
+        description: "Your bank details have been updated successfully.",
+      });
+      setIsEditing(false);
+      onUpdate();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Update Failed",
+        description: error.message || "Failed to update bank details",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleSave = () => {
+    updateMutation.mutate(editData);
+  };
+
+  const handleCancel = () => {
+    setEditData(user || {});
+    setIsEditing(false);
+    setBankInfo(null);
+    setIfscErrors({});
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center gap-2">
+            <CreditCard className="w-5 h-5" />
+            Bank Details
+          </CardTitle>
+          <div className="space-x-2">
+            {isEditing ? (
+              <>
+                <Button size="sm" variant="outline" onClick={handleCancel}>
+                  Cancel
+                </Button>
+                <Button size="sm" onClick={handleSave} disabled={updateMutation.isPending}>
+                  {updateMutation.isPending ? "Saving..." : "Save"}
+                </Button>
+              </>
+            ) : (
+              <Button size="sm" variant="outline" onClick={() => setIsEditing(true)}>
+                Edit Details
+              </Button>
+            )}
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {/* Bank Details Notice */}
+        {(!user?.bankAccountNumber) && !isEditing && (
+          <Alert>
+            <CreditCard className="h-4 w-4" />
+            <AlertDescription>
+              <strong>Complete your profile:</strong> Add your bank details for faster payment processing when using our services.
+            </AlertDescription>
+          </Alert>
+        )}
+
+        <div className="grid grid-cols-1 gap-4">
+          <div>
+            <Label className="text-sm font-medium text-muted-foreground">Account Holder Name</Label>
+            {isEditing ? (
+              <Input
+                value={editData.bankAccountHolderName || ""}
+                onChange={(e) => setEditData(prev => ({ ...prev, bankAccountHolderName: e.target.value }))}
+                placeholder="Enter account holder name"
+              />
+            ) : (
+              <p className="font-medium">{user?.bankAccountHolderName || 'Not provided'}</p>
+            )}
+          </div>
+
+          <div>
+            <Label className="text-sm font-medium text-muted-foreground">Account Number</Label>
+            {isEditing ? (
+              <Input
+                value={editData.bankAccountNumber || ""}
+                onChange={(e) => setEditData(prev => ({ ...prev, bankAccountNumber: e.target.value }))}
+                placeholder="Enter account number"
+              />
+            ) : (
+              <p className="font-medium">{user?.bankAccountNumber || 'Not provided'}</p>
+            )}
+          </div>
+
+          <div>
+            <Label className="text-sm font-medium text-muted-foreground">IFSC Code</Label>
+            {isEditing ? (
+              <div className="space-y-2">
+                <div className="flex gap-2">
+                  <Input
+                    type="text"
+                    value={editData.bankIFSC || ''}
+                    onChange={(e) => {
+                      const ifscValue = e.target.value.toUpperCase();
+                      setEditData(prev => ({ ...prev, bankIFSC: ifscValue }));
+                      // Clear previous bank info when IFSC changes
+                      if (ifscValue !== editData.bankIFSC) {
+                        setBankInfo(null);
+                      }
+                    }}
+                    placeholder="Enter 11-character IFSC code"
+                    maxLength={11}
+                    className={`flex-1 ${ifscErrors.bankIFSC ? 'border-red-500' : ''}`}
+                  />
+                  <Button
+                    type="button"
+                    onClick={handleIFSCLookup}
+                    disabled={isSearchingIFSC || !editData.bankIFSC || editData.bankIFSC.length !== 11}
+                    className="px-6"
+                  >
+                    {isSearchingIFSC ? (
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    ) : (
+                      <Search className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+                {ifscErrors.bankIFSC && (
+                  <p className="text-sm text-red-500">{ifscErrors.bankIFSC}</p>
+                )}
+                {bankInfo && (
+                  <Alert className="border-green-200 bg-green-50">
+                    <CreditCard className="h-4 w-4" />
+                    <AlertDescription>
+                      <div className="space-y-2">
+                        <div>
+                          <p className="font-medium">{bankInfo.BANK}</p>
+                          <p className="text-sm">{bankInfo.BRANCH}</p>
+                          <p className="text-xs text-muted-foreground">{bankInfo.ADDRESS}</p>
+                          <p className="text-xs text-muted-foreground">{bankInfo.CITY}, {bankInfo.STATE}</p>
+                        </div>
+                      </div>
+                    </AlertDescription>
+                  </Alert>
+                )}
+              </div>
+            ) : (
+              <p className="font-medium">{user?.bankIFSC || 'Not provided'}</p>
+            )}
+          </div>
+
+          <div>
+            <Label className="text-sm font-medium text-muted-foreground">Bank Name</Label>
+            {isEditing ? (
+              <Input
+                value={editData.bankName || ""}
+                onChange={(e) => setEditData(prev => ({ ...prev, bankName: e.target.value }))}
+                placeholder="Bank name will be auto-filled from IFSC"
+                readOnly={!!bankInfo}
+              />
+            ) : (
+              <p className="font-medium">{user?.bankName || 'Not provided'}</p>
+            )}
+          </div>
+
+          <div>
+            <Label className="text-sm font-medium text-muted-foreground">Branch Name</Label>
+            {isEditing ? (
+              <Input
+                value={editData.bankBranch || ""}
+                onChange={(e) => setEditData(prev => ({ ...prev, bankBranch: e.target.value }))}
+                placeholder="Branch name will be auto-filled from IFSC"
+                readOnly={!!bankInfo}
+              />
+            ) : (
+              <p className="font-medium">{user?.bankBranch || 'Not provided'}</p>
+            )}
+          </div>
+
+          <div>
+            <Label className="text-sm font-medium text-muted-foreground">Account Type</Label>
+            {isEditing ? (
+              <Select 
+                value={editData.bankAccountType || ''} 
+                onValueChange={(val) => setEditData(prev => ({ ...prev, bankAccountType: val }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select account type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="savings">Savings</SelectItem>
+                  <SelectItem value="current">Current</SelectItem>
+                </SelectContent>
+              </Select>
+            ) : (
+              <p className="font-medium capitalize">{user?.bankAccountType || 'Not provided'}</p>
+            )}
+          </div>
+
+          {user?.bankMICR && (
+            <div>
+              <Label className="text-sm font-medium text-muted-foreground">MICR Code</Label>
+              <p className="font-medium">{user.bankMICR}</p>
+            </div>
+          )}
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 
