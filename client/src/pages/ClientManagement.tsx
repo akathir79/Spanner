@@ -840,10 +840,15 @@ export default function ClientManagement() {
                                     className="h-6 w-6 p-0 text-green-600 hover:text-green-700 hover:bg-green-50 group transition-all duration-300 hover:scale-110 hover:shadow-lg hover:animate-financial-glow rounded-full"
                                     onClick={(e) => {
                                       e.stopPropagation();
-                                      e.currentTarget.classList.add('animate-financial-click');
-                                      setTimeout(() => {
-                                        e.currentTarget.classList.remove('animate-financial-click');
-                                      }, 200);
+                                      const button = e.currentTarget;
+                                      if (button) {
+                                        button.classList.add('animate-financial-click');
+                                        setTimeout(() => {
+                                          if (button) {
+                                            button.classList.remove('animate-financial-click');
+                                          }
+                                        }, 200);
+                                      }
                                       handleViewFinancialStatements(client);
                                     }}
                                     onMouseEnter={(e) => {
@@ -1525,10 +1530,15 @@ export default function ClientManagement() {
                                       className="h-6 w-6 p-0 text-green-600 hover:text-green-700 hover:bg-green-50 group transition-all duration-300 hover:scale-110 hover:shadow-lg hover:animate-financial-glow rounded-full"
                                       onClick={(e) => {
                                         e.stopPropagation();
-                                        e.currentTarget.classList.add('animate-financial-click');
-                                        setTimeout(() => {
-                                          e.currentTarget.classList.remove('animate-financial-click');
-                                        }, 200);
+                                        const button = e.currentTarget;
+                                        if (button) {
+                                          button.classList.add('animate-financial-click');
+                                          setTimeout(() => {
+                                            if (button) {
+                                              button.classList.remove('animate-financial-click');
+                                            }
+                                          }, 200);
+                                        }
                                         handleViewFinancialStatements(client);
                                       }}
                                       onMouseEnter={(e) => {
