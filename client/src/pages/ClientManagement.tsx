@@ -825,6 +825,18 @@ export default function ClientManagement() {
                                           >
                                             <Send className="w-3 h-3" />
                                           </Button>
+                                          <Button
+                                            size="sm"
+                                            variant="ghost"
+                                            className="h-6 w-6 p-0 text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              window.location.href = `tel:+91${client.mobile}`;
+                                            }}
+                                            title="Call Phone"
+                                          >
+                                            <Phone className="w-3 h-3" />
+                                          </Button>
                                         </div>
                                       </div>
                                     )}
@@ -903,6 +915,18 @@ export default function ClientManagement() {
                                           title="Send Message"
                                         >
                                           <Send className="w-3 h-3" />
+                                        </Button>
+                                        <Button
+                                          size="sm"
+                                          variant="ghost"
+                                          className="h-6 w-6 p-0 text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            window.location.href = `tel:+91${client.mobile}`;
+                                          }}
+                                          title="Call Phone"
+                                        >
+                                          <Phone className="w-3 h-3" />
                                         </Button>
                                       </div>
                                     </div>
@@ -1446,6 +1470,18 @@ export default function ClientManagement() {
                                             >
                                               <Send className="w-3 h-3" />
                                             </Button>
+                                            <Button
+                                              size="sm"
+                                              variant="ghost"
+                                              className="h-6 w-6 p-0 text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                window.location.href = `tel:+91${client.mobile}`;
+                                              }}
+                                              title="Call Phone"
+                                            >
+                                              <Phone className="w-3 h-3" />
+                                            </Button>
                                           </div>
                                         </div>
                                       )}
@@ -1522,6 +1558,18 @@ export default function ClientManagement() {
                                                 title="Send Message"
                                               >
                                                 <Send className="w-3 h-3" />
+                                              </Button>
+                                              <Button
+                                                size="sm"
+                                                variant="ghost"
+                                                className="h-6 w-6 p-0 text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+                                                onClick={(e) => {
+                                                  e.stopPropagation();
+                                                  window.location.href = `tel:+91${client.mobile}`;
+                                                }}
+                                                title="Call Phone"
+                                              >
+                                                <Phone className="w-3 h-3" />
                                               </Button>
                                             </div>
                                           </div>
