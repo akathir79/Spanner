@@ -858,14 +858,14 @@ export default function ClientManagement() {
                           <TableHead className="w-[140px]">Contact</TableHead>
                           <TableHead className="w-[130px]">Bank Details</TableHead>
                           <TableHead className="w-[90px]">
-                            <div className="flex items-center gap-1">
+                            <div className="flex items-center gap-2">
                               <span>Status</span>
                               <Select value={statusFilter} onValueChange={(value) => {
                                 setStatusFilter(value as any);
                                 setCurrentPage(1); // Reset to first page when filtering
                               }}>
-                                <SelectTrigger className="w-6 h-6 p-0 border-none bg-transparent">
-                                  <Filter className="w-3 h-3" />
+                                <SelectTrigger className="w-8 h-8 p-1 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 rounded">
+                                  <Filter className="w-4 h-4 text-gray-600 dark:text-gray-300" />
                                 </SelectTrigger>
                                 <SelectContent>
                                   <SelectItem value="all">All Status</SelectItem>
@@ -1551,14 +1551,14 @@ export default function ClientManagement() {
                           <TableHead className="w-[140px]">Contact</TableHead>
                           <TableHead className="w-[130px]">Bank Details</TableHead>
                           <TableHead className="w-[90px]">
-                            <div className="flex items-center gap-1">
+                            <div className="flex items-center gap-2">
                               <span>Status</span>
                               <Select value={statusFilter} onValueChange={(value) => {
                                 setStatusFilter(value as any);
                                 setDistrictCurrentPage(1); // Reset to first page when filtering
                               }}>
-                                <SelectTrigger className="w-6 h-6 p-0 border-none bg-transparent">
-                                  <Filter className="w-3 h-3" />
+                                <SelectTrigger className="w-8 h-8 p-1 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 rounded">
+                                  <Filter className="w-4 h-4 text-gray-600 dark:text-gray-300" />
                                 </SelectTrigger>
                                 <SelectContent>
                                   <SelectItem value="all">All Status</SelectItem>
