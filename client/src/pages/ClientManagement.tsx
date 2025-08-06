@@ -601,11 +601,11 @@ export default function ClientManagement() {
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead className="w-[140px]">User</TableHead>
-                          <TableHead className="w-[80px]">Role</TableHead>
-                          <TableHead className="w-[150px]">Location</TableHead>
-                          <TableHead className="w-[130px]">Bookings/Earnings</TableHead>
-                          <TableHead className="w-[130px]">Contact</TableHead>
+                          <TableHead className="w-[120px]">User</TableHead>
+                          <TableHead className="w-[70px]">Role</TableHead>
+                          <TableHead className="w-[140px]">Location</TableHead>
+                          <TableHead className="w-[140px]">Bookings/Earnings</TableHead>
+                          <TableHead className="w-[140px]">Contact</TableHead>
                           <TableHead className="w-[140px]">Registration Date</TableHead>
                           <TableHead className="w-[90px]">Status</TableHead>
                           <TableHead className="w-[50px]"></TableHead>
@@ -894,11 +894,11 @@ export default function ClientManagement() {
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead className="w-[140px]">User</TableHead>
-                          <TableHead className="w-[80px]">Role</TableHead>
-                          <TableHead className="w-[150px]">Location</TableHead>
-                          <TableHead className="w-[130px]">Bookings/Earnings</TableHead>
-                          <TableHead className="w-[130px]">Contact</TableHead>
+                          <TableHead className="w-[120px]">User</TableHead>
+                          <TableHead className="w-[70px]">Role</TableHead>
+                          <TableHead className="w-[140px]">Location</TableHead>
+                          <TableHead className="w-[140px]">Bookings/Earnings</TableHead>
+                          <TableHead className="w-[140px]">Contact</TableHead>
                           <TableHead className="w-[140px]">Registration Date</TableHead>
                           <TableHead className="w-[90px]">Status</TableHead>
                           <TableHead className="w-[50px]"></TableHead>
