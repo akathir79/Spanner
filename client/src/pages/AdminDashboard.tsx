@@ -788,6 +788,8 @@ export default function AdminDashboard() {
                           <TableHead>Service Type</TableHead>
                           <TableHead>Bookings/Earnings</TableHead>
                           <TableHead>Contact</TableHead>
+                          <TableHead>Registration Date</TableHead>
+                          <TableHead>Last Login</TableHead>
                           <TableHead>Status</TableHead>
                           <TableHead>Actions</TableHead>
                         </TableRow>
@@ -868,6 +870,63 @@ export default function AdminDashboard() {
                                     <Mail className="h-3 w-3" />
                                     <span>{user.email}</span>
                                   </p>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <div className="text-sm">
+                                <p className="font-medium">
+                                  {user.createdAt ? new Date(user.createdAt).toLocaleDateString('en-IN', {
+                                    day: '2-digit',
+                                    month: '2-digit', 
+                                    year: 'numeric'
+                                  }) : 'N/A'}
+                                </p>
+                                <p className="text-muted-foreground">
+                                  {user.createdAt ? new Date(user.createdAt).toLocaleTimeString('en-IN', {
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                  }) : ''}
+                                </p>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <div className="text-sm">
+                                {user.lastLoginAt ? (
+                                  <>
+                                    <p className="font-medium flex items-center space-x-2">
+                                      <span>
+                                        {new Date(user.lastLoginAt).toLocaleDateString('en-IN', {
+                                          day: '2-digit',
+                                          month: '2-digit', 
+                                          year: 'numeric'
+                                        })}
+                                      </span>
+                                      {(() => {
+                                        const daysSinceLogin = Math.floor((new Date().getTime() - new Date(user.lastLoginAt).getTime()) / (1000 * 60 * 60 * 24));
+                                        return daysSinceLogin > 15 ? (
+                                          <Badge variant="destructive" className="ml-1 bg-red-100 text-red-800">
+                                            <AlertCircle className="h-3 w-3 mr-1" />
+                                            Inactive
+                                          </Badge>
+                                        ) : null;
+                                      })()}
+                                    </p>
+                                    <p className="text-muted-foreground">
+                                      {new Date(user.lastLoginAt).toLocaleTimeString('en-IN', {
+                                        hour: '2-digit',
+                                        minute: '2-digit'
+                                      })}
+                                    </p>
+                                  </>
+                                ) : (
+                                  <div className="flex items-center space-x-2">
+                                    <span className="text-muted-foreground">Never</span>
+                                    <Badge variant="destructive" className="bg-red-100 text-red-800">
+                                      <AlertCircle className="h-3 w-3 mr-1" />
+                                      No Login
+                                    </Badge>
+                                  </div>
                                 )}
                               </div>
                             </TableCell>
