@@ -698,7 +698,6 @@ export default function ClientManagement() {
                   </div>
                 )}
               </div>
-
             </div>
           )}
         </div>
@@ -718,34 +717,34 @@ export default function ClientManagement() {
           }}
           fields={[
             // Personal Information
-            { key: "firstName", label: "First Name", type: "text", editable: true, required: true, section: "personal" },
-            { key: "lastName", label: "Last Name", type: "text", editable: true, required: true, section: "personal" },
-            { key: "id", label: "User ID", type: "display", section: "personal" },
-            { key: "mobile", label: "Mobile Number", type: "tel", editable: true, required: true, section: "personal" },
-            { key: "email", label: "Email Address", type: "email", editable: true, section: "personal" },
-            { key: "role", label: "User Role", type: "display", section: "personal" },
+            { key: 'firstName', label: 'First Name', type: 'text', editable: true, required: true, section: 'personal' },
+            { key: 'lastName', label: 'Last Name', type: 'text', editable: true, required: true, section: 'personal' },
+            { key: 'id', label: 'User ID', type: 'display', section: 'personal' },
+            { key: 'mobile', label: 'Mobile Number', type: 'tel', editable: true, required: true, section: 'personal' },
+            { key: 'email', label: 'Email Address', type: 'email', editable: true, section: 'personal' },
+            { key: 'role', label: 'User Role', type: 'display', section: 'personal' },
             
             // Address Information
-            { key: "address", label: "Full Address", type: "textarea", editable: true, section: "address" },
-            { key: "state", label: "State", type: "text", editable: true, section: "address" },
-            { key: "district", label: "District", type: "text", editable: true, section: "address" },
-            { key: "pincode", label: "Pincode", type: "text", editable: true, section: "address" },
+            { key: 'address', label: 'Full Address', type: 'textarea', editable: true, section: 'address' },
+            { key: 'state', label: 'State', type: 'text', editable: true, section: 'address' },
+            { key: 'district', label: 'District', type: 'text', editable: true, section: 'address' },
+            { key: 'pincode', label: 'Pincode', type: 'text', editable: true, section: 'address' },
             
-            // Bank Details (Display only - cant edit from admin panel)
-            { key: "bankAccountNumber", label: "Account Number", type: "display", section: "bankDetails" },
-            { key: "bankIFSC", label: "IFSC Code", type: "display", section: "bankDetails" },
-            { key: "bankAccountHolderName", label: "Account Holder Name", type: "display", section: "bankDetails" },
-            { key: "bankName", label: "Bank Name", type: "display", section: "bankDetails" },
+            // Bank Details (Display only - can't edit from admin panel)
+            { key: 'bankAccountNumber', label: 'Account Number', type: 'display', section: 'bankDetails' },
+            { key: 'bankIFSC', label: 'IFSC Code', type: 'display', section: 'bankDetails' },
+            { key: 'bankAccountHolderName', label: 'Account Holder Name', type: 'display', section: 'bankDetails' },
+            { key: 'bankName', label: 'Bank Name', type: 'display', section: 'bankDetails' },
             
             // Status Information
-            { key: "isVerified", label: "Verification Status", type: "badge", section: "status" },
-            { key: "isActive", label: "Account Status", type: "display", section: "status" },
-            { key: "createdAt", label: "Member Since", type: "display", section: "status" },
-            { key: "updatedAt", label: "Last Updated", type: "display", section: "status" },
+            { key: 'isVerified', label: 'Verification Status', type: 'badge', section: 'status' },
+            { key: 'isActive', label: 'Account Status', type: 'display', section: 'status' },
+            { key: 'createdAt', label: 'Member Since', type: 'display', section: 'status' },
+            { key: 'updatedAt', label: 'Last Updated', type: 'display', section: 'status' },
           ]}
           actions={[
             {
-              label: "Send Message",
+              label: 'Send Message',
               icon: MessageSquare,
               onClick: () => {
                 setShowDetailsDialog(false);
@@ -753,7 +752,7 @@ export default function ClientManagement() {
               }
             },
             {
-              label: "Verify User",
+              label: 'Verify User',
               icon: CheckCircle,
               onClick: () => {
                 setShowDetailsDialog(false);
@@ -761,8 +760,8 @@ export default function ClientManagement() {
               }
             },
             {
-              label: "Suspend User",
-              variant: "destructive",
+              label: 'Suspend User',
+              variant: 'destructive',
               icon: XCircle,
               onClick: () => {
                 setShowDetailsDialog(false);
@@ -770,8 +769,8 @@ export default function ClientManagement() {
               }
             },
             {
-              label: "Delete User",
-              variant: "destructive",
+              label: 'Delete User',
+              variant: 'destructive',
               icon: Trash2,
               onClick: () => {
                 setShowDetailsDialog(false);
@@ -783,6 +782,268 @@ export default function ClientManagement() {
           queryKeyToInvalidate={["/api/admin/users"]}
         />
       )}
+
+      {/* Send Message Modal */}
+            <div className="space-y-6">
+              {/* Avatar Section */}
+              <div className="flex items-center justify-center">
+                <Avatar className="w-20 h-20">
+                  <AvatarImage src={selectedClient.profileImageUrl} />
+                  <AvatarFallback className="text-lg">
+                    {selectedClient.firstName?.charAt(0)}{selectedClient.lastName?.charAt(0)}
+                  </AvatarFallback>
+                </Avatar>
+              </div>
+
+              {/* Personal Information */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="firstName">First Name</Label>
+                  {isEditMode ? (
+                    <Input
+                      id="firstName"
+                      value={editFormData.firstName || ""}
+                      onChange={(e) => setEditFormData({...editFormData, firstName: e.target.value})}
+                    />
+                  ) : (
+                    <p className="text-sm font-medium text-gray-900 dark:text-white p-2 bg-gray-50 dark:bg-gray-800 rounded">
+                      {selectedClient.firstName}
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <Label htmlFor="lastName">Last Name</Label>
+                  {isEditMode ? (
+                    <Input
+                      id="lastName"
+                      value={editFormData.lastName || ""}
+                      onChange={(e) => setEditFormData({...editFormData, lastName: e.target.value})}
+                    />
+                  ) : (
+                    <p className="text-sm font-medium text-gray-900 dark:text-white p-2 bg-gray-50 dark:bg-gray-800 rounded">
+                      {selectedClient.lastName}
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <Label htmlFor="userIdDisplay">User ID</Label>
+                  <p className="text-sm font-medium text-blue-600 dark:text-blue-400 p-2 bg-blue-50 dark:bg-blue-900/20 rounded">
+                    {selectedClient.id}
+                  </p>
+                </div>
+                <div>
+                  <Label htmlFor="mobile">Mobile Number</Label>
+                  {isEditMode ? (
+                    <Input
+                      id="mobile"
+                      value={editFormData.mobile || ""}
+                      onChange={(e) => setEditFormData({...editFormData, mobile: e.target.value})}
+                    />
+                  ) : (
+                    <p className="text-sm font-medium text-gray-900 dark:text-white p-2 bg-gray-50 dark:bg-gray-800 rounded">
+                      {selectedClient.mobile}
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <Label htmlFor="email">Email Address</Label>
+                  {isEditMode ? (
+                    <Input
+                      id="email"
+                      type="email"
+                      value={editFormData.email || ""}
+                      onChange={(e) => setEditFormData({...editFormData, email: e.target.value})}
+                    />
+                  ) : (
+                    <p className="text-sm font-medium text-gray-900 dark:text-white p-2 bg-gray-50 dark:bg-gray-800 rounded">
+                      {selectedClient.email || "Not provided"}
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <Label htmlFor="role">User Role</Label>
+                  <p className="text-sm font-medium text-purple-600 dark:text-purple-400 p-2 bg-purple-50 dark:bg-purple-900/20 rounded capitalize">
+                    {selectedClient.role}
+                  </p>
+                </div>
+              </div>
+
+              {/* Address Information */}
+              <div className="space-y-4">
+                <h4 className="font-medium text-gray-900 dark:text-white mb-3">Address Information</h4>
+                <div className="grid grid-cols-1 gap-4">
+                  <div>
+                    <Label htmlFor="fullAddress">Full Address</Label>
+                    {isEditMode ? (
+                      <Textarea
+                        id="fullAddress"
+                        rows={3}
+                        value={editFormData.address || ""}
+                        onChange={(e) => setEditFormData({...editFormData, address: e.target.value})}
+                        placeholder="Enter complete address"
+                      />
+                    ) : (
+                      <p className="text-sm font-medium text-gray-900 dark:text-white p-2 bg-gray-50 dark:bg-gray-800 rounded min-h-[60px]">
+                        {selectedClient.address || "Address not provided"}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <Label htmlFor="state">State</Label>
+                    {isEditMode ? (
+                      <Input
+                        id="state"
+                        value={editFormData.state || ""}
+                        onChange={(e) => setEditFormData({...editFormData, state: e.target.value})}
+                        placeholder="State"
+                      />
+                    ) : (
+                      <p className="text-sm font-medium text-gray-900 dark:text-white p-2 bg-gray-50 dark:bg-gray-800 rounded">
+                        {selectedClient.state || "Not specified"}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <Label htmlFor="district">District</Label>
+                    {isEditMode ? (
+                      <Input
+                        id="district"
+                        value={editFormData.district || ""}
+                        onChange={(e) => setEditFormData({...editFormData, district: e.target.value})}
+                        placeholder="District"
+                      />
+                    ) : (
+                      <p className="text-sm font-medium text-gray-900 dark:text-white p-2 bg-gray-50 dark:bg-gray-800 rounded">
+                        {selectedClient.district || "Not specified"}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <Label htmlFor="pincode">Pincode</Label>
+                    {isEditMode ? (
+                      <Input
+                        id="pincode"
+                        value={editFormData.pincode || ""}
+                        onChange={(e) => setEditFormData({...editFormData, pincode: e.target.value})}
+                        placeholder="Pincode"
+                        maxLength={6}
+                      />
+                    ) : (
+                      <p className="text-sm font-medium text-gray-900 dark:text-white p-2 bg-gray-50 dark:bg-gray-800 rounded">
+                        {selectedClient.pincode || "Not provided"}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Bank Details Information */}
+              <div className="space-y-4">
+                <h4 className="font-medium text-gray-900 dark:text-white mb-3">Bank Details</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="bankAccountNumber">Account Number</Label>
+                    <p className="text-sm font-medium text-gray-900 dark:text-white p-2 bg-gray-50 dark:bg-gray-800 rounded">
+                      {selectedClient.bankAccountNumber ? "••••••••••••" + selectedClient.bankAccountNumber.slice(-4) : "Not provided"}
+                    </p>
+                  </div>
+                  <div>
+                    <Label htmlFor="bankIFSC">IFSC Code</Label>
+                    <p className="text-sm font-medium text-gray-900 dark:text-white p-2 bg-gray-50 dark:bg-gray-800 rounded">
+                      {selectedClient.bankIFSC || "Not provided"}
+                    </p>
+                  </div>
+                  <div>
+                    <Label htmlFor="bankAccountHolderName">Account Holder Name</Label>
+                    <p className="text-sm font-medium text-gray-900 dark:text-white p-2 bg-gray-50 dark:bg-gray-800 rounded">
+                      {selectedClient.bankAccountHolderName || "Not provided"}
+                    </p>
+                  </div>
+                  <div>
+                    <Label htmlFor="bankName">Bank Name</Label>
+                    <p className="text-sm font-medium text-gray-900 dark:text-white p-2 bg-gray-50 dark:bg-gray-800 rounded">
+                      {selectedClient.bankName || "Not provided"}
+                    </p>
+                  </div>
+                </div>
+                {(!selectedClient.bankAccountNumber) && (
+                  <Alert>
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>
+                      Bank details not provided. Client can add these in their dashboard.
+                    </AlertDescription>
+                  </Alert>
+                )}
+              </div>
+
+              {/* Status Information */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="verificationStatus">Verification Status</Label>
+                  <div className="p-2">
+                    <Badge className={`${selectedClient.isVerified ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100'}`}>
+                      {selectedClient.isVerified ? 'Verified' : 'Pending Verification'}
+                    </Badge>
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="memberSince">Member Since</Label>
+                  <p className="text-sm font-medium text-gray-900 dark:text-white p-2 bg-gray-50 dark:bg-gray-800 rounded">
+                    {new Date(selectedClient.createdAt).toLocaleDateString('en-IN', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    })}
+                  </p>
+                </div>
+              </div>
+
+              {/* Account Activity */}
+              <div>
+                <h4 className="font-medium text-gray-900 dark:text-white mb-3">Account Activity</h4>
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="text-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded">
+                    <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">0</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Total Bookings</p>
+                  </div>
+                  <div className="text-center p-3 bg-green-50 dark:bg-green-900/20 rounded">
+                    <p className="text-2xl font-bold text-green-600 dark:text-green-400">₹0</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Amount Spent</p>
+                  </div>
+                  <div className="text-center p-3 bg-purple-50 dark:bg-purple-900/20 rounded">
+                    <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">0</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Reviews Given</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => {
+              setShowDetailsDialog(false);
+              setIsEditMode(false);
+              setEditFormData({});
+            }}>
+              Close
+            </Button>
+            {isEditMode && (
+              <Button onClick={() => {
+                // TODO: Implement save functionality
+                console.log("Save changes:", editFormData);
+                setIsEditMode(false);
+                toast({
+                  title: "Changes Saved",
+                  description: "Client details have been updated successfully.",
+                });
+              }}>
+                Save Changes
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Send Message Modal */}
       <Dialog open={showMessageDialog} onOpenChange={setShowMessageDialog}>
