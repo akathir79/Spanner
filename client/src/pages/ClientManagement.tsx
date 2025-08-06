@@ -97,9 +97,9 @@ export default function ClientManagement() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <div className="container mx-auto px-4 py-6">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
+      {/* Header */}
+      <div className="bg-white dark:bg-gray-800 shadow-sm border-b">
+        <div className="container mx-auto px-4 py-4">
           <div className="flex items-center gap-4">
             <Button 
               variant="outline" 
@@ -109,139 +109,177 @@ export default function ClientManagement() {
               <ArrowLeft className="w-4 h-4" />
               Back to Dashboard
             </Button>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">user management</h1>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Client Management</h1>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="flex h-[calc(100vh-120px)]">
+        
+        {/* Left Sidebar */}
+        <div className="w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 overflow-y-auto">
+          <div className="p-4">
+            {/* Total Client List Header */}
+            <div className="mb-4">
+              <div className="bg-gray-100 dark:bg-gray-700 rounded-lg p-3 text-center font-medium text-gray-900 dark:text-white border">
+                Total Client List
+              </div>
+            </div>
+
+            {/* States List */}
+            <div className="space-y-1">
+              {states.map((state) => (
+                <button
+                  key={state}
+                  onClick={() => handleStateClick(state)}
+                  className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    selectedState === state
+                      ? 'bg-blue-100 text-blue-900 dark:bg-blue-900 dark:text-blue-100'
+                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                  }`}
+                >
+                  {state}
+                </button>
+              ))}
             </div>
           </div>
         </div>
 
-        {/* Two Panel Layout */}
-        <div className="flex h-[600px] border-2 border-black bg-white dark:bg-gray-800">
-          
-          {/* Left Panel */}
-          <div className="w-1/4 border-r-2 border-black p-4 space-y-2">
-            {/* Total Client List Button */}
-            <Button
-              variant={view === "total" ? "default" : "outline"}
-              className="w-full h-12 text-left justify-start border-2 border-black font-medium"
-              onClick={handleTotalClientsClick}
-            >
-              Total Client List
-            </Button>
-
-            {/* State Buttons */}
-            <div className="space-y-2">
-              {states.map((state) => (
-                <Button
-                  key={state}
-                  variant={selectedState === state ? "default" : "outline"}
-                  className="w-full h-12 text-left justify-start border-2 border-black font-medium"
-                  onClick={() => handleStateClick(state)}
-                >
-                  {state}
-                </Button>
-              ))}
-            </div>
-          </div>
-
-          {/* Right Panel */}
-          <div className="flex-1 p-4">
-            {/* Loading State */}
-            {usersLoading && (
-              <div className="flex items-center justify-center h-full">
-                <div className="text-center">
-                  <div className="inline-block w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mb-2"></div>
-                  <p className="text-gray-600 dark:text-gray-400">Loading...</p>
-                </div>
+        {/* Right Content Area */}
+        <div className="flex-1 bg-white dark:bg-gray-800">
+          {/* Loading State */}
+          {usersLoading && (
+            <div className="flex items-center justify-center h-full">
+              <div className="text-center">
+                <div className="inline-block w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mb-3"></div>
+                <p className="text-gray-600 dark:text-gray-400">Loading client data...</p>
               </div>
-            )}
+            </div>
+          )}
 
-            {/* Districts View */}
-            {!usersLoading && view === "districts" && selectedState && (
-              <div className="grid grid-cols-3 gap-3">
+          {/* Default State - No Selection */}
+          {!usersLoading && !selectedState && (
+            <div className="flex items-center justify-center h-full">
+              <div className="text-center">
+                <div className="text-gray-400 mb-4">
+                  <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                </div>
+                <p className="text-lg text-gray-500 dark:text-gray-400 mb-2">Select a state from the left panel to view districts</p>
+                <p className="text-sm text-gray-400 dark:text-gray-500">Choose any state to see available districts and clients</p>
+              </div>
+            </div>
+          )}
+
+          {/* Districts View */}
+          {!usersLoading && selectedState && !selectedDistrict && (
+            <div className="p-6">
+              <div className="mb-6">
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                  Districts in {selectedState}
+                </h2>
+                <p className="text-gray-600 dark:text-gray-400">
+                  Select a district to view registered clients
+                </p>
+              </div>
+              
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                 {districtsForState.map((district) => (
                   <Button
                     key={district.id}
                     variant="outline"
-                    className="h-12 border-2 border-black font-medium"
                     onClick={() => handleDistrictClick(district.name)}
+                    className="h-12 justify-start font-medium hover:bg-blue-50 hover:border-blue-200 dark:hover:bg-blue-900/20"
                   >
                     {district.name}
                   </Button>
                 ))}
               </div>
-            )}
+            </div>
+          )}
 
-            {/* Clients View */}
-            {!usersLoading && view === "clients" && selectedDistrict && (
-              <div className="space-y-4">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold">
-                    Clients in {selectedDistrict}, {selectedState}
-                  </h3>
-                  <Button variant="outline" onClick={handleBackClick}>
-                    Back to Districts
-                  </Button>
+          {/* Clients View */}
+          {!usersLoading && selectedDistrict && (
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-1">
+                    Clients in {selectedDistrict}
+                  </h2>
+                  <p className="text-gray-600 dark:text-gray-400">
+                    {selectedState} • {clientsForDistrict.length} clients found
+                  </p>
                 </div>
-                
-                {clientsForDistrict.length === 0 ? (
-                  <div className="text-center py-8">
-                    <p className="text-gray-500 dark:text-gray-400">No clients found in this district</p>
+                <Button 
+                  variant="outline" 
+                  onClick={handleBackClick}
+                  className="flex items-center gap-2"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  Back to Districts
+                </Button>
+              </div>
+              
+              {clientsForDistrict.length === 0 ? (
+                <div className="text-center py-12">
+                  <div className="text-gray-400 mb-4">
+                    <svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+                    </svg>
                   </div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {clientsForDistrict.map((client) => (
-                      <Card key={client.id} className="border-2">
-                        <CardContent className="p-4">
-                          <div className="flex justify-between items-start mb-2">
-                            <h4 className="font-medium text-gray-900 dark:text-white">
+                  <p className="text-gray-500 dark:text-gray-400 text-lg">No clients found in this district</p>
+                  <p className="text-gray-400 dark:text-gray-500 text-sm mt-1">Clients will appear here once they register</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {clientsForDistrict.map((client) => (
+                    <Card key={client.id} className="hover:shadow-md transition-shadow">
+                      <CardContent className="p-4">
+                        <div className="flex justify-between items-start mb-3">
+                          <div>
+                            <h4 className="font-semibold text-gray-900 dark:text-white text-lg">
                               {client.firstName} {client.lastName}
                             </h4>
-                            <Badge 
-                              variant={client.isVerified ? "default" : "destructive"}
-                              className={client.isVerified ? "bg-green-100 text-green-800" : ""}
-                            >
-                              {client.isVerified ? "Verified" : "Pending"}
-                            </Badge>
                           </div>
-                          
-                          <div className="space-y-1 text-sm text-gray-600 dark:text-gray-400">
-                            <div className="flex items-center gap-2">
-                              <Phone className="w-3 h-3" />
-                              {client.mobile}
-                            </div>
-                            {client.email && (
-                              <div className="flex items-center gap-2">
-                                <Mail className="w-3 h-3" />
-                                {client.email}
-                              </div>
-                            )}
-                            <div className="flex items-center gap-2">
-                              <Calendar className="w-3 h-3" />
-                              Joined {new Date(client.createdAt).toLocaleDateString()}
-                            </div>
+                          <Badge 
+                            variant={client.isVerified ? "default" : "destructive"}
+                            className={client.isVerified ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100" : ""}
+                          >
+                            {client.isVerified ? "Verified" : "Pending"}
+                          </Badge>
+                        </div>
+                        
+                        <div className="space-y-2 text-sm">
+                          <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+                            <Phone className="w-4 h-4 flex-shrink-0" />
+                            <span className="font-mono">{client.mobile}</span>
                           </div>
-                          
-                          <div className="mt-3 text-xs text-gray-500 dark:text-gray-500">
+                          {client.email && (
+                            <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+                              <Mail className="w-4 h-4 flex-shrink-0" />
+                              <span className="truncate">{client.email}</span>
+                            </div>
+                          )}
+                          <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+                            <Calendar className="w-4 h-4 flex-shrink-0" />
+                            <span>Joined {new Date(client.createdAt).toLocaleDateString()}</span>
+                          </div>
+                        </div>
+                        
+                        <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
+                          <div className="text-xs text-gray-500 dark:text-gray-500 font-mono">
                             ID: {client.id.slice(0, 8)}...
                           </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Instructions */}
-            {!usersLoading && view === "states" && (
-              <div className="flex items-center justify-center h-full">
-                <p className="text-gray-500 dark:text-gray-400 text-center">
-                  Select a state from the left panel to view districts
-                </p>
-              </div>
-            )}
-          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>
