@@ -802,7 +802,7 @@ export function AuthModal({ isOpen, onClose, mode, initialTab, onSwitchToSignup 
     const { termsAccepted, districtId, ...signupData } = data;
     
     // Convert districtId to district name
-    const selectedDistrict = currentDistricts?.find(d => d.id === districtId);
+    const selectedDistrict = clientApiDistricts?.find(d => d.id === districtId);
     const districtName = selectedDistrict?.name || districtId;
     
     const result = await signupClient({
