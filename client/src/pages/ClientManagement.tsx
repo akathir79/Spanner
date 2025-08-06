@@ -149,6 +149,7 @@ export default function ClientManagement() {
   const [searchFilter, setSearchFilter] = useState<"all" | "id" | "name" | "email" | "mobile" | "location">("all");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [sidebarToggling, setSidebarToggling] = useState(false);
+  const [loadingState, setLoadingState] = useState<string | null>(null);
   
   // Modal states
   const [selectedClient, setSelectedClient] = useState<User | null>(null);
@@ -357,21 +358,33 @@ export default function ClientManagement() {
   };
 
   // Handle navigation
-  const handleTotalClientsClick = () => {
-    setView("total");
-    setSelectedState(null);
-    setSelectedDistrict(null);
+  const handleTotalClientsClick = async () => {
+    setLoadingState("total");
+    setTimeout(() => {
+      setView("total");
+      setSelectedState(null);
+      setSelectedDistrict(null);
+      setLoadingState(null);
+    }, 200);
   };
 
-  const handleStateClick = (state: string) => {
-    setSelectedState(state);
-    setSelectedDistrict(null);
-    setView("districts");
+  const handleStateClick = async (state: string) => {
+    setLoadingState(state);
+    setTimeout(() => {
+      setSelectedState(state);
+      setSelectedDistrict(null);
+      setView("districts");
+      setLoadingState(null);
+    }, 200);
   };
 
-  const handleDistrictClick = (district: string) => {
-    setSelectedDistrict(district);
-    setView("clients");
+  const handleDistrictClick = async (district: string) => {
+    setLoadingState(district);
+    setTimeout(() => {
+      setSelectedDistrict(district);
+      setView("clients");
+      setLoadingState(null);
+    }, 200);
   };
 
   const handleBackClick = () => {
@@ -441,19 +454,29 @@ export default function ClientManagement() {
             {/* Total Client List Header */}
             <button
               onClick={handleTotalClientsClick}
+              disabled={loadingState === "total"}
               className={`w-full bg-gray-100 dark:bg-gray-700 rounded-lg p-3 text-center font-medium border transition-colors relative ${
                 view === "total" 
                   ? 'bg-blue-100 text-blue-900 dark:bg-blue-900 dark:text-blue-100 border-blue-300' 
                   : 'text-gray-900 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-600'
-              }`}
+              } ${loadingState === "total" ? 'opacity-75' : ''}`}
             >
-              <span className="pr-8">Total Client List</span>
-              <Badge 
-                variant="secondary" 
-                className="absolute right-2 top-1/2 -translate-y-1/2 h-5 px-2 min-w-[20px] rounded-md flex items-center justify-center text-xs bg-purple-500 text-white hover:bg-purple-600"
-              >
-                {clients.length}
-              </Badge>
+              {loadingState === "total" ? (
+                <div className="flex items-center justify-center">
+                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                  Loading...
+                </div>
+              ) : (
+                <>
+                  <span className="pr-8">Total Client List</span>
+                  <Badge 
+                    variant="secondary" 
+                    className="absolute right-2 top-1/2 -translate-y-1/2 h-5 px-2 min-w-[20px] rounded-md flex items-center justify-center text-xs bg-purple-500 text-white hover:bg-purple-600"
+                  >
+                    {clients.length}
+                  </Badge>
+                </>
+              )}
             </button>
           </div>
           
@@ -464,19 +487,29 @@ export default function ClientManagement() {
                 <button
                   key={state}
                   onClick={() => handleStateClick(state)}
+                  disabled={loadingState === state}
                   className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors relative ${
                     selectedState === state
                       ? 'bg-blue-100 text-blue-900 dark:bg-blue-900 dark:text-blue-100'
                       : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-                  }`}
+                  } ${loadingState === state ? 'opacity-75' : ''}`}
                 >
-                  <span className="pr-8">{state}</span>
-                  <Badge 
-                    variant="secondary" 
-                    className="absolute right-2 top-1/2 -translate-y-1/2 h-5 px-2 min-w-[20px] rounded-md flex items-center justify-center text-xs bg-blue-500 text-white hover:bg-blue-600"
-                  >
-                    {getClientCountForState(state)}
-                  </Badge>
+                  {loadingState === state ? (
+                    <div className="flex items-center">
+                      <Loader2 className="w-3 h-3 animate-spin mr-2" />
+                      <span>Loading...</span>
+                    </div>
+                  ) : (
+                    <>
+                      <span className="pr-8">{state}</span>
+                      <Badge 
+                        variant="secondary" 
+                        className="absolute right-2 top-1/2 -translate-y-1/2 h-5 px-2 min-w-[20px] rounded-md flex items-center justify-center text-xs bg-blue-500 text-white hover:bg-blue-600"
+                      >
+                        {getClientCountForState(state)}
+                      </Badge>
+                    </>
+                  )}
                 </button>
               ))}
             </div>
@@ -734,15 +767,27 @@ export default function ClientManagement() {
                       key={district}
                       variant="outline"
                       onClick={() => handleDistrictClick(district)}
-                      className="h-12 justify-start font-medium hover:bg-blue-50 hover:border-blue-200 dark:hover:bg-blue-900/20 relative pr-10"
+                      disabled={loadingState === district}
+                      className={`h-12 justify-start font-medium hover:bg-blue-50 hover:border-blue-200 dark:hover:bg-blue-900/20 relative pr-10 ${
+                        loadingState === district ? 'opacity-75' : ''
+                      }`}
                     >
-                      <span className="truncate">{district}</span>
-                      <Badge 
-                        variant="secondary" 
-                        className="absolute right-2 top-1/2 -translate-y-1/2 h-5 px-2 min-w-[20px] rounded-md flex items-center justify-center text-xs bg-green-500 text-white hover:bg-green-600"
-                      >
-                        {getClientCountForDistrict(district)}
-                      </Badge>
+                      {loadingState === district ? (
+                        <div className="flex items-center">
+                          <Loader2 className="w-3 h-3 animate-spin mr-2" />
+                          <span className="truncate">Loading...</span>
+                        </div>
+                      ) : (
+                        <>
+                          <span className="truncate">{district}</span>
+                          <Badge 
+                            variant="secondary" 
+                            className="absolute right-2 top-1/2 -translate-y-1/2 h-5 px-2 min-w-[20px] rounded-md flex items-center justify-center text-xs bg-green-500 text-white hover:bg-green-600"
+                          >
+                            {getClientCountForDistrict(district)}
+                          </Badge>
+                        </>
+                      )}
                     </Button>
                   ))}
                 </div>
