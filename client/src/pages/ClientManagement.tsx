@@ -428,23 +428,14 @@ export default function ClientManagement() {
     }
   };
 
-  // Handle navigation with proper batching
+  // Handle navigation - direct approach without async operations
   const handleTotalClientsClick = () => {
-    // Set loading state immediately
-    setLoadingState("total");
-    
-    // Use a more responsive approach with state batching
-    Promise.resolve().then(() => {
-      // Reset search and filters first to reduce rendering load
-      setSearchQuery("");
-      setSearchFilter("all");
-      
-      // Then update the main state
-      setView("total");
-      setSelectedState(null);
-      setSelectedDistrict(null);
-      setLoadingState(null);
-    });
+    // Direct state updates without delays or promises
+    setView("total");
+    setSelectedState(null);
+    setSelectedDistrict(null);
+    setSearchQuery("");
+    setSearchFilter("all");
   };
 
   const handleStateClick = async (state: string) => {
@@ -521,29 +512,19 @@ export default function ClientManagement() {
             {/* Total Client List Header */}
             <button
               onClick={handleTotalClientsClick}
-              disabled={loadingState === "total"}
               className={`w-full bg-gray-100 dark:bg-gray-700 rounded-lg p-3 text-center font-medium border transition-colors relative ${
                 view === "total" 
                   ? 'bg-blue-100 text-blue-900 dark:bg-blue-900 dark:text-blue-100 border-blue-300' 
                   : 'text-gray-900 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-600'
-              } ${loadingState === "total" ? 'opacity-75' : ''}`}
+              }`}
             >
-              {loadingState === "total" ? (
-                <div className="flex items-center justify-center">
-                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                  Loading...
-                </div>
-              ) : (
-                <>
-                  <span className="pr-8">Total Client List</span>
-                  <Badge 
-                    variant="secondary" 
-                    className="absolute right-2 top-1/2 -translate-y-1/2 h-5 px-2 min-w-[20px] rounded-md flex items-center justify-center text-xs bg-purple-500 text-white hover:bg-purple-600"
-                  >
-                    {clients.length}
-                  </Badge>
-                </>
-              )}
+              <span className="pr-8">Total Client List</span>
+              <Badge 
+                variant="secondary" 
+                className="absolute right-2 top-1/2 -translate-y-1/2 h-5 px-2 min-w-[20px] rounded-md flex items-center justify-center text-xs bg-purple-500 text-white hover:bg-purple-600"
+              >
+                {clients.length}
+              </Badge>
             </button>
           </div>
           
