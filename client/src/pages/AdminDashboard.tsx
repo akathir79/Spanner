@@ -81,7 +81,7 @@ const createAdminSchema = z.object({
 type CreateAdminForm = z.infer<typeof createAdminSchema>;
 
 export default function AdminDashboard() {
-  const { user, isLoading: authLoading } = useAuth();
+  const { user, isLoading: authLoading, login } = useAuth();
   const currentUser = user; // Reference for clarity in nested components
   const { t } = useLanguage();
   const { toast } = useToast();
@@ -343,28 +343,7 @@ export default function AdminDashboard() {
     }
   };
 
-  // Authentication redirect logic in useEffect to avoid render warnings
-  useEffect(() => {
-    if (!authLoading && (!user || (user.role !== "admin" && user.role !== "super_admin"))) {
-      setLocation("/");
-    }
-  }, [user, authLoading, setLocation]);
 
-  // Authentication checks - MUST be after all hooks
-  if (authLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4" />
-          <p className="text-muted-foreground">Loading dashboard...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!user || (user.role !== "admin" && user.role !== "super_admin")) {
-    return null;
-  }
 
   // Quick login for demo purposes
   const quickLogin = async () => {
@@ -404,8 +383,8 @@ export default function AdminDashboard() {
             title: "Success",
             description: "Super admin login successful!",
           });
-          // Force page refresh to trigger proper redirection
-          window.location.reload();
+          // Navigate to admin dashboard without reload
+          setLocation("/admin-dashboard");
         } else {
           toast({
             title: "Error",
@@ -432,8 +411,23 @@ export default function AdminDashboard() {
     }
   };
 
-  // Redirect if not authenticated or wrong role
-  if (!user) {
+  // Authentication redirect logic in useEffect to avoid render warnings
+  useEffect(() => {
+    if (!authLoading) {
+      if (!user) {
+        setLocation("/");
+      } else if (user.role !== "admin" && user.role !== "super_admin") {
+        if (user.role === "client") {
+          setLocation("/dashboard");
+        } else if (user.role === "worker") {
+          setLocation("/worker-dashboard");
+        }
+      }
+    }
+  }, [user, authLoading, setLocation]);
+
+  // Show login interface for unauthenticated users
+  if (!user && !authLoading) {
     return (
       <div className="min-h-screen bg-muted/30 flex items-center justify-center">
         <Card className="w-full max-w-md p-8">
@@ -464,12 +458,20 @@ export default function AdminDashboard() {
     );
   }
 
-  if (user.role !== "admin" && user.role !== "super_admin") {
-    if (user.role === "client") {
-      setLocation("/dashboard");
-    } else if (user.role === "worker") {
-      setLocation("/worker-dashboard");
-    }
+  // Show loading state during authentication
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-muted/30 flex items-center justify-center">
+        <div className="text-center">
+          <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4" />
+          <p>Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Return null if wrong role (redirect happens in useEffect)
+  if (user && user.role !== "admin" && user.role !== "super_admin") {
     return null;
   }
 
@@ -501,7 +503,7 @@ export default function AdminDashboard() {
   
   const stats = {
     // For regular admins, only count clients and workers as "total users"
-    totalUsers: user.role === "super_admin" ? 
+    totalUsers: user?.role === "super_admin" ? 
       allUsers.length : 
       allUsers.filter((u: any) => u.role === "client" || u.role === "worker").length,
     totalClients: allUsers.filter((u: any) => u.role === "client").length,
@@ -525,7 +527,7 @@ export default function AdminDashboard() {
   const getUsersByType = (userType: string) => {
     return allUsers.filter((u: any) => {
       // Regular admins cannot access admin management
-      if (userType === "admin" && user.role !== "super_admin") return false;
+      if (userType === "admin" && user?.role !== "super_admin") return false;
       if (userType === "admin") return u.role === "admin" || u.role === "super_admin";
       return u.role === userType;
     }).map((userItem: any) => {
@@ -555,7 +557,7 @@ export default function AdminDashboard() {
     let usersToFilter = selectedUserType ? getUsersByType(selectedUserType) : allUsers;
     
     // For regular admins, hide admin and super_admin users from the default view
-    if (!selectedUserType && user.role === "admin") {
+    if (!selectedUserType && user?.role === "admin") {
       usersToFilter = allUsers.filter((u: any) => u.role !== "admin" && u.role !== "super_admin");
     }
     
@@ -591,7 +593,7 @@ export default function AdminDashboard() {
       <div className="container mx-auto px-4">
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">
-            {user.role === "super_admin" ? "Super Admin" : "Admin"} Dashboard
+            {user?.role === "super_admin" ? "Super Admin" : "Admin"} Dashboard
           </h1>
           <p className="text-muted-foreground">
             Manage users, bookings, and platform operations across Tamil Nadu.
@@ -599,7 +601,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Enhanced Stats Overview with User Type Cards */}
-        <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 ${user.role === "super_admin" ? "xl:grid-cols-6" : "xl:grid-cols-5"} gap-6 mb-8`}>
+        <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 ${user?.role === "super_admin" ? "xl:grid-cols-6" : "xl:grid-cols-5"} gap-6 mb-8`}>
           <Card 
             className="cursor-pointer transition-all hover:shadow-md border-2 hover:border-blue-200"
             onClick={() => {
@@ -613,7 +615,7 @@ export default function AdminDashboard() {
                   <p className="text-sm font-medium text-muted-foreground">Total Users</p>
                   <p className="text-2xl font-bold">{stats.totalUsers}</p>
                   <p className="text-xs text-muted-foreground">
-                    {user.role === "super_admin" ? "All platform users" : `${stats.totalClients} clients, ${stats.totalWorkers} workers`}
+                    {user?.role === "super_admin" ? "All platform users" : `${stats.totalClients} clients, ${stats.totalWorkers} workers`}
                   </p>
                 </div>
                 <Users className="h-8 w-8 text-blue-600" />
@@ -714,7 +716,7 @@ export default function AdminDashboard() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className={`grid w-full ${user.role === "super_admin" ? "grid-cols-6" : "grid-cols-5"} admin-tabs`}>
+          <TabsList className={`grid w-full ${user?.role === "super_admin" ? "grid-cols-6" : "grid-cols-5"} admin-tabs`}>
             <TabsTrigger value="approvals">Worker Approvals</TabsTrigger>
             <TabsTrigger value="users">User Management</TabsTrigger>
             <TabsTrigger value="bookings">Booking Management</TabsTrigger>
@@ -724,7 +726,7 @@ export default function AdminDashboard() {
             </TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
             {/* Platform Settings - Only for Super Admin */}
-            {user.role === "super_admin" && (
+            {user?.role === "super_admin" && (
               <TabsTrigger value="settings">Platform Settings</TabsTrigger>
             )}
           </TabsList>
@@ -1420,7 +1422,7 @@ export default function AdminDashboard() {
           </TabsContent>
 
           {/* Platform Settings Tab - Only for Super Admin */}
-          {user.role === "super_admin" && (
+          {user?.role === "super_admin" && (
             <TabsContent value="settings" className="space-y-6">
             <Card>
               <CardHeader>
@@ -1486,7 +1488,7 @@ export default function AdminDashboard() {
                     </div>
                   </div>
                   
-                  {user.role === "super_admin" && (
+                  {user?.role === "super_admin" && (
                     <div>
                       <h4 className="font-semibold mb-4">Super Admin Tools</h4>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
