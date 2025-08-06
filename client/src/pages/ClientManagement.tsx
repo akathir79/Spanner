@@ -665,6 +665,7 @@ export default function ClientManagement() {
                             <TableCell>
                               <div className="text-sm text-gray-600 dark:text-gray-400">
                                 <div>0 bookings</div>
+                                <div>Balance: ₹0</div>
                                 <div>Spent: ₹0</div>
                               </div>
                             </TableCell>
@@ -957,6 +958,7 @@ export default function ClientManagement() {
                               <TableCell>
                                 <div className="text-sm text-gray-600 dark:text-gray-400">
                                   <div>0 bookings</div>
+                                  <div>Balance: ₹0</div>
                                   <div>Spent: ₹0</div>
                                 </div>
                               </TableCell>
