@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -848,6 +848,21 @@ export default function Dashboard() {
     }
   };
 
+  // Authentication redirect logic in useEffect to avoid render warnings
+  useEffect(() => {
+    if (!authLoading) {
+      if (!user) {
+        setLocation("/");
+      } else if (user.role !== "client") {
+        if (user.role === "worker") {
+          setLocation("/worker-dashboard");
+        } else if (user.role === "admin" || user.role === "super_admin") {
+          setLocation("/admin-dashboard");
+        }
+      }
+    }
+  }, [user, authLoading, setLocation]);
+
   // Authentication checks - MUST be after all hooks
   if (authLoading) {
     return (
@@ -860,17 +875,7 @@ export default function Dashboard() {
     );
   }
 
-  if (!user) {
-    setLocation("/");
-    return null;
-  }
-
-  if (user.role !== "client") {
-    if (user.role === "worker") {
-      setLocation("/worker-dashboard");
-    } else if (user.role === "admin" || user.role === "super_admin") {
-      setLocation("/admin-dashboard");
-    }
+  if (!user || user.role !== "client") {
     return null;
   }
 

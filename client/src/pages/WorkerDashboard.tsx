@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Plus } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -585,6 +585,21 @@ export default function WorkerDashboard() {
     }
   };
 
+  // Authentication redirect logic in useEffect to avoid render warnings
+  useEffect(() => {
+    if (!authLoading) {
+      if (!user) {
+        setLocation("/");
+      } else if (user.role !== "worker") {
+        if (user.role === "client") {
+          setLocation("/dashboard");
+        } else if (user.role === "admin" || user.role === "super_admin") {
+          setLocation("/admin-dashboard");
+        }
+      }
+    }
+  }, [user, authLoading, setLocation]);
+
   // Authentication checks - MUST be after all hooks
   if (authLoading) {
     return (
@@ -597,17 +612,7 @@ export default function WorkerDashboard() {
     );
   }
 
-  if (!user) {
-    setLocation("/");
-    return null;
-  }
-
-  if (user.role !== "worker") {
-    if (user.role === "client") {
-      setLocation("/dashboard");
-    } else if (user.role === "admin" || user.role === "super_admin") {
-      setLocation("/admin-dashboard");
-    }
+  if (!user || user.role !== "worker") {
     return null;
   }
 

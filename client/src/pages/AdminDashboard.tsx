@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -343,6 +343,13 @@ export default function AdminDashboard() {
     }
   };
 
+  // Authentication redirect logic in useEffect to avoid render warnings
+  useEffect(() => {
+    if (!authLoading && (!user || (user.role !== "admin" && user.role !== "super_admin"))) {
+      setLocation("/");
+    }
+  }, [user, authLoading, setLocation]);
+
   // Authentication checks - MUST be after all hooks
   if (authLoading) {
     return (
@@ -356,7 +363,6 @@ export default function AdminDashboard() {
   }
 
   if (!user || (user.role !== "admin" && user.role !== "super_admin")) {
-    setLocation("/");
     return null;
   }
 

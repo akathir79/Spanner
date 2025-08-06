@@ -588,19 +588,23 @@ export default function Home() {
     // Filter workers by district
   };
 
+  // Authentication redirect logic in useEffect to avoid render warnings
+  useEffect(() => {
+    if (user && window.location.pathname === '/') {
+      const userRole = user.role;
+      if (userRole === "admin" || userRole === "super_admin") {
+        setLocation("/admin-dashboard");
+      } else if (userRole === "worker") {
+        setLocation("/worker-dashboard");
+      } else if (userRole === "client") {
+        setLocation("/dashboard");
+      }
+    }
+  }, [user, setLocation]);
+
   // Authentication checks - MUST be after all hooks
   if (user && window.location.pathname === '/') {
-    const userRole = user.role;
-    if (userRole === "admin" || userRole === "super_admin") {
-      setLocation("/admin-dashboard");
-      return null;
-    } else if (userRole === "worker") {
-      setLocation("/worker-dashboard");
-      return null;
-    } else if (userRole === "client") {
-      setLocation("/dashboard");
-      return null;
-    }
+    return null; // Will redirect via useEffect
   }
 
   return (
