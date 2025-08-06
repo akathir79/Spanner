@@ -86,10 +86,9 @@ export default function AdminDashboard() {
   const { t } = useLanguage();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
-  const [userFilter, setUserFilter] = useState("");
+
   const [bookingFilter, setBookingFilter] = useState("");
-  const [selectedUserType, setSelectedUserType] = useState<string | null>(null);
-  const [userDetailsModal, setUserDetailsModal] = useState<any>(null);
+
   const [activeTab, setActiveTab] = useState("approvals");
   const [messageDialogUser, setMessageDialogUser] = useState<any>(null);
   const [createAdminModalOpen, setCreateAdminModalOpen] = useState(false);
@@ -97,7 +96,7 @@ export default function AdminDashboard() {
   const [databaseManagementOpen, setDatabaseManagementOpen] = useState(false);
   const [districtManagerOpen, setDistrictManagerOpen] = useState(false);
   const [adminProfilePreview, setAdminProfilePreview] = useState<string | null>(null);
-  const [deleteConfirmUser, setDeleteConfirmUser] = useState<any>(null);
+
   const [isLoading, setIsLoading] = useState(false);
 
   // Create admin form
@@ -523,57 +522,9 @@ export default function AdminDashboard() {
 
   const platformFee = stats.totalRevenue * 0.15;
 
-  // Get users by type with detailed info
-  const getUsersByType = (userType: string) => {
-    return allUsers.filter((u: any) => {
-      // Regular admins cannot access admin management
-      if (userType === "admin" && user?.role !== "super_admin") return false;
-      if (userType === "admin") return u.role === "admin" || u.role === "super_admin";
-      return u.role === userType;
-    }).map((userItem: any) => {
-      const userDistrict = districts.find((d: any) => d.id === userItem.districtId);
-      const userBookings = allBookings.filter((b: any) => 
-        (userItem.role === "client" && b.clientId === userItem.id) || 
-        (userItem.role === "worker" && b.workerId === userItem.id)
-      );
-      const completedBookings = userBookings.filter((b: any) => b.status === "completed");
-      
-      return {
-        ...userItem,
-        location: userDistrict ? `${userDistrict.name} (${userDistrict.tamilName})` : "Not specified",
-        serviceType: userItem.workerProfile?.primaryService?.replace('_', ' ') || 
-                    (userItem.role === "client" ? "General Services" : "N/A"),
-        totalBookings: userBookings.length,
-        balance: userItem.role === "client" ? 
-          completedBookings.reduce((sum: number, b: any) => sum + (parseFloat(b.totalAmount) || 0), 0) : 0,
-        totalEarnings: userItem.role === "worker" ? 
-          completedBookings.reduce((sum: number, b: any) => sum + (parseFloat(b.totalAmount) || 0) * 0.85, 0) : 0,
-      };
-    });
-  };
 
-  // Filter users - ensure users is an array before filtering
-  const filteredUsers = (() => {
-    let usersToFilter = selectedUserType ? getUsersByType(selectedUserType) : allUsers;
-    
-    // For regular admins, hide admin and super_admin users from the default view
-    if (!selectedUserType && user?.role === "admin") {
-      usersToFilter = allUsers.filter((u: any) => u.role !== "admin" && u.role !== "super_admin");
-    }
-    
-    if (!userFilter) return usersToFilter;
-    
-    const searchLower = userFilter.toLowerCase();
-    return usersToFilter.filter((user: any) => (
-      user.firstName?.toLowerCase().includes(searchLower) ||
-      user.lastName?.toLowerCase().includes(searchLower) ||
-      user.mobile?.includes(searchLower) ||
-      user.email?.toLowerCase().includes(searchLower) ||
-      user.role?.toLowerCase().includes(searchLower) ||
-      user.serviceType?.toLowerCase().includes(searchLower) ||
-      user.location?.toLowerCase().includes(searchLower)
-    ));
-  })();
+
+
 
   // Filter bookings - ensure bookings is an array before filtering
   const filteredBookings = (Array.isArray(bookings) ? bookings : [])?.filter((booking: any) => {
@@ -602,13 +553,7 @@ export default function AdminDashboard() {
 
         {/* Enhanced Stats Overview with User Type Cards */}
         <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 ${user?.role === "super_admin" ? "xl:grid-cols-6" : "xl:grid-cols-5"} gap-6 mb-8`}>
-          <Card 
-            className="cursor-pointer transition-all hover:shadow-md border-2 hover:border-blue-200"
-            onClick={() => {
-              setSelectedUserType(null);
-              setActiveTab("users");
-            }}
-          >
+          <Card>
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -639,13 +584,7 @@ export default function AdminDashboard() {
             </CardContent>
           </Card>
           
-          <Card 
-            className="cursor-pointer transition-all hover:shadow-md border-2 hover:border-purple-200"
-            onClick={() => {
-              setSelectedUserType("worker");
-              setActiveTab("users");
-            }}
-          >
+          <Card>
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -660,13 +599,7 @@ export default function AdminDashboard() {
           
           {/* Total Admins Card - Only for Super Admin */}
           {user.role === "super_admin" && (
-            <Card 
-              className="cursor-pointer transition-all hover:shadow-md border-2 hover:border-orange-200"
-              onClick={() => {
-                setSelectedUserType("admin");
-                setActiveTab("users");
-              }}
-            >
+            <Card>
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
@@ -713,11 +646,9 @@ export default function AdminDashboard() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className={`grid w-full ${user?.role === "super_admin" ? "grid-cols-6" : "grid-cols-5"} admin-tabs`}>
+          <TabsList className={`grid w-full ${user?.role === "super_admin" ? "grid-cols-5" : "grid-cols-4"} admin-tabs`}>
             <TabsTrigger value="approvals">Worker Approvals</TabsTrigger>
-            <TabsTrigger value="users">User Management</TabsTrigger>
             <TabsTrigger value="bookings">Booking Management</TabsTrigger>
-
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
             {/* Platform Settings - Only for Super Admin */}
             {user?.role === "super_admin" && (
@@ -730,504 +661,7 @@ export default function AdminDashboard() {
             <WorkerApprovalSection />
           </TabsContent>
 
-          {/* Enhanced User Management Tab */}
-          <TabsContent value="users" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <Users className="h-5 w-5" />
-                    <span>User Management</span>
-                    {selectedUserType && (
-                      <Badge variant="secondary" className="ml-2">
-                        {selectedUserType === "admin" ? "Admins & Super Admins" : 
-                         selectedUserType === "client" ? "Clients" : 
-                         selectedUserType === "worker" ? "Workers" : "All Users"}
-                      </Badge>
-                    )}
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    {selectedUserType && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setSelectedUserType(null)}
-                      >
-                        Clear Filter
-                      </Button>
-                    )}
-                    <div className="relative">
-                      <Search className="h-4 w-4 absolute left-3 top-3 text-muted-foreground" />
-                      <Input
-                        placeholder="Search users..."
-                        value={userFilter}
-                        onChange={(e) => setUserFilter(e.target.value)}
-                        className="pl-9 w-64"
-                      />
-                    </div>
-                  </div>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {usersLoading ? (
-                  <div className="space-y-4">
-                    {[...Array(5)].map((_, i) => (
-                      <div key={i} className="animate-pulse">
-                        <div className="h-16 bg-muted rounded-lg"></div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>User</TableHead>
-                          <TableHead>Role</TableHead>
-                          <TableHead>Location</TableHead>
-                          <TableHead>Service Type</TableHead>
-                          <TableHead>Bookings/Earnings</TableHead>
-                          <TableHead>Contact</TableHead>
-                          <TableHead>Registration Date</TableHead>
-                          <TableHead>Last Login</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead>Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {filteredUsers.map((user: any) => (
-                          <TableRow key={user.id}>
-                            <TableCell>
-                              <div>
-                                <p className="font-medium">
-                                  {user.firstName} {user.lastName}
-                                </p>
-                                <p className="text-sm text-muted-foreground">
-                                  ID: {user.id.substring(0, 8)}...
-                                </p>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <Badge 
-                                variant={
-                                  user.role === "super_admin" ? "default" :
-                                  user.role === "admin" ? "secondary" :
-                                  user.role === "worker" ? "outline" : "secondary"
-                                }
-                                className={
-                                  user.role === "super_admin" ? "bg-red-100 text-red-800" :
-                                  user.role === "admin" ? "bg-orange-100 text-orange-800" :
-                                  user.role === "worker" ? "bg-purple-100 text-purple-800" :
-                                  "bg-green-100 text-green-800"
-                                }
-                              >
-                                {user.role === "super_admin" ? "Super Admin" :
-                                 user.role === "admin" ? "Admin" :
-                                 user.role === "worker" ? "Worker" : "Client"}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>
-                              <div className="text-sm">
-                                <p className="font-medium">{user.location}</p>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <div className="text-sm">
-                                <p className="font-medium">{user.serviceType}</p>
-                                {user.workerProfile?.skills && (
-                                  <p className="text-muted-foreground">
-                                    {user.workerProfile.skills.slice(0, 2).join(", ")}
-                                    {user.workerProfile.skills.length > 2 && "..."}
-                                  </p>
-                                )}
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <div className="text-sm">
-                                <p className="font-medium">
-                                  {user.totalBookings || 0} bookings
-                                </p>
-                                {user.role === "client" && (
-                                  <p className="text-muted-foreground">
-                                    Spent: ₹{(user.balance || 0).toLocaleString()}
-                                  </p>
-                                )}
-                                {user.role === "worker" && (
-                                  <p className="text-green-600 font-medium">
-                                    Earned: ₹{(user.totalEarnings || 0).toLocaleString()}
-                                  </p>
-                                )}
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <div className="text-sm">
-                                <p className="font-medium flex items-center space-x-1">
-                                  <Phone className="h-3 w-3" />
-                                  <span>{user.mobile}</span>
-                                </p>
-                                {user.email && (
-                                  <p className="text-muted-foreground flex items-center space-x-1">
-                                    <Mail className="h-3 w-3" />
-                                    <span>{user.email}</span>
-                                  </p>
-                                )}
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <div className="text-sm">
-                                <p className="font-medium">
-                                  {user.createdAt ? new Date(user.createdAt).toLocaleDateString('en-IN', {
-                                    day: '2-digit',
-                                    month: '2-digit', 
-                                    year: 'numeric'
-                                  }) : 'N/A'}
-                                </p>
-                                <p className="text-muted-foreground">
-                                  {user.createdAt ? new Date(user.createdAt).toLocaleTimeString('en-IN', {
-                                    hour: '2-digit',
-                                    minute: '2-digit'
-                                  }) : ''}
-                                </p>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <div className="text-sm">
-                                {user.lastLoginAt ? (
-                                  <>
-                                    <p className="font-medium flex items-center space-x-2">
-                                      <span>
-                                        {new Date(user.lastLoginAt).toLocaleDateString('en-IN', {
-                                          day: '2-digit',
-                                          month: '2-digit', 
-                                          year: 'numeric'
-                                        })}
-                                      </span>
-                                      {(() => {
-                                        const daysSinceLogin = Math.floor((new Date().getTime() - new Date(user.lastLoginAt).getTime()) / (1000 * 60 * 60 * 24));
-                                        return daysSinceLogin > 15 ? (
-                                          <Badge variant="destructive" className="ml-1 bg-red-100 text-red-800">
-                                            <AlertCircle className="h-3 w-3 mr-1" />
-                                            Inactive
-                                          </Badge>
-                                        ) : null;
-                                      })()}
-                                    </p>
-                                    <p className="text-muted-foreground">
-                                      {new Date(user.lastLoginAt).toLocaleTimeString('en-IN', {
-                                        hour: '2-digit',
-                                        minute: '2-digit'
-                                      })}
-                                    </p>
-                                  </>
-                                ) : (
-                                  <div className="flex items-center space-x-2">
-                                    <span className="text-muted-foreground">Never</span>
-                                    <Badge variant="destructive" className="bg-red-100 text-red-800">
-                                      <AlertCircle className="h-3 w-3 mr-1" />
-                                      No Login
-                                    </Badge>
-                                  </div>
-                                )}
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <Badge 
-                                variant={user.isVerified ? "default" : "secondary"}
-                                className={user.isVerified ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800"}
-                              >
-                                {user.isVerified ? "Verified" : "Pending"}
-                              </Badge>
-                              {user.role === "worker" && user.workerProfile?.isBackgroundVerified && (
-                                <Badge variant="outline" className="ml-1 bg-blue-100 text-blue-800">
-                                  BG Verified
-                                </Badge>
-                              )}
-                            </TableCell>
-                            <TableCell>
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" className="h-8 w-8 p-0">
-                                    <span className="sr-only">Open menu</span>
-                                    <MoreHorizontal className="h-4 w-4" />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                  <DropdownMenuLabel>User Actions</DropdownMenuLabel>
-                                  <DropdownMenuItem onClick={() => setUserDetailsModal(user)}>
-                                    <Eye className="mr-2 h-4 w-4" />
-                                    View Details
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem
-                                    onClick={() => {
-                                      setMessageDialogUser(user);
-                                      setActiveTab("messaging");
-                                    }}
-                                  >
-                                    <Mail className="mr-2 h-4 w-4" />
-                                    Send Message
-                                  </DropdownMenuItem>
-                                  <DropdownMenuSeparator />
-                                  <DropdownMenuItem 
-                                    onClick={() => handleVerifyUser(user.id, !user.isVerified)}
-                                    className={user.isVerified ? "text-yellow-600" : "text-green-600"}
-                                  >
-                                    {user.isVerified ? (
-                                      <>
-                                        <XCircle className="mr-2 h-4 w-4" />
-                                        Unverify User
-                                      </>
-                                    ) : (
-                                      <>
-                                        <CheckCircle className="mr-2 h-4 w-4" />
-                                        Verify User
-                                      </>
-                                    )}
-                                  </DropdownMenuItem>
-                                  {user.role === "worker" && (
-                                    <DropdownMenuItem className="text-blue-600">
-                                      <Settings className="mr-2 h-4 w-4" />
-                                      Manage Profile
-                                    </DropdownMenuItem>
-                                  )}
-                                  <DropdownMenuSeparator />
-                                  <DropdownMenuItem className="text-red-600">
-                                    <Ban className="mr-2 h-4 w-4" />
-                                    Suspend User
-                                  </DropdownMenuItem>
-                                  {(() => {
-                                    // Only show delete option for appropriate user types based on admin level
-                                    const canDelete = 
-                                      // Super admin can delete anyone except other super admins
-                                      (currentUser?.role === 'super_admin' && user.role !== 'super_admin') ||
-                                      // Regular admin can delete clients and workers only
-                                      (currentUser?.role === 'admin' && (user.role === 'client' || user.role === 'worker'));
-                                    
-                                    if (canDelete) {
-                                      return (
-                                        <DropdownMenuItem 
-                                          className="text-red-600"
-                                          onClick={() => setDeleteConfirmUser(user)}
-                                        >
-                                          <Trash2 className="mr-2 h-4 w-4" />
-                                          Delete User
-                                        </DropdownMenuItem>
-                                      );
-                                    }
-                                    return null;
-                                  })()}
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                    
-                    {filteredUsers.length === 0 && (
-                      <div className="text-center py-12">
-                        <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                        <h3 className="text-lg font-semibold mb-2">No users found</h3>
-                        <p className="text-muted-foreground">
-                          {userFilter ? "Try adjusting your search terms." : "No users match the current filter."}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
 
-          {/* User Details Modal */}
-          <Dialog open={!!userDetailsModal} onOpenChange={() => setUserDetailsModal(null)}>
-            <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle className="flex items-center space-x-2">
-                  <Users className="h-5 w-5" />
-                  <span>User Details: {userDetailsModal?.firstName} {userDetailsModal?.lastName}</span>
-                </DialogTitle>
-                <DialogDescription>
-                  Comprehensive user information and platform activity
-                </DialogDescription>
-              </DialogHeader>
-              
-              {userDetailsModal && (
-                <div className="space-y-6">
-                  {/* Personal Information */}
-                  <div>
-                    <h3 className="text-lg font-semibold mb-3">Personal Information</h3>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label className="text-sm font-medium text-muted-foreground">Full Name</Label>
-                        <p className="font-medium">{userDetailsModal.firstName} {userDetailsModal.lastName}</p>
-                      </div>
-                      <div>
-                        <Label className="text-sm font-medium text-muted-foreground">User ID</Label>
-                        <p className="font-mono text-sm">{userDetailsModal.id}</p>
-                      </div>
-                      <div>
-                        <Label className="text-sm font-medium text-muted-foreground">Role</Label>
-                        <Badge 
-                          className={
-                            userDetailsModal.role === "super_admin" ? "bg-red-100 text-red-800" :
-                            userDetailsModal.role === "admin" ? "bg-orange-100 text-orange-800" :
-                            userDetailsModal.role === "worker" ? "bg-purple-100 text-purple-800" :
-                            "bg-green-100 text-green-800"
-                          }
-                        >
-                          {userDetailsModal.role === "super_admin" ? "Super Admin" :
-                           userDetailsModal.role === "admin" ? "Admin" :
-                           userDetailsModal.role === "worker" ? "Worker" : "Client"}
-                        </Badge>
-                      </div>
-                      <div>
-                        <Label className="text-sm font-medium text-muted-foreground">Location</Label>
-                        <p>{userDetailsModal.location || "Not specified"}</p>
-                      </div>
-                      <div>
-                        <Label className="text-sm font-medium text-muted-foreground">Mobile</Label>
-                        <p className="flex items-center space-x-1">
-                          <Phone className="h-3 w-3" />
-                          <span>{userDetailsModal.mobile}</span>
-                        </p>
-                      </div>
-                      <div>
-                        <Label className="text-sm font-medium text-muted-foreground">Email</Label>
-                        <p className="flex items-center space-x-1">
-                          <Mail className="h-3 w-3" />
-                          <span>{userDetailsModal.email || "Not provided"}</span>
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Service Information for Workers */}
-                  {userDetailsModal.role === "worker" && userDetailsModal.workerProfile && (
-                    <div>
-                      <h3 className="text-lg font-semibold mb-3">Service Information</h3>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <Label className="text-sm font-medium text-muted-foreground">Primary Service</Label>
-                          <p className="capitalize">{userDetailsModal.workerProfile.primaryService?.replace('_', ' ')}</p>
-                        </div>
-                        <div>
-                          <Label className="text-sm font-medium text-muted-foreground">Experience</Label>
-                          <p>{userDetailsModal.workerProfile.experienceYears} years</p>
-                        </div>
-                        <div>
-                          <Label className="text-sm font-medium text-muted-foreground">Hourly Rate</Label>
-                          <p className="flex items-center space-x-1">
-                            <DollarSign className="h-3 w-3" />
-                            <span>₹{userDetailsModal.workerProfile.hourlyRate}/hour</span>
-                          </p>
-                        </div>
-                        <div>
-                          <Label className="text-sm font-medium text-muted-foreground">Rating</Label>
-                          <p className="flex items-center space-x-1">
-                            <Star className="h-3 w-3 text-yellow-500" />
-                            <span>{userDetailsModal.workerProfile.rating || "No ratings yet"}</span>
-                          </p>
-                        </div>
-                        <div className="col-span-2">
-                          <Label className="text-sm font-medium text-muted-foreground">Skills</Label>
-                          <div className="flex flex-wrap gap-1 mt-1">
-                            {userDetailsModal.workerProfile.skills?.map((skill: string, index: number) => (
-                              <Badge key={index} variant="outline" className="text-xs">
-                                {skill}
-                              </Badge>
-                            ))}
-                          </div>
-                        </div>
-                        {userDetailsModal.workerProfile.bio && (
-                          <div className="col-span-2">
-                            <Label className="text-sm font-medium text-muted-foreground">Bio</Label>
-                            <p className="text-sm mt-1">{userDetailsModal.workerProfile.bio}</p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Platform Activity */}
-                  <div>
-                    <h3 className="text-lg font-semibold mb-3">Platform Activity</h3>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label className="text-sm font-medium text-muted-foreground">Total Bookings</Label>
-                        <p className="text-2xl font-bold text-blue-600">{userDetailsModal.totalBookings || 0}</p>
-                      </div>
-                      {userDetailsModal.role === "client" && (
-                        <div>
-                          <Label className="text-sm font-medium text-muted-foreground">Total Spent</Label>
-                          <p className="text-2xl font-bold text-green-600">₹{(userDetailsModal.balance || 0).toLocaleString()}</p>
-                        </div>
-                      )}
-                      {userDetailsModal.role === "worker" && (
-                        <div>
-                          <Label className="text-sm font-medium text-muted-foreground">Total Earnings</Label>
-                          <p className="text-2xl font-bold text-green-600">₹{(userDetailsModal.totalEarnings || 0).toLocaleString()}</p>
-                        </div>
-                      )}
-                      <div>
-                        <Label className="text-sm font-medium text-muted-foreground">Member Since</Label>
-                        <p>{new Date(userDetailsModal.createdAt).toLocaleDateString()}</p>
-                      </div>
-                      <div>
-                        <Label className="text-sm font-medium text-muted-foreground">Status</Label>
-                        <div className="flex space-x-2">
-                          <Badge variant={userDetailsModal.isVerified ? "default" : "secondary"}>
-                            {userDetailsModal.isVerified ? "Verified" : "Pending"}
-                          </Badge>
-                          {userDetailsModal.role === "worker" && userDetailsModal.workerProfile?.isBackgroundVerified && (
-                            <Badge variant="outline" className="bg-blue-100 text-blue-800">
-                              Background Verified
-                            </Badge>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div className="flex space-x-2 pt-4 border-t">
-                    <Button 
-                      variant="outline" 
-                      className="flex-1"
-                      onClick={() => {
-                        setMessageDialogUser(userDetailsModal);
-                        setActiveTab("messaging");
-                        setUserDetailsModal(null);
-                      }}
-                    >
-                      <Mail className="h-4 w-4 mr-2" />
-                      Send Message
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      className="flex-1"
-                      onClick={() => handleVerifyUser(userDetailsModal.id, !userDetailsModal.isVerified)}
-                    >
-                      {userDetailsModal.isVerified ? (
-                        <>
-                          <XCircle className="h-4 w-4 mr-2" />
-                          Unverify
-                        </>
-                      ) : (
-                        <>
-                          <CheckCircle className="h-4 w-4 mr-2" />
-                          Verify
-                        </>
-                      )}
-                    </Button>
-                    <Button variant="destructive" className="flex-1">
-                      <Ban className="h-4 w-4 mr-2" />
-                      Suspend
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </DialogContent>
-          </Dialog>
 
           {/* Booking Management Tab */}
           <TabsContent value="bookings" className="space-y-6">
@@ -1982,73 +1416,6 @@ export default function AdminDashboard() {
         </DialogContent>
       </Dialog>
 
-      {/* Delete User Confirmation Dialog */}
-      <Dialog open={!!deleteConfirmUser} onOpenChange={() => setDeleteConfirmUser(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="text-red-600">Delete User</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to permanently delete this user? This action cannot be undone and will remove:
-              <br />
-              <br />
-              <strong>User Information:</strong>
-              <br />
-              • {deleteConfirmUser?.firstName} {deleteConfirmUser?.lastName}
-              <br />
-              • {deleteConfirmUser?.mobile}
-              <br />
-              • {deleteConfirmUser?.email}
-              <br />
-              <br />
-              <strong>All Associated Data:</strong>
-              <br />
-              • Profile and account information
-              <br />
-              • All bookings and service history
-              <br />
-              • Payment records and transactions
-              <br />
-              • Messages and communications
-              {deleteConfirmUser?.role === 'worker' && (
-                <>
-                  <br />
-                  • Worker profile and certifications
-                  <br />
-                  • Bank account details
-                  <br />
-                  • Service ratings and reviews
-                </>
-              )}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex justify-end gap-3 mt-6">
-            <Button
-              variant="outline"
-              onClick={() => setDeleteConfirmUser(null)}
-              disabled={deleteUserMutation.isPending}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={() => handleDeleteUser(deleteConfirmUser?.id)}
-              disabled={deleteUserMutation.isPending}
-            >
-              {deleteUserMutation.isPending ? (
-                <>
-                  <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                  Deleting...
-                </>
-              ) : (
-                <>
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  Delete Permanently
-                </>
-              )}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
 
       {/* District Manager Modal */}
       <Dialog open={districtManagerOpen} onOpenChange={setDistrictManagerOpen}>
