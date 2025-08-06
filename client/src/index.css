@@ -45,6 +45,19 @@
     animation: financial-click 0.2s ease-out;
   }
   
+  /* Rolling button animations */
+  .animate-roll-in {
+    animation: roll-in 0.6s ease-out;
+  }
+  
+  .animate-roll-hover {
+    animation: roll-hover 0.8s ease-in-out infinite;
+  }
+  
+  .animate-roll-click {
+    animation: roll-click 0.3s ease-out;
+  }
+  
   /* Table column widths for User ID display */
   .table-user-column {
     min-width: 280px !important;
@@ -179,6 +192,51 @@
   }
   100% {
     transform: scale(1.1);
+  }
+}
+
+@keyframes roll-in {
+  0% {
+    transform: translateX(-100px) rotate(-180deg);
+    opacity: 0;
+  }
+  60% {
+    transform: translateX(10px) rotate(-20deg);
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateX(0) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+@keyframes roll-hover {
+  0% {
+    transform: rotate(0deg) scale(1);
+  }
+  25% {
+    transform: rotate(2deg) scale(1.02);
+  }
+  50% {
+    transform: rotate(-2deg) scale(1.01);
+  }
+  75% {
+    transform: rotate(1deg) scale(1.02);
+  }
+  100% {
+    transform: rotate(0deg) scale(1);
+  }
+}
+
+@keyframes roll-click {
+  0% {
+    transform: rotate(0deg) scale(1);
+  }
+  50% {
+    transform: rotate(10deg) scale(0.95);
+  }
+  100% {
+    transform: rotate(0deg) scale(1.05);
   }
 }
 

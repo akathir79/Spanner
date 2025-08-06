@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -166,6 +166,9 @@ export default function ClientManagement() {
   const [selectedDistrict, setSelectedDistrict] = useState<string | null>(null);
   const [view, setView] = useState<"total" | "states" | "districts" | "clients">("states");
   
+  // Ref for rolling animation
+  const totalClientButtonRef = useRef<HTMLButtonElement>(null);
+  
   // Search and pagination states
   const [searchQuery, setSearchQuery] = useState("");
   const [searchFilter, setSearchFilter] = useState<"all" | "id" | "name" | "email" | "mobile" | "location">("all");
@@ -267,6 +270,19 @@ export default function ClientManagement() {
     
     return paginated;
   }, [filteredClients, currentPage, pageSize, totalPages]);
+
+  // Roll-in animation effect on component load
+  useEffect(() => {
+    const button = totalClientButtonRef.current;
+    if (button) {
+      button.classList.add('animate-roll-in');
+      // Remove animation class after animation completes
+      const timer = setTimeout(() => {
+        button.classList.remove('animate-roll-in');
+      }, 600);
+      return () => clearTimeout(timer);
+    }
+  }, []);
 
   // Get states from JSON file
   const states = (statesDistrictsData.states as StateData[]).map(s => s.state).sort();
@@ -603,8 +619,26 @@ export default function ClientManagement() {
           <div className="p-4 border-b border-gray-200 dark:border-gray-700">
             {/* Total Client List Header */}
             <button
-              onClick={handleTotalClientsClick}
-              className={`w-full bg-gray-100 dark:bg-gray-700 rounded-lg p-3 text-center font-medium border transition-colors relative ${
+              ref={totalClientButtonRef}
+              onClick={(e) => {
+                const button = e.currentTarget;
+                button.classList.add('animate-roll-click');
+                setTimeout(() => {
+                  button.classList.remove('animate-roll-click');
+                }, 300);
+                handleTotalClientsClick();
+              }}
+              onMouseEnter={(e) => {
+                const button = e.currentTarget;
+                if (!button.classList.contains('animate-roll-hover')) {
+                  button.classList.add('animate-roll-hover');
+                }
+              }}
+              onMouseLeave={(e) => {
+                const button = e.currentTarget;
+                button.classList.remove('animate-roll-hover');
+              }}
+              className={`w-full bg-gray-100 dark:bg-gray-700 rounded-lg p-3 text-center font-medium border transition-all duration-300 relative transform-gpu ${
                 view === "total" 
                   ? 'bg-blue-100 text-blue-900 dark:bg-blue-900 dark:text-blue-100 border-blue-300' 
                   : 'text-gray-900 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-600'
