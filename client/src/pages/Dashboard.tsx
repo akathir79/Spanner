@@ -1590,11 +1590,31 @@ export default function Dashboard() {
         </div>
 
         <Tabs defaultValue="bookings" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="bookings">My Bookings</TabsTrigger>
-            <TabsTrigger value="search">Find Workers</TabsTrigger>
-            <TabsTrigger value="jobs">My Jobs/Bids</TabsTrigger>
-            <TabsTrigger value="profile">Profile</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-4 bg-muted">
+            <TabsTrigger 
+              value="bookings" 
+              className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            >
+              My Bookings
+            </TabsTrigger>
+            <TabsTrigger 
+              value="search"
+              className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            >
+              Find Workers
+            </TabsTrigger>
+            <TabsTrigger 
+              value="jobs"
+              className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            >
+              My Jobs/Bids
+            </TabsTrigger>
+            <TabsTrigger 
+              value="profile"
+              className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            >
+              Profile
+            </TabsTrigger>
           </TabsList>
 
           {/* My Bookings Tab */}
