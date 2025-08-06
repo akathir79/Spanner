@@ -45,6 +45,12 @@ export default function ClientManagement() {
     enabled: !!user && (user.role === "admin" || user.role === "super_admin"),
   });
 
+  // Fetch all districts from database for real counts
+  const { data: dbDistricts = [] } = useQuery({
+    queryKey: ["/api/districts"],
+    enabled: !!user && (user.role === "admin" || user.role === "super_admin"),
+  });
+
   // Filter only clients
   const clients = (users as User[]).filter((u: User) => u.role === "client");
 
@@ -61,13 +67,13 @@ export default function ClientManagement() {
     ? clients.filter((client: User) => client.district === selectedDistrict)
     : [];
 
-  // Get district count for each state
+  // Get district count for each state from database
   const getDistrictCountForState = (stateName: string) => {
-    const stateData = (statesDistrictsData.states as StateData[]).find(s => s.state === stateName);
-    return stateData ? stateData.districts.length : 0;
+    const districtsInState = (dbDistricts as District[]).filter((d: District) => d.state === stateName);
+    return districtsInState.length;
   };
 
-  // Get client count for each district
+  // Get client count for each district from database
   const getClientCountForDistrict = (districtName: string) => {
     return clients.filter((client: User) => client.district === districtName).length;
   };
