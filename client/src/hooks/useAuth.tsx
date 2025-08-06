@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect } from "react";
+import { useLocation } from "wouter";
 import type { ReactNode } from "react";
 
 interface User {
@@ -39,6 +40,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [, setLocation] = useLocation();
 
   useEffect(() => {
     // Check if user is logged in from localStorage
@@ -63,6 +65,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = () => {
     setUser(null);
     localStorage.removeItem("user");
+    // Redirect to home page after logout
+    setLocation("/");
   };
 
   const loginWithOtp = async (mobile: string, role: string) => {
