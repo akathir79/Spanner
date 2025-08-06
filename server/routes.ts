@@ -591,12 +591,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           state: user.state,
           pincode: user.pincode,
           bankAccountNumber: user.bankAccountNumber,
-          bankIfsc: user.bankIfsc,
+          bankIFSC: user.bankIFSC,
           bankAccountHolderName: user.bankAccountHolderName,
           bankName: user.bankName,
           bankBranch: user.bankBranch,
           bankAccountType: user.bankAccountType,
-          bankMicr: user.bankMicr,
+          bankMICR: user.bankMICR,
         }
       });
     } catch (error) {
@@ -636,12 +636,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           state: user.state,
           pincode: user.pincode,
           bankAccountNumber: user.bankAccountNumber,
-          bankIfsc: user.bankIfsc,
+          bankIFSC: user.bankIFSC,
           bankAccountHolderName: user.bankAccountHolderName,
           bankName: user.bankName,
           bankBranch: user.bankBranch,
           bankAccountType: user.bankAccountType,
-          bankMicr: user.bankMicr,
+          bankMICR: user.bankMICR,
         }
       });
     } catch (error) {
@@ -695,12 +695,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           state: user.state,
           pincode: user.pincode,
           bankAccountNumber: user.bankAccountNumber,
-          bankIfsc: user.bankIfsc,
+          bankIFSC: user.bankIFSC,
           bankAccountHolderName: user.bankAccountHolderName,
           bankName: user.bankName,
           bankBranch: user.bankBranch,
           bankAccountType: user.bankAccountType,
-          bankMicr: user.bankMicr,
+          bankMICR: user.bankMICR,
         },
         workerProfile
       });

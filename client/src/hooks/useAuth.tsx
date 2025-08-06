@@ -14,12 +14,12 @@ interface User {
   district?: string;
   pincode?: string;
   bankAccountNumber?: string;
-  bankIfsc?: string;
+  bankIFSC?: string;
   bankAccountHolderName?: string;
   bankName?: string;
   bankBranch?: string;
   bankAccountType?: string;
-  bankMicr?: string;
+  bankMICR?: string;
 }
 
 interface AuthContextType {
