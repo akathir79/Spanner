@@ -708,6 +708,15 @@ export default function ClientManagement() {
                                     <span className="truncate max-w-[150px]">{client.email}</span>
                                   </div>
                                 )}
+                                {(client as any).address && (
+                                  <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                    <div className="font-medium text-gray-700 dark:text-gray-300">Address:</div>
+                                    <div className="break-words">{(client as any).address}</div>
+                                    {(client as any).pincode && (
+                                      <div>PIN: {(client as any).pincode}</div>
+                                    )}
+                                  </div>
+                                )}
                               </div>
                             </TableCell>
                             <TableCell>
@@ -1021,6 +1030,15 @@ export default function ClientManagement() {
                                     <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
                                       <Mail className="w-3 h-3" />
                                       <span className="truncate max-w-[150px]">{client.email}</span>
+                                    </div>
+                                  )}
+                                  {(client as any).address && (
+                                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                      <div className="font-medium text-gray-700 dark:text-gray-300">Address:</div>
+                                      <div className="break-words">{(client as any).address}</div>
+                                      {(client as any).pincode && (
+                                        <div>PIN: {(client as any).pincode}</div>
+                                      )}
                                     </div>
                                   )}
                                 </div>
