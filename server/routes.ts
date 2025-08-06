@@ -14,7 +14,8 @@ import {
   insertLocationEventSchema,
   insertWorkerBankDetailsSchema,
   insertPaymentSchema,
-  insertMessageSchema
+  insertMessageSchema,
+  insertTransferHistorySchema
 } from "@shared/schema";
 
 // Validation schemas
@@ -1947,6 +1948,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating booking review:", error);
       res.status(500).json({ message: "Failed to update review" });
+    }
+  });
+
+  // Transfer History API Routes
+  
+  // Create transfer history
+  app.post("/api/transfer-history", async (req, res) => {
+    try {
+      const transferData = insertTransferHistorySchema.parse(req.body);
+      const transfer = await storage.createTransferHistory(transferData);
+      res.status(201).json(transfer);
+    } catch (error) {
+      console.error("Error creating transfer history:", error);
+      res.status(500).json({ message: "Failed to create transfer history" });
+    }
+  });
+
+  // Get transfer history by client ID
+  app.get("/api/transfer-history/:clientId", async (req, res) => {
+    try {
+      const { clientId } = req.params;
+      const transfers = await storage.getTransferHistoryByClient(clientId);
+      res.json(transfers);
+    } catch (error) {
+      console.error("Error fetching transfer history:", error);
+      res.status(500).json({ message: "Failed to fetch transfer history" });
+    }
+  });
+
+  // Delete transfer history
+  app.delete("/api/transfer-history/:transferId", async (req, res) => {
+    try {
+      const { transferId } = req.params;
+      await storage.deleteTransferHistory(transferId);
+      res.json({ message: "Transfer history deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting transfer history:", error);
+      res.status(500).json({ message: "Failed to delete transfer history" });
     }
   });
 

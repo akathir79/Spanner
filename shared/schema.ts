@@ -273,6 +273,23 @@ export const messages = pgTable("messages", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+// Transfer history for tracking money transfers
+export const transferHistory = pgTable("transfer_history", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  clientId: varchar("client_id").references(() => users.id).notNull(),
+  receiverName: text("receiver_name").notNull(),
+  receiverAccountNumber: text("receiver_account_number").notNull(),
+  receiverIFSC: text("receiver_ifsc").notNull(),
+  receiverBankName: text("receiver_bank_name"),
+  amount: decimal("amount", { precision: 12, scale: 2 }).notNull(),
+  transferType: text("transfer_type").notNull(), // IMPS, NEFT, RTGS
+  transactionId: text("transaction_id"),
+  status: text("status").default("pending"), // pending, completed, failed
+  description: text("description"),
+  transferredAt: timestamp("transferred_at").defaultNow().notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 // Relations
 export const usersRelations = relations(users, ({ one, many }) => ({
   workerProfile: one(workerProfiles, {
@@ -289,6 +306,7 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   bids: many(bids),
   sentMessages: many(messages, { relationName: "sentMessages" }),
   receivedMessages: many(messages, { relationName: "receivedMessages" }),
+  transferHistory: many(transferHistory),
 }));
 
 export const workerProfilesRelations = relations(workerProfiles, ({ one }) => ({
@@ -410,6 +428,13 @@ export const paymentWebhooksRelations = relations(paymentWebhooks, ({ one }) => 
   }),
 }));
 
+export const transferHistoryRelations = relations(transferHistory, ({ one }) => ({
+  client: one(users, {
+    fields: [transferHistory.clientId],
+    references: [users.id],
+  }),
+}));
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
@@ -499,6 +524,11 @@ export const insertPaymentWebhookSchema = createInsertSchema(paymentWebhooks).om
   createdAt: true,
 });
 
+export const insertTransferHistorySchema = createInsertSchema(transferHistory).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -530,6 +560,8 @@ export type Payment = typeof payments.$inferSelect;
 export type InsertPayment = z.infer<typeof insertPaymentSchema>;
 export type PaymentWebhook = typeof paymentWebhooks.$inferSelect;
 export type InsertPaymentWebhook = z.infer<typeof insertPaymentWebhookSchema>;
+export type TransferHistory = typeof transferHistory.$inferSelect;
+export type InsertTransferHistory = z.infer<typeof insertTransferHistorySchema>;
 
 // Message relations
 export const messagesRelations = relations(messages, ({ one, many }) => ({

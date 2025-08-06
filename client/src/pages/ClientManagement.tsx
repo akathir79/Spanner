@@ -32,7 +32,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { ArrowLeft, Phone, Mail, Calendar, MoreHorizontal, Eye, MessageSquare, CheckCircle, XCircle, Trash2, Edit, AlertCircle, Search, X, Menu, Loader2, MessageCircle, Smartphone, CreditCard, Send, ArrowRightLeft } from "lucide-react";
+import { ArrowLeft, Phone, Mail, Calendar, MoreHorizontal, Eye, MessageSquare, CheckCircle, XCircle, Trash2, Edit, AlertCircle, Search, X, Menu, Loader2, MessageCircle, Smartphone, CreditCard, Send, ArrowRightLeft, History } from "lucide-react";
 import { format } from "date-fns";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
@@ -187,6 +187,7 @@ export default function ClientManagement() {
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
   const [showMessageDialog, setShowMessageDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showTransferHistoryDialog, setShowTransferHistoryDialog] = useState(false);
   const [messageText, setMessageText] = useState("");
 
 
@@ -200,6 +201,12 @@ export default function ClientManagement() {
   const { data: dbDistricts = [] } = useQuery({
     queryKey: ["/api/districts"],
     enabled: !!user && (user.role === "admin" || user.role === "super_admin"),
+  });
+
+  // Fetch transfer history for selected client
+  const { data: transferHistory = [], isLoading: transferHistoryLoading } = useQuery({
+    queryKey: ["/api/transfer-history", selectedClient?.id],
+    enabled: !!selectedClient?.id && showTransferHistoryDialog,
   });
 
   // Memoize filtered clients to prevent recalculation on every render
@@ -409,6 +416,26 @@ export default function ClientManagement() {
     },
   });
 
+  const deleteTransferMutation = useMutation({
+    mutationFn: async (transferId: string) => {
+      return await apiRequest("DELETE", `/api/transfer-history/${transferId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/transfer-history", selectedClient?.id] });
+      toast({
+        title: "Success",
+        description: "Transfer history deleted successfully",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to delete transfer history",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Action handlers
   const handleViewDetails = (client: User) => {
     setSelectedClient(client);
@@ -466,6 +493,15 @@ export default function ClientManagement() {
         message: messageText.trim(),
       });
     }
+  };
+
+  const handleViewTransferHistory = (client: User) => {
+    setSelectedClient(client);
+    setShowTransferHistoryDialog(true);
+  };
+
+  const handleDeleteTransferHistory = (transferId: string) => {
+    deleteTransferMutation.mutate(transferId);
   };
 
   // Handle navigation - direct approach with pagination reset
@@ -975,6 +1011,18 @@ export default function ClientManagement() {
                                             title="Transfer Money"
                                           >
                                             <ArrowRightLeft className="w-3 h-3" />
+                                          </Button>
+                                          <Button
+                                            size="sm"
+                                            variant="ghost"
+                                            className="h-6 w-6 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              handleViewTransferHistory(client);
+                                            }}
+                                            title="Transfer History"
+                                          >
+                                            <History className="w-3 h-3" />
                                           </Button>
                                         </div>
                                       </>
@@ -1621,6 +1669,18 @@ export default function ClientManagement() {
                                             >
                                               <ArrowRightLeft className="w-3 h-3" />
                                             </Button>
+                                            <Button
+                                              size="sm"
+                                              variant="ghost"
+                                              className="h-6 w-6 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleViewTransferHistory(client);
+                                              }}
+                                              title="Transfer History"
+                                            >
+                                              <History className="w-3 h-3" />
+                                            </Button>
                                           </div>
                                         </>
                                       ) : (
@@ -1668,7 +1728,7 @@ export default function ClientManagement() {
                                             </div>
                                           )}
                                         </div>
-                                        <div className="flex items-center gap-1 mt-3 pt-2 border-t border-gray-200 dark:border-gray-700">
+                                        <div className="flex items-center gap-2 mt-3 pt-2 border-t border-gray-200 dark:border-gray-700">
                                           <Button
                                             size="sm"
                                             variant="outline"
@@ -1681,6 +1741,18 @@ export default function ClientManagement() {
                                           >
                                             <ArrowRightLeft className="w-3 h-3 mr-1" />
                                             Transfer Money
+                                          </Button>
+                                          <Button
+                                            size="sm"
+                                            variant="outline"
+                                            className="h-7 px-2 text-blue-600 border-blue-200 hover:text-blue-700 hover:bg-blue-50"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              handleViewTransferHistory(client);
+                                            }}
+                                          >
+                                            <History className="w-3 h-3 mr-1" />
+                                            History
                                           </Button>
                                         </div>
                                       </div>
@@ -2008,6 +2080,79 @@ export default function ClientManagement() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Transfer History Modal */}
+      <Dialog open={showTransferHistoryDialog} onOpenChange={setShowTransferHistoryDialog}>
+        <DialogContent className="max-w-4xl max-h-[80vh]">
+          <DialogHeader>
+            <DialogTitle>
+              Transfer History - {selectedClient?.firstName} {selectedClient?.lastName}
+            </DialogTitle>
+            <DialogDescription>
+              View all money transfer records for this client
+            </DialogDescription>
+          </DialogHeader>
+          <div className="mt-4">
+            {transferHistoryLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="w-6 h-6 animate-spin mr-2" />
+                <span>Loading transfer history...</span>
+              </div>
+            ) : transferHistory.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <History className="w-12 h-12 mx-auto mb-2 opacity-30" />
+                <p>No transfer history found for this client</p>
+              </div>
+            ) : (
+              <div className="space-y-4 max-h-96 overflow-y-auto">
+                {transferHistory.map((transfer: any) => (
+                  <div key={transfer.id} className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="text-lg font-semibold text-green-600">
+                            ₹{transfer.amount?.toLocaleString('en-IN')}
+                          </span>
+                          <span className="text-xs text-gray-500">
+                            {new Date(transfer.createdAt).toLocaleString('en-IN', {
+                              timeZone: 'Asia/Kolkata',
+                              year: 'numeric',
+                              month: 'short',
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </span>
+                        </div>
+                        {transfer.description && (
+                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                            {transfer.description}
+                          </p>
+                        )}
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        onClick={() => handleDeleteTransferHistory(transfer.id)}
+                        disabled={deleteTransferMutation.isPending}
+                        title="Delete Transfer Record"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowTransferHistoryDialog(false)}>
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       </div>
     </TooltipProvider>
   );

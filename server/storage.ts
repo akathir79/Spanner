@@ -15,6 +15,7 @@ import {
   payments,
   paymentWebhooks,
   messages,
+  transferHistory,
   type User, 
   type InsertUser,
   type WorkerProfile,
@@ -43,7 +44,9 @@ import {
   type PaymentWebhook,
   type InsertPaymentWebhook,
   type Message,
-  type InsertMessage
+  type InsertMessage,
+  type TransferHistory,
+  type InsertTransferHistory
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, sql, desc, ilike, inArray, or } from "drizzle-orm";
@@ -151,6 +154,11 @@ export interface IStorage {
   markMessageAsRead(messageId: string): Promise<Message | undefined>;
   getUnreadMessageCount(userId: string): Promise<number>;
   deleteMessage(messageId: string): Promise<void>;
+  
+  // Transfer History
+  createTransferHistory(transfer: InsertTransferHistory): Promise<TransferHistory>;
+  getTransferHistoryByClient(clientId: string): Promise<TransferHistory[]>;
+  deleteTransferHistory(transferId: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -996,6 +1004,29 @@ export class DatabaseStorage implements IStorage {
     await db
       .delete(messages)
       .where(eq(messages.id, messageId));
+  }
+
+  // Transfer History Methods
+  async createTransferHistory(transfer: InsertTransferHistory): Promise<TransferHistory> {
+    const [createdTransfer] = await db
+      .insert(transferHistory)
+      .values(transfer)
+      .returning();
+    return createdTransfer;
+  }
+
+  async getTransferHistoryByClient(clientId: string): Promise<TransferHistory[]> {
+    return await db
+      .select()
+      .from(transferHistory)
+      .where(eq(transferHistory.clientId, clientId))
+      .orderBy(desc(transferHistory.transferredAt));
+  }
+
+  async deleteTransferHistory(transferId: string): Promise<void> {
+    await db
+      .delete(transferHistory)
+      .where(eq(transferHistory.id, transferId));
   }
 }
 
