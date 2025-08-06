@@ -830,6 +830,7 @@ export default function ClientManagement() {
             { key: "bankIFSC", label: "IFSC Code", type: "ifsc", editable: true, required: true, section: "bankDetails" },
             { key: "bankName", label: "Bank Name", type: "text", editable: true, section: "bankDetails" },
             { key: "bankBranch", label: "Branch Name", type: "text", editable: true, section: "bankDetails" },
+            { key: "bankAddress", label: "Bank Address", type: "textarea", editable: true, section: "bankDetails" },
             { key: "bankMICR", label: "MICR Code", type: "text", editable: true, section: "bankDetails" },
             { 
               key: "bankAccountType", 
