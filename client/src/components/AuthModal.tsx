@@ -799,9 +799,15 @@ export function AuthModal({ isOpen, onClose, mode, initialTab, onSwitchToSignup 
   };
 
   const handleClientSignup = async (data: z.infer<typeof clientSignupSchema>) => {
-    const { termsAccepted, ...signupData } = data;
+    const { termsAccepted, districtId, ...signupData } = data;
+    
+    // Convert districtId to district name
+    const selectedDistrict = currentDistricts?.find(d => d.id === districtId);
+    const districtName = selectedDistrict?.name || districtId;
+    
     const result = await signupClient({
       ...signupData,
+      district: districtName,
       role: "client",
     });
     if (result?.success) {
