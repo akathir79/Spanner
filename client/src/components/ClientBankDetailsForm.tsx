@@ -17,6 +17,7 @@ interface BankDetails {
   bankName: string;
   bankBranch: string;
   bankAccountType: string;
+  bankMICR: string;
 }
 
 interface ClientBankDetailsFormProps {
@@ -36,6 +37,7 @@ export default function ClientBankDetailsForm({ userId, existingDetails, onSucce
     bankName: existingDetails?.bankName || "",
     bankBranch: existingDetails?.bankBranch || "",
     bankAccountType: existingDetails?.bankAccountType || "savings",
+    bankMICR: existingDetails?.bankMICR || "",
   });
 
   const [isIFSCLoading, setIsIFSCLoading] = useState(false);
@@ -55,6 +57,7 @@ export default function ClientBankDetailsForm({ userId, existingDetails, onSucce
           ...prev,
           bankName: bankData.BANK || "",
           bankBranch: bankData.BRANCH || "",
+          bankMICR: bankData.MICR || "",
         }));
         setIfscValidated(true);
         setErrors(prev => ({ ...prev, bankIFSC: "" }));
@@ -232,6 +235,21 @@ export default function ClientBankDetailsForm({ userId, existingDetails, onSucce
               <Label htmlFor="bankBranch">Branch</Label>
               <div className="flex items-center gap-2 p-2 bg-gray-50 dark:bg-gray-800 rounded border">
                 <span className="text-sm font-medium">{formData.bankBranch}</span>
+              </div>
+            </div>
+          )}
+
+          {/* MICR Code (Auto-filled from IFSC validation) */}
+          {formData.bankMICR && (
+            <div>
+              <Label htmlFor="bankMICR">MICR Code</Label>
+              <div className="flex items-center gap-2 p-2 bg-gray-50 dark:bg-gray-800 rounded border">
+                <span className="text-sm font-medium">{formData.bankMICR}</span>
+                <div className="ml-auto flex gap-1">
+                  <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded">RTGS</span>
+                  <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded">NEFT</span>
+                  <span className="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded">IMPS</span>
+                </div>
               </div>
             </div>
           )}

@@ -1111,7 +1111,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         bankAccountHolderName,
         bankName,
         bankBranch,
-        bankAccountType
+        bankAccountType,
+        bankMICR,
+        address,
+        district,
+        state,
+        pincode
       } = req.body;
 
       // Validate required fields
@@ -1124,14 +1129,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Invalid IFSC code format" });
       }
 
-      await storage.updateUser(userId, {
+      // Prepare update data - only include non-empty fields
+      const updateData: any = {
         bankAccountNumber,
         bankIFSC,
         bankAccountHolderName,
         bankName,
         bankBranch,
-        bankAccountType
-      });
+        bankAccountType,
+        bankMICR
+      };
+
+      // Add address fields if provided
+      if (address) updateData.address = address;
+      if (district) updateData.district = district;
+      if (state) updateData.state = state;
+      if (pincode) updateData.pincode = pincode;
+
+      await storage.updateUser(userId, updateData);
 
       res.json({ message: "Bank details updated successfully" });
     } catch (error) {

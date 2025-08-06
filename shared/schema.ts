@@ -37,6 +37,7 @@ export const users = pgTable("users", {
   bankName: text("bank_name"),
   bankBranch: text("bank_branch"),
   bankAccountType: text("bank_account_type"), // savings, current
+  bankMICR: text("bank_micr"), // MICR code
   isVerified: boolean("is_verified").default(false),
   isActive: boolean("is_active").default(true),
   status: text("status").default("pending"), // pending, approved, rejected (for worker approval workflow)
@@ -261,7 +262,7 @@ export const messages = pgTable("messages", {
   subject: text("subject").notNull(),
   content: text("content").notNull(),
   isRead: boolean("is_read").default(false),
-  parentMessageId: varchar("parent_message_id").references(() => messages.id), // For replies
+  parentMessageId: varchar("parent_message_id"), // For replies
   attachments: jsonb("attachments"), // Array of attachment URLs/data
   messageType: text("message_type").default("general"), // general, support, complaint, inquiry
   priority: text("priority").default("normal"), // low, normal, high, urgent
@@ -507,11 +508,10 @@ export type JobPosting = typeof jobPostings.$inferSelect;
 export type InsertJobPosting = z.infer<typeof insertJobPostingSchema>;
 export type Bid = typeof bids.$inferSelect;
 export type InsertBid = z.infer<typeof insertBidSchema>;
-export type District = typeof districts.$inferSelect;
+// District types removed - now handled via API
 export type ServiceCategory = typeof serviceCategories.$inferSelect;
 export type InsertServiceCategory = z.infer<typeof insertServiceCategorySchema>;
-export type Area = typeof areas.$inferSelect;
-export type InsertArea = z.infer<typeof insertAreaSchema>;
+// Area types removed - now handled via API
 export type OtpVerification = typeof otpVerifications.$inferSelect;
 export type InsertOtp = z.infer<typeof insertOtpSchema>;
 export type LocationTracking = typeof locationTracking.$inferSelect;

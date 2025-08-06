@@ -190,7 +190,8 @@ export default function ViewDetailsModal({
           ...prev,
           bankName: result.BANK,
           bankBranch: result.BRANCH,
-          bankAddress: addressParts.join(', ')
+          bankAddress: addressParts.join(', '),
+          bankMICR: result.MICR || ''
         }));
         
         setIfscErrors(prev => ({ ...prev, bankIFSC: '' }));
