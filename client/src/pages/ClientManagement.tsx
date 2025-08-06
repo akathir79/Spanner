@@ -798,8 +798,8 @@ export default function ClientManagement() {
                               <div className="text-sm text-gray-600 dark:text-gray-400">
                                 <div>0 bookings</div>
                                 <div>Balance: ₹0</div>
-                                <div className="flex items-center gap-2">
-                                  <span>Spent: ₹0</span>
+                                <div>Spent: ₹0</div>
+                                <div className="flex items-center gap-1 mt-1">
                                   <Button
                                     size="sm"
                                     variant="ghost"
@@ -810,7 +810,7 @@ export default function ClientManagement() {
                                     }}
                                     title="Financial Statements"
                                   >
-                                    <DollarSign className="w-3 h-3" />
+                                    <span className="text-xs font-bold">₹</span>
                                   </Button>
                                 </div>
                               </div>
@@ -1469,8 +1469,8 @@ export default function ClientManagement() {
                                 <div className="text-sm text-gray-600 dark:text-gray-400">
                                   <div>0 bookings</div>
                                   <div>Balance: ₹0</div>
-                                  <div className="flex items-center gap-2">
-                                    <span>Spent: ₹0</span>
+                                  <div>Spent: ₹0</div>
+                                  <div className="flex items-center gap-1 mt-1">
                                     <Button
                                       size="sm"
                                       variant="ghost"
@@ -1481,7 +1481,7 @@ export default function ClientManagement() {
                                       }}
                                       title="Financial Statements"
                                     >
-                                      <DollarSign className="w-3 h-3" />
+                                      <span className="text-xs font-bold">₹</span>
                                     </Button>
                                   </div>
                                 </div>
@@ -2199,7 +2199,7 @@ export default function ClientManagement() {
         <DialogContent className="max-w-4xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <DollarSign className="w-5 h-5 text-green-600" />
+              <span className="text-xl font-bold text-green-600">₹</span>
               Financial Statements - {selectedClient?.firstName} {selectedClient?.lastName}
             </DialogTitle>
             <DialogDescription>
@@ -2215,7 +2215,7 @@ export default function ClientManagement() {
               </div>
             ) : financialStatements.length === 0 ? (
               <div className="text-center py-8 text-gray-500">
-                <DollarSign className="w-12 h-12 mx-auto mb-2 opacity-30" />
+                <span className="text-6xl font-bold text-gray-300 block mb-2">₹</span>
                 <p>No financial data found for this client</p>
                 <p className="text-sm text-gray-400 mt-1">Data for {new Date().getFullYear()} and {new Date().getFullYear() - 1} will appear here</p>
               </div>
