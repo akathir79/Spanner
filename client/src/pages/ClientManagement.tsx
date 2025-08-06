@@ -706,27 +706,20 @@ export default function ClientManagement() {
                               </div>
                             </TableCell>
                             <TableCell>
-                              <div className="text-sm space-y-1">
-                                <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
-                                  <Phone className="w-3 h-3" />
-                                  <span>{client.mobile}</span>
-                                </div>
-                                {client.email && (
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <div className="text-sm space-y-1 cursor-pointer">
+                                    <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
+                                      <Phone className="w-3 h-3" />
+                                      <span>{client.mobile}</span>
+                                    </div>
+                                    {client.email && (
                                       <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
                                         <Mail className="w-3 h-3" />
                                         <span className="truncate max-w-[150px]">{client.email}</span>
                                       </div>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                      <p>{client.email}</p>
-                                    </TooltipContent>
-                                  </Tooltip>
-                                )}
-                                {(client as any).address && (
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
+                                    )}
+                                    {(client as any).address && (
                                       <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                                         <div className="font-medium text-gray-700 dark:text-gray-300">Address:</div>
                                         <div className="break-words line-clamp-2">{(client as any).address}</div>
@@ -734,70 +727,117 @@ export default function ClientManagement() {
                                           <div>PIN: {(client as any).pincode}</div>
                                         )}
                                       </div>
-                                    </TooltipTrigger>
-                                    <TooltipContent className="max-w-xs">
-                                      <div>
-                                        <p className="font-medium">Complete Address:</p>
-                                        <p className="mt-1">{(client as any).address}</p>
-                                        {(client as any).pincode && (
-                                          <p className="mt-1">PIN: {(client as any).pincode}</p>
-                                        )}
+                                    )}
+                                  </div>
+                                </TooltipTrigger>
+                                <TooltipContent className="max-w-sm">
+                                  <div className="space-y-2">
+                                    <p className="font-medium">Complete Contact Information:</p>
+                                    <div className="space-y-1">
+                                      <div className="flex items-center gap-2">
+                                        <Phone className="w-3 h-3" />
+                                        <span>{client.mobile}</span>
                                       </div>
-                                    </TooltipContent>
-                                  </Tooltip>
-                                )}
-                              </div>
+                                      {client.email && (
+                                        <div className="flex items-center gap-2">
+                                          <Mail className="w-3 h-3" />
+                                          <span>{client.email}</span>
+                                        </div>
+                                      )}
+                                      {(client as any).address && (
+                                        <div className="mt-2">
+                                          <p className="font-medium text-xs">Complete Address:</p>
+                                          <p className="text-xs mt-1">{(client as any).address}</p>
+                                          {(client as any).pincode && (
+                                            <p className="text-xs">PIN: {(client as any).pincode}</p>
+                                          )}
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                </TooltipContent>
+                              </Tooltip>
                             </TableCell>
                             <TableCell>
-                              <div className="text-sm space-y-1">
-                                {(client as any).bankAccountNumber && (client as any).bankIFSC ? (
-                                  <>
-                                    <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
-                                      <CreditCard className="w-3 h-3" />
-                                      <span className="font-mono text-xs">{(client as any).bankAccountNumber.slice(-4)}</span>
-                                    </div>
-                                    <div className="text-xs text-gray-500 dark:text-gray-400">
-                                      IFSC: {(client as any).bankIFSC}
-                                    </div>
-                                    {(client as any).bankMICR && (
-                                      <div className="text-xs text-gray-500 dark:text-gray-400">
-                                        MICR: {(client as any).bankMICR}
-                                      </div>
-                                    )}
-                                    {(client as any).bankName && (
-                                      <Tooltip>
-                                        <TooltipTrigger asChild>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <div className="text-sm space-y-1 cursor-pointer">
+                                    {(client as any).bankAccountNumber && (client as any).bankIFSC ? (
+                                      <>
+                                        <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
+                                          <CreditCard className="w-3 h-3" />
+                                          <span className="font-mono text-xs">{(client as any).bankAccountNumber.slice(-4)}</span>
+                                        </div>
+                                        <div className="text-xs text-gray-500 dark:text-gray-400">
+                                          IFSC: {(client as any).bankIFSC}
+                                        </div>
+                                        {(client as any).bankMICR && (
+                                          <div className="text-xs text-gray-500 dark:text-gray-400">
+                                            MICR: {(client as any).bankMICR}
+                                          </div>
+                                        )}
+                                        {(client as any).bankName && (
                                           <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
                                             {(client as any).bankName}
                                           </div>
-                                        </TooltipTrigger>
-                                        <TooltipContent>
-                                          <p>{(client as any).bankName}</p>
-                                        </TooltipContent>
-                                      </Tooltip>
-                                    )}
-                                    {(client as any).bankAddress && (
-                                      <Tooltip>
-                                        <TooltipTrigger asChild>
+                                        )}
+                                        {(client as any).bankAddress && (
                                           <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
                                             {(client as any).bankAddress}
                                           </div>
-                                        </TooltipTrigger>
-                                        <TooltipContent className="max-w-xs">
-                                          <div>
-                                            <p className="font-medium">Bank Address:</p>
-                                            <p className="mt-1">{(client as any).bankAddress}</p>
-                                          </div>
-                                        </TooltipContent>
-                                      </Tooltip>
+                                        )}
+                                      </>
+                                    ) : (
+                                      <span className="text-gray-400 dark:text-gray-500 italic text-xs">
+                                        Not provided
+                                      </span>
                                     )}
-                                  </>
-                                ) : (
-                                  <span className="text-gray-400 dark:text-gray-500 italic text-xs">
-                                    Not provided
-                                  </span>
-                                )}
-                              </div>
+                                  </div>
+                                </TooltipTrigger>
+                                <TooltipContent className="max-w-sm">
+                                  {(client as any).bankAccountNumber && (client as any).bankIFSC ? (
+                                    <div className="space-y-2">
+                                      <p className="font-medium">Complete Bank Details:</p>
+                                      <div className="space-y-1 text-xs">
+                                        <div className="flex items-center gap-2">
+                                          <CreditCard className="w-3 h-3" />
+                                          <span>Account: {(client as any).bankAccountNumber}</span>
+                                        </div>
+                                        <div>
+                                          <span className="font-medium">IFSC:</span> {(client as any).bankIFSC}
+                                        </div>
+                                        {(client as any).bankMICR && (
+                                          <div>
+                                            <span className="font-medium">MICR:</span> {(client as any).bankMICR}
+                                          </div>
+                                        )}
+                                        {(client as any).bankName && (
+                                          <div>
+                                            <span className="font-medium">Bank Name:</span> {(client as any).bankName}
+                                          </div>
+                                        )}
+                                        {(client as any).bankAddress && (
+                                          <div>
+                                            <span className="font-medium">Bank Address:</span> {(client as any).bankAddress}
+                                          </div>
+                                        )}
+                                        {(client as any).bankAccountHolderName && (
+                                          <div>
+                                            <span className="font-medium">Account Holder:</span> {(client as any).bankAccountHolderName}
+                                          </div>
+                                        )}
+                                        {(client as any).bankAccountType && (
+                                          <div>
+                                            <span className="font-medium">Account Type:</span> {(client as any).bankAccountType}
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    <p>No bank details provided</p>
+                                  )}
+                                </TooltipContent>
+                              </Tooltip>
                             </TableCell>
                             <TableCell>
                               <Badge 
@@ -1084,27 +1124,20 @@ export default function ClientManagement() {
                                 </div>
                               </TableCell>
                               <TableCell>
-                                <div className="text-sm space-y-1">
-                                  <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
-                                    <Phone className="w-3 h-3" />
-                                    <span>{client.mobile}</span>
-                                  </div>
-                                  {client.email && (
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <div className="text-sm space-y-1 cursor-pointer">
+                                      <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
+                                        <Phone className="w-3 h-3" />
+                                        <span>{client.mobile}</span>
+                                      </div>
+                                      {client.email && (
                                         <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
                                           <Mail className="w-3 h-3" />
                                           <span className="truncate max-w-[150px]">{client.email}</span>
                                         </div>
-                                      </TooltipTrigger>
-                                      <TooltipContent>
-                                        <p>{client.email}</p>
-                                      </TooltipContent>
-                                    </Tooltip>
-                                  )}
-                                  {(client as any).address && (
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
+                                      )}
+                                      {(client as any).address && (
                                         <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                                           <div className="font-medium text-gray-700 dark:text-gray-300">Address:</div>
                                           <div className="break-words line-clamp-2">{(client as any).address}</div>
@@ -1112,70 +1145,117 @@ export default function ClientManagement() {
                                             <div>PIN: {(client as any).pincode}</div>
                                           )}
                                         </div>
-                                      </TooltipTrigger>
-                                      <TooltipContent className="max-w-xs">
-                                        <div>
-                                          <p className="font-medium">Complete Address:</p>
-                                          <p className="mt-1">{(client as any).address}</p>
-                                          {(client as any).pincode && (
-                                            <p className="mt-1">PIN: {(client as any).pincode}</p>
-                                          )}
+                                      )}
+                                    </div>
+                                  </TooltipTrigger>
+                                  <TooltipContent className="max-w-sm">
+                                    <div className="space-y-2">
+                                      <p className="font-medium">Complete Contact Information:</p>
+                                      <div className="space-y-1">
+                                        <div className="flex items-center gap-2">
+                                          <Phone className="w-3 h-3" />
+                                          <span>{client.mobile}</span>
                                         </div>
-                                      </TooltipContent>
-                                    </Tooltip>
-                                  )}
-                                </div>
+                                        {client.email && (
+                                          <div className="flex items-center gap-2">
+                                            <Mail className="w-3 h-3" />
+                                            <span>{client.email}</span>
+                                          </div>
+                                        )}
+                                        {(client as any).address && (
+                                          <div className="mt-2">
+                                            <p className="font-medium text-xs">Complete Address:</p>
+                                            <p className="text-xs mt-1">{(client as any).address}</p>
+                                            {(client as any).pincode && (
+                                              <p className="text-xs">PIN: {(client as any).pincode}</p>
+                                            )}
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </TooltipContent>
+                                </Tooltip>
                               </TableCell>
                               <TableCell>
-                                <div className="text-sm space-y-1">
-                                  {(client as any).bankAccountNumber && (client as any).bankIFSC ? (
-                                    <>
-                                      <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
-                                        <CreditCard className="w-3 h-3" />
-                                        <span className="font-mono text-xs">{(client as any).bankAccountNumber.slice(-4)}</span>
-                                      </div>
-                                      <div className="text-xs text-gray-500 dark:text-gray-400">
-                                        IFSC: {(client as any).bankIFSC}
-                                      </div>
-                                      {(client as any).bankMICR && (
-                                        <div className="text-xs text-gray-500 dark:text-gray-400">
-                                          MICR: {(client as any).bankMICR}
-                                        </div>
-                                      )}
-                                      {(client as any).bankName && (
-                                        <Tooltip>
-                                          <TooltipTrigger asChild>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <div className="text-sm space-y-1 cursor-pointer">
+                                      {(client as any).bankAccountNumber && (client as any).bankIFSC ? (
+                                        <>
+                                          <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
+                                            <CreditCard className="w-3 h-3" />
+                                            <span className="font-mono text-xs">{(client as any).bankAccountNumber.slice(-4)}</span>
+                                          </div>
+                                          <div className="text-xs text-gray-500 dark:text-gray-400">
+                                            IFSC: {(client as any).bankIFSC}
+                                          </div>
+                                          {(client as any).bankMICR && (
+                                            <div className="text-xs text-gray-500 dark:text-gray-400">
+                                              MICR: {(client as any).bankMICR}
+                                            </div>
+                                          )}
+                                          {(client as any).bankName && (
                                             <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
                                               {(client as any).bankName}
                                             </div>
-                                          </TooltipTrigger>
-                                          <TooltipContent>
-                                            <p>{(client as any).bankName}</p>
-                                          </TooltipContent>
-                                        </Tooltip>
-                                      )}
-                                      {(client as any).bankAddress && (
-                                        <Tooltip>
-                                          <TooltipTrigger asChild>
+                                          )}
+                                          {(client as any).bankAddress && (
                                             <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
                                               {(client as any).bankAddress}
                                             </div>
-                                          </TooltipTrigger>
-                                          <TooltipContent className="max-w-xs">
-                                            <div>
-                                              <p className="font-medium">Bank Address:</p>
-                                              <p className="mt-1">{(client as any).bankAddress}</p>
-                                            </div>
-                                          </TooltipContent>
-                                        </Tooltip>
+                                          )}
+                                        </>
+                                      ) : (
+                                        <span className="text-gray-400 dark:text-gray-500 italic text-xs">
+                                          Not provided
+                                        </span>
                                       )}
-                                    </>
-                                  ) : (
-                                    <span className="text-gray-400 dark:text-gray-500 italic text-xs">
-                                      Not provided
-                                    </span>
-                                  )}
-                                </div>
+                                    </div>
+                                  </TooltipTrigger>
+                                  <TooltipContent className="max-w-sm">
+                                    {(client as any).bankAccountNumber && (client as any).bankIFSC ? (
+                                      <div className="space-y-2">
+                                        <p className="font-medium">Complete Bank Details:</p>
+                                        <div className="space-y-1 text-xs">
+                                          <div className="flex items-center gap-2">
+                                            <CreditCard className="w-3 h-3" />
+                                            <span>Account: {(client as any).bankAccountNumber}</span>
+                                          </div>
+                                          <div>
+                                            <span className="font-medium">IFSC:</span> {(client as any).bankIFSC}
+                                          </div>
+                                          {(client as any).bankMICR && (
+                                            <div>
+                                              <span className="font-medium">MICR:</span> {(client as any).bankMICR}
+                                            </div>
+                                          )}
+                                          {(client as any).bankName && (
+                                            <div>
+                                              <span className="font-medium">Bank Name:</span> {(client as any).bankName}
+                                            </div>
+                                          )}
+                                          {(client as any).bankAddress && (
+                                            <div>
+                                              <span className="font-medium">Bank Address:</span> {(client as any).bankAddress}
+                                            </div>
+                                          )}
+                                          {(client as any).bankAccountHolderName && (
+                                            <div>
+                                              <span className="font-medium">Account Holder:</span> {(client as any).bankAccountHolderName}
+                                            </div>
+                                          )}
+                                          {(client as any).bankAccountType && (
+                                            <div>
+                                              <span className="font-medium">Account Type:</span> {(client as any).bankAccountType}
+                                            </div>
+                                          )}
+                                        </div>
+                                      </div>
+                                    ) : (
+                                      <p>No bank details provided</p>
+                                    )}
+                                  </TooltipContent>
+                                </Tooltip>
                               </TableCell>
                               <TableCell>
                                 <Badge 
