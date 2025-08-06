@@ -105,6 +105,7 @@ export function AuthModal({ isOpen, onClose, mode, initialTab }: AuthModalProps)
   const [registeredWorkerId, setRegisteredWorkerId] = useState<string>("");
   const [workerRegistrationStep, setWorkerRegistrationStep] = useState<"details" | "bank" | "complete">("details");
   const [showBankDetailsModal, setShowBankDetailsModal] = useState(false);
+  const [loginError, setLoginError] = useState<string>("");
   const { loginWithOtp, verifyOtp, signupClient, signupWorker, isLoading } = useAuth();
   const { t } = useLanguage();
   const { toast } = useToast();
@@ -760,11 +761,15 @@ export function AuthModal({ isOpen, onClose, mode, initialTab }: AuthModalProps)
   };
 
   const handleLogin = async (data: z.infer<typeof loginSchema>) => {
+    setLoginError(""); // Clear any previous errors
     const result = await loginWithOtp(data.mobile, loginRole);
     if (result.success) {
       setPendingLogin({ mobile: data.mobile, role: loginRole });
       setDevelopmentOtp(result.otp || "");
       setStep(2);
+    } else {
+      // Display the error message from the server
+      setLoginError(result.error || "Login failed. Please try again.");
     }
   };
 
@@ -888,6 +893,7 @@ export function AuthModal({ isOpen, onClose, mode, initialTab }: AuthModalProps)
     setStep(1);
     setPendingLogin(null);
     setDevelopmentOtp("");
+    setLoginError(""); // Clear login error
     setClientProfilePreview("");
     setWorkerProfilePreview("");
     setShowNewServiceInput(false);
@@ -973,7 +979,10 @@ export function AuthModal({ isOpen, onClose, mode, initialTab }: AuthModalProps)
                 <form onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-4">
                   <div>
                     <Label>Login As</Label>
-                    <RadioGroup value={loginRole} onValueChange={(value: "client" | "worker") => setLoginRole(value)} className="flex gap-6 mt-2">
+                    <RadioGroup value={loginRole} onValueChange={(value: "client" | "worker") => {
+                      setLoginRole(value);
+                      setLoginError(""); // Clear login error when role changes
+                    }} className="flex gap-6 mt-2">
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="client" id="login-client" />
                         <Label htmlFor="login-client" className="cursor-pointer">Client (Need Services)</Label>
@@ -998,6 +1007,20 @@ export function AuthModal({ isOpen, onClose, mode, initialTab }: AuthModalProps)
                       </p>
                     )}
                   </div>
+
+                  {loginError && (
+                    <Alert variant="destructive">
+                      <AlertTriangle className="h-4 w-4" />
+                      <AlertDescription>
+                        {loginError}
+                        {loginError.includes("not found") && (
+                          <span className="block mt-2">
+                            Don't have an account? <strong>Sign up</strong> first.
+                          </span>
+                        )}
+                      </AlertDescription>
+                    </Alert>
+                  )}
 
                   <Button type="submit" className="w-full" disabled={isLoading}>
                     <Smartphone className="h-4 w-4 mr-2" />
