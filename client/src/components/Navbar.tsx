@@ -236,6 +236,11 @@ export function Navbar() {
         isOpen={showLoginModal}
         onClose={() => setShowLoginModal(false)}
         mode="login"
+        onSwitchToSignup={() => {
+          setShowLoginModal(false);
+          setShowSignupModal(true);
+          setSignupInitialTab("client"); // Default to client signup
+        }}
       />
       
       <AuthModal

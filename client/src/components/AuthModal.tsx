@@ -71,9 +71,10 @@ interface AuthModalProps {
   onClose: () => void;
   mode: "login" | "signup";
   initialTab?: "client" | "worker";
+  onSwitchToSignup?: () => void;
 }
 
-export function AuthModal({ isOpen, onClose, mode, initialTab }: AuthModalProps) {
+export function AuthModal({ isOpen, onClose, mode, initialTab, onSwitchToSignup }: AuthModalProps) {
   const [step, setStep] = useState(1);
   const [pendingLogin, setPendingLogin] = useState<{ mobile: string; role: string } | null>(null);
   const [developmentOtp, setDevelopmentOtp] = useState<string>("");
@@ -1033,7 +1034,13 @@ export function AuthModal({ isOpen, onClose, mode, initialTab }: AuthModalProps)
                     type="button" 
                     variant="link" 
                     className="text-sm p-0 h-auto text-muted-foreground hover:text-foreground"
-                    onClick={handleClose}
+                    onClick={() => {
+                      if (onSwitchToSignup) {
+                        onSwitchToSignup();
+                      } else {
+                        handleClose();
+                      }
+                    }}
                   >
                     Sign Up
                   </Button>
