@@ -119,9 +119,7 @@ export default function ClientManagement() {
   // Mutations for client actions
   const verifyUserMutation = useMutation({
     mutationFn: async (userId: string) => {
-      return await apiRequest(`/api/admin/verify-user/${userId}`, {
-        method: "PUT",
-      });
+      return await apiRequest(`/api/admin/verify-user/${userId}`, "PUT");
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
@@ -141,9 +139,7 @@ export default function ClientManagement() {
 
   const suspendUserMutation = useMutation({
     mutationFn: async (userId: string) => {
-      return await apiRequest(`/api/admin/suspend-user/${userId}`, {
-        method: "PUT",
-      });
+      return await apiRequest(`/api/admin/suspend-user/${userId}`, "PUT");
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
@@ -163,9 +159,7 @@ export default function ClientManagement() {
 
   const deleteUserMutation = useMutation({
     mutationFn: async (userId: string) => {
-      return await apiRequest(`/api/admin/delete-user/${userId}`, {
-        method: "DELETE",
-      });
+      return await apiRequest(`/api/admin/delete-user/${userId}`, "DELETE");
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
@@ -187,10 +181,7 @@ export default function ClientManagement() {
 
   const sendMessageMutation = useMutation({
     mutationFn: async ({ userId, message }: { userId: string; message: string }) => {
-      return await apiRequest("/api/admin/send-message", {
-        method: "POST",
-        body: { userId, message },
-      });
+      return await apiRequest("/api/admin/send-message", "POST", { userId, message });
     },
     onSuccess: () => {
       setShowMessageDialog(false);
@@ -713,7 +704,7 @@ export default function ClientManagement() {
           subtitle="Complete registration information"
           data={selectedClient}
           avatar={{
-            src: selectedClient.profilePicture,
+            src: selectedClient.profileImageUrl,
             fallback: `${selectedClient.firstName?.charAt(0)}${selectedClient.lastName?.charAt(0)}`
           }}
           fields={[

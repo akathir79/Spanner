@@ -359,14 +359,26 @@ export default function ViewDetailsModal({
 export const getDistrictOptions = () => {
   const allDistricts: { value: string; label: string }[] = [];
   
-  Object.entries(statesDistrictsData as Record<string, string[]>).forEach(([state, districts]) => {
-    districts.forEach(district => {
-      allDistricts.push({
-        value: district,
-        label: `${district}, ${state}`
+  if ('states' in statesDistrictsData) {
+    statesDistrictsData.states.forEach(({ state, districts }) => {
+      districts.forEach(district => {
+        allDistricts.push({
+          value: district,
+          label: `${district}, ${state}`
+        });
       });
     });
-  });
+  } else {
+    // Fallback for old format
+    Object.entries(statesDistrictsData as Record<string, string[]>).forEach(([state, districts]) => {
+      districts.forEach(district => {
+        allDistricts.push({
+          value: district,
+          label: `${district}, ${state}`
+        });
+      });
+    });
+  }
   
   return allDistricts.sort((a, b) => a.label.localeCompare(b.label));
 };
