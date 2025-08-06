@@ -31,7 +31,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { ArrowLeft, Phone, Mail, Calendar, MoreHorizontal, Eye, MessageSquare, CheckCircle, XCircle, Trash2, Edit, AlertCircle, Search, X } from "lucide-react";
+import { ArrowLeft, Phone, Mail, Calendar, MoreHorizontal, Eye, MessageSquare, CheckCircle, XCircle, Trash2, Edit, AlertCircle, Search, X, Menu } from "lucide-react";
 import { format } from "date-fns";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
@@ -147,6 +147,7 @@ export default function ClientManagement() {
   // Search states
   const [searchQuery, setSearchQuery] = useState("");
   const [searchFilter, setSearchFilter] = useState<"all" | "id" | "name" | "email" | "mobile" | "location">("all");
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   
   // Modal states
   const [selectedClient, setSelectedClient] = useState<User | null>(null);
@@ -402,6 +403,14 @@ export default function ClientManagement() {
               <ArrowLeft className="w-4 h-4" />
               Back to Dashboard
             </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+              className="flex items-center justify-center w-8 h-8"
+            >
+              <Menu className="w-4 h-4" />
+            </Button>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Client Management</h1>
           </div>
         </div>
@@ -411,7 +420,7 @@ export default function ClientManagement() {
       <div className="flex h-[calc(100vh-140px)] mt-20">
         
         {/* Left Sidebar */}
-        <div className="w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col">
+        <div className={`${sidebarCollapsed ? 'w-0' : 'w-64'} bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col transition-all duration-300 overflow-hidden`}>
           <div className="p-4 border-b border-gray-200 dark:border-gray-700">
             {/* Total Client List Header */}
             <button
@@ -537,14 +546,14 @@ export default function ClientManagement() {
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead className="w-[280px]">User</TableHead>
-                          <TableHead>Role</TableHead>
-                          <TableHead>Location</TableHead>
-                          <TableHead>Bookings/Earnings</TableHead>
-                          <TableHead>Contact</TableHead>
-                          <TableHead>Registration Date</TableHead>
-                          <TableHead>Last Login</TableHead>
-                          <TableHead>Status</TableHead>
+                          <TableHead className="w-[180px]">User</TableHead>
+                          <TableHead className="w-[80px]">Role</TableHead>
+                          <TableHead className="w-[150px]">Location</TableHead>
+                          <TableHead className="w-[120px]">Bookings/Earnings</TableHead>
+                          <TableHead className="w-[130px]">Contact</TableHead>
+                          <TableHead className="w-[140px]">Registration Date</TableHead>
+                          <TableHead className="w-[130px]">Last Login</TableHead>
+                          <TableHead className="w-[90px]">Status</TableHead>
                           <TableHead className="w-[50px]"></TableHead>
                         </TableRow>
                       </TableHeader>
@@ -800,14 +809,14 @@ export default function ClientManagement() {
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead className="w-[280px]">User</TableHead>
-                          <TableHead>Role</TableHead>
-                          <TableHead>Location</TableHead>
-                          <TableHead>Bookings/Earnings</TableHead>
-                          <TableHead>Contact</TableHead>
-                          <TableHead>Registration Date</TableHead>
-                          <TableHead>Last Login</TableHead>
-                          <TableHead>Status</TableHead>
+                          <TableHead className="w-[180px]">User</TableHead>
+                          <TableHead className="w-[80px]">Role</TableHead>
+                          <TableHead className="w-[150px]">Location</TableHead>
+                          <TableHead className="w-[120px]">Bookings/Earnings</TableHead>
+                          <TableHead className="w-[130px]">Contact</TableHead>
+                          <TableHead className="w-[140px]">Registration Date</TableHead>
+                          <TableHead className="w-[130px]">Last Login</TableHead>
+                          <TableHead className="w-[90px]">Status</TableHead>
                           <TableHead className="w-[50px]"></TableHead>
                         </TableRow>
                       </TableHeader>
