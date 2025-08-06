@@ -494,30 +494,6 @@ export default function ClientManagement() {
                               </div>
                             </TableCell>
                             <TableCell>
-                              <div className="text-sm space-y-1">
-                                <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
-                                  <Calendar className="w-3 h-3" />
-                                  <span>{formatIndianDateTime(client.createdAt)}</span>
-                                </div>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-2">
-                                <Badge 
-                                  variant={activityStatus.variant}
-                                  className={activityStatus.className}
-                                >
-                                  {activityStatus.icon}
-                                  <span className="ml-1">{activityStatus.label}</span>
-                                </Badge>
-                                {client.lastLoginAt && (
-                                  <div className="text-xs text-gray-500 dark:text-gray-400">
-                                    {formatIndianDateTime(client.lastLoginAt)}
-                                  </div>
-                                )}
-                              </div>
-                            </TableCell>
-                            <TableCell>
                               <Badge 
                                 variant={client.isVerified ? "default" : "destructive"}
                                 className={client.isVerified ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100" : ""}
@@ -697,30 +673,6 @@ export default function ClientManagement() {
                                 ) : (
                                   <span className="text-gray-500 dark:text-gray-400">
                                     Not specified
-                            <TableCell>
-                              <div className="text-sm space-y-1">
-                                <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
-                                  <Calendar className="w-3 h-3" />
-                                  <span>{formatIndianDateTime(client.createdAt)}</span>
-                                </div>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-2">
-                                <Badge 
-                                  variant={activityStatus.variant}
-                                  className={activityStatus.className}
-                                >
-                                  {activityStatus.icon}
-                                  <span className="ml-1">{activityStatus.label}</span>
-                                </Badge>
-                                {client.lastLoginAt && (
-                                  <div className="text-xs text-gray-500 dark:text-gray-400">
-                                    {formatIndianDateTime(client.lastLoginAt)}
-                                  </div>
-                                )}
-                              </div>
-                            </TableCell>
                                   </span>
                                 )}
                               </div>
