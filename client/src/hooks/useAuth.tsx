@@ -45,7 +45,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const savedUser = localStorage.getItem("user");
     if (savedUser) {
       try {
-        setUser(JSON.parse(savedUser));
+        const userData = JSON.parse(savedUser);
+        setUser(userData);
       } catch (error) {
         console.error("Error parsing saved user:", error);
         localStorage.removeItem("user");
@@ -147,6 +148,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const refreshUser = async () => {
+    if (!user?.id) return false;
+    
+    try {
+      console.log("🔄 Refreshing user profile...");
+      const response = await fetch(`/api/user/refresh/${user.id}`);
+      if (response.ok) {
+        const data = await response.json();
+        console.log("🔄 Fresh user data from server:", data.user);
+        setUser(data.user);
+        localStorage.setItem("user", JSON.stringify(data.user));
+        console.log("✅ User profile refreshed successfully");
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error("Failed to refresh user profile:", error);
+      return false;
+    }
+  };
+
   const value = {
     user,
     isLoading,
@@ -157,6 +179,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     verifyOtp,
     signupClient,
     signupWorker,
+    refreshUser,
   };
 
   return (

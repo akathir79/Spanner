@@ -65,8 +65,12 @@ interface BankInfo {
 const ProfileDetailsCard = ({ user, onUpdate }: { user: any, onUpdate: () => void }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState(user || {});
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { refreshUser } = useAuth();
+
+
 
   useEffect(() => {
     setEditData(user || {});
@@ -103,6 +107,25 @@ const ProfileDetailsCard = ({ user, onUpdate }: { user: any, onUpdate: () => voi
     setIsEditing(false);
   };
 
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    const success = await refreshUser();
+    if (success) {
+      toast({
+        title: "Profile Refreshed",
+        description: "Your profile has been updated with the latest information.",
+      });
+      onUpdate();
+    } else {
+      toast({
+        title: "Refresh Failed",
+        description: "Failed to refresh profile data",
+        variant: "destructive",
+      });
+    }
+    setIsRefreshing(false);
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -112,6 +135,16 @@ const ProfileDetailsCard = ({ user, onUpdate }: { user: any, onUpdate: () => voi
             Profile Information
           </CardTitle>
           <div className="space-x-2">
+            {!isEditing && (
+              <Button 
+                size="sm" 
+                variant="outline" 
+                onClick={handleRefresh}
+                disabled={isRefreshing}
+              >
+                {isRefreshing ? "Refreshing..." : "Refresh"}
+              </Button>
+            )}
             {isEditing ? (
               <>
                 <Button size="sm" variant="outline" onClick={handleCancel}>

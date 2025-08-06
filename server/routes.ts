@@ -573,6 +573,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "User not found. Please sign up first." });
       }
       
+
+      
       res.json({
         message: "Login successful",
         user: {
@@ -1052,6 +1054,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error rejecting worker:", error);
       res.status(500).json({ error: "Failed to reject worker" });
+    }
+  });
+
+  // Refresh user profile - fetch latest data from database
+  app.get("/api/user/refresh/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const user = await storage.getUser(id);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Return complete user object with all current fields
+      res.json({
+        message: "Profile refreshed successfully",
+        user: {
+          id: user.id,
+          mobile: user.mobile,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          role: user.role,
+          district: user.district,
+          isVerified: user.isVerified,
+          status: user.status,
+          createdAt: user.createdAt,
+          profilePicture: user.profilePicture,
+          address: user.address,
+          state: user.state,
+          pincode: user.pincode,
+          bankAccountNumber: user.bankAccountNumber,
+          bankIFSC: user.bankIFSC,
+          bankAccountHolderName: user.bankAccountHolderName,
+          bankName: user.bankName,
+          bankBranch: user.bankBranch,
+          bankAccountType: user.bankAccountType,
+          bankMICR: user.bankMICR,
+        }
+      });
+    } catch (error) {
+      console.error("Refresh user profile error:", error);
+      res.status(500).json({ message: "Internal server error" });
     }
   });
 
