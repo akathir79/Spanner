@@ -166,11 +166,16 @@ export default function ClientManagement() {
   const [selectedDistrict, setSelectedDistrict] = useState<string | null>(null);
   const [view, setView] = useState<"total" | "states" | "districts" | "clients">("states");
   
-  // Search states
+  // Search and pagination states
   const [searchQuery, setSearchQuery] = useState("");
   const [searchFilter, setSearchFilter] = useState<"all" | "id" | "name" | "email" | "mobile" | "location">("all");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [loadingState, setLoadingState] = useState<string | null>(null);
+  
+  // Pagination states for handling large datasets
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(50); // Start with 50 records per page
+  const [totalPages, setTotalPages] = useState(1);
   
   // Modal states
   const [selectedClient, setSelectedClient] = useState<User | null>(null);
@@ -197,8 +202,8 @@ export default function ClientManagement() {
     return (users as User[]).filter((u: User) => u.role === "client");
   }, [users]);
 
-  // Memoized search filter function
-  const clients = useMemo(() => {
+  // Filtered clients (without pagination)
+  const filteredClients = useMemo(() => {
     if (!searchQuery.trim()) return allClients;
 
     const query = searchQuery.toLowerCase().trim();
@@ -228,6 +233,21 @@ export default function ClientManagement() {
       }
     });
   }, [allClients, searchQuery, searchFilter]);
+
+  // Paginated clients for current view
+  const clients = useMemo(() => {
+    const startIndex = (currentPage - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    const paginated = filteredClients.slice(startIndex, endIndex);
+    
+    // Update total pages
+    const calculatedTotalPages = Math.ceil(filteredClients.length / pageSize);
+    if (calculatedTotalPages !== totalPages) {
+      setTotalPages(calculatedTotalPages);
+    }
+    
+    return paginated;
+  }, [filteredClients, currentPage, pageSize, totalPages]);
 
   // Get states from JSON file
   const states = (statesDistrictsData.states as StateData[]).map(s => s.state).sort();
@@ -428,7 +448,7 @@ export default function ClientManagement() {
     }
   };
 
-  // Handle navigation - direct approach without async operations
+  // Handle navigation - direct approach with pagination reset
   const handleTotalClientsClick = () => {
     // Direct state updates without delays or promises
     setView("total");
@@ -436,6 +456,7 @@ export default function ClientManagement() {
     setSelectedDistrict(null);
     setSearchQuery("");
     setSearchFilter("all");
+    setCurrentPage(1); // Reset to first page
   };
 
   const handleStateClick = async (state: string) => {
@@ -523,7 +544,7 @@ export default function ClientManagement() {
                 variant="secondary" 
                 className="absolute right-2 top-1/2 -translate-y-1/2 h-5 px-2 min-w-[20px] rounded-md flex items-center justify-center text-xs bg-purple-500 text-white hover:bg-purple-600"
               >
-                {clients.length}
+                {filteredClients.length}
               </Badge>
             </button>
           </div>
@@ -587,7 +608,7 @@ export default function ClientManagement() {
                       All Registered Clients
                     </h2>
                     <p className="text-gray-600 dark:text-gray-400">
-                      Complete client database • {clients.length} total clients {searchQuery && `• ${clients.length} filtered results`}
+                      Complete client database • {filteredClients.length} total clients • Showing {((currentPage - 1) * pageSize) + 1}-{Math.min(currentPage * pageSize, filteredClients.length)} of {filteredClients.length} {searchQuery && `filtered results`}
                     </p>
                   </div>
                   
@@ -598,7 +619,10 @@ export default function ClientManagement() {
                       <Input
                         placeholder="Search clients..."
                         value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
+                        onChange={(e) => {
+                          setSearchQuery(e.target.value);
+                          setCurrentPage(1); // Reset to first page when searching
+                        }}
                         className="pl-10 pr-8"
                       />
                       {searchQuery && (
@@ -1019,6 +1043,87 @@ export default function ClientManagement() {
                         })}
                       </TableBody>
                     </Table>
+                  </div>
+                )}
+                
+                {/* Pagination Controls */}
+                {filteredClients.length > 0 && (
+                  <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                        <span>Show:</span>
+                        <Select value={pageSize.toString()} onValueChange={(value) => {
+                          setPageSize(parseInt(value));
+                          setCurrentPage(1); // Reset to first page when changing page size
+                        }}>
+                          <SelectTrigger className="w-20 h-8">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="25">25</SelectItem>
+                            <SelectItem value="50">50</SelectItem>
+                            <SelectItem value="100">100</SelectItem>
+                            <SelectItem value="200">200</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <span>per page</span>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(1)}
+                        disabled={currentPage === 1}
+                      >
+                        First
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                        disabled={currentPage === 1}
+                      >
+                        Previous
+                      </Button>
+                      
+                      <div className="flex items-center gap-1">
+                        {/* Show page numbers */}
+                        {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                          const pageNum = Math.max(1, Math.min(totalPages - 4, currentPage - 2)) + i;
+                          if (pageNum > totalPages) return null;
+                          return (
+                            <Button
+                              key={pageNum}
+                              variant={currentPage === pageNum ? "default" : "outline"}
+                              size="sm"
+                              className="w-8 h-8 p-0"
+                              onClick={() => setCurrentPage(pageNum)}
+                            >
+                              {pageNum}
+                            </Button>
+                          );
+                        })}
+                      </div>
+                      
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                        disabled={currentPage === totalPages}
+                      >
+                        Next
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(totalPages)}
+                        disabled={currentPage === totalPages}
+                      >
+                        Last
+                      </Button>
+                    </div>
                   </div>
                 )}
               </div>
