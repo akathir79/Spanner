@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/components/LanguageProvider";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -66,6 +67,7 @@ const ProfileDetailsCard = ({ user, onUpdate }: { user: any, onUpdate: () => voi
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState(user || {});
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { refreshUser } = useAuth();
@@ -126,6 +128,77 @@ const ProfileDetailsCard = ({ user, onUpdate }: { user: any, onUpdate: () => voi
     setIsRefreshing(false);
   };
 
+  const handlePhotoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Invalid File",
+        description: "Please select an image file",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate file size (5MB max)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "File Too Large",
+        description: "Please select an image smaller than 5MB",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsUploadingPhoto(true);
+
+    try {
+      // Convert to base64
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const base64String = e.target?.result as string;
+        
+        try {
+          // Update user profile with new photo
+          const response = await apiRequest("PUT", `/api/users/${user.id}`, {
+            profilePicture: base64String
+          });
+          
+          if (response.ok) {
+            toast({
+              title: "Photo Updated",
+              description: "Your profile photo has been updated successfully",
+            });
+            onUpdate();
+            // Refresh user data
+            await refreshUser();
+          } else {
+            throw new Error("Failed to update photo");
+          }
+        } catch (error) {
+          toast({
+            title: "Upload Failed",
+            description: "Failed to update profile photo",
+            variant: "destructive",
+          });
+        } finally {
+          setIsUploadingPhoto(false);
+        }
+      };
+      
+      reader.readAsDataURL(file);
+    } catch (error) {
+      toast({
+        title: "Upload Failed",
+        description: "Failed to process image file",
+        variant: "destructive",
+      });
+      setIsUploadingPhoto(false);
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -163,6 +236,46 @@ const ProfileDetailsCard = ({ user, onUpdate }: { user: any, onUpdate: () => voi
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
+        {/* Profile Avatar Section */}
+        <div className="flex items-center gap-4 p-4 bg-muted/20 rounded-lg">
+          <Avatar className="h-20 w-20">
+            <AvatarImage 
+              src={user?.profilePicture || undefined} 
+              alt={`${user?.firstName} ${user?.lastName}`} 
+            />
+            <AvatarFallback className="bg-primary text-primary-foreground text-xl">
+              {user?.firstName?.[0]?.toUpperCase()}{user?.lastName?.[0]?.toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
+          <div className="flex-1">
+            <h3 className="text-lg font-semibold">{user?.firstName} {user?.lastName}</h3>
+            <p className="text-sm text-muted-foreground">{user?.role?.charAt(0).toUpperCase() + user?.role?.slice(1)} • {user?.id}</p>
+            <p className="text-sm text-muted-foreground">
+              {user?.district ? `${user.district}, ${user.state || 'India'}` : 'Location not set'}
+            </p>
+          </div>
+          {!isEditing && (
+            <>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handlePhotoUpload}
+                className="hidden"
+                id="profile-photo-upload"
+              />
+              <Button 
+                variant="outline" 
+                size="sm"
+                disabled={isUploadingPhoto}
+                onClick={() => document.getElementById('profile-photo-upload')?.click()}
+              >
+                <User className="h-4 w-4 mr-2" />
+                {isUploadingPhoto ? "Uploading..." : "Change Photo"}
+              </Button>
+            </>
+          )}
+        </div>
+
         <div className="grid grid-cols-1 gap-4">
           <div>
             <Label className="text-sm font-medium text-muted-foreground">Full Name</Label>
