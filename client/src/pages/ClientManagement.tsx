@@ -704,7 +704,7 @@ export default function ClientManagement() {
           subtitle="Complete registration information"
           data={selectedClient}
           avatar={{
-            src: selectedClient.profileImageUrl,
+            src: selectedClient.profilePicture,
             fallback: `${selectedClient.firstName?.charAt(0)}${selectedClient.lastName?.charAt(0)}`
           }}
           fields={[
