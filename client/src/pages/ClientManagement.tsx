@@ -602,7 +602,7 @@ export default function ClientManagement() {
                                 <div className="font-medium text-gray-900 dark:text-white">
                                   {client.firstName} {client.lastName}
                                 </div>
-                                <div className="text-xs text-green-800 dark:text-green-400 font-mono font-bold">
+                                <div className="text-sm text-green-800 dark:text-green-400 font-mono font-bold">
                                   ID: {client.id}
                                 </div>
                               </div>
@@ -877,7 +877,7 @@ export default function ClientManagement() {
                                   <div className="font-medium text-gray-900 dark:text-white">
                                     {client.firstName} {client.lastName}
                                   </div>
-                                  <div className="text-xs text-green-800 dark:text-green-400 font-mono font-bold">
+                                  <div className="text-sm text-green-800 dark:text-green-400 font-mono font-bold">
                                     ID: {client.id}
                                   </div>
                                 </div>
