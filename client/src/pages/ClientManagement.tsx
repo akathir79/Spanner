@@ -149,10 +149,9 @@ export default function ClientManagement() {
     ? clients.filter((client: User) => client.district === selectedDistrict)
     : [];
 
-  // Get district count for each state from database
-  const getDistrictCountForState = (stateName: string) => {
-    const districtsInState = (dbDistricts as District[]).filter((d: District) => d.state === stateName);
-    return districtsInState.length;
+  // Get client count for each state from database
+  const getClientCountForState = (stateName: string) => {
+    return clients.filter((client: User) => client.state === stateName).length;
   };
 
   // Get client count for each district from database
@@ -381,7 +380,7 @@ export default function ClientManagement() {
                     variant="secondary" 
                     className="absolute right-2 top-1/2 -translate-y-1/2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs bg-blue-500 text-white hover:bg-blue-600"
                   >
-                    {getDistrictCountForState(state)}
+                    {getClientCountForState(state)}
                   </Badge>
                 </button>
               ))}
