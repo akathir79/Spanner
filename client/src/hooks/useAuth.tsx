@@ -9,6 +9,17 @@ interface User {
   mobile: string;
   role: string;
   profilePicture?: string;
+  address?: string;
+  state?: string;
+  district?: string;
+  pincode?: string;
+  bankAccountNumber?: string;
+  bankIfsc?: string;
+  bankAccountHolderName?: string;
+  bankName?: string;
+  bankBranch?: string;
+  bankAccountType?: string;
+  bankMicr?: string;
 }
 
 interface AuthContextType {
