@@ -601,12 +601,11 @@ export default function ClientManagement() {
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead className="w-[120px]">User</TableHead>
+                          <TableHead className="w-[140px]">User</TableHead>
                           <TableHead className="w-[70px]">Role</TableHead>
                           <TableHead className="w-[140px]">Location</TableHead>
                           <TableHead className="w-[140px]">Bookings/Earnings</TableHead>
                           <TableHead className="w-[140px]">Contact</TableHead>
-                          <TableHead className="w-[140px]">Registration Date</TableHead>
                           <TableHead className="w-[90px]">Status</TableHead>
                           <TableHead className="w-[50px]"></TableHead>
                         </TableRow>
@@ -641,6 +640,9 @@ export default function ClientManagement() {
                                       Never logged in
                                     </div>
                                   )}
+                                  <div className="text-xs text-gray-500 dark:text-gray-400">
+                                    Reg: {formatIndianDateTime(client.createdAt)}
+                                  </div>
                                 </div>
                               </div>
                             </TableCell>
@@ -681,14 +683,6 @@ export default function ClientManagement() {
                                     <span className="truncate max-w-[150px]">{client.email}</span>
                                   </div>
                                 )}
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <div className="text-sm space-y-1">
-                                <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
-                                  <Calendar className="w-3 h-3" />
-                                  <span>{formatIndianDateTime(client.createdAt)}</span>
-                                </div>
                               </div>
                             </TableCell>
                             <TableCell>
@@ -894,12 +888,11 @@ export default function ClientManagement() {
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead className="w-[120px]">User</TableHead>
+                          <TableHead className="w-[140px]">User</TableHead>
                           <TableHead className="w-[70px]">Role</TableHead>
                           <TableHead className="w-[140px]">Location</TableHead>
                           <TableHead className="w-[140px]">Bookings/Earnings</TableHead>
                           <TableHead className="w-[140px]">Contact</TableHead>
-                          <TableHead className="w-[140px]">Registration Date</TableHead>
                           <TableHead className="w-[90px]">Status</TableHead>
                           <TableHead className="w-[50px]"></TableHead>
                         </TableRow>
@@ -934,6 +927,9 @@ export default function ClientManagement() {
                                         Never logged in
                                       </div>
                                     )}
+                                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                                      Reg: {formatIndianDateTime(client.createdAt)}
+                                    </div>
                                   </div>
                                 </div>
                               </TableCell>
@@ -974,14 +970,6 @@ export default function ClientManagement() {
                                       <span className="truncate max-w-[150px]">{client.email}</span>
                                     </div>
                                   )}
-                                </div>
-                              </TableCell>
-                              <TableCell>
-                                <div className="text-sm space-y-1">
-                                  <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
-                                    <Calendar className="w-3 h-3" />
-                                    <span>{formatIndianDateTime(client.createdAt)}</span>
-                                  </div>
                                 </div>
                               </TableCell>
                               <TableCell>
