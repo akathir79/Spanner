@@ -69,14 +69,20 @@ function formatIndianDateTime(dateString: string | Date): string {
   try {
     // Parse the UTC date string or Date object
     const date = typeof dateString === 'string' ? new Date(dateString) : dateString;
-    console.log("formatIndianDateTime input:", dateString, "parsed date:", date, "is valid:", !isNaN(date.getTime()));
     if (isNaN(date.getTime())) return "Invalid date";
     
-    // Convert to IST by adding 5 hours 30 minutes
-    const istDate = new Date(date.getTime() + (5.5 * 60 * 60 * 1000));
+    // Use Intl.DateTimeFormat to properly convert to IST timezone
+    const istFormatter = new Intl.DateTimeFormat('en-IN', {
+      timeZone: 'Asia/Kolkata',
+      year: 'numeric',
+      month: 'short',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    });
     
-    // Format as readable IST date-time
-    return format(istDate, "dd MMM yyyy, hh:mm a") + " IST";
+    return istFormatter.format(date) + " IST";
   } catch (error) {
     console.error("Date formatting error:", error);
     return "Invalid date";
