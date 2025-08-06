@@ -929,15 +929,15 @@ export default function ClientManagement() {
                               </div>
                             </TableCell>
                             <TableCell>
-                              <div className="text-sm text-gray-600 dark:text-gray-400">
-                                <div>Bookings: 0</div>
-                                <div className="text-xs text-gray-500 dark:text-gray-400 ml-2">
-                                  <div>In progress: 0</div>
-                                  <div>Completed: 0</div>
+                              <div className="text-sm text-gray-600 dark:text-gray-400 space-y-0.5">
+                                <div className="font-medium">Bookings: 0</div>
+                                <div className="text-xs text-gray-500 dark:text-gray-400 ml-3 space-y-0.5">
+                                  <div>• In progress: 0</div>
+                                  <div>• Completed: 0</div>
                                 </div>
-                                <div>Balance: ₹0</div>
+                                <div className="pt-1">Balance: ₹0</div>
                                 <div>Spent: ₹0</div>
-                                <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                <div className="text-xs text-gray-500 dark:text-gray-400 pt-1 space-y-0.5">
                                   <div>Commission: ₹0</div>
                                   <div>GST: ₹0</div>
                                 </div>
@@ -1648,15 +1648,15 @@ export default function ClientManagement() {
                                 </div>
                               </TableCell>
                               <TableCell>
-                                <div className="text-sm text-gray-600 dark:text-gray-400">
-                                  <div>Bookings: 0</div>
-                                  <div className="text-xs text-gray-500 dark:text-gray-400 ml-2">
-                                    <div>In progress: 0</div>
-                                    <div>Completed: 0</div>
+                                <div className="text-sm text-gray-600 dark:text-gray-400 space-y-0.5">
+                                  <div className="font-medium">Bookings: 0</div>
+                                  <div className="text-xs text-gray-500 dark:text-gray-400 ml-3 space-y-0.5">
+                                    <div>• In progress: 0</div>
+                                    <div>• Completed: 0</div>
                                   </div>
-                                  <div>Balance: ₹0</div>
+                                  <div className="pt-1">Balance: ₹0</div>
                                   <div>Spent: ₹0</div>
-                                  <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                  <div className="text-xs text-gray-500 dark:text-gray-400 pt-1 space-y-0.5">
                                     <div>Commission: ₹0</div>
                                     <div>GST: ₹0</div>
                                   </div>
