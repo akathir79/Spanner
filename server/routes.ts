@@ -573,7 +573,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "User not found. Please sign up first." });
       }
       
-
+      // Update last login timestamp for activity tracking
+      await storage.updateUser(user.id, { 
+        lastLoginAt: new Date()
+      });
+      
+      // Refresh user data to include updated lastLoginAt
+      user = await storage.getUser(user.id) || user;
       
       res.json({
         message: "Login successful",
@@ -599,6 +605,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           bankBranch: user.bankBranch,
           bankAccountType: user.bankAccountType,
           bankMICR: user.bankMICR,
+          lastLoginAt: user.lastLoginAt,
         }
       });
     } catch (error) {
@@ -1092,6 +1099,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           bankBranch: user.bankBranch,
           bankAccountType: user.bankAccountType,
           bankMICR: user.bankMICR,
+          lastLoginAt: user.lastLoginAt,
         }
       });
     } catch (error) {

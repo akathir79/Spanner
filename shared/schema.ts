@@ -41,6 +41,7 @@ export const users = pgTable("users", {
   isVerified: boolean("is_verified").default(false),
   isActive: boolean("is_active").default(true),
   status: text("status").default("pending"), // pending, approved, rejected (for worker approval workflow)
+  lastLoginAt: timestamp("last_login_at"), // Track last login for activity monitoring
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });

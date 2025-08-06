@@ -1211,6 +1211,110 @@ const JobPostingForm = () => {
   );
 };
 
+// User Activity Card Component - shows registration date, last login, member since info
+const UserActivityCard = ({ user }: { user: any }) => {
+  // Helper function to format date for display
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return 'Not available';
+    
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat('en-IN', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    }).format(date);
+  };
+
+  // Helper function to calculate days since registration
+  const getDaysSinceRegistration = (createdAt: string | null) => {
+    if (!createdAt) return 0;
+    
+    const registrationDate = new Date(createdAt);
+    const now = new Date();
+    const diffTime = Math.abs(now.getTime() - registrationDate.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
+  };
+
+  // Helper function to get member since text
+  const getMemberSinceText = (createdAt: string | null) => {
+    if (!createdAt) return 'Member since information not available';
+    
+    const registrationDate = new Date(createdAt);
+    const monthYear = new Intl.DateTimeFormat('en-IN', {
+      year: 'numeric',
+      month: 'long'
+    }).format(registrationDate);
+    
+    return `Member since ${monthYear}`;
+  };
+
+  const daysSinceMember = getDaysSinceRegistration(user?.createdAt);
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Clock className="w-5 h-5" />
+          Activity & Membership
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="grid grid-cols-1 gap-4">
+          {/* Member Since Section */}
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 p-4 rounded-lg border">
+            <div className="flex items-center gap-2 mb-2">
+              <Star className="w-4 h-4 text-blue-600" />
+              <span className="text-sm font-medium text-blue-700 dark:text-blue-300">Membership Status</span>
+            </div>
+            <p className="font-semibold text-blue-900 dark:text-blue-100">
+              {getMemberSinceText(user?.createdAt)}
+            </p>
+            <p className="text-sm text-blue-600 dark:text-blue-400 mt-1">
+              {daysSinceMember} {daysSinceMember === 1 ? 'day' : 'days'} as a valued member
+            </p>
+          </div>
+
+          {/* Registration Details */}
+          <div>
+            <Label className="text-sm font-medium text-muted-foreground">Registration Date & Time</Label>
+            <p className="font-medium flex items-center gap-2">
+              <Calendar className="h-4 w-4" />
+              {formatDate(user?.createdAt)}
+            </p>
+          </div>
+
+          {/* Last Login Details */}
+          <div>
+            <Label className="text-sm font-medium text-muted-foreground">Last Login</Label>
+            <p className="font-medium flex items-center gap-2">
+              <Clock className="h-4 w-4" />
+              {user?.lastLoginAt ? formatDate(user.lastLoginAt) : 'Login time not tracked yet'}
+            </p>
+          </div>
+
+          {/* Account Activity Summary */}
+          <div className="border-t pt-4">
+            <Label className="text-sm font-medium text-muted-foreground">Account Summary</Label>
+            <div className="grid grid-cols-2 gap-4 mt-2">
+              <div className="text-center p-3 bg-muted/50 rounded-lg">
+                <p className="text-2xl font-bold text-primary">{daysSinceMember}</p>
+                <p className="text-sm text-muted-foreground">Days Active</p>
+              </div>
+              <div className="text-center p-3 bg-muted/50 rounded-lg">
+                <p className="text-2xl font-bold text-primary">{user?.role?.toUpperCase()}</p>
+                <p className="text-sm text-muted-foreground">Account Type</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
 export default function Dashboard() {
   const { user, isLoading: authLoading, refreshUser } = useAuth();
   const { t } = useLanguage();
@@ -1981,6 +2085,9 @@ export default function Dashboard() {
                   refreshUser();
                 }}
               />
+
+              {/* User Activity & Membership Section */}
+              <UserActivityCard user={user} />
 
               {/* Bank Details Section */}
               <BankDetailsCard
