@@ -90,6 +90,27 @@ function formatIndianDateTime(dateString: string | Date): string {
   }
 }
 
+function getMemberSince(registrationDate: string): string {
+  const now = new Date();
+  const regDate = new Date(registrationDate);
+  const diffTime = Math.abs(now.getTime() - regDate.getTime());
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  
+  if (diffDays < 30) {
+    return `${diffDays} days`;
+  } else if (diffDays < 365) {
+    const months = Math.floor(diffDays / 30);
+    return `${months} month${months > 1 ? 's' : ''}`;
+  } else {
+    const years = Math.floor(diffDays / 365);
+    const remainingMonths = Math.floor((diffDays % 365) / 30);
+    if (remainingMonths === 0) {
+      return `${years} year${years > 1 ? 's' : ''}`;
+    }
+    return `${years} year${years > 1 ? 's' : ''}, ${remainingMonths} month${remainingMonths > 1 ? 's' : ''}`;
+  }
+}
+
 function getActivityStatus(lastLoginAt?: string, createdAt?: string) {
   if (!lastLoginAt) {
     // Check if user was created recently (within 24 hours)
@@ -643,6 +664,9 @@ export default function ClientManagement() {
                                   <div className="text-xs text-gray-500 dark:text-gray-400">
                                     Reg: {formatIndianDateTime(client.createdAt)}
                                   </div>
+                                  <div className="text-xs text-gray-400 dark:text-gray-500 italic">
+                                    Member since {getMemberSince(client.createdAt)}
+                                  </div>
                                 </div>
                               </div>
                             </TableCell>
@@ -929,6 +953,9 @@ export default function ClientManagement() {
                                     )}
                                     <div className="text-xs text-gray-500 dark:text-gray-400">
                                       Reg: {formatIndianDateTime(client.createdAt)}
+                                    </div>
+                                    <div className="text-xs text-gray-400 dark:text-gray-500 italic">
+                                      Member since {getMemberSince(client.createdAt)}
                                     </div>
                                   </div>
                                 </div>
