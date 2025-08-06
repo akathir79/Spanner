@@ -42,6 +42,225 @@ import LocationViewer from "@/components/LocationViewer";
 import ClientBankDetailsForm from "@/components/ClientBankDetailsForm";
 // Services and districts are now fetched dynamically from database
 
+// Profile Details Card Component
+const ProfileDetailsCard = ({ user, onUpdate }: { user: any, onUpdate: () => void }) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editData, setEditData] = useState(user || {});
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    setEditData(user || {});
+  }, [user]);
+
+  const updateMutation = useMutation({
+    mutationFn: async (updatedData: any) => {
+      const response = await apiRequest("PUT", `/api/users/${user.id}`, updatedData);
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Profile Updated",
+        description: "Your profile has been updated successfully.",
+      });
+      setIsEditing(false);
+      onUpdate();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Update Failed",
+        description: error.message || "Failed to update profile",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleSave = () => {
+    updateMutation.mutate(editData);
+  };
+
+  const handleCancel = () => {
+    setEditData(user || {});
+    setIsEditing(false);
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center gap-2">
+            <User className="w-5 h-5" />
+            Profile Information
+          </CardTitle>
+          <div className="space-x-2">
+            {isEditing ? (
+              <>
+                <Button size="sm" variant="outline" onClick={handleCancel}>
+                  Cancel
+                </Button>
+                <Button size="sm" onClick={handleSave} disabled={updateMutation.isPending}>
+                  {updateMutation.isPending ? "Saving..." : "Save"}
+                </Button>
+              </>
+            ) : (
+              <Button size="sm" variant="outline" onClick={() => setIsEditing(true)}>
+                Edit Details
+              </Button>
+            )}
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="grid grid-cols-1 gap-4">
+          <div>
+            <Label className="text-sm font-medium text-muted-foreground">Full Name</Label>
+            {isEditing ? (
+              <div className="grid grid-cols-2 gap-2">
+                <Input
+                  value={editData.firstName || ""}
+                  onChange={(e) => setEditData(prev => ({ ...prev, firstName: e.target.value }))}
+                  placeholder="First Name"
+                />
+                <Input
+                  value={editData.lastName || ""}
+                  onChange={(e) => setEditData(prev => ({ ...prev, lastName: e.target.value }))}
+                  placeholder="Last Name"
+                />
+              </div>
+            ) : (
+              <p className="font-medium">{user?.firstName} {user?.lastName}</p>
+            )}
+          </div>
+
+          <div>
+            <Label className="text-sm font-medium text-muted-foreground">Mobile Number</Label>
+            {isEditing ? (
+              <Input
+                value={editData.mobile || ""}
+                onChange={(e) => setEditData(prev => ({ ...prev, mobile: e.target.value }))}
+                placeholder="Mobile Number"
+              />
+            ) : (
+              <p className="font-medium flex items-center gap-2">
+                <Phone className="h-4 w-4" />
+                {user?.mobile}
+              </p>
+            )}
+          </div>
+
+          <div>
+            <Label className="text-sm font-medium text-muted-foreground">Email Address</Label>
+            {isEditing ? (
+              <Input
+                type="email"
+                value={editData.email || ""}
+                onChange={(e) => setEditData(prev => ({ ...prev, email: e.target.value }))}
+                placeholder="Email Address"
+              />
+            ) : (
+              <p className="font-medium flex items-center gap-2">
+                <Mail className="h-4 w-4" />
+                {user?.email || 'Not provided'}
+              </p>
+            )}
+          </div>
+
+          <div>
+            <Label className="text-sm font-medium text-muted-foreground">User ID</Label>
+            <p className="font-medium text-xs bg-muted px-2 py-1 rounded">{user?.id}</p>
+          </div>
+
+          <div>
+            <Label className="text-sm font-medium text-muted-foreground">Full Address</Label>
+            {isEditing ? (
+              <Textarea
+                value={editData.fullAddress || ""}
+                onChange={(e) => setEditData(prev => ({ ...prev, fullAddress: e.target.value }))}
+                placeholder="Enter your full address"
+                rows={3}
+              />
+            ) : (
+              <p className="font-medium">{user?.fullAddress || 'Not provided'}</p>
+            )}
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <Label className="text-sm font-medium text-muted-foreground">District</Label>
+              <p className="font-medium">{user?.district || 'Not provided'}</p>
+            </div>
+            <div>
+              <Label className="text-sm font-medium text-muted-foreground">State</Label>
+              <p className="font-medium">{user?.state || 'Not provided'}</p>
+            </div>
+          </div>
+
+          <div>
+            <Label className="text-sm font-medium text-muted-foreground">Pincode</Label>
+            {isEditing ? (
+              <Input
+                value={editData.pincode || ""}
+                onChange={(e) => setEditData(prev => ({ ...prev, pincode: e.target.value }))}
+                placeholder="Pincode"
+              />
+            ) : (
+              <p className="font-medium">{user?.pincode || 'Not provided'}</p>
+            )}
+          </div>
+
+          <div>
+            <Label className="text-sm font-medium text-muted-foreground">Account Status</Label>
+            <div className="flex items-center gap-2">
+              {user?.isVerified ? (
+                <Badge variant="default" className="bg-green-500">
+                  <CheckCircle className="w-3 h-3 mr-1" />
+                  Verified
+                </Badge>
+              ) : (
+                <Badge variant="secondary">
+                  <AlertCircle className="w-3 h-3 mr-1" />
+                  Pending Verification
+                </Badge>
+              )}
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
+// Bank Details Card Component
+const BankDetailsCard = ({ user, onUpdate }: { user: any, onUpdate: () => void }) => {
+  return (
+    <div className="space-y-6">
+      {/* Bank Details Notice */}
+      {(!user?.bankAccountNumber) && (
+        <Alert>
+          <CreditCard className="h-4 w-4" />
+          <AlertDescription>
+            <strong>Complete your profile:</strong> Add your bank details for faster payment processing when using our services.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* Bank Details Form */}
+      <ClientBankDetailsForm
+        userId={user?.id || ''}
+        existingDetails={{
+          bankAccountNumber: user?.bankAccountNumber,
+          bankIFSC: user?.bankIFSC,
+          bankAccountHolderName: user?.bankAccountHolderName,
+          bankName: user?.bankName,
+          bankBranch: user?.bankBranch,
+          bankAccountType: user?.bankAccountType,
+        }}
+        onSuccess={onUpdate}
+      />
+    </div>
+  );
+};
+
 // Job posting form component
 const JobPostingForm = () => {
   const { user } = useAuth();
@@ -1260,66 +1479,23 @@ export default function Dashboard() {
 
           {/* Profile Tab */}
           <TabsContent value="profile" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <User className="h-5 w-5" />
-                  <span>Profile Information</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    <div>
-                      <Label>Full Name</Label>
-                      <p className="text-lg font-medium">
-                        {user.firstName} {user.lastName}
-                      </p>
-                    </div>
-                    <div>
-                      <Label>Mobile Number</Label>
-                      <p className="text-lg font-medium flex items-center space-x-2">
-                        <Phone className="h-4 w-4" />
-                        <span>{user.mobile}</span>
-                      </p>
-                    </div>
-                    {user.email && (
-                      <div>
-                        <Label>Email Address</Label>
-                        <p className="text-lg font-medium flex items-center space-x-2">
-                          <Mail className="h-4 w-4" />
-                          <span>{user.email}</span>
-                        </p>
-                      </div>
-                    )}
-                    <div>
-                      <Label>Account Type</Label>
-                      <Badge variant="secondary" className="mt-1">
-                        Client Account
-                      </Badge>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-4">
-                    <div>
-                      <Label>Account Status</Label>
-                      <div className="flex items-center space-x-2 mt-1">
-                        <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100">
-                          <CheckCircle className="h-3 w-3 mr-1" />
-                          Active
-                        </Badge>
-                      </div>
-                    </div>
-                    <div>
-                      <Label>Member Since</Label>
-                      <p className="text-lg font-medium">
-                        {new Date().getFullYear()}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Client Details Section */}
+              <ProfileDetailsCard
+                user={user}
+                onUpdate={() => {
+                  queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+                }}
+              />
+
+              {/* Bank Details Section */}
+              <BankDetailsCard
+                user={user}
+                onUpdate={() => {
+                  queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+                }}
+              />
+            </div>
           </TabsContent>
 
           {/* My Jobs/Bids Tab */}
@@ -1536,96 +1712,7 @@ export default function Dashboard() {
             </div>
           </TabsContent>
 
-          {/* Profile Tab */}
-          <TabsContent value="profile" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* User Profile Information */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <User className="w-5 h-5" />
-                    Profile Information
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-3">
-                    <div>
-                      <Label className="text-sm font-medium text-muted-foreground">Name</Label>
-                      <p className="font-medium">{user?.firstName} {user?.lastName}</p>
-                    </div>
-                    <div>
-                      <Label className="text-sm font-medium text-muted-foreground">Email</Label>
-                      <p className="font-medium">{user?.email || 'Not provided'}</p>
-                    </div>
-                    <div>
-                      <Label className="text-sm font-medium text-muted-foreground">Mobile</Label>
-                      <p className="font-medium">{user?.mobile}</p>
-                    </div>
-                    <div>
-                      <Label className="text-sm font-medium text-muted-foreground">User ID</Label>
-                      <p className="font-medium text-xs bg-muted px-2 py-1 rounded">{user?.id}</p>
-                    </div>
-                    <div>
-                      <Label className="text-sm font-medium text-muted-foreground">Account Status</Label>
-                      <div className="flex items-center gap-2">
-                        {user?.isVerified ? (
-                          <Badge variant="default" className="bg-green-500">
-                            <CheckCircle className="w-3 h-3 mr-1" />
-                            Verified
-                          </Badge>
-                        ) : (
-                          <Badge variant="secondary">
-                            <AlertCircle className="w-3 h-3 mr-1" />
-                            Pending Verification
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
-                    {user?.fullAddress && (
-                      <div>
-                        <Label className="text-sm font-medium text-muted-foreground">Address</Label>
-                        <p className="font-medium">{user.fullAddress}</p>
-                        {user.district && user.state && (
-                          <p className="text-sm text-muted-foreground">
-                            {user.district}, {user.state} - {user.pincode || 'No pincode'}
-                          </p>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
 
-              {/* Bank Details Section */}
-              <div className="space-y-6">
-                {/* Bank Details Notice */}
-                {(!user?.bankAccountNumber) && (
-                  <Alert>
-                    <CreditCard className="h-4 w-4" />
-                    <AlertDescription>
-                      <strong>Complete your profile:</strong> Add your bank details for faster payment processing when using our services.
-                    </AlertDescription>
-                  </Alert>
-                )}
-
-                {/* Bank Details Form */}
-                <ClientBankDetailsForm
-                  userId={user?.id || ''}
-                  existingDetails={{
-                    bankAccountNumber: user?.bankAccountNumber,
-                    bankIFSC: user?.bankIFSC,
-                    bankAccountHolderName: user?.bankAccountHolderName,
-                    bankName: user?.bankName,
-                    bankBranch: user?.bankBranch,
-                    bankAccountType: user?.bankAccountType,
-                  }}
-                  onSuccess={() => {
-                    queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-                  }}
-                />
-              </div>
-            </div>
-          </TabsContent>
 
         </Tabs>
       </div>
