@@ -673,117 +673,117 @@ export default function ClientManagement() {
                           return (
                             <TableRow key={client.id}>
                               <TableCell>
-                              <div>
-                                <div className="font-medium text-gray-900 dark:text-white">
-                                  {client.firstName} {client.lastName}
+                                <div>
+                                  <div className="font-medium text-gray-900 dark:text-white">
+                                    {client.firstName} {client.lastName}
+                                  </div>
+                                  <div className="text-xs text-gray-500 dark:text-gray-400 font-mono">
+                                    ID: {client.id.slice(0, 8)}...
+                                  </div>
                                 </div>
-                                <div className="text-xs text-gray-500 dark:text-gray-400 font-mono">
-                                  ID: {client.id.slice(0, 8)}...
-                                </div>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900 dark:text-blue-100">
-                                Client
-                              </Badge>
-                            </TableCell>
-                            <TableCell>
-                              <div className="text-sm">
-                                {client.district && client.state ? (
-                                  <span className="text-gray-900 dark:text-white">
-                                    {client.district}, {client.state}
-                                  </span>
-                                ) : (
-                                  <span className="text-gray-500 dark:text-gray-400">
-                                    Not specified
-                            <TableCell>
-                              <div className="text-sm space-y-1">
-                                <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
-                                  <Calendar className="w-3 h-3" />
-                                  <span>{formatIndianDateTime(client.createdAt)}</span>
-                                </div>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-2">
-                                <Badge 
-                                  variant={activityStatus.variant}
-                                  className={activityStatus.className}
-                                >
-                                  {activityStatus.icon}
-                                  <span className="ml-1">{activityStatus.label}</span>
+                              </TableCell>
+                              <TableCell>
+                                <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900 dark:text-blue-100">
+                                  Client
                                 </Badge>
-                                {client.lastLoginAt && (
-                                  <div className="text-xs text-gray-500 dark:text-gray-400">
-                                    {formatIndianDateTime(client.lastLoginAt)}
-                                  </div>
-                                )}
-                              </div>
-                            </TableCell>
-                                  </span>
-                                )}
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <div className="text-sm text-gray-600 dark:text-gray-400">
-                                <div>0 bookings</div>
-                                <div>Spent: ₹0</div>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <div className="text-sm space-y-1">
-                                <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
-                                  <Phone className="w-3 h-3" />
-                                  <span>{client.mobile}</span>
+                              </TableCell>
+                              <TableCell>
+                                <div className="text-sm">
+                                  {client.district && client.state ? (
+                                    <span className="text-gray-900 dark:text-white">
+                                      {client.district}, {client.state}
+                                    </span>
+                                  ) : (
+                                    <span className="text-gray-500 dark:text-gray-400">
+                                      Not specified
+                                    </span>
+                                  )}
                                 </div>
-                                {client.email && (
+                              </TableCell>
+                              <TableCell>
+                                <div className="text-sm text-gray-600 dark:text-gray-400">
+                                  <div>0 bookings</div>
+                                  <div>Spent: ₹0</div>
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <div className="text-sm space-y-1">
                                   <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
-                                    <Mail className="w-3 h-3" />
-                                    <span className="truncate max-w-[150px]">{client.email}</span>
+                                    <Phone className="w-3 h-3" />
+                                    <span>{client.mobile}</span>
                                   </div>
-                                )}
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <Badge 
-                                variant={client.isVerified ? "default" : "destructive"}
-                                className={client.isVerified ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100" : ""}
-                              >
-                                {client.isVerified ? "Verified" : "Pending"}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="sm">
-                                    <MoreHorizontal className="w-4 h-4" />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="w-48">
-                                  <DropdownMenuItem onClick={() => handleViewDetails(client)}>
-                                    <Eye className="w-4 h-4 mr-2" />
-                                    View Details
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => handleSendMessage(client)}>
-                                    <MessageSquare className="w-4 h-4 mr-2" />
-                                    Send Message
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => handleVerifyUser(client)}>
-                                    <CheckCircle className="w-4 h-4 mr-2 text-green-600" />
-                                    <span className="text-green-600">Verify User</span>
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => handleSuspendUser(client)}>
-                                    <XCircle className="w-4 h-4 mr-2 text-red-600" />
-                                    <span className="text-red-600">Suspend User</span>
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => handleDeleteUser(client)}>
-                                    <Trash2 className="w-4 h-4 mr-2 text-red-600" />
-                                    <span className="text-red-600">Delete User</span>
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            </TableCell>
-                          </TableRow>
+                                  {client.email && (
+                                    <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
+                                      <Mail className="w-3 h-3" />
+                                      <span className="truncate max-w-[150px]">{client.email}</span>
+                                    </div>
+                                  )}
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <div className="text-sm space-y-1">
+                                  <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
+                                    <Calendar className="w-3 h-3" />
+                                    <span>{formatIndianDateTime(client.createdAt)}</span>
+                                  </div>
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex items-center gap-2">
+                                  <Badge 
+                                    variant={activityStatus.variant}
+                                    className={activityStatus.className}
+                                  >
+                                    {activityStatus.icon}
+                                    <span className="ml-1">{activityStatus.label}</span>
+                                  </Badge>
+                                  {client.lastLoginAt && (
+                                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                                      {formatIndianDateTime(client.lastLoginAt)}
+                                    </div>
+                                  )}
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <Badge 
+                                  variant={client.isVerified ? "default" : "destructive"}
+                                  className={client.isVerified ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100" : ""}
+                                >
+                                  {client.isVerified ? "Verified" : "Pending"}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="sm">
+                                      <MoreHorizontal className="w-4 h-4" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end" className="w-48">
+                                    <DropdownMenuItem onClick={() => handleViewDetails(client)}>
+                                      <Eye className="w-4 h-4 mr-2" />
+                                      View Details
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => handleSendMessage(client)}>
+                                      <MessageSquare className="w-4 h-4 mr-2" />
+                                      Send Message
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => handleVerifyUser(client)}>
+                                      <CheckCircle className="w-4 h-4 mr-2 text-green-600" />
+                                      <span className="text-green-600">Verify User</span>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => handleSuspendUser(client)}>
+                                      <XCircle className="w-4 h-4 mr-2 text-red-600" />
+                                      <span className="text-red-600">Suspend User</span>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => handleDeleteUser(client)}>
+                                      <Trash2 className="w-4 h-4 mr-2 text-red-600" />
+                                      <span className="text-red-600">Delete User</span>
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </TableCell>
+                            </TableRow>
                           );
                         })}
                       </TableBody>
