@@ -177,6 +177,11 @@ export default function ClientManagement() {
   const [pageSize, setPageSize] = useState(50); // Start with 50 records per page
   const [totalPages, setTotalPages] = useState(1);
   
+  // District-specific pagination states
+  const [districtCurrentPage, setDistrictCurrentPage] = useState(1);
+  const [districtPageSize, setDistrictPageSize] = useState(50);
+  const [districtTotalPages, setDistrictTotalPages] = useState(1);
+  
   // Modal states
   const [selectedClient, setSelectedClient] = useState<User | null>(null);
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
@@ -257,8 +262,8 @@ export default function ClientManagement() {
     ? (statesDistrictsData.states as StateData[]).find(s => s.state === selectedState)?.districts || []
     : [];
 
-  // Memoized clients for selected district
-  const clientsForDistrict = useMemo(() => {
+  // Filtered district clients (without pagination)
+  const filteredDistrictClients = useMemo(() => {
     if (!selectedDistrict) return [];
     
     const districtClients = allClients.filter((client: User) => client.district === selectedDistrict);
@@ -292,6 +297,21 @@ export default function ClientManagement() {
       }
     });
   }, [allClients, selectedDistrict, searchQuery, searchFilter]);
+
+  // Paginated district clients for current view
+  const clientsForDistrict = useMemo(() => {
+    const startIndex = (districtCurrentPage - 1) * districtPageSize;
+    const endIndex = startIndex + districtPageSize;
+    const paginated = filteredDistrictClients.slice(startIndex, endIndex);
+    
+    // Update total pages
+    const calculatedTotalPages = Math.ceil(filteredDistrictClients.length / districtPageSize);
+    if (calculatedTotalPages !== districtTotalPages) {
+      setDistrictTotalPages(calculatedTotalPages);
+    }
+    
+    return paginated;
+  }, [filteredDistrictClients, districtCurrentPage, districtPageSize, districtTotalPages]);
 
   // Get client count for each state from database (using allClients, not filtered)
   const getClientCountForState = (stateName: string) => {
@@ -475,6 +495,9 @@ export default function ClientManagement() {
       setSelectedDistrict(district);
       setView("clients");
       setLoadingState(null);
+      setDistrictCurrentPage(1); // Reset district pagination
+      setSearchQuery(""); // Clear search
+      setSearchFilter("all");
     }, 200);
   };
 
@@ -1202,7 +1225,7 @@ export default function ClientManagement() {
                       Clients in {selectedDistrict}
                     </h2>
                     <p className="text-gray-600 dark:text-gray-400">
-                      {selectedState} • {clientsForDistrict.length} clients found {searchQuery && `• ${clientsForDistrict.length} filtered results`}
+                      {selectedState} • {filteredDistrictClients.length} total clients • Showing {((districtCurrentPage - 1) * districtPageSize) + 1}-{Math.min(districtCurrentPage * districtPageSize, filteredDistrictClients.length)} of {filteredDistrictClients.length} {searchQuery && `filtered results`}
                     </p>
                   </div>
                   
@@ -1213,7 +1236,10 @@ export default function ClientManagement() {
                       <Input
                         placeholder="Search in this district..."
                         value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
+                        onChange={(e) => {
+                          setSearchQuery(e.target.value);
+                          setDistrictCurrentPage(1); // Reset to first page when searching
+                        }}
                         className="pl-10 pr-8"
                       />
                       {searchQuery && (
@@ -1676,6 +1702,87 @@ export default function ClientManagement() {
                         })}
                       </TableBody>
                     </Table>
+                  </div>
+                )}
+                
+                {/* Pagination Controls for District View */}
+                {filteredDistrictClients.length > 0 && (
+                  <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                        <span>Show:</span>
+                        <Select value={districtPageSize.toString()} onValueChange={(value) => {
+                          setDistrictPageSize(parseInt(value));
+                          setDistrictCurrentPage(1); // Reset to first page when changing page size
+                        }}>
+                          <SelectTrigger className="w-20 h-8">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="25">25</SelectItem>
+                            <SelectItem value="50">50</SelectItem>
+                            <SelectItem value="100">100</SelectItem>
+                            <SelectItem value="200">200</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <span>per page</span>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setDistrictCurrentPage(1)}
+                        disabled={districtCurrentPage === 1}
+                      >
+                        First
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setDistrictCurrentPage(prev => Math.max(1, prev - 1))}
+                        disabled={districtCurrentPage === 1}
+                      >
+                        Previous
+                      </Button>
+                      
+                      <div className="flex items-center gap-1">
+                        {/* Show page numbers */}
+                        {Array.from({ length: Math.min(5, districtTotalPages) }, (_, i) => {
+                          const pageNum = Math.max(1, Math.min(districtTotalPages - 4, districtCurrentPage - 2)) + i;
+                          if (pageNum > districtTotalPages) return null;
+                          return (
+                            <Button
+                              key={pageNum}
+                              variant={districtCurrentPage === pageNum ? "default" : "outline"}
+                              size="sm"
+                              className="w-8 h-8 p-0"
+                              onClick={() => setDistrictCurrentPage(pageNum)}
+                            >
+                              {pageNum}
+                            </Button>
+                          );
+                        })}
+                      </div>
+                      
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setDistrictCurrentPage(prev => Math.min(districtTotalPages, prev + 1))}
+                        disabled={districtCurrentPage === districtTotalPages}
+                      >
+                        Next
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setDistrictCurrentPage(districtTotalPages)}
+                        disabled={districtCurrentPage === districtTotalPages}
+                      >
+                        Last
+                      </Button>
+                    </div>
                   </div>
                 )}
               </div>
