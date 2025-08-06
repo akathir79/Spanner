@@ -1073,8 +1073,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/admin/suspend-user/:userId", async (req, res) => {
     try {
       const { userId } = req.params;
-      await storage.updateUser(userId, { isVerified: false });
-      res.json({ message: "User suspended successfully" });
+      
+      if (!userId) {
+        return res.status(400).json({ error: "User ID is required" });
+      }
+      
+      // Check if user exists
+      const existingUser = await storage.getUser(userId);
+      if (!existingUser) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      
+      // Suspend the user by setting them as inactive and unverified
+      const updatedUser = await storage.updateUser(userId, { 
+        isVerified: false,
+        isActive: false,
+        status: "suspended",
+        updatedAt: new Date()
+      });
+      
+      if (!updatedUser) {
+        return res.status(500).json({ error: "Failed to update user status" });
+      }
+      
+      res.json({ 
+        message: "User suspended successfully",
+        user: {
+          id: updatedUser.id,
+          status: updatedUser.status,
+          isActive: updatedUser.isActive,
+          isVerified: updatedUser.isVerified
+        }
+      });
     } catch (error) {
       console.error("Error suspending user:", error);
       res.status(500).json({ error: "Failed to suspend user" });

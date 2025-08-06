@@ -148,10 +148,11 @@ export default function ClientManagement() {
         description: "User suspended successfully",
       });
     },
-    onError: () => {
+    onError: (error: any) => {
+      console.error("Suspend user error:", error);
       toast({
         title: "Error",
-        description: "Failed to suspend user",
+        description: error?.message || "Failed to suspend user",
         variant: "destructive",
       });
     },
