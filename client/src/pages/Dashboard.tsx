@@ -36,7 +36,8 @@ import {
   MapPin as MapPinIcon,
   Users,
   DollarSign,
-  CreditCard
+  CreditCard,
+  Camera
 } from "lucide-react";
 import { useLocation } from "wouter";
 import LocationViewer from "@/components/LocationViewer";
@@ -238,42 +239,53 @@ const ProfileDetailsCard = ({ user, onUpdate }: { user: any, onUpdate: () => voi
       <CardContent className="space-y-4">
         {/* Profile Avatar Section */}
         <div className="flex items-center gap-4 p-4 bg-muted/20 rounded-lg">
-          <Avatar className="h-20 w-20">
-            <AvatarImage 
-              src={user?.profilePicture || undefined} 
-              alt={`${user?.firstName} ${user?.lastName}`} 
-            />
-            <AvatarFallback className="bg-primary text-primary-foreground text-xl">
-              {user?.firstName?.[0]?.toUpperCase()}{user?.lastName?.[0]?.toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
+          <div className="relative">
+            <Avatar className="h-20 w-20">
+              <AvatarImage 
+                src={user?.profilePicture || undefined} 
+                alt={`${user?.firstName} ${user?.lastName}`} 
+              />
+              <AvatarFallback className="bg-primary text-primary-foreground text-xl">
+                {user?.firstName?.[0]?.toUpperCase()}{user?.lastName?.[0]?.toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            {isEditing && (
+              <>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handlePhotoUpload}
+                  className="hidden"
+                  id="profile-photo-upload"
+                />
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full p-0"
+                  disabled={isUploadingPhoto}
+                  onClick={() => document.getElementById('profile-photo-upload')?.click()}
+                >
+                  {isUploadingPhoto ? (
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
+                  ) : (
+                    <Camera className="h-4 w-4" />
+                  )}
+                </Button>
+              </>
+            )}
+          </div>
           <div className="flex-1">
             <h3 className="text-lg font-semibold">{user?.firstName} {user?.lastName}</h3>
             <p className="text-sm text-muted-foreground">{user?.role?.charAt(0).toUpperCase() + user?.role?.slice(1)} • {user?.id}</p>
             <p className="text-sm text-muted-foreground">
               {user?.district ? `${user.district}, ${user.state || 'India'}` : 'Location not set'}
             </p>
+            {isEditing && (
+              <p className="text-xs text-muted-foreground mt-1">
+                Click the camera icon to change your profile photo
+              </p>
+            )}
           </div>
-          {!isEditing && (
-            <>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handlePhotoUpload}
-                className="hidden"
-                id="profile-photo-upload"
-              />
-              <Button 
-                variant="outline" 
-                size="sm"
-                disabled={isUploadingPhoto}
-                onClick={() => document.getElementById('profile-photo-upload')?.click()}
-              >
-                <User className="h-4 w-4 mr-2" />
-                {isUploadingPhoto ? "Uploading..." : "Change Photo"}
-              </Button>
-            </>
-          )}
         </div>
 
         <div className="grid grid-cols-1 gap-4">
