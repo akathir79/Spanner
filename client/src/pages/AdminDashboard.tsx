@@ -625,10 +625,7 @@ export default function AdminDashboard() {
           
           <Card 
             className="cursor-pointer transition-all hover:shadow-md border-2 hover:border-green-200"
-            onClick={() => {
-              setSelectedUserType("client");
-              setActiveTab("users");
-            }}
+            onClick={() => setLocation("/admin/clients")}
           >
             <CardContent className="p-6">
               <div className="flex items-center justify-between">

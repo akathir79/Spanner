@@ -13,6 +13,7 @@ import Home from "@/pages/Home";
 import Dashboard from "@/pages/Dashboard";
 import WorkerDashboard from "@/pages/WorkerDashboard";
 import AdminDashboard from "@/pages/AdminDashboard";
+import ClientManagement from "@/pages/ClientManagement";
 import DistrictManager from "@/pages/DistrictManager";
 import Payment from "@/pages/Payment";
 import ServiceHistory from "@/pages/ServiceHistory";
@@ -28,6 +29,8 @@ function Router() {
           <Route path="/dashboard" component={Dashboard} />
           <Route path="/worker-dashboard" component={WorkerDashboard} />
           <Route path="/admin-dashboard" component={AdminDashboard} />
+          <Route path="/admin" component={AdminDashboard} />
+          <Route path="/admin/clients" component={ClientManagement} />
           <Route path="/district-manager" component={DistrictManager} />
           <Route path="/payment/:bookingId" component={Payment} />
           <Route path="/service-history" component={ServiceHistory} />
