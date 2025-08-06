@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ArrowLeft, Phone, Mail, Calendar, MoreHorizontal } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { ArrowLeft, Phone, Mail, Calendar, MoreHorizontal, Eye, MessageSquare, CheckCircle, XCircle, Trash2 } from "lucide-react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import statesDistrictsData from "@/../../shared/states-districts.json";
@@ -292,9 +293,35 @@ export default function ClientManagement() {
                               </Badge>
                             </TableCell>
                             <TableCell>
-                              <Button variant="ghost" size="sm">
-                                <MoreHorizontal className="w-4 h-4" />
-                              </Button>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="sm">
+                                    <MoreHorizontal className="w-4 h-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="w-48">
+                                  <DropdownMenuItem>
+                                    <Eye className="w-4 h-4 mr-2" />
+                                    View Details
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem>
+                                    <MessageSquare className="w-4 h-4 mr-2" />
+                                    Send Message
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem>
+                                    <CheckCircle className="w-4 h-4 mr-2 text-green-600" />
+                                    <span className="text-green-600">Verify User</span>
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem>
+                                    <XCircle className="w-4 h-4 mr-2 text-red-600" />
+                                    <span className="text-red-600">Suspend User</span>
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem>
+                                    <Trash2 className="w-4 h-4 mr-2 text-red-600" />
+                                    <span className="text-red-600">Delete User</span>
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
                             </TableCell>
                           </TableRow>
                         ))}
@@ -465,9 +492,35 @@ export default function ClientManagement() {
                               </Badge>
                             </TableCell>
                             <TableCell>
-                              <Button variant="ghost" size="sm">
-                                <MoreHorizontal className="w-4 h-4" />
-                              </Button>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="sm">
+                                    <MoreHorizontal className="w-4 h-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="w-48">
+                                  <DropdownMenuItem>
+                                    <Eye className="w-4 h-4 mr-2" />
+                                    View Details
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem>
+                                    <MessageSquare className="w-4 h-4 mr-2" />
+                                    Send Message
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem>
+                                    <CheckCircle className="w-4 h-4 mr-2 text-green-600" />
+                                    <span className="text-green-600">Verify User</span>
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem>
+                                    <XCircle className="w-4 h-4 mr-2 text-red-600" />
+                                    <span className="text-red-600">Suspend User</span>
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem>
+                                    <Trash2 className="w-4 h-4 mr-2 text-red-600" />
+                                    <span className="text-red-600">Delete User</span>
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
                             </TableCell>
                           </TableRow>
                         ))}

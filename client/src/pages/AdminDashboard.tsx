@@ -61,7 +61,7 @@ import {
 } from "lucide-react";
 import { useLocation } from "wouter";
 import WorkerApprovalSection from "@/components/WorkerApprovalSection";
-import { MessagingSystem } from "@/components/MessagingSystem";
+import { FloatingMessaging } from "@/components/FloatingMessaging";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -717,10 +717,7 @@ export default function AdminDashboard() {
             <TabsTrigger value="approvals">Worker Approvals</TabsTrigger>
             <TabsTrigger value="users">User Management</TabsTrigger>
             <TabsTrigger value="bookings">Booking Management</TabsTrigger>
-            <TabsTrigger value="messaging" className="flex items-center gap-2">
-              <MessageSquare className="h-4 w-4" />
-              Messaging
-            </TabsTrigger>
+
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
             {/* Platform Settings - Only for Super Admin */}
             {user?.role === "super_admin" && (
@@ -1295,12 +1292,7 @@ export default function AdminDashboard() {
           </TabsContent>
 
           {/* Messaging Tab */}
-          <TabsContent value="messaging" className="space-y-6">
-            <MessagingSystem 
-              initialUserId={messageDialogUser?.id}
-              onUserSelect={(user) => setMessageDialogUser(null)}
-            />
-          </TabsContent>
+
 
           {/* Analytics Tab */}
           <TabsContent value="analytics" className="space-y-6">
@@ -2181,6 +2173,9 @@ export default function AdminDashboard() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Floating Messaging Component */}
+      <FloatingMessaging />
     </div>
   );
 }
