@@ -32,7 +32,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { ArrowLeft, Phone, Mail, Calendar, MoreHorizontal, Eye, MessageSquare, CheckCircle, XCircle, Trash2, Edit, AlertCircle, Search, X, Menu, Loader2, MessageCircle, Smartphone, CreditCard, Send } from "lucide-react";
+import { ArrowLeft, Phone, Mail, Calendar, MoreHorizontal, Eye, MessageSquare, CheckCircle, XCircle, Trash2, Edit, AlertCircle, Search, X, Menu, Loader2, MessageCircle, Smartphone, CreditCard, Send, ArrowRightLeft } from "lucide-react";
 import { format } from "date-fns";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
@@ -786,6 +786,21 @@ export default function ClientManagement() {
                                             {(client as any).bankAddress}
                                           </div>
                                         )}
+                                        <div className="flex items-center gap-1 mt-2">
+                                          <Button
+                                            size="sm"
+                                            variant="ghost"
+                                            className="h-6 w-6 p-0 text-green-600 hover:text-green-700 hover:bg-green-50"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              // Handle money transfer functionality
+                                              console.log('Transfer money to:', client.firstName, client.lastName);
+                                            }}
+                                            title="Transfer Money"
+                                          >
+                                            <ArrowRightLeft className="w-3 h-3" />
+                                          </Button>
+                                        </div>
                                       </>
                                     ) : (
                                       <span className="text-gray-400 dark:text-gray-500 italic text-xs">
@@ -1308,6 +1323,21 @@ export default function ClientManagement() {
                                               {(client as any).bankAddress}
                                             </div>
                                           )}
+                                          <div className="flex items-center gap-1 mt-2">
+                                            <Button
+                                              size="sm"
+                                              variant="ghost"
+                                              className="h-6 w-6 p-0 text-green-600 hover:text-green-700 hover:bg-green-50"
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                // Handle money transfer functionality
+                                                console.log('Transfer money to:', client.firstName, client.lastName);
+                                              }}
+                                              title="Transfer Money"
+                                            >
+                                              <ArrowRightLeft className="w-3 h-3" />
+                                            </Button>
+                                          </div>
                                         </>
                                       ) : (
                                         <span className="text-gray-400 dark:text-gray-500 italic text-xs">
@@ -1353,6 +1383,21 @@ export default function ClientManagement() {
                                               <span className="font-medium">Account Type:</span> {(client as any).bankAccountType}
                                             </div>
                                           )}
+                                        </div>
+                                        <div className="flex items-center gap-1 mt-3 pt-2 border-t border-gray-200 dark:border-gray-700">
+                                          <Button
+                                            size="sm"
+                                            variant="outline"
+                                            className="h-7 px-2 text-green-600 border-green-200 hover:text-green-700 hover:bg-green-50"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              // Handle money transfer functionality
+                                              console.log('Transfer money to:', client.firstName, client.lastName);
+                                            }}
+                                          >
+                                            <ArrowRightLeft className="w-3 h-3 mr-1" />
+                                            Transfer Money
+                                          </Button>
                                         </div>
                                       </div>
                                     ) : (
