@@ -1989,6 +1989,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get financial statements by client ID (returns last 2 years data)
+  app.get("/api/financial-statements/:clientId", async (req, res) => {
+    try {
+      const { clientId } = req.params;
+      const statements = await storage.getFinancialStatementsByClient(clientId);
+      res.json(statements);
+    } catch (error) {
+      console.error("Error fetching financial statements:", error);
+      res.status(500).json({ message: "Failed to fetch financial statements" });
+    }
+  });
+
+  // Create or update financial statement
+  app.post("/api/financial-statements", async (req, res) => {
+    try {
+      const { clientId, year, balance, spent, totalEarnings, totalBookings } = req.body;
+      
+      if (!clientId || !year) {
+        return res.status(400).json({ message: "Client ID and year are required" });
+      }
+
+      const statement = await storage.createOrUpdateFinancialStatement(clientId, year, {
+        balance: balance || "0.00",
+        spent: spent || "0.00", 
+        totalEarnings: totalEarnings || "0.00",
+        totalBookings: totalBookings || 0,
+      });
+      
+      res.json(statement);
+    } catch (error) {
+      console.error("Error creating/updating financial statement:", error);
+      res.status(500).json({ message: "Failed to create/update financial statement" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

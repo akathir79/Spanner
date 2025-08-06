@@ -16,6 +16,7 @@ import {
   paymentWebhooks,
   messages,
   transferHistory,
+  financialStatements,
   type User, 
   type InsertUser,
   type WorkerProfile,
@@ -46,7 +47,9 @@ import {
   type Message,
   type InsertMessage,
   type TransferHistory,
-  type InsertTransferHistory
+  type InsertTransferHistory,
+  type FinancialStatement,
+  type InsertFinancialStatement
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, sql, desc, ilike, inArray, or } from "drizzle-orm";
@@ -159,6 +162,11 @@ export interface IStorage {
   createTransferHistory(transfer: InsertTransferHistory): Promise<TransferHistory>;
   getTransferHistoryByClient(clientId: string): Promise<TransferHistory[]>;
   deleteTransferHistory(transferId: string): Promise<void>;
+  
+  // Financial Statements
+  getFinancialStatementsByClient(clientId: string): Promise<FinancialStatement[]>;
+  createOrUpdateFinancialStatement(clientId: string, year: number, updates: Partial<FinancialStatement>): Promise<FinancialStatement>;
+  getFinancialStatementByClientAndYear(clientId: string, year: number): Promise<FinancialStatement | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1027,6 +1035,69 @@ export class DatabaseStorage implements IStorage {
     await db
       .delete(transferHistory)
       .where(eq(transferHistory.id, transferId));
+  }
+
+  // Financial Statements Methods
+  async getFinancialStatementsByClient(clientId: string): Promise<FinancialStatement[]> {
+    const currentYear = new Date().getFullYear();
+    const previousYear = currentYear - 1;
+    
+    return await db
+      .select()
+      .from(financialStatements)
+      .where(
+        and(
+          eq(financialStatements.clientId, clientId),
+          inArray(financialStatements.year, [currentYear, previousYear])
+        )
+      )
+      .orderBy(desc(financialStatements.year));
+  }
+
+  async getFinancialStatementByClientAndYear(clientId: string, year: number): Promise<FinancialStatement | undefined> {
+    const [statement] = await db
+      .select()
+      .from(financialStatements)
+      .where(
+        and(
+          eq(financialStatements.clientId, clientId),
+          eq(financialStatements.year, year)
+        )
+      );
+    return statement;
+  }
+
+  async createOrUpdateFinancialStatement(clientId: string, year: number, updates: Partial<FinancialStatement>): Promise<FinancialStatement> {
+    const existing = await this.getFinancialStatementByClientAndYear(clientId, year);
+    
+    if (existing) {
+      // Update existing record
+      const [updated] = await db
+        .update(financialStatements)
+        .set({
+          ...updates,
+          lastUpdated: new Date(),
+          updatedAt: new Date(),
+        })
+        .where(eq(financialStatements.id, existing.id))
+        .returning();
+      return updated;
+    } else {
+      // Create new record
+      const [created] = await db
+        .insert(financialStatements)
+        .values({
+          clientId,
+          year,
+          balance: "0.00",
+          spent: "0.00",
+          totalEarnings: "0.00",
+          totalBookings: 0,
+          ...updates,
+        })
+        .returning();
+      return created;
+    }
   }
 }
 

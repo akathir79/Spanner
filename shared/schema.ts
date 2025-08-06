@@ -290,6 +290,20 @@ export const transferHistory = pgTable("transfer_history", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// Financial Statements for clients - Balance and Spent tracking by year
+export const financialStatements = pgTable("financial_statements", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  clientId: varchar("client_id").references(() => users.id).notNull(),
+  year: integer("year").notNull(),
+  balance: decimal("balance", { precision: 12, scale: 2 }).default("0.00").notNull(),
+  spent: decimal("spent", { precision: 12, scale: 2 }).default("0.00").notNull(),
+  totalEarnings: decimal("total_earnings", { precision: 12, scale: 2 }).default("0.00").notNull(), // For tracking income
+  totalBookings: integer("total_bookings").default(0).notNull(),
+  lastUpdated: timestamp("last_updated").defaultNow().notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 // Relations
 export const usersRelations = relations(users, ({ one, many }) => ({
   workerProfile: one(workerProfiles, {
@@ -307,6 +321,7 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   sentMessages: many(messages, { relationName: "sentMessages" }),
   receivedMessages: many(messages, { relationName: "receivedMessages" }),
   transferHistory: many(transferHistory),
+  financialStatements: many(financialStatements),
 }));
 
 export const workerProfilesRelations = relations(workerProfiles, ({ one }) => ({
@@ -435,6 +450,13 @@ export const transferHistoryRelations = relations(transferHistory, ({ one }) => 
   }),
 }));
 
+export const financialStatementsRelations = relations(financialStatements, ({ one }) => ({
+  client: one(users, {
+    fields: [financialStatements.clientId],
+    references: [users.id],
+  }),
+}));
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
@@ -529,6 +551,12 @@ export const insertTransferHistorySchema = createInsertSchema(transferHistory).o
   createdAt: true,
 });
 
+export const insertFinancialStatementSchema = createInsertSchema(financialStatements).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -562,6 +590,8 @@ export type PaymentWebhook = typeof paymentWebhooks.$inferSelect;
 export type InsertPaymentWebhook = z.infer<typeof insertPaymentWebhookSchema>;
 export type TransferHistory = typeof transferHistory.$inferSelect;
 export type InsertTransferHistory = z.infer<typeof insertTransferHistorySchema>;
+export type FinancialStatement = typeof financialStatements.$inferSelect;
+export type InsertFinancialStatement = z.infer<typeof insertFinancialStatementSchema>;
 
 // Message relations
 export const messagesRelations = relations(messages, ({ one, many }) => ({

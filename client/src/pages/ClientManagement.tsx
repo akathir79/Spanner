@@ -32,7 +32,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { ArrowLeft, Phone, Mail, Calendar, MoreHorizontal, Eye, MessageSquare, CheckCircle, XCircle, Trash2, Edit, AlertCircle, Search, X, Menu, Loader2, MessageCircle, Smartphone, CreditCard, Send, ArrowRightLeft, History } from "lucide-react";
+import { ArrowLeft, Phone, Mail, Calendar, MoreHorizontal, Eye, MessageSquare, CheckCircle, XCircle, Trash2, Edit, AlertCircle, Search, X, Menu, Loader2, MessageCircle, Smartphone, CreditCard, Send, ArrowRightLeft, History, DollarSign } from "lucide-react";
 import { format } from "date-fns";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
@@ -188,6 +188,7 @@ export default function ClientManagement() {
   const [showMessageDialog, setShowMessageDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showTransferHistoryDialog, setShowTransferHistoryDialog] = useState(false);
+  const [showFinancialStatementsDialog, setShowFinancialStatementsDialog] = useState(false);
   const [messageText, setMessageText] = useState("");
 
 
@@ -207,6 +208,12 @@ export default function ClientManagement() {
   const { data: transferHistory = [], isLoading: transferHistoryLoading } = useQuery({
     queryKey: ["/api/transfer-history", selectedClient?.id],
     enabled: !!selectedClient?.id && showTransferHistoryDialog,
+  });
+
+  // Fetch financial statements for selected client (last 2 years)
+  const { data: financialStatements = [], isLoading: financialStatementsLoading } = useQuery({
+    queryKey: ["/api/financial-statements", selectedClient?.id],
+    enabled: !!selectedClient?.id && showFinancialStatementsDialog,
   });
 
   // Memoize filtered clients to prevent recalculation on every render
@@ -500,6 +507,11 @@ export default function ClientManagement() {
     setShowTransferHistoryDialog(true);
   };
 
+  const handleViewFinancialStatements = (client: User) => {
+    setSelectedClient(client);
+    setShowFinancialStatementsDialog(true);
+  };
+
   const handleDeleteTransferHistory = (transferId: string) => {
     deleteTransferMutation.mutate(transferId);
   };
@@ -786,7 +798,21 @@ export default function ClientManagement() {
                               <div className="text-sm text-gray-600 dark:text-gray-400">
                                 <div>0 bookings</div>
                                 <div>Balance: ₹0</div>
-                                <div>Spent: ₹0</div>
+                                <div className="flex items-center gap-2">
+                                  <span>Spent: ₹0</span>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className="h-6 w-6 p-0 text-green-600 hover:text-green-700 hover:bg-green-50"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleViewFinancialStatements(client);
+                                    }}
+                                    title="Financial Statements"
+                                  >
+                                    <DollarSign className="w-3 h-3" />
+                                  </Button>
+                                </div>
                               </div>
                             </TableCell>
                             <TableCell>
@@ -1443,7 +1469,21 @@ export default function ClientManagement() {
                                 <div className="text-sm text-gray-600 dark:text-gray-400">
                                   <div>0 bookings</div>
                                   <div>Balance: ₹0</div>
-                                  <div>Spent: ₹0</div>
+                                  <div className="flex items-center gap-2">
+                                    <span>Spent: ₹0</span>
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      className="h-6 w-6 p-0 text-green-600 hover:text-green-700 hover:bg-green-50"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleViewFinancialStatements(client);
+                                      }}
+                                      title="Financial Statements"
+                                    >
+                                      <DollarSign className="w-3 h-3" />
+                                    </Button>
+                                  </div>
                                 </div>
                               </TableCell>
                               <TableCell>
@@ -2148,6 +2188,99 @@ export default function ClientManagement() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowTransferHistoryDialog(false)}>
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Financial Statements Dialog */}
+      <Dialog open={showFinancialStatementsDialog} onOpenChange={setShowFinancialStatementsDialog}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <DollarSign className="w-5 h-5 text-green-600" />
+              Financial Statements - {selectedClient?.firstName} {selectedClient?.lastName}
+            </DialogTitle>
+            <DialogDescription>
+              View balance and spending data for the last 2 years from current year
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            {financialStatementsLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="w-6 h-6 animate-spin mr-2" />
+                <span>Loading financial statements...</span>
+              </div>
+            ) : financialStatements.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <DollarSign className="w-12 h-12 mx-auto mb-2 opacity-30" />
+                <p>No financial data found for this client</p>
+                <p className="text-sm text-gray-400 mt-1">Data for {new Date().getFullYear()} and {new Date().getFullYear() - 1} will appear here</p>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {financialStatements.map((statement: any) => (
+                    <Card key={statement.id} className="p-4">
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <h4 className="font-semibold text-lg text-gray-900 dark:text-white">
+                            Year {statement.year}
+                          </h4>
+                          <Badge variant="outline" className="text-xs">
+                            {statement.year === new Date().getFullYear() ? 'Current Year' : 'Previous Year'}
+                          </Badge>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <div className="text-sm text-gray-600 dark:text-gray-400">Balance</div>
+                            <div className="text-xl font-bold text-green-600">
+                              ₹{parseFloat(statement.balance || '0').toLocaleString('en-IN')}
+                            </div>
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <div className="text-sm text-gray-600 dark:text-gray-400">Spent</div>
+                            <div className="text-xl font-bold text-red-600">
+                              ₹{parseFloat(statement.spent || '0').toLocaleString('en-IN')}
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-4 pt-2 border-t">
+                          <div className="space-y-1">
+                            <div className="text-xs text-gray-500 dark:text-gray-400">Total Earnings</div>
+                            <div className="text-sm font-medium text-blue-600">
+                              ₹{parseFloat(statement.totalEarnings || '0').toLocaleString('en-IN')}
+                            </div>
+                          </div>
+                          
+                          <div className="space-y-1">
+                            <div className="text-xs text-gray-500 dark:text-gray-400">Total Bookings</div>
+                            <div className="text-sm font-medium text-blue-600">
+                              {statement.totalBookings || 0}
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {statement.lastUpdated && (
+                          <div className="text-xs text-gray-400 dark:text-gray-500 pt-2 border-t">
+                            Last updated: {format(new Date(statement.lastUpdated), 'dd MMM yyyy, hh:mm a')}
+                          </div>
+                        )}
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowFinancialStatementsDialog(false)}>
               Close
             </Button>
           </DialogFooter>
