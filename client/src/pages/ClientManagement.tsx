@@ -399,14 +399,16 @@ export default function ClientManagement() {
   };
 
   // Handle navigation
-  const handleTotalClientsClick = async () => {
+  const handleTotalClientsClick = () => {
     setLoadingState("total");
-    setTimeout(() => {
+    
+    // Use requestAnimationFrame for smoother performance
+    requestAnimationFrame(() => {
       setView("total");
       setSelectedState(null);
       setSelectedDistrict(null);
       setLoadingState(null);
-    }, 200);
+    });
   };
 
   const handleStateClick = async (state: string) => {
@@ -639,49 +641,31 @@ export default function ClientManagement() {
                           const activityStatus = getActivityStatus(client.lastLoginAt, client.createdAt);
                           return (
                             <TableRow key={client.id}>
-                              <TableCell>
-                              <div>
-                                <div className="font-medium text-gray-900 dark:text-white">
+                              <TableCell className="py-2">
+                              <div className="space-y-1">
+                                <div className="font-medium text-gray-900 dark:text-white text-sm">
                                   {client.firstName} {client.lastName}
                                 </div>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <div className="text-sm text-green-800 dark:text-green-400 font-mono font-bold truncate">
-                                      ID: {client.id}
-                                    </div>
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    <p className="font-mono">{client.id}</p>
-                                  </TooltipContent>
-                                </Tooltip>
-                                <div className="mt-1 space-y-1">
-                                  <Badge 
-                                    variant={activityStatus.variant}
-                                    className={activityStatus.className}
-                                  >
-                                    {activityStatus.icon}
-                                    <span className="ml-1">{activityStatus.label}</span>
-                                  </Badge>
-                                  {client.lastLoginAt ? (
-                                    <div className="text-xs text-gray-500 dark:text-gray-400">
-                                      Last: {formatIndianDateTime(client.lastLoginAt)}
-                                    </div>
-                                  ) : (
-                                    <div className="text-xs text-gray-400 dark:text-gray-500 italic">
-                                      Never logged in
-                                    </div>
-                                  )}
-                                  <div className="text-xs text-gray-500 dark:text-gray-400">
-                                    Reg: {formatIndianDateTime(client.createdAt)}
-                                  </div>
-                                  <div className="text-xs text-gray-400 dark:text-gray-500 italic">
-                                    Member since {getMemberSince(client.createdAt)}
-                                  </div>
+                                <div className="text-xs text-green-800 dark:text-green-400 font-mono font-bold">
+                                  ID: {client.id}
+                                </div>
+                                <Badge 
+                                  variant={activityStatus.variant}
+                                  className={`${activityStatus.className} text-xs px-1.5 py-0.5`}
+                                >
+                                  {activityStatus.icon}
+                                  <span className="ml-1">{activityStatus.label}</span>
+                                </Badge>
+                                <div className="text-xs text-gray-500 dark:text-gray-400">
+                                  Last: {client.lastLoginAt ? formatIndianDateTime(client.lastLoginAt) : 'Never'}
+                                </div>
+                                <div className="text-xs text-gray-400 dark:text-gray-500 italic">
+                                  Reg: {formatIndianDateTime(client.createdAt)}
                                 </div>
                               </div>
                             </TableCell>
-                            <TableCell>
-                              <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900 dark:text-blue-100">
+                            <TableCell className="py-2">
+                              <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900 dark:text-blue-100 text-xs px-2 py-1">
                                 Client
                               </Badge>
                             </TableCell>
@@ -726,6 +710,58 @@ export default function ClientManagement() {
                                         {(client as any).pincode && (
                                           <div>PIN: {(client as any).pincode}</div>
                                         )}
+                                        <div className="flex items-center gap-1 mt-2">
+                                          <Button
+                                            size="sm"
+                                            variant="ghost"
+                                            className="h-6 w-6 p-0 text-green-600 hover:text-green-700 hover:bg-green-50"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              window.open(`https://wa.me/91${client.mobile}`, '_blank');
+                                            }}
+                                            title="WhatsApp"
+                                          >
+                                            <MessageCircle className="w-3 h-3" />
+                                          </Button>
+                                          <Button
+                                            size="sm"
+                                            variant="ghost"
+                                            className="h-6 w-6 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              window.location.href = `sms:+91${client.mobile}`;
+                                            }}
+                                            title="SMS"
+                                          >
+                                            <MessageSquare className="w-3 h-3" />
+                                          </Button>
+                                          {client.email && (
+                                            <Button
+                                              size="sm"
+                                              variant="ghost"
+                                              className="h-6 w-6 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                window.location.href = `mailto:${client.email}`;
+                                              }}
+                                              title="Email"
+                                            >
+                                              <Mail className="w-3 h-3" />
+                                            </Button>
+                                          )}
+                                          <Button
+                                            size="sm"
+                                            variant="ghost"
+                                            className="h-6 w-6 p-0 text-purple-600 hover:text-purple-700 hover:bg-purple-50"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              // Handle internal messaging system
+                                            }}
+                                            title="Send Message"
+                                          >
+                                            <Send className="w-3 h-3" />
+                                          </Button>
+                                        </div>
                                       </div>
                                     )}
                                   </div>
@@ -753,6 +789,58 @@ export default function ClientManagement() {
                                           )}
                                         </div>
                                       )}
+                                      <div className="flex items-center gap-1 mt-3 pt-2 border-t border-gray-200 dark:border-gray-700">
+                                        <Button
+                                          size="sm"
+                                          variant="ghost"
+                                          className="h-6 w-6 p-0 text-green-600 hover:text-green-700 hover:bg-green-50"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            window.open(`https://wa.me/91${client.mobile}`, '_blank');
+                                          }}
+                                          title="WhatsApp"
+                                        >
+                                          <MessageCircle className="w-3 h-3" />
+                                        </Button>
+                                        <Button
+                                          size="sm"
+                                          variant="ghost"
+                                          className="h-6 w-6 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            window.location.href = `sms:+91${client.mobile}`;
+                                          }}
+                                          title="SMS"
+                                        >
+                                          <MessageSquare className="w-3 h-3" />
+                                        </Button>
+                                        {client.email && (
+                                          <Button
+                                            size="sm"
+                                            variant="ghost"
+                                            className="h-6 w-6 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              window.location.href = `mailto:${client.email}`;
+                                            }}
+                                            title="Email"
+                                          >
+                                            <Mail className="w-3 h-3" />
+                                          </Button>
+                                        )}
+                                        <Button
+                                          size="sm"
+                                          variant="ghost"
+                                          className="h-6 w-6 p-0 text-purple-600 hover:text-purple-700 hover:bg-purple-50"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            // Handle internal messaging system
+                                          }}
+                                          title="Send Message"
+                                        >
+                                          <Send className="w-3 h-3" />
+                                        </Button>
+                                      </div>
                                     </div>
                                   </div>
                                 </TooltipContent>
