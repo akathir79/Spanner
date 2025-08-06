@@ -31,6 +31,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ArrowLeft, Phone, Mail, Calendar, MoreHorizontal, Eye, MessageSquare, CheckCircle, XCircle, Trash2, Edit, AlertCircle, Search, X, Menu, Loader2, MessageCircle, Smartphone, CreditCard } from "lucide-react";
 import { format } from "date-fns";
 import { useLocation } from "wouter";
@@ -446,7 +447,8 @@ export default function ClientManagement() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pt-16">
+    <TooltipProvider>
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pt-16">
       {/* Header */}
       <div className="bg-white dark:bg-gray-800 shadow-sm border-b fixed top-16 left-0 right-0 z-10">
         <div className="container mx-auto px-4 py-4">
@@ -642,9 +644,16 @@ export default function ClientManagement() {
                                 <div className="font-medium text-gray-900 dark:text-white">
                                   {client.firstName} {client.lastName}
                                 </div>
-                                <div className="text-sm text-green-800 dark:text-green-400 font-mono font-bold">
-                                  ID: {client.id}
-                                </div>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <div className="text-sm text-green-800 dark:text-green-400 font-mono font-bold truncate">
+                                      ID: {client.id}
+                                    </div>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p className="font-mono">{client.id}</p>
+                                  </TooltipContent>
+                                </Tooltip>
                                 <div className="mt-1 space-y-1">
                                   <Badge 
                                     variant={activityStatus.variant}
@@ -703,19 +712,39 @@ export default function ClientManagement() {
                                   <span>{client.mobile}</span>
                                 </div>
                                 {client.email && (
-                                  <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
-                                    <Mail className="w-3 h-3" />
-                                    <span className="truncate max-w-[150px]">{client.email}</span>
-                                  </div>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
+                                        <Mail className="w-3 h-3" />
+                                        <span className="truncate max-w-[150px]">{client.email}</span>
+                                      </div>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p>{client.email}</p>
+                                    </TooltipContent>
+                                  </Tooltip>
                                 )}
                                 {(client as any).address && (
-                                  <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                    <div className="font-medium text-gray-700 dark:text-gray-300">Address:</div>
-                                    <div className="break-words">{(client as any).address}</div>
-                                    {(client as any).pincode && (
-                                      <div>PIN: {(client as any).pincode}</div>
-                                    )}
-                                  </div>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                        <div className="font-medium text-gray-700 dark:text-gray-300">Address:</div>
+                                        <div className="break-words line-clamp-2">{(client as any).address}</div>
+                                        {(client as any).pincode && (
+                                          <div>PIN: {(client as any).pincode}</div>
+                                        )}
+                                      </div>
+                                    </TooltipTrigger>
+                                    <TooltipContent className="max-w-xs">
+                                      <div>
+                                        <p className="font-medium">Complete Address:</p>
+                                        <p className="mt-1">{(client as any).address}</p>
+                                        {(client as any).pincode && (
+                                          <p className="mt-1">PIN: {(client as any).pincode}</p>
+                                        )}
+                                      </div>
+                                    </TooltipContent>
+                                  </Tooltip>
                                 )}
                               </div>
                             </TableCell>
@@ -736,14 +765,31 @@ export default function ClientManagement() {
                                       </div>
                                     )}
                                     {(client as any).bankName && (
-                                      <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                                        {(client as any).bankName}
-                                      </div>
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                                            {(client as any).bankName}
+                                          </div>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                          <p>{(client as any).bankName}</p>
+                                        </TooltipContent>
+                                      </Tooltip>
                                     )}
                                     {(client as any).bankAddress && (
-                                      <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                                        {(client as any).bankAddress}
-                                      </div>
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                                            {(client as any).bankAddress}
+                                          </div>
+                                        </TooltipTrigger>
+                                        <TooltipContent className="max-w-xs">
+                                          <div>
+                                            <p className="font-medium">Bank Address:</p>
+                                            <p className="mt-1">{(client as any).bankAddress}</p>
+                                          </div>
+                                        </TooltipContent>
+                                      </Tooltip>
                                     )}
                                   </>
                                 ) : (
@@ -976,9 +1022,16 @@ export default function ClientManagement() {
                                   <div className="font-medium text-gray-900 dark:text-white">
                                     {client.firstName} {client.lastName}
                                   </div>
-                                  <div className="text-sm text-green-800 dark:text-green-400 font-mono font-bold">
-                                    ID: {client.id}
-                                  </div>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <div className="text-sm text-green-800 dark:text-green-400 font-mono font-bold truncate">
+                                        ID: {client.id}
+                                      </div>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p className="font-mono">{client.id}</p>
+                                    </TooltipContent>
+                                  </Tooltip>
                                   <div className="mt-1 space-y-1">
                                     <Badge 
                                       variant={activityStatus.variant}
@@ -1037,19 +1090,39 @@ export default function ClientManagement() {
                                     <span>{client.mobile}</span>
                                   </div>
                                   {client.email && (
-                                    <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
-                                      <Mail className="w-3 h-3" />
-                                      <span className="truncate max-w-[150px]">{client.email}</span>
-                                    </div>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
+                                          <Mail className="w-3 h-3" />
+                                          <span className="truncate max-w-[150px]">{client.email}</span>
+                                        </div>
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                        <p>{client.email}</p>
+                                      </TooltipContent>
+                                    </Tooltip>
                                   )}
                                   {(client as any).address && (
-                                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                      <div className="font-medium text-gray-700 dark:text-gray-300">Address:</div>
-                                      <div className="break-words">{(client as any).address}</div>
-                                      {(client as any).pincode && (
-                                        <div>PIN: {(client as any).pincode}</div>
-                                      )}
-                                    </div>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                          <div className="font-medium text-gray-700 dark:text-gray-300">Address:</div>
+                                          <div className="break-words line-clamp-2">{(client as any).address}</div>
+                                          {(client as any).pincode && (
+                                            <div>PIN: {(client as any).pincode}</div>
+                                          )}
+                                        </div>
+                                      </TooltipTrigger>
+                                      <TooltipContent className="max-w-xs">
+                                        <div>
+                                          <p className="font-medium">Complete Address:</p>
+                                          <p className="mt-1">{(client as any).address}</p>
+                                          {(client as any).pincode && (
+                                            <p className="mt-1">PIN: {(client as any).pincode}</p>
+                                          )}
+                                        </div>
+                                      </TooltipContent>
+                                    </Tooltip>
                                   )}
                                 </div>
                               </TableCell>
@@ -1070,14 +1143,31 @@ export default function ClientManagement() {
                                         </div>
                                       )}
                                       {(client as any).bankName && (
-                                        <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                                          {(client as any).bankName}
-                                        </div>
+                                        <Tooltip>
+                                          <TooltipTrigger asChild>
+                                            <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                                              {(client as any).bankName}
+                                            </div>
+                                          </TooltipTrigger>
+                                          <TooltipContent>
+                                            <p>{(client as any).bankName}</p>
+                                          </TooltipContent>
+                                        </Tooltip>
                                       )}
                                       {(client as any).bankAddress && (
-                                        <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                                          {(client as any).bankAddress}
-                                        </div>
+                                        <Tooltip>
+                                          <TooltipTrigger asChild>
+                                            <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                                              {(client as any).bankAddress}
+                                            </div>
+                                          </TooltipTrigger>
+                                          <TooltipContent className="max-w-xs">
+                                            <div>
+                                              <p className="font-medium">Bank Address:</p>
+                                              <p className="mt-1">{(client as any).bankAddress}</p>
+                                            </div>
+                                          </TooltipContent>
+                                        </Tooltip>
                                       )}
                                     </>
                                   ) : (
@@ -1324,6 +1414,7 @@ export default function ClientManagement() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+      </div>
+    </TooltipProvider>
   );
 }
