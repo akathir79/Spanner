@@ -107,6 +107,13 @@ export function AuthModal({ isOpen, onClose, mode, initialTab, onSwitchToSignup 
   const [workerRegistrationStep, setWorkerRegistrationStep] = useState<"details" | "bank" | "complete">("details");
   const [showBankDetailsModal, setShowBankDetailsModal] = useState(false);
   const [loginError, setLoginError] = useState<string>("");
+  
+  // Availability checking states
+  const [clientMobileAvailability, setClientMobileAvailability] = useState<"checking" | "available" | "not-available" | "">("");
+  const [clientEmailAvailability, setClientEmailAvailability] = useState<"checking" | "available" | "not-available" | "">("");
+  const [workerMobileAvailability, setWorkerMobileAvailability] = useState<"checking" | "available" | "not-available" | "">("");
+  const [workerEmailAvailability, setWorkerEmailAvailability] = useState<"checking" | "available" | "not-available" | "">("");
+  
   const { loginWithOtp, verifyOtp, signupClient, signupWorker, isLoading } = useAuth();
   const { t } = useLanguage();
   const { toast } = useToast();
@@ -932,6 +939,11 @@ export function AuthModal({ isOpen, onClose, mode, initialTab, onSwitchToSignup 
     setWorkerDistrictOpen(false);
     setClientApiDistricts([]);
     setWorkerApiDistricts([]);
+    // Reset availability checking states
+    setClientMobileAvailability("");
+    setClientEmailAvailability("");
+    setWorkerMobileAvailability("");
+    setWorkerEmailAvailability("");
     loginForm.reset();
     otpForm.reset();
     clientForm.reset();
@@ -944,6 +956,95 @@ export function AuthModal({ isOpen, onClose, mode, initialTab, onSwitchToSignup 
       resetModal();
     }
   }, [isOpen]);
+
+  // Availability checking function
+  const checkAvailability = async (mobile: string, email: string, role: string, formType: "client" | "worker") => {
+    try {
+      const response = await fetch("/api/auth/check-availability", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mobile, email, role }),
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        
+        if (formType === "client") {
+          if (mobile) {
+            setClientMobileAvailability(result.mobile ? "available" : "not-available");
+          }
+          if (email) {
+            setClientEmailAvailability(result.email ? "available" : "not-available");
+          }
+        } else {
+          if (mobile) {
+            setWorkerMobileAvailability(result.mobile ? "available" : "not-available");
+          }
+          if (email) {
+            setWorkerEmailAvailability(result.email ? "available" : "not-available");
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Error checking availability:", error);
+    }
+  };
+
+  // Watch for mobile/email changes in client form
+  const clientMobile = clientForm.watch("mobile");
+  const clientEmail = clientForm.watch("email");
+  const workerMobile = workerForm.watch("mobile");
+  const workerEmail = workerForm.watch("email");
+
+  // Debounced availability checking for client form
+  useEffect(() => {
+    if (clientMobile && clientMobile.length >= 10) {
+      setClientMobileAvailability("checking");
+      const timer = setTimeout(() => {
+        checkAvailability(clientMobile, "", "client", "client");
+      }, 500);
+      return () => clearTimeout(timer);
+    } else {
+      setClientMobileAvailability("");
+    }
+  }, [clientMobile]);
+
+  useEffect(() => {
+    if (clientEmail && clientEmail.includes("@")) {
+      setClientEmailAvailability("checking");
+      const timer = setTimeout(() => {
+        checkAvailability("", clientEmail, "client", "client");
+      }, 500);
+      return () => clearTimeout(timer);
+    } else {
+      setClientEmailAvailability("");
+    }
+  }, [clientEmail]);
+
+  // Debounced availability checking for worker form
+  useEffect(() => {
+    if (workerMobile && workerMobile.length >= 10) {
+      setWorkerMobileAvailability("checking");
+      const timer = setTimeout(() => {
+        checkAvailability(workerMobile, "", "worker", "worker");
+      }, 500);
+      return () => clearTimeout(timer);
+    } else {
+      setWorkerMobileAvailability("");
+    }
+  }, [workerMobile]);
+
+  useEffect(() => {
+    if (workerEmail && workerEmail.includes("@")) {
+      setWorkerEmailAvailability("checking");
+      const timer = setTimeout(() => {
+        checkAvailability("", workerEmail, "worker", "worker");
+      }, 500);
+      return () => clearTimeout(timer);
+    } else {
+      setWorkerEmailAvailability("");
+    }
+  }, [workerEmail]);
 
   const handleBioDataUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -1191,11 +1292,36 @@ export function AuthModal({ isOpen, onClose, mode, initialTab, onSwitchToSignup 
 
                 <div>
                   <Label htmlFor="mobile">Mobile Number</Label>
-                  <Input
-                    id="mobile"
-                    placeholder="+91 XXXXX XXXXX"
-                    {...clientForm.register("mobile")}
-                  />
+                  <div className="relative">
+                    <Input
+                      id="mobile"
+                      placeholder="+91 XXXXX XXXXX"
+                      {...clientForm.register("mobile")}
+                    />
+                    {clientMobileAvailability && (
+                      <div className="absolute right-2 top-2.5 flex items-center">
+                        {clientMobileAvailability === "checking" && (
+                          <div className="w-4 h-4 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin"></div>
+                        )}
+                        {clientMobileAvailability === "available" && (
+                          <div className="flex items-center text-green-600">
+                            <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
+                            <span className="text-xs">Available</span>
+                          </div>
+                        )}
+                        {clientMobileAvailability === "not-available" && (
+                          <div className="flex items-center text-red-600">
+                            <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                            </svg>
+                            <span className="text-xs">Not Available</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
                   {clientForm.formState.errors.mobile && (
                     <p className="text-sm text-destructive mt-1">
                       {clientForm.formState.errors.mobile.message}
@@ -1205,11 +1331,36 @@ export function AuthModal({ isOpen, onClose, mode, initialTab, onSwitchToSignup 
 
                 <div>
                   <Label htmlFor="email">Email Address (Optional)</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    {...clientForm.register("email")}
-                  />
+                  <div className="relative">
+                    <Input
+                      id="email"
+                      type="email"
+                      {...clientForm.register("email")}
+                    />
+                    {clientEmailAvailability && (
+                      <div className="absolute right-2 top-2.5 flex items-center">
+                        {clientEmailAvailability === "checking" && (
+                          <div className="w-4 h-4 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin"></div>
+                        )}
+                        {clientEmailAvailability === "available" && (
+                          <div className="flex items-center text-green-600">
+                            <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
+                            <span className="text-xs">Available</span>
+                          </div>
+                        )}
+                        {clientEmailAvailability === "not-available" && (
+                          <div className="flex items-center text-red-600">
+                            <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                            </svg>
+                            <span className="text-xs">Not Available</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
                   {clientForm.formState.errors.email && (
                     <p className="text-sm text-destructive mt-1">
                       {clientForm.formState.errors.email.message}
@@ -1544,11 +1695,36 @@ export function AuthModal({ isOpen, onClose, mode, initialTab, onSwitchToSignup 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="workerMobile">Mobile Number</Label>
-                    <Input
-                      id="workerMobile"
-                      placeholder="+91 XXXXX XXXXX"
-                      {...workerForm.register("mobile")}
-                    />
+                    <div className="relative">
+                      <Input
+                        id="workerMobile"
+                        placeholder="+91 XXXXX XXXXX"
+                        {...workerForm.register("mobile")}
+                      />
+                      {workerMobileAvailability && (
+                        <div className="absolute right-2 top-2.5 flex items-center">
+                          {workerMobileAvailability === "checking" && (
+                            <div className="w-4 h-4 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin"></div>
+                          )}
+                          {workerMobileAvailability === "available" && (
+                            <div className="flex items-center text-green-600">
+                              <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                              </svg>
+                              <span className="text-xs">Available</span>
+                            </div>
+                          )}
+                          {workerMobileAvailability === "not-available" && (
+                            <div className="flex items-center text-red-600">
+                              <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                              </svg>
+                              <span className="text-xs">Not Available</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
                     {workerForm.formState.errors.mobile && (
                       <p className="text-sm text-destructive mt-1">
                         {workerForm.formState.errors.mobile.message}
@@ -1557,11 +1733,36 @@ export function AuthModal({ isOpen, onClose, mode, initialTab, onSwitchToSignup 
                   </div>
                   <div>
                     <Label htmlFor="workerEmail">Email Address (Optional)</Label>
-                    <Input
-                      id="workerEmail"
-                      type="email"
-                      {...workerForm.register("email")}
-                    />
+                    <div className="relative">
+                      <Input
+                        id="workerEmail"
+                        type="email"
+                        {...workerForm.register("email")}
+                      />
+                      {workerEmailAvailability && (
+                        <div className="absolute right-2 top-2.5 flex items-center">
+                          {workerEmailAvailability === "checking" && (
+                            <div className="w-4 h-4 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin"></div>
+                          )}
+                          {workerEmailAvailability === "available" && (
+                            <div className="flex items-center text-green-600">
+                              <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                              </svg>
+                              <span className="text-xs">Available</span>
+                            </div>
+                          )}
+                          {workerEmailAvailability === "not-available" && (
+                            <div className="flex items-center text-red-600">
+                              <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                              </svg>
+                              <span className="text-xs">Not Available</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
                     {workerForm.formState.errors.email && (
                       <p className="text-sm text-destructive mt-1">
                         {workerForm.formState.errors.email.message}

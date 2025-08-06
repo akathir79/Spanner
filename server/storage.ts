@@ -169,6 +169,17 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUserByMobileAndRole(mobile: string, role: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(and(eq(users.mobile, mobile), eq(users.role, role)));
+    return user || undefined;
+  }
+
+  async getUserByEmailAndRole(email: string, role: string): Promise<User | undefined> {
+    if (!email) return undefined;
+    const [user] = await db.select().from(users).where(and(eq(users.email, email), eq(users.role, role)));
+    return user || undefined;
+  }
+
+  async getUserByMobileAndRole(mobile: string, role: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(
       and(eq(users.mobile, mobile), eq(users.role, role))
     );

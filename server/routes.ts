@@ -285,6 +285,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Check availability of mobile/email for a specific role
+  app.post("/api/auth/check-availability", async (req, res) => {
+    try {
+      const { mobile, email, role } = req.body;
+      
+      let mobileAvailable = true;
+      let emailAvailable = true;
+      
+      // Check mobile availability if provided
+      if (mobile) {
+        const existingUserByMobile = await storage.getUserByMobileAndRole(mobile, role);
+        mobileAvailable = !existingUserByMobile;
+      }
+      
+      // Check email availability if provided
+      if (email) {
+        const existingUserByEmail = await storage.getUserByEmailAndRole(email, role);
+        emailAvailable = !existingUserByEmail;
+      }
+      
+      return res.json({
+        mobile: mobileAvailable,
+        email: emailAvailable
+      });
+      
+    } catch (error) {
+      console.error("Availability check error:", error);
+      return res.status(500).json({ message: "Error checking availability" });
+    }
+  });
+
   app.post("/api/auth/signup-client", async (req, res) => {
     try {
       const userData = clientSignupSchema.parse(req.body);
