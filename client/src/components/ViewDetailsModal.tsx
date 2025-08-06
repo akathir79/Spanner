@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Dialog,
@@ -42,14 +42,36 @@ import {
   MapPin,
   CreditCard,
   User,
-  Building2
+  Building2,
+  Search,
+  Loader
 } from "lucide-react";
 import statesDistrictsData from "@/../../shared/states-districts.json";
+
+interface BankInfo {
+  BANK: string;
+  BRANCH: string;
+  ADDRESS: string;
+  CITY: string;
+  STATE: string;
+  DISTRICT: string;
+  CENTRE: string;
+  CONTACT: string | null;
+  IMPS: boolean;
+  UPI: boolean;
+  MICR: string | null;
+  RTGS: boolean;
+  NEFT: boolean;
+  SWIFT: string;
+  ISO3166: string;
+  BANKCODE: string;
+  IFSC: string;
+}
 
 interface ViewDetailsField {
   key: string;
   label: string;
-  type: 'text' | 'email' | 'tel' | 'textarea' | 'select' | 'display' | 'badge' | 'avatar';
+  type: 'text' | 'email' | 'tel' | 'textarea' | 'select' | 'display' | 'badge' | 'avatar' | 'ifsc';
   value?: any;
   options?: { value: string; label: string }[];
   editable?: boolean;
@@ -103,6 +125,11 @@ export default function ViewDetailsModal({
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState(data);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  
+  // IFSC functionality state
+  const [isSearchingIFSC, setIsSearchingIFSC] = useState(false);
+  const [bankInfo, setBankInfo] = useState<BankInfo | null>(null);
+  const [ifscErrors, setIfscErrors] = useState<Record<string, string>>({});
 
   // Group fields by section
   const groupedFields = fields.reduce((acc, field) => {
@@ -111,6 +138,88 @@ export default function ViewDetailsModal({
     acc[section].push(field);
     return acc;
   }, {} as Record<string, ViewDetailsField[]>);
+
+  // IFSC lookup function
+  const lookupIFSC = useCallback(async (ifscCode: string): Promise<BankInfo | null> => {
+    setIsSearchingIFSC(true);
+    
+    try {
+      const response = await fetch(`https://ifsc.razorpay.com/${ifscCode.toUpperCase()}`);
+      
+      if (!response.ok) {
+        if (response.status === 404) {
+          throw new Error('IFSC code not found');
+        }
+        throw new Error(`API Error: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      setIsSearchingIFSC(false);
+      return data;
+    } catch (error) {
+      setIsSearchingIFSC(false);
+      console.error('IFSC lookup error:', error);
+      throw error;
+    }
+  }, []);
+
+  // Handle IFSC lookup
+  const handleIFSCLookup = useCallback(async () => {
+    const ifscCode = editData.bankIFSC;
+    if (!ifscCode || ifscCode.length !== 11) {
+      setIfscErrors(prev => ({ ...prev, bankIFSC: 'Please enter a valid 11-character IFSC code' }));
+      return;
+    }
+
+    try {
+      const result = await lookupIFSC(ifscCode);
+      if (result) {
+        setBankInfo(result);
+        
+        // Format the address properly from the API response
+        const addressParts = [result.ADDRESS];
+        if (result.CITY && result.CITY !== result.CENTRE) {
+          addressParts.push(result.CITY);
+        }
+        if (result.STATE) {
+          addressParts.push(result.STATE);
+        }
+        
+        // Update form with bank details
+        setEditData(prev => ({
+          ...prev,
+          bankName: result.BANK,
+          bankBranch: result.BRANCH,
+          bankAddress: addressParts.join(', ')
+        }));
+        
+        setIfscErrors(prev => ({ ...prev, bankIFSC: '' }));
+        
+        toast({
+          title: "Bank Details Found",
+          description: `${result.BANK} - ${result.BRANCH}, ${result.CITY}`,
+        });
+      }
+    } catch (error: any) {
+      const errorMessage = error.message || 'Unknown error occurred';
+      
+      if (errorMessage.includes('IFSC code not found')) {
+        setIfscErrors(prev => ({ ...prev, bankIFSC: 'Invalid IFSC code. Please check and try again.' }));
+        toast({
+          title: "IFSC Not Found",
+          description: "The IFSC code you entered is not valid. Please verify and try again.",
+          variant: "destructive",
+        });
+      } else {
+        setIfscErrors(prev => ({ ...prev, bankIFSC: 'Failed to fetch bank details. Please try again.' }));
+        toast({
+          title: "Connection Error",
+          description: "Unable to fetch bank details at the moment. Please try again or enter manually.",
+          variant: "destructive",
+        });
+      }
+    }
+  }, [editData.bankIFSC, lookupIFSC, toast]);
 
   // Update mutation
   const updateMutation = useMutation({
@@ -222,6 +331,69 @@ export default function ViewDetailsModal({
           <p className="font-medium">
             {field.options?.find(opt => opt.value === value)?.label || value || 'Not provided'}
           </p>
+        );
+
+      case 'ifsc':
+        return isEditing && field.editable ? (
+          <div className="space-y-3">
+            <div className="flex space-x-2">
+              <Input
+                type="text"
+                value={value || ''}
+                onChange={(e) => {
+                  const ifscValue = e.target.value.toUpperCase();
+                  setEditData(prev => ({ ...prev, [field.key]: ifscValue }));
+                  // Clear previous bank info when IFSC changes
+                  if (ifscValue !== editData.bankIFSC) {
+                    setBankInfo(null);
+                  }
+                }}
+                placeholder="Enter 11-character IFSC code"
+                maxLength={11}
+                className={`flex-1 ${ifscErrors[field.key] ? 'border-red-500' : ''}`}
+                required={field.required}
+              />
+              <Button
+                type="button"
+                onClick={handleIFSCLookup}
+                disabled={isSearchingIFSC || !value || value.length !== 11}
+                className="px-6"
+              >
+                {isSearchingIFSC ? (
+                  <Loader className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Search className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
+            {ifscErrors[field.key] && (
+              <p className="text-sm text-red-500">{ifscErrors[field.key]}</p>
+            )}
+            {bankInfo && (
+              <Alert className="border-green-200 bg-green-50">
+                <Building2 className="h-4 w-4" />
+                <AlertDescription>
+                  <div className="space-y-2">
+                    <div>
+                      <p className="font-medium">{bankInfo.BANK}</p>
+                      <p className="text-sm">{bankInfo.BRANCH}</p>
+                      <p className="text-xs text-muted-foreground">{bankInfo.ADDRESS}</p>
+                      <p className="text-xs text-muted-foreground">{bankInfo.CITY}, {bankInfo.STATE}</p>
+                    </div>
+                    <div className="flex flex-wrap gap-1 mt-2">
+                      {bankInfo.UPI && <Badge variant="secondary" className="text-xs">UPI</Badge>}
+                      {bankInfo.RTGS && <Badge variant="secondary" className="text-xs">RTGS</Badge>}
+                      {bankInfo.NEFT && <Badge variant="secondary" className="text-xs">NEFT</Badge>}
+                      {bankInfo.IMPS && <Badge variant="secondary" className="text-xs">IMPS</Badge>}
+                      {bankInfo.MICR && <Badge variant="outline" className="text-xs">MICR: {bankInfo.MICR}</Badge>}
+                    </div>
+                  </div>
+                </AlertDescription>
+              </Alert>
+            )}
+          </div>
+        ) : (
+          <p className="font-medium">{value || 'Not provided'}</p>
         );
 
       default: // text, email, tel

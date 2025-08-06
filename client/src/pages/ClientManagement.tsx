@@ -722,11 +722,23 @@ export default function ClientManagement() {
             { key: "district", label: "District", type: "text", editable: true, section: "address" },
             { key: "pincode", label: "Pincode", type: "text", editable: true, section: "address" },
             
-            // Bank Details (Display only - cant edit from admin panel)
-            { key: "bankAccountNumber", label: "Account Number", type: "display", section: "bankDetails" },
-            { key: "bankIFSC", label: "IFSC Code", type: "display", section: "bankDetails" },
-            { key: "bankAccountHolderName", label: "Account Holder Name", type: "display", section: "bankDetails" },
-            { key: "bankName", label: "Bank Name", type: "display", section: "bankDetails" },
+            // Bank Details (Now editable with IFSC API functionality)
+            { key: "bankAccountHolderName", label: "Account Holder Name", type: "text", editable: true, required: true, section: "bankDetails" },
+            { key: "bankAccountNumber", label: "Account Number", type: "text", editable: true, required: true, section: "bankDetails" },
+            { key: "bankIFSC", label: "IFSC Code", type: "ifsc", editable: true, required: true, section: "bankDetails" },
+            { key: "bankName", label: "Bank Name", type: "text", editable: true, section: "bankDetails" },
+            { key: "bankBranch", label: "Branch Name", type: "text", editable: true, section: "bankDetails" },
+            { 
+              key: "bankAccountType", 
+              label: "Account Type", 
+              type: "select", 
+              editable: true, 
+              section: "bankDetails",
+              options: [
+                { value: "savings", label: "Savings" },
+                { value: "current", label: "Current" }
+              ]
+            },
             
             // Status Information
             { key: "isVerified", label: "Verification Status", type: "badge", section: "status" },
