@@ -36,6 +36,7 @@ export const users = pgTable("users", {
   bankAccountHolderName: text("bank_account_holder_name"),
   bankName: text("bank_name"),
   bankBranch: text("bank_branch"),
+  bankAddress: text("bank_address"), // Bank address field
   bankAccountType: text("bank_account_type"), // savings, current
   bankMICR: text("bank_micr"), // MICR code
   isVerified: boolean("is_verified").default(false),

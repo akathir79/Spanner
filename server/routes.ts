@@ -1086,6 +1086,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update user details endpoint (admin)
+  app.put("/api/admin/users/:userId", async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const updates = req.body;
+      
+      // Remove any fields that shouldn't be updated this way
+      const { id, createdAt, ...allowedUpdates } = updates;
+      
+      const updatedUser = await storage.updateUser(userId, allowedUpdates);
+      if (!updatedUser) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      
+      res.json({ message: "User updated successfully", user: updatedUser });
+    } catch (error) {
+      console.error("Error updating user:", error);
+      res.status(500).json({ error: "Failed to update user" });
+    }
+  });
+
   // User verification endpoint
   app.put("/api/admin/verify-user/:userId", async (req, res) => {
     try {
