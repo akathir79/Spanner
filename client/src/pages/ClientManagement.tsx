@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Phone, Mail, Calendar } from "lucide-react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
+import statesDistrictsData from "@/../../shared/states-districts.json";
 
 interface User {
   id: string;
@@ -26,6 +27,11 @@ interface District {
   state: string;
 }
 
+interface StateData {
+  state: string;
+  districts: string[];
+}
+
 export default function ClientManagement() {
   const [, setLocation] = useLocation();
   const { user } = useAuth();
@@ -39,21 +45,15 @@ export default function ClientManagement() {
     enabled: !!user && (user.role === "admin" || user.role === "super_admin"),
   });
 
-  // Fetch districts for filtering
-  const { data: allDistricts = [] } = useQuery({
-    queryKey: ["/api/districts"],
-    enabled: !!user && (user.role === "admin" || user.role === "super_admin"),
-  });
-
   // Filter only clients
   const clients = (users as User[]).filter((u: User) => u.role === "client");
 
-  // Get unique states from districts
-  const states = Array.from(new Set((allDistricts as District[]).map((d: District) => d.state))).sort();
+  // Get states from JSON file
+  const states = (statesDistrictsData.states as StateData[]).map(s => s.state).sort();
 
-  // Get districts for selected state
+  // Get districts for selected state from JSON file
   const districtsForState = selectedState 
-    ? (allDistricts as District[]).filter((d: District) => d.state === selectedState)
+    ? (statesDistrictsData.states as StateData[]).find(s => s.state === selectedState)?.districts || []
     : [];
 
   // Get clients for selected district
@@ -188,12 +188,12 @@ export default function ClientManagement() {
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                 {districtsForState.map((district) => (
                   <Button
-                    key={district.id}
+                    key={district}
                     variant="outline"
-                    onClick={() => handleDistrictClick(district.name)}
+                    onClick={() => handleDistrictClick(district)}
                     className="h-12 justify-start font-medium hover:bg-blue-50 hover:border-blue-200 dark:hover:bg-blue-900/20"
                   >
-                    {district.name}
+                    {district}
                   </Button>
                 ))}
               </div>
