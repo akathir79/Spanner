@@ -458,7 +458,7 @@ export default function ClientManagement() {
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead className="w-[200px]">User</TableHead>
+                          <TableHead className="w-[280px]">User</TableHead>
                           <TableHead>Role</TableHead>
                           <TableHead>Location</TableHead>
                           <TableHead>Bookings/Earnings</TableHead>
@@ -480,7 +480,7 @@ export default function ClientManagement() {
                                   {client.firstName} {client.lastName}
                                 </div>
                                 <div className="text-xs text-gray-500 dark:text-gray-400 font-mono">
-                                  ID: {client.id.slice(0, 8)}...
+                                  ID: {client.id}
                                 </div>
                               </div>
                             </TableCell>
@@ -686,7 +686,7 @@ export default function ClientManagement() {
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead className="w-[200px]">User</TableHead>
+                          <TableHead className="w-[280px]">User</TableHead>
                           <TableHead>Role</TableHead>
                           <TableHead>Location</TableHead>
                           <TableHead>Bookings/Earnings</TableHead>
@@ -708,7 +708,7 @@ export default function ClientManagement() {
                                     {client.firstName} {client.lastName}
                                   </div>
                                   <div className="text-xs text-gray-500 dark:text-gray-400 font-mono">
-                                    ID: {client.id.slice(0, 8)}...
+                                    ID: {client.id}
                                   </div>
                                 </div>
                               </TableCell>

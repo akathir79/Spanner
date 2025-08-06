@@ -27,6 +27,12 @@
   .animate-tag-remove {
     animation: tag-remove 0.15s ease-in forwards;
   }
+  
+  /* Table column widths for User ID display */
+  .table-user-column {
+    min-width: 280px !important;
+    width: 280px !important;
+  }
 }
 
 @keyframes dropdown-open {
