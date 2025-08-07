@@ -699,10 +699,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
         isActive: isActive !== false, // Default to true
       });
 
+      // Update states-districts.json with new service type
+      try {
+        const { statesDistrictsManager } = await import('./statesDistrictsManager.js');
+        await statesDistrictsManager.addServiceTypeToAllStates(name.trim());
+        console.log(`Successfully added service "${name.trim()}" to states-districts.json`);
+      } catch (jsonError) {
+        console.error("Failed to update states-districts.json:", jsonError);
+        // Don't fail the request if JSON update fails
+      }
+
       res.status(201).json(newService);
     } catch (error) {
       console.error("Create service error:", error);
       res.status(500).json({ message: "Failed to create service" });
+    }
+  });
+
+  // Get service types from states-districts.json
+  app.get("/api/service-types", async (req, res) => {
+    try {
+      const { statesDistrictsManager } = await import('./statesDistrictsManager.js');
+      const serviceTypes = await statesDistrictsManager.getAllServiceTypes();
+      res.json(serviceTypes);
+    } catch (error) {
+      console.error("Get service types error:", error);
+      res.status(500).json({ message: "Failed to get service types" });
+    }
+  });
+
+  // Get service types for specific state
+  app.get("/api/service-types/:state", async (req, res) => {
+    try {
+      const { state } = req.params;
+      const { statesDistrictsManager } = await import('./statesDistrictsManager.js');
+      const serviceTypes = await statesDistrictsManager.getServiceTypesForState(state);
+      res.json(serviceTypes);
+    } catch (error) {
+      console.error("Get service types for state error:", error);
+      res.status(500).json({ message: "Failed to get service types for state" });
     }
   });
 
