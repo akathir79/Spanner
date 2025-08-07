@@ -1,6 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import statesDistrictsData from "@shared/states-districts.json";
 import { z } from "zod";
 import { 
   insertUserSchema, 

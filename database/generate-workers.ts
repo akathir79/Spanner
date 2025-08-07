@@ -105,7 +105,7 @@ async function generateWorkersForState(stateName: string, districts: string[]) {
           totalJobs: Math.floor(Math.random() * 50), // 0-50 jobs completed
         };
 
-        await db.insert(workerProfiles).values(workerProfileData);
+        await db.insert(workerProfiles).values([workerProfileData]);
         
         console.log(`    Created worker: ${firstName} ${lastName} (${serviceType}) - ID: ${userId}`);
         
@@ -135,6 +135,3 @@ export async function generateWorkers() {
     console.error("❌ Error during worker generation:", error);
   }
 }
-
-// Export for API usage
-export { generateWorkers };
