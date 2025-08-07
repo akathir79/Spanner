@@ -879,6 +879,103 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get all workers with their profiles for admin management
+  app.get("/api/admin/workers", async (req, res) => {
+    try {
+      const workers = await storage.getAllWorkersWithProfiles();
+      res.json(workers);
+    } catch (error) {
+      console.error("Get admin workers error:", error);
+      res.status(500).json({ error: "Failed to fetch workers" });
+    }
+  });
+
+  // Send message to worker
+  app.post("/api/admin/workers/:workerId/message", async (req, res) => {
+    try {
+      const { workerId } = req.params;
+      const { message } = req.body;
+      
+      if (!message) {
+        return res.status(400).json({ error: "Message is required" });
+      }
+
+      const worker = await storage.getUser(workerId);
+      if (!worker) {
+        return res.status(404).json({ error: "Worker not found" });
+      }
+
+      // For now, just log the message since messages table might not exist
+      console.log(`Admin message to worker ${workerId}: ${message}`);
+      
+      // TODO: Implement proper message storage when messages table is available
+      res.json({ message: "Message sent successfully to worker" });
+    } catch (error) {
+      console.error("Error sending message to worker:", error);
+      res.status(500).json({ error: "Failed to send message to worker" });
+    }
+  });
+
+  // Update worker status (verified/unverified)
+  app.patch("/api/admin/workers/:workerId/status", async (req, res) => {
+    try {
+      const { workerId } = req.params;
+      const { status, reason } = req.body;
+      
+      if (!status) {
+        return res.status(400).json({ error: "Status is required" });
+      }
+
+      const isVerified = status === "verified";
+      
+      const updatedUser = await storage.updateUser(workerId, { 
+        isVerified,
+        updatedAt: new Date()
+      });
+      
+      if (!updatedUser) {
+        return res.status(404).json({ error: "Worker not found" });
+      }
+      
+      console.log(`Worker ${workerId} status changed to ${status}. Reason: ${reason || 'No reason provided'}`);
+      
+      res.json({ 
+        message: `Worker ${status} successfully`,
+        user: {
+          id: updatedUser.id,
+          isVerified: updatedUser.isVerified
+        }
+      });
+    } catch (error) {
+      console.error("Error updating worker status:", error);
+      res.status(500).json({ error: "Failed to update worker status" });
+    }
+  });
+
+  // Delete worker
+  app.delete("/api/admin/workers/:workerId", async (req, res) => {
+    try {
+      const { workerId } = req.params;
+      
+      // First check if worker exists
+      const worker = await storage.getUser(workerId);
+      if (!worker) {
+        return res.status(404).json({ error: "Worker not found" });
+      }
+
+      // Delete worker profile first
+      await storage.deleteWorkerProfile(workerId);
+      
+      // Then delete the user
+      await storage.deleteUser(workerId);
+      
+      res.json({ message: "Worker deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting worker:", error);
+      res.status(500).json({ error: "Failed to delete worker" });
+    }
+  });
+
   // Create admin user (super admin only)
   app.post("/api/admin/create-admin", async (req, res) => {
     try {

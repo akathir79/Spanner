@@ -69,8 +69,10 @@ export interface IStorage {
   // Worker profiles
   getWorkerProfile(userId: string): Promise<WorkerProfile | undefined>;
   createWorkerProfile(profile: InsertWorkerProfile): Promise<WorkerProfile>;
+  deleteWorkerProfile(userId: string): Promise<void>;
   getWorkersByDistrict(districtId: string): Promise<(User & { workerProfile: WorkerProfile })[]>;
   getWorkersByService(service: string): Promise<(User & { workerProfile: WorkerProfile })[]>;
+  getAllWorkersWithProfiles(): Promise<(User & { workerProfile?: WorkerProfile })[]>;
   
   // Districts and Areas now handled via API - removed from storage
   
@@ -330,6 +332,28 @@ export class DatabaseStorage implements IStorage {
       .values(profile)
       .returning();
     return workerProfile;
+  }
+
+  async deleteWorkerProfile(userId: string): Promise<void> {
+    await db.delete(workerProfiles).where(eq(workerProfiles.userId, userId));
+  }
+
+  async getAllWorkersWithProfiles(): Promise<(User & { workerProfile?: WorkerProfile })[]> {
+    const allWorkers = await db
+      .select()
+      .from(users)
+      .where(eq(users.role, "worker"));
+    
+    const workersWithProfiles = [];
+    for (const worker of allWorkers) {
+      const profile = await this.getWorkerProfile(worker.id);
+      workersWithProfiles.push({
+        ...worker,
+        workerProfile: profile
+      });
+    }
+    
+    return workersWithProfiles;
   }
 
   async getWorkersByDistrict(districtId: string): Promise<(User & { workerProfile: WorkerProfile })[]> {
