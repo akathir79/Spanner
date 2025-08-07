@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import {
   Dialog,
   DialogContent,
@@ -27,14 +27,9 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { ArrowLeft, Phone, Mail, Calendar, MoreHorizontal, Eye, MessageSquare, CheckCircle, XCircle, Trash2, Edit, AlertCircle, Search, X, Menu, Loader2, MessageCircle, Smartphone, CreditCard, Send, ArrowRightLeft, History, DollarSign, Filter } from "lucide-react";
-import { FaWhatsapp } from "react-icons/fa";
-import { format } from "date-fns";
+import { ArrowLeft, Phone, Mail, MoreHorizontal, Eye, MessageSquare, CheckCircle, XCircle, Trash2, AlertCircle, Search, X, Menu, Loader2 } from "lucide-react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import ViewDetailsModal from "@/components/ViewDetailsModal";
@@ -62,12 +57,6 @@ interface User {
     completedJobs: number;
     isAvailable: boolean;
   };
-}
-
-interface District {
-  id: string;
-  name: string;
-  state: string;
 }
 
 interface StateData {
@@ -184,12 +173,11 @@ export default function WorkerManagement() {
   const { user } = useAuth();
   const { toast } = useToast();
   
-  const [selectedStates, setSelectedStates] = useState<string[]>([]);
+  const [selectedState, setSelectedState] = useState<string | null>(null);
   const [selectedDistricts, setSelectedDistricts] = useState<string[]>([]);
   const [selectedServiceTypes, setSelectedServiceTypes] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [isSearchFocused, setIsSearchFocused] = useState(false);
-  const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   
   // Dialog states
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
@@ -206,6 +194,9 @@ export default function WorkerManagement() {
     refetchInterval: 30000,
   });
 
+  // Get states from statesDistrictsData
+  const states = Object.keys(statesDistrictsData);
+
   // Get all available service types from states-districts.json
   const allServiceTypes = useMemo(() => {
     const serviceTypesSet = new Set<string>();
@@ -220,30 +211,21 @@ export default function WorkerManagement() {
   }, []);
 
   // Calculate worker counts by state
-  const workersByState = useMemo(() => {
-    const counts: { [key: string]: number } = {};
-    allWorkers.forEach((worker: User) => {
-      if (worker.district) {
-        // Find the state for this district
-        Object.entries(statesDistrictsData).forEach(([stateName, stateData]: [string, any]) => {
-          if (stateData.districts && stateData.districts.includes(worker.district)) {
-            counts[stateName] = (counts[stateName] || 0) + 1;
-          }
-        });
-      }
-    });
-    return counts;
-  }, [allWorkers]);
+  const getWorkerCountForState = (stateName: string): number => {
+    return allWorkers.filter((worker: User) => {
+      if (!worker.district) return false;
+      const stateData = statesDistrictsData[stateName as keyof typeof statesDistrictsData] as any;
+      return stateData?.districts && stateData.districts.includes(worker.district);
+    }).length;
+  };
 
   // Filter workers based on selected criteria
   const filteredWorkers = useMemo(() => {
     return allWorkers.filter((worker: User) => {
       // State filter
-      if (selectedStates.length > 0) {
-        const workerState = Object.entries(statesDistrictsData).find(([, stateData]: [string, any]) => 
-          stateData.districts && stateData.districts.includes(worker.district)
-        )?.[0];
-        if (!workerState || !selectedStates.includes(workerState)) return false;
+      if (selectedState) {
+        const stateData = statesDistrictsData[selectedState as keyof typeof statesDistrictsData] as any;
+        if (!worker.district || !stateData?.districts?.includes(worker.district)) return false;
       }
 
       // District filter
@@ -279,41 +261,35 @@ export default function WorkerManagement() {
 
       return true;
     });
-  }, [allWorkers, selectedStates, selectedDistricts, selectedServiceTypes, searchQuery]);
+  }, [allWorkers, selectedState, selectedDistricts, selectedServiceTypes, searchQuery]);
 
-  // Get districts for selected states
+  // Get districts for selected state
   const availableDistricts = useMemo(() => {
-    if (selectedStates.length === 0) return [];
+    if (!selectedState) return [];
     
-    const districts: string[] = [];
-    selectedStates.forEach(stateName => {
-      const stateData = statesDistrictsData[stateName as keyof typeof statesDistrictsData] as any;
-      if (stateData?.districts) {
-        districts.push(...stateData.districts);
-      }
-    });
-    return districts.sort();
-  }, [selectedStates]);
+    const stateData = statesDistrictsData[selectedState as keyof typeof statesDistrictsData] as any;
+    return stateData?.districts ? stateData.districts.sort() : [];
+  }, [selectedState]);
 
   // Reset dependent filters when parent filter changes
   useEffect(() => {
-    if (selectedStates.length === 0) {
+    if (!selectedState) {
       setSelectedDistricts([]);
       setSelectedServiceTypes([]);
     } else {
-      // Keep only districts that belong to selected states
+      // Keep only districts that belong to selected state
       setSelectedDistricts(prev => prev.filter(district => availableDistricts.includes(district)));
     }
-  }, [selectedStates, availableDistricts]);
+  }, [selectedState, availableDistricts]);
 
   const clearAllFilters = () => {
-    setSelectedStates([]);
+    setSelectedState(null);
     setSelectedDistricts([]);
     setSelectedServiceTypes([]);
     setSearchQuery("");
   };
 
-  const hasActiveFilters = selectedStates.length > 0 || selectedDistricts.length > 0 || selectedServiceTypes.length > 0 || searchQuery;
+  const hasActiveFilters = selectedState || selectedDistricts.length > 0 || selectedServiceTypes.length > 0 || searchQuery;
 
   // Message worker
   const sendMessageMutation = useMutation({
@@ -414,191 +390,198 @@ export default function WorkerManagement() {
     deleteWorkerMutation.mutate(selectedUser.id);
   };
 
+  const handleStateClick = (stateName: string) => {
+    if (selectedState === stateName) {
+      setSelectedState(null);
+    } else {
+      setSelectedState(stateName);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 sticky top-0 z-40">
+      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 fixed top-0 left-0 right-0 z-50">
         <div className="px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
-            <div className="flex items-center">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setLocation('/admin')}
-                className="mr-4"
-              >
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Dashboard
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowMobileMenu(!showMobileMenu)}
-                className="lg:hidden"
-              >
-                <Menu className="h-4 w-4" />
-              </Button>
-            </div>
-            <h1 className="text-xl font-semibold text-gray-900">Worker Management</h1>
-            <div className="w-20"></div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setLocation("/admin")}
+              className="flex items-center gap-2"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Back to Dashboard
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+              className="flex items-center justify-center w-8 h-8"
+            >
+              <Menu className="w-4 h-4" />
+            </Button>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Worker Management</h1>
           </div>
         </div>
       </div>
 
-      <div className="flex">
+      {/* Main Content */}
+      <div className="flex h-[calc(100vh-140px)] mt-20">
+        
         {/* Left Sidebar */}
-        <div className={`bg-white border-r border-gray-200 w-64 min-h-screen ${showMobileMenu ? 'block' : 'hidden lg:block'}`}>
-          <div className="p-4">
-            <div className="space-y-6">
-              {/* Total Worker List */}
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-sm font-medium text-gray-900">Total Worker List</h3>
-                  <Badge variant="default" className="bg-blue-600">
-                    {filteredWorkers.length}
+        <div className={`${sidebarCollapsed ? 'w-0' : 'w-64'} bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col transition-all duration-300 overflow-hidden`}>
+          <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+            {/* Total Worker List Header */}
+            <button
+              className={`w-full bg-gray-100 dark:bg-gray-700 rounded-lg p-3 text-center font-medium border transition-all duration-300 relative transform-gpu text-gray-900 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-600`}
+            >
+              <span className="pr-8">Total Worker List</span>
+              <Badge 
+                variant="secondary" 
+                className="absolute right-2 top-1/2 -translate-y-1/2 h-5 px-2 min-w-[20px] rounded-md flex items-center justify-center text-xs bg-blue-500 text-white hover:bg-blue-600"
+              >
+                {filteredWorkers.length}
+              </Badge>
+            </button>
+          </div>
+          
+          {/* Scrollable States List */}
+          <div className="flex-1 overflow-y-auto">
+            <div className="p-4 space-y-1">
+              {states.map((state) => (
+                <button
+                  key={state}
+                  onClick={() => handleStateClick(state)}
+                  className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors relative ${
+                    selectedState === state
+                      ? 'bg-blue-100 text-blue-900 dark:bg-blue-900 dark:text-blue-100'
+                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                  }`}
+                >
+                  <span className="pr-8">{state}</span>
+                  <Badge 
+                    variant="secondary" 
+                    className="absolute right-2 top-1/2 -translate-y-1/2 h-5 px-2 min-w-[20px] rounded-md flex items-center justify-center text-xs bg-blue-500 text-white hover:bg-blue-600"
+                  >
+                    {getWorkerCountForState(state)}
                   </Badge>
-                </div>
-              </div>
-
-              {/* States List */}
-              <div className="space-y-2">
-                {Object.entries(statesDistrictsData).map(([stateName, stateData]) => {
-                  const workerCount = workersByState[stateName] || 0;
-                  return (
-                    <div key={stateName} className="flex items-center justify-between">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          if (selectedStates.includes(stateName)) {
-                            setSelectedStates(selectedStates.filter(s => s !== stateName));
-                          } else {
-                            setSelectedStates([...selectedStates, stateName]);
-                          }
-                        }}
-                        className={`justify-start text-left h-auto py-2 px-3 w-full ${
-                          selectedStates.includes(stateName) ? 'bg-blue-50 text-blue-700' : 'hover:bg-gray-50'
-                        }`}
-                      >
-                        <span className="truncate text-sm">{stateName}</span>
-                      </Button>
-                      <Badge variant="secondary" className="ml-2 bg-blue-100 text-blue-800 text-xs">
-                        {workerCount}
-                      </Badge>
-                    </div>
-                  );
-                })}
-              </div>
+                </button>
+              ))}
             </div>
           </div>
         </div>
 
-        {/* Main Content */}
-        <div className="flex-1 p-6">
-          {!selectedStates.length ? (
-            <Card>
-              <CardContent className="flex flex-col items-center justify-center py-16">
-                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                  <ArrowLeft className="h-8 w-8 text-gray-400 transform rotate-180" />
-                </div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Select a state from the left panel to view districts</h3>
-                <p className="text-gray-500 text-center">Choose any state to see available districts and workers.</p>
-              </CardContent>
-            </Card>
-          ) : !selectedDistricts.length ? (
-            <div>
-              <div className="mb-6">
-                <h2 className="text-lg font-semibold text-gray-900 mb-4">
-                  Select Districts in {selectedStates.join(', ')}
-                </h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {availableDistricts.map(district => (
-                    <Button
-                      key={district}
-                      variant="outline"
-                      onClick={() => {
-                        if (selectedDistricts.includes(district)) {
-                          setSelectedDistricts(selectedDistricts.filter(d => d !== district));
-                        } else {
-                          setSelectedDistricts([...selectedDistricts, district]);
-                        }
-                      }}
-                      className={`justify-start text-left h-auto py-3 px-4 ${
-                        selectedDistricts.includes(district) ? 'bg-blue-50 border-blue-200 text-blue-700' : ''
-                      }`}
-                    >
-                      {district}
-                    </Button>
-                  ))}
-                </div>
+        {/* Right Content Area */}
+        <div className="flex-1 bg-white dark:bg-gray-800 overflow-y-auto">
+          {isLoading && (
+            <div className="flex items-center justify-center h-full">
+              <div className="text-center">
+                <div className="inline-block w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mb-3"></div>
+                <p className="text-gray-600 dark:text-gray-400">Loading worker data...</p>
               </div>
             </div>
-          ) : (
-            <div>
-              {/* Filters and Search */}
-              <div className="mb-6 space-y-4">
-                <div className="flex flex-col sm:flex-row gap-4">
+          )}
+
+          {!selectedState && !isLoading && (
+            <div className="flex flex-col items-center justify-center h-full">
+              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                <ArrowLeft className="h-8 w-8 text-gray-400 transform rotate-180" />
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                Select a state from the left panel to view districts
+              </h3>
+              <p className="text-gray-500 dark:text-gray-400 text-center">
+                Choose any state to see available districts and workers.
+              </p>
+            </div>
+          )}
+
+          {selectedState && !isLoading && (
+            <div className="h-full flex flex-col">
+              <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+                {/* Header with inline search */}
+                <div className="flex items-center justify-between mb-2">
                   <div className="flex-1">
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                    <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-1">
+                      Workers in {selectedState}
+                    </h2>
+                    <p className="text-gray-600 dark:text-gray-400">
+                      {filteredWorkers.length} workers found
+                    </p>
+                  </div>
+                  
+                  {/* Search Controls */}
+                  <div className="flex gap-3 items-center ml-6">
+                    <div className="relative w-72">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                       <Input
-                        placeholder="Search workers by name, phone, email, ID, or service..."
+                        placeholder="Search workers..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        onFocus={() => setIsSearchFocused(true)}
-                        onBlur={() => setIsSearchFocused(false)}
                         className="pl-10"
                       />
                     </div>
-                  </div>
-                  
-                  <Select
-                    value=""
-                    onValueChange={(value) => {
-                      if (selectedServiceTypes.includes(value)) {
-                        setSelectedServiceTypes(selectedServiceTypes.filter(s => s !== value));
-                      } else {
-                        setSelectedServiceTypes([...selectedServiceTypes, value]);
-                      }
-                    }}
-                  >
-                    <SelectTrigger className="w-48">
-                      <SelectValue placeholder="Filter by Service" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {allServiceTypes.map(serviceType => (
-                        <SelectItem key={serviceType} value={serviceType}>
-                          {serviceType}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    
+                    <Select
+                      value=""
+                      onValueChange={(value) => {
+                        if (selectedServiceTypes.includes(value)) {
+                          setSelectedServiceTypes(selectedServiceTypes.filter(s => s !== value));
+                        } else {
+                          setSelectedServiceTypes([...selectedServiceTypes, value]);
+                        }
+                      }}
+                    >
+                      <SelectTrigger className="w-48">
+                        <SelectValue placeholder="Filter by Service" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {allServiceTypes.map(serviceType => (
+                          <SelectItem key={serviceType} value={serviceType}>
+                            {serviceType}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
 
-                  {hasActiveFilters && (
-                    <Button variant="outline" onClick={clearAllFilters}>
-                      <X className="h-4 w-4 mr-2" />
-                      Clear Filters
-                    </Button>
-                  )}
+                    {hasActiveFilters && (
+                      <Button variant="outline" onClick={clearAllFilters}>
+                        <X className="h-4 w-4 mr-2" />
+                        Clear
+                      </Button>
+                    )}
+                  </div>
                 </div>
 
+                {/* District Selection */}
+                {availableDistricts.length > 0 && (
+                  <div className="mb-4">
+                    <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Select Districts:</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {availableDistricts.map(district => (
+                        <Button
+                          key={district}
+                          variant={selectedDistricts.includes(district) ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => {
+                            if (selectedDistricts.includes(district)) {
+                              setSelectedDistricts(selectedDistricts.filter(d => d !== district));
+                            } else {
+                              setSelectedDistricts([...selectedDistricts, district]);
+                            }
+                          }}
+                        >
+                          {district}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {/* Active Filters Display */}
-                {(selectedStates.length > 0 || selectedDistricts.length > 0 || selectedServiceTypes.length > 0) && (
-                  <div className="flex flex-wrap gap-2">
-                    {selectedStates.map(state => (
-                      <Badge key={state} variant="secondary" className="cursor-pointer" onClick={() => 
-                        setSelectedStates(selectedStates.filter(s => s !== state))
-                      }>
-                        State: {state} <X className="h-3 w-3 ml-1" />
-                      </Badge>
-                    ))}
-                    {selectedDistricts.map(district => (
-                      <Badge key={district} variant="secondary" className="cursor-pointer" onClick={() => 
-                        setSelectedDistricts(selectedDistricts.filter(d => d !== district))
-                      }>
-                        District: {district} <X className="h-3 w-3 ml-1" />
-                      </Badge>
-                    ))}
+                {(selectedServiceTypes.length > 0) && (
+                  <div className="flex flex-wrap gap-2 mb-4">
                     {selectedServiceTypes.map(service => (
                       <Badge key={service} variant="secondary" className="cursor-pointer" onClick={() => 
                         setSelectedServiceTypes(selectedServiceTypes.filter(s => s !== service))
@@ -611,172 +594,165 @@ export default function WorkerManagement() {
               </div>
 
               {/* Workers Table */}
-              <Card>
-                <CardContent className="p-0">
-                  {isLoading ? (
-                    <div className="flex justify-center items-center py-12">
-                      <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
-                      <span className="ml-2 text-gray-500">Loading workers...</span>
+              <div className="flex-1 overflow-auto">
+                {filteredWorkers.length === 0 ? (
+                  <div className="text-center py-12">
+                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <AlertCircle className="h-8 w-8 text-gray-400" />
                     </div>
-                  ) : filteredWorkers.length === 0 ? (
-                    <div className="text-center py-12">
-                      <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <AlertCircle className="h-8 w-8 text-gray-400" />
-                      </div>
-                      <h3 className="text-lg font-medium text-gray-900 mb-2">No workers found</h3>
-                      <p className="text-gray-500">Try adjusting your filters or search criteria.</p>
-                    </div>
-                  ) : (
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Worker</TableHead>
-                          <TableHead>Service</TableHead>
-                          <TableHead>Location</TableHead>
-                          <TableHead>Contact</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead>Member Since</TableHead>
-                          <TableHead>Activity</TableHead>
-                          <TableHead className="text-right">Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {filteredWorkers.map((worker) => {
-                          const activityStatus = getActivityStatus(worker.lastLoginAt, worker.createdAt);
-                          
-                          return (
-                            <TableRow key={worker.id}>
-                              <TableCell>
-                                <div className="flex items-center space-x-3">
-                                  <Avatar className="h-8 w-8">
-                                    <AvatarFallback className="text-xs">
-                                      {worker.firstName[0]}{worker.lastName[0]}
-                                    </AvatarFallback>
-                                  </Avatar>
-                                  <div>
-                                    <div className="font-medium text-gray-900">
-                                      {worker.firstName} {worker.lastName}
-                                    </div>
-                                    <div className="text-sm text-gray-500">ID: {worker.id}</div>
+                    <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No workers found</h3>
+                    <p className="text-gray-500 dark:text-gray-400">Try adjusting your filters or search criteria.</p>
+                  </div>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Worker</TableHead>
+                        <TableHead>Service</TableHead>
+                        <TableHead>Location</TableHead>
+                        <TableHead>Contact</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Member Since</TableHead>
+                        <TableHead>Activity</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredWorkers.map((worker) => {
+                        const activityStatus = getActivityStatus(worker.lastLoginAt, worker.createdAt);
+                        
+                        return (
+                          <TableRow key={worker.id}>
+                            <TableCell>
+                              <div className="flex items-center space-x-3">
+                                <Avatar className="h-8 w-8">
+                                  <AvatarFallback className="text-xs">
+                                    {worker.firstName[0]}{worker.lastName[0]}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <div>
+                                  <div className="font-medium text-gray-900 dark:text-white">
+                                    {worker.firstName} {worker.lastName}
                                   </div>
+                                  <div className="text-sm text-gray-500">ID: {worker.id}</div>
                                 </div>
-                              </TableCell>
-                              <TableCell>
-                                <div className="text-sm">
-                                  <div className="font-medium">{worker.workerProfile?.primaryService || 'Not specified'}</div>
-                                  {worker.workerProfile?.hourlyRate && (
-                                    <div className="text-gray-500">₹{worker.workerProfile.hourlyRate}/hr</div>
-                                  )}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <div className="text-sm">
+                                <div className="font-medium text-gray-900 dark:text-white">{worker.workerProfile?.primaryService || 'Not specified'}</div>
+                                {worker.workerProfile?.hourlyRate && (
+                                  <div className="text-gray-500">₹{worker.workerProfile.hourlyRate}/hr</div>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <div className="text-sm text-gray-900 dark:text-white">{worker.district || 'Not specified'}</div>
+                            </TableCell>
+                            <TableCell>
+                              <div className="text-sm">
+                                <div className="flex items-center text-gray-900 dark:text-white">
+                                  <Phone className="h-3 w-3 mr-1" />
+                                  {worker.mobile}
                                 </div>
-                              </TableCell>
-                              <TableCell>
-                                <div className="text-sm text-gray-900">{worker.district || 'Not specified'}</div>
-                              </TableCell>
-                              <TableCell>
-                                <div className="text-sm">
-                                  <div className="flex items-center text-gray-900">
-                                    <Phone className="h-3 w-3 mr-1" />
-                                    {worker.mobile}
+                                {worker.email && (
+                                  <div className="flex items-center text-gray-500 mt-1">
+                                    <Mail className="h-3 w-3 mr-1" />
+                                    {worker.email}
                                   </div>
-                                  {worker.email && (
-                                    <div className="flex items-center text-gray-500 mt-1">
-                                      <Mail className="h-3 w-3 mr-1" />
-                                      {worker.email}
-                                    </div>
-                                  )}
-                                </div>
-                              </TableCell>
-                              <TableCell>
-                                <div className="flex flex-col space-y-1">
-                                  <Badge variant={worker.isVerified ? "default" : "secondary"} className="w-fit">
-                                    {worker.isVerified ? "Verified" : "Unverified"}
-                                  </Badge>
-                                  {worker.workerProfile?.isAvailable !== undefined && (
-                                    <Badge variant={worker.workerProfile.isAvailable ? "outline" : "secondary"} className="w-fit">
-                                      {worker.workerProfile.isAvailable ? "Available" : "Unavailable"}
-                                    </Badge>
-                                  )}
-                                </div>
-                              </TableCell>
-                              <TableCell>
-                                <div className="text-sm text-gray-500">
-                                  {getMemberSince(worker.createdAt)}
-                                </div>
-                              </TableCell>
-                              <TableCell>
-                                <Badge 
-                                  variant="outline" 
-                                  className={`${activityStatus.bgColor} ${activityStatus.borderColor} ${activityStatus.color} border`}
-                                >
-                                  {activityStatus.label}
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex flex-col space-y-1">
+                                <Badge variant={worker.isVerified ? "default" : "secondary"} className="w-fit">
+                                  {worker.isVerified ? "Verified" : "Unverified"}
                                 </Badge>
-                              </TableCell>
-                              <TableCell className="text-right">
-                                <DropdownMenu>
-                                  <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" size="sm">
-                                      <MoreHorizontal className="h-4 w-4" />
-                                    </Button>
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent align="end">
-                                    <DropdownMenuItem
-                                      onClick={() => {
-                                        setSelectedUser(worker);
-                                        setShowDetailsModal(true);
-                                      }}
-                                    >
-                                      <Eye className="h-4 w-4 mr-2" />
-                                      View Details
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem
-                                      onClick={() => {
-                                        setSelectedUser(worker);
-                                        setShowMessageDialog(true);
-                                      }}
-                                    >
-                                      <MessageSquare className="h-4 w-4 mr-2" />
-                                      Send Message
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem
-                                      onClick={() => {
-                                        setSelectedUser(worker);
-                                        setStatusAction(worker.isVerified ? 'unverify' : 'verify');
-                                        setShowStatusDialog(true);
-                                      }}
-                                    >
-                                      {worker.isVerified ? (
-                                        <>
-                                          <XCircle className="h-4 w-4 mr-2" />
-                                          Unverify Worker
-                                        </>
-                                      ) : (
-                                        <>
-                                          <CheckCircle className="h-4 w-4 mr-2" />
-                                          Verify Worker
-                                        </>
-                                      )}
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem
-                                      onClick={() => {
-                                        setSelectedUser(worker);
-                                        setShowDeleteDialog(true);
-                                      }}
-                                      className="text-red-600"
-                                    >
-                                      <Trash2 className="h-4 w-4 mr-2" />
-                                      Delete Worker
-                                    </DropdownMenuItem>
-                                  </DropdownMenuContent>
-                                </DropdownMenu>
-                              </TableCell>
-                            </TableRow>
-                          );
-                        })}
-                      </TableBody>
-                    </Table>
-                  )}
-                </CardContent>
-              </Card>
+                                {worker.workerProfile?.isAvailable !== undefined && (
+                                  <Badge variant={worker.workerProfile.isAvailable ? "outline" : "secondary"} className="w-fit">
+                                    {worker.workerProfile.isAvailable ? "Available" : "Unavailable"}
+                                  </Badge>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <div className="text-sm text-gray-500">
+                                {getMemberSince(worker.createdAt)}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <Badge 
+                                variant="outline" 
+                                className={`${activityStatus.bgColor} ${activityStatus.borderColor} ${activityStatus.color} border`}
+                              >
+                                {activityStatus.label}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="sm">
+                                    <MoreHorizontal className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem
+                                    onClick={() => {
+                                      setSelectedUser(worker);
+                                      setShowDetailsModal(true);
+                                    }}
+                                  >
+                                    <Eye className="h-4 w-4 mr-2" />
+                                    View Details
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    onClick={() => {
+                                      setSelectedUser(worker);
+                                      setShowMessageDialog(true);
+                                    }}
+                                  >
+                                    <MessageSquare className="h-4 w-4 mr-2" />
+                                    Send Message
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    onClick={() => {
+                                      setSelectedUser(worker);
+                                      setStatusAction(worker.isVerified ? 'unverify' : 'verify');
+                                      setShowStatusDialog(true);
+                                    }}
+                                  >
+                                    {worker.isVerified ? (
+                                      <>
+                                        <XCircle className="h-4 w-4 mr-2" />
+                                        Unverify Worker
+                                      </>
+                                    ) : (
+                                      <>
+                                        <CheckCircle className="h-4 w-4 mr-2" />
+                                        Verify Worker
+                                      </>
+                                    )}
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    onClick={() => {
+                                      setSelectedUser(worker);
+                                      setShowDeleteDialog(true);
+                                    }}
+                                    className="text-red-600"
+                                  >
+                                    <Trash2 className="h-4 w-4 mr-2" />
+                                    Delete Worker
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                )}
+              </div>
             </div>
           )}
         </div>
