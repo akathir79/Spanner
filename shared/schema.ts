@@ -304,63 +304,6 @@ export const financialStatements = pgTable("financial_statements", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-// Bulk messaging campaigns
-export const bulkMessageCampaigns = pgTable("bulk_message_campaigns", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  adminId: varchar("admin_id").references(() => users.id).notNull(),
-  campaignName: text("campaign_name").notNull(),
-  messageType: text("message_type").notNull(), // whatsapp, sms, email, in_app
-  subject: text("subject"), // For email and in-app messages
-  content: text("content").notNull(),
-  targetCriteria: jsonb("target_criteria").notNull(), // Filters for targeting users
-  recipientCount: integer("recipient_count").default(0),
-  status: text("status").default("draft"), // draft, scheduled, sending, completed, cancelled
-  scheduledAt: timestamp("scheduled_at"),
-  sentAt: timestamp("sent_at"),
-  completedAt: timestamp("completed_at"),
-  successCount: integer("success_count").default(0),
-  failureCount: integer("failure_count").default(0),
-  estimatedCost: decimal("estimated_cost", { precision: 10, scale: 2 }).default("0.00"),
-  actualCost: decimal("actual_cost", { precision: 10, scale: 2 }).default("0.00"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
-
-// Individual message delivery tracking
-export const bulkMessageDeliveries = pgTable("bulk_message_deliveries", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  campaignId: varchar("campaign_id").references(() => bulkMessageCampaigns.id).notNull(),
-  recipientId: varchar("recipient_id").references(() => users.id).notNull(),
-  messageType: text("message_type").notNull(), // whatsapp, sms, email, in_app
-  recipientContact: text("recipient_contact").notNull(), // phone/email based on type
-  status: text("status").default("pending"), // pending, sent, delivered, failed, bounced, clicked
-  providerMessageId: text("provider_message_id"), // ID from SMS/Email provider
-  failureReason: text("failure_reason"),
-  deliveredAt: timestamp("delivered_at"),
-  readAt: timestamp("read_at"),
-  clickedAt: timestamp("clicked_at"),
-  cost: decimal("cost", { precision: 8, scale: 4 }).default("0.00"),
-  metadata: jsonb("metadata"), // Additional provider-specific data
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
-
-// Message templates for bulk messaging
-export const messageTemplates = pgTable("message_templates", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  adminId: varchar("admin_id").references(() => users.id).notNull(),
-  templateName: text("template_name").notNull(),
-  messageType: text("message_type").notNull(), // whatsapp, sms, email, in_app
-  category: text("category").notNull(), // promotional, transactional, notification, reminder
-  subject: text("subject"), // For email templates
-  content: text("content").notNull(),
-  variables: jsonb("variables"), // Template variables like {{firstName}}, {{serviceName}}
-  isActive: boolean("is_active").default(true),
-  usageCount: integer("usage_count").default(0),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
-
 // Relations
 export const usersRelations = relations(users, ({ one, many }) => ({
   workerProfile: one(workerProfiles, {
@@ -514,33 +457,6 @@ export const financialStatementsRelations = relations(financialStatements, ({ on
   }),
 }));
 
-// Bulk messaging relations
-export const bulkMessageCampaignsRelations = relations(bulkMessageCampaigns, ({ one, many }) => ({
-  admin: one(users, {
-    fields: [bulkMessageCampaigns.adminId],
-    references: [users.id],
-  }),
-  deliveries: many(bulkMessageDeliveries),
-}));
-
-export const bulkMessageDeliveriesRelations = relations(bulkMessageDeliveries, ({ one }) => ({
-  campaign: one(bulkMessageCampaigns, {
-    fields: [bulkMessageDeliveries.campaignId],
-    references: [bulkMessageCampaigns.id],
-  }),
-  recipient: one(users, {
-    fields: [bulkMessageDeliveries.recipientId],
-    references: [users.id],
-  }),
-}));
-
-export const messageTemplatesRelations = relations(messageTemplates, ({ one }) => ({
-  admin: one(users, {
-    fields: [messageTemplates.adminId],
-    references: [users.id],
-  }),
-}));
-
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
@@ -641,24 +557,6 @@ export const insertFinancialStatementSchema = createInsertSchema(financialStatem
   updatedAt: true,
 });
 
-export const insertBulkMessageCampaignSchema = createInsertSchema(bulkMessageCampaigns).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-export const insertBulkMessageDeliverySchema = createInsertSchema(bulkMessageDeliveries).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-export const insertMessageTemplateSchema = createInsertSchema(messageTemplates).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -694,12 +592,6 @@ export type TransferHistory = typeof transferHistory.$inferSelect;
 export type InsertTransferHistory = z.infer<typeof insertTransferHistorySchema>;
 export type FinancialStatement = typeof financialStatements.$inferSelect;
 export type InsertFinancialStatement = z.infer<typeof insertFinancialStatementSchema>;
-export type BulkMessageCampaign = typeof bulkMessageCampaigns.$inferSelect;
-export type InsertBulkMessageCampaign = z.infer<typeof insertBulkMessageCampaignSchema>;
-export type BulkMessageDelivery = typeof bulkMessageDeliveries.$inferSelect;
-export type InsertBulkMessageDelivery = z.infer<typeof insertBulkMessageDeliverySchema>;
-export type MessageTemplate = typeof messageTemplates.$inferSelect;
-export type InsertMessageTemplate = z.infer<typeof insertMessageTemplateSchema>;
 
 // Message relations
 export const messagesRelations = relations(messages, ({ one, many }) => ({

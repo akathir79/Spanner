@@ -17,9 +17,6 @@ import {
   messages,
   transferHistory,
   financialStatements,
-  bulkMessageCampaigns,
-  bulkMessageDeliveries,
-  messageTemplates,
   type User, 
   type InsertUser,
   type WorkerProfile,
@@ -52,13 +49,7 @@ import {
   type TransferHistory,
   type InsertTransferHistory,
   type FinancialStatement,
-  type InsertFinancialStatement,
-  type BulkMessageCampaign,
-  type InsertBulkMessageCampaign,
-  type BulkMessageDelivery,
-  type InsertBulkMessageDelivery,
-  type MessageTemplate,
-  type InsertMessageTemplate
+  type InsertFinancialStatement
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, sql, desc, ilike, inArray, or } from "drizzle-orm";
@@ -176,37 +167,6 @@ export interface IStorage {
   getFinancialStatementsByClient(clientId: string): Promise<FinancialStatement[]>;
   createOrUpdateFinancialStatement(clientId: string, year: number, updates: Partial<FinancialStatement>): Promise<FinancialStatement>;
   getFinancialStatementByClientAndYear(clientId: string, year: number): Promise<FinancialStatement | undefined>;
-
-  // Bulk Messaging
-  createBulkMessageCampaign(campaign: InsertBulkMessageCampaign): Promise<BulkMessageCampaign>;
-  getBulkMessageCampaign(campaignId: string): Promise<BulkMessageCampaign | undefined>;
-  getBulkMessageCampaignsByAdmin(adminId: string): Promise<BulkMessageCampaign[]>;
-  updateBulkMessageCampaign(campaignId: string, updates: Partial<BulkMessageCampaign>): Promise<BulkMessageCampaign | undefined>;
-  deleteBulkMessageCampaign(campaignId: string): Promise<void>;
-  
-  // Bulk Message Deliveries
-  createBulkMessageDelivery(delivery: InsertBulkMessageDelivery): Promise<BulkMessageDelivery>;
-  getBulkMessageDeliveriesByCampaign(campaignId: string): Promise<BulkMessageDelivery[]>;
-  updateBulkMessageDelivery(deliveryId: string, updates: Partial<BulkMessageDelivery>): Promise<BulkMessageDelivery | undefined>;
-  
-  // Message Templates
-  createMessageTemplate(template: InsertMessageTemplate): Promise<MessageTemplate>;
-  getMessageTemplate(templateId: string): Promise<MessageTemplate | undefined>;
-  getMessageTemplatesByAdmin(adminId: string): Promise<MessageTemplate[]>;
-  getMessageTemplatesByType(messageType: string, adminId: string): Promise<MessageTemplate[]>;
-  updateMessageTemplate(templateId: string, updates: Partial<MessageTemplate>): Promise<MessageTemplate | undefined>;
-  deleteMessageTemplate(templateId: string): Promise<void>;
-  
-  // User filtering for bulk messaging
-  getUsersByFilters(filters: {
-    role?: string;
-    district?: string;
-    state?: string;
-    isVerified?: boolean;
-    isActive?: boolean;
-    lastLoginDays?: number;
-    registrationDays?: number;
-  }): Promise<User[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1138,176 +1098,6 @@ export class DatabaseStorage implements IStorage {
         .returning();
       return created;
     }
-  }
-
-  // Bulk Messaging Methods
-  async createBulkMessageCampaign(campaign: InsertBulkMessageCampaign): Promise<BulkMessageCampaign> {
-    const [created] = await db
-      .insert(bulkMessageCampaigns)
-      .values(campaign)
-      .returning();
-    return created;
-  }
-
-  async getBulkMessageCampaign(campaignId: string): Promise<BulkMessageCampaign | undefined> {
-    const [campaign] = await db
-      .select()
-      .from(bulkMessageCampaigns)
-      .where(eq(bulkMessageCampaigns.id, campaignId));
-    return campaign;
-  }
-
-  async getBulkMessageCampaignsByAdmin(adminId: string): Promise<BulkMessageCampaign[]> {
-    return await db
-      .select()
-      .from(bulkMessageCampaigns)
-      .where(eq(bulkMessageCampaigns.adminId, adminId))
-      .orderBy(desc(bulkMessageCampaigns.createdAt));
-  }
-
-  async updateBulkMessageCampaign(campaignId: string, updates: Partial<BulkMessageCampaign>): Promise<BulkMessageCampaign | undefined> {
-    const [updated] = await db
-      .update(bulkMessageCampaigns)
-      .set({ ...updates, updatedAt: new Date() })
-      .where(eq(bulkMessageCampaigns.id, campaignId))
-      .returning();
-    return updated;
-  }
-
-  async deleteBulkMessageCampaign(campaignId: string): Promise<void> {
-    await db
-      .delete(bulkMessageCampaigns)
-      .where(eq(bulkMessageCampaigns.id, campaignId));
-  }
-
-  // Bulk Message Deliveries
-  async createBulkMessageDelivery(delivery: InsertBulkMessageDelivery): Promise<BulkMessageDelivery> {
-    const [created] = await db
-      .insert(bulkMessageDeliveries)
-      .values(delivery)
-      .returning();
-    return created;
-  }
-
-  async getBulkMessageDeliveriesByCampaign(campaignId: string): Promise<BulkMessageDelivery[]> {
-    return await db
-      .select()
-      .from(bulkMessageDeliveries)
-      .where(eq(bulkMessageDeliveries.campaignId, campaignId))
-      .orderBy(desc(bulkMessageDeliveries.createdAt));
-  }
-
-  async updateBulkMessageDelivery(deliveryId: string, updates: Partial<BulkMessageDelivery>): Promise<BulkMessageDelivery | undefined> {
-    const [updated] = await db
-      .update(bulkMessageDeliveries)
-      .set({ ...updates, updatedAt: new Date() })
-      .where(eq(bulkMessageDeliveries.id, deliveryId))
-      .returning();
-    return updated;
-  }
-
-  // Message Templates
-  async createMessageTemplate(template: InsertMessageTemplate): Promise<MessageTemplate> {
-    const [created] = await db
-      .insert(messageTemplates)
-      .values(template)
-      .returning();
-    return created;
-  }
-
-  async getMessageTemplate(templateId: string): Promise<MessageTemplate | undefined> {
-    const [template] = await db
-      .select()
-      .from(messageTemplates)
-      .where(eq(messageTemplates.id, templateId));
-    return template;
-  }
-
-  async getMessageTemplatesByAdmin(adminId: string): Promise<MessageTemplate[]> {
-    return await db
-      .select()
-      .from(messageTemplates)
-      .where(eq(messageTemplates.adminId, adminId))
-      .orderBy(desc(messageTemplates.createdAt));
-  }
-
-  async getMessageTemplatesByType(messageType: string, adminId: string): Promise<MessageTemplate[]> {
-    return await db
-      .select()
-      .from(messageTemplates)
-      .where(
-        and(
-          eq(messageTemplates.messageType, messageType),
-          eq(messageTemplates.adminId, adminId)
-        )
-      )
-      .orderBy(desc(messageTemplates.createdAt));
-  }
-
-  async updateMessageTemplate(templateId: string, updates: Partial<MessageTemplate>): Promise<MessageTemplate | undefined> {
-    const [updated] = await db
-      .update(messageTemplates)
-      .set({ ...updates, updatedAt: new Date() })
-      .where(eq(messageTemplates.id, templateId))
-      .returning();
-    return updated;
-  }
-
-  async deleteMessageTemplate(templateId: string): Promise<void> {
-    await db
-      .delete(messageTemplates)
-      .where(eq(messageTemplates.id, templateId));
-  }
-
-  // User filtering for bulk messaging
-  async getUsersByFilters(filters: {
-    role?: string;
-    district?: string;
-    state?: string;
-    isVerified?: boolean;
-    isActive?: boolean;
-    lastLoginDays?: number;
-    registrationDays?: number;
-  }): Promise<User[]> {
-    const conditions = [];
-
-    if (filters.role) {
-      conditions.push(eq(users.role, filters.role));
-    }
-
-    if (filters.district) {
-      conditions.push(eq(users.district, filters.district));
-    }
-
-    if (filters.state) {
-      conditions.push(eq(users.state, filters.state));
-    }
-
-    if (filters.isVerified !== undefined) {
-      conditions.push(eq(users.isVerified, filters.isVerified));
-    }
-
-    if (filters.isActive !== undefined) {
-      conditions.push(eq(users.isActive, filters.isActive));
-    }
-
-    if (filters.lastLoginDays) {
-      const cutoffDate = new Date();
-      cutoffDate.setDate(cutoffDate.getDate() - filters.lastLoginDays);
-      conditions.push(sql`${users.lastLogin} >= ${cutoffDate}`);
-    }
-
-    if (filters.registrationDays) {
-      const cutoffDate = new Date();
-      cutoffDate.setDate(cutoffDate.getDate() - filters.registrationDays);
-      conditions.push(sql`${users.createdAt} >= ${cutoffDate}`);
-    }
-
-    return await db
-      .select()
-      .from(users)
-      .where(and(...conditions))
-      .orderBy(desc(users.createdAt));
   }
 }
 
