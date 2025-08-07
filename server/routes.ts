@@ -2024,6 +2024,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Generate workers for all states and districts (Admin only)
+  app.post('/api/admin/generate-workers', async (req, res) => {
+    try {
+      // Import the generateWorkers function dynamically
+      const { generateWorkers } = await import('../database/generate-workers.js');
+      await generateWorkers();
+      res.json({ message: 'Workers generated successfully' });
+    } catch (error) {
+      console.error('Error generating workers:', error);
+      res.status(500).json({ message: 'Failed to generate workers' });
+    }
+  });
+
+  // Get all districts with optional filtering
+  app.get('/api/districts/:stateName?', async (req, res) => {
+    try {
+      const { stateName } = req.params;
+      
+      if (stateName && stateName !== 'undefined') {
+        // Return districts for specific state
+        const stateData = statesDistrictsData.states.find(
+          state => state.state.toLowerCase() === stateName.toLowerCase()
+        );
+        
+        if (!stateData) {
+          return res.status(404).json({ message: 'State not found' });
+        }
+        
+        res.json(stateData.districts);
+      } else {
+        // Return all states and their districts
+        res.json(statesDistrictsData.states);
+      }
+    } catch (error) {
+      console.error('Error fetching districts:', error);
+      res.status(500).json({ message: 'Failed to fetch districts' });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

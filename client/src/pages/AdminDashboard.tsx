@@ -985,6 +985,14 @@ export default function AdminDashboard() {
                         <Button 
                           variant="outline" 
                           className="justify-start"
+                          onClick={() => setLocation("/admin/workers")}
+                        >
+                          <Users className="h-4 w-4 mr-2" />
+                          Worker Management
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          className="justify-start"
                           onClick={() => setDatabaseManagementOpen(true)}
                         >
                           <Database className="h-4 w-4 mr-2" />
