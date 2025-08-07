@@ -584,7 +584,7 @@ export default function AdminDashboard() {
             </CardContent>
           </Card>
           
-          <Card>
+          <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setLocation("/admin/workers")}>
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
