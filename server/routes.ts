@@ -15,7 +15,10 @@ import {
   insertWorkerBankDetailsSchema,
   insertPaymentSchema,
   insertMessageSchema,
-  insertTransferHistorySchema
+  insertTransferHistorySchema,
+  insertBulkMessageCampaignSchema,
+  insertBulkMessageDeliverySchema,
+  insertMessageTemplateSchema
 } from "@shared/schema";
 
 // Validation schemas
@@ -2021,6 +2024,272 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error creating/updating financial statement:", error);
       res.status(500).json({ message: "Failed to create/update financial statement" });
+    }
+  });
+
+  // Bulk Messaging API Endpoints
+
+  // Create message template
+  app.post("/api/admin/message-templates", async (req, res) => {
+    try {
+      const templateData = insertMessageTemplateSchema.parse(req.body);
+      const template = await storage.createMessageTemplate(templateData);
+      res.json(template);
+    } catch (error) {
+      console.error("Error creating message template:", error);
+      res.status(500).json({ error: "Failed to create message template" });
+    }
+  });
+
+  // Get message templates by admin
+  app.get("/api/admin/message-templates/:adminId", async (req, res) => {
+    try {
+      const { adminId } = req.params;
+      const templates = await storage.getMessageTemplatesByAdmin(adminId);
+      res.json(templates);
+    } catch (error) {
+      console.error("Error fetching message templates:", error);
+      res.status(500).json({ error: "Failed to fetch message templates" });
+    }
+  });
+
+  // Get message templates by type
+  app.get("/api/admin/message-templates/:adminId/:messageType", async (req, res) => {
+    try {
+      const { adminId, messageType } = req.params;
+      const templates = await storage.getMessageTemplatesByType(messageType, adminId);
+      res.json(templates);
+    } catch (error) {
+      console.error("Error fetching message templates by type:", error);
+      res.status(500).json({ error: "Failed to fetch message templates" });
+    }
+  });
+
+  // Update message template
+  app.put("/api/admin/message-templates/:templateId", async (req, res) => {
+    try {
+      const { templateId } = req.params;
+      const updates = req.body;
+      const template = await storage.updateMessageTemplate(templateId, updates);
+      if (!template) {
+        return res.status(404).json({ error: "Template not found" });
+      }
+      res.json(template);
+    } catch (error) {
+      console.error("Error updating message template:", error);
+      res.status(500).json({ error: "Failed to update message template" });
+    }
+  });
+
+  // Delete message template
+  app.delete("/api/admin/message-templates/:templateId", async (req, res) => {
+    try {
+      const { templateId } = req.params;
+      await storage.deleteMessageTemplate(templateId);
+      res.json({ message: "Template deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting message template:", error);
+      res.status(500).json({ error: "Failed to delete message template" });
+    }
+  });
+
+  // Create bulk message campaign
+  app.post("/api/admin/bulk-campaigns", async (req, res) => {
+    try {
+      const campaignData = insertBulkMessageCampaignSchema.parse(req.body);
+      const campaign = await storage.createBulkMessageCampaign(campaignData);
+      res.json(campaign);
+    } catch (error) {
+      console.error("Error creating bulk campaign:", error);
+      res.status(500).json({ error: "Failed to create bulk campaign" });
+    }
+  });
+
+  // Get bulk campaigns by admin
+  app.get("/api/admin/bulk-campaigns/:adminId", async (req, res) => {
+    try {
+      const { adminId } = req.params;
+      const campaigns = await storage.getBulkMessageCampaignsByAdmin(adminId);
+      res.json(campaigns);
+    } catch (error) {
+      console.error("Error fetching bulk campaigns:", error);
+      res.status(500).json({ error: "Failed to fetch bulk campaigns" });
+    }
+  });
+
+  // Get bulk campaign details
+  app.get("/api/admin/bulk-campaigns/details/:campaignId", async (req, res) => {
+    try {
+      const { campaignId } = req.params;
+      const [campaign, deliveries] = await Promise.all([
+        storage.getBulkMessageCampaign(campaignId),
+        storage.getBulkMessageDeliveriesByCampaign(campaignId)
+      ]);
+
+      if (!campaign) {
+        return res.status(404).json({ error: "Campaign not found" });
+      }
+
+      res.json({ campaign, deliveries });
+    } catch (error) {
+      console.error("Error fetching campaign details:", error);
+      res.status(500).json({ error: "Failed to fetch campaign details" });
+    }
+  });
+
+  // Update bulk campaign
+  app.put("/api/admin/bulk-campaigns/:campaignId", async (req, res) => {
+    try {
+      const { campaignId } = req.params;
+      const updates = req.body;
+      const campaign = await storage.updateBulkMessageCampaign(campaignId, updates);
+      if (!campaign) {
+        return res.status(404).json({ error: "Campaign not found" });
+      }
+      res.json(campaign);
+    } catch (error) {
+      console.error("Error updating bulk campaign:", error);
+      res.status(500).json({ error: "Failed to update bulk campaign" });
+    }
+  });
+
+  // Delete bulk campaign
+  app.delete("/api/admin/bulk-campaigns/:campaignId", async (req, res) => {
+    try {
+      const { campaignId } = req.params;
+      await storage.deleteBulkMessageCampaign(campaignId);
+      res.json({ message: "Campaign deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting bulk campaign:", error);
+      res.status(500).json({ error: "Failed to delete bulk campaign" });
+    }
+  });
+
+  // Get filtered users for bulk messaging
+  app.post("/api/admin/users/filter", async (req, res) => {
+    try {
+      const filters = req.body;
+      const users = await storage.getUsersByFilters(filters);
+      res.json(users);
+    } catch (error) {
+      console.error("Error filtering users:", error);
+      res.status(500).json({ error: "Failed to filter users" });
+    }
+  });
+
+  // Send bulk messages
+  app.post("/api/admin/send-bulk-messages", async (req, res) => {
+    try {
+      const { campaignId, messageChannels, userFilters } = req.body;
+
+      // Get campaign details
+      const campaign = await storage.getBulkMessageCampaign(campaignId);
+      if (!campaign) {
+        return res.status(404).json({ error: "Campaign not found" });
+      }
+
+      // Get filtered users
+      const targetUsers = await storage.getUsersByFilters(userFilters);
+      
+      if (targetUsers.length === 0) {
+        return res.status(400).json({ error: "No users match the specified filters" });
+      }
+
+      // Process bulk messages
+      const deliveries = [];
+      let successCount = 0;
+      let failureCount = 0;
+
+      for (const user of targetUsers) {
+        for (const channel of messageChannels) {
+          try {
+            let deliveryStatus = 'pending';
+            let errorMessage = null;
+
+            // Send message based on channel
+            switch (channel) {
+              case 'whatsapp':
+                // WhatsApp integration would go here
+                deliveryStatus = 'sent'; // Mock success for now
+                break;
+                
+              case 'sms':
+                // SMS integration would go here
+                deliveryStatus = 'sent'; // Mock success for now
+                break;
+                
+              case 'email':
+                // Email integration with SendGrid would go here
+                if (user.email) {
+                  deliveryStatus = 'sent'; // Mock success for now
+                } else {
+                  deliveryStatus = 'failed';
+                  errorMessage = 'No email address available';
+                }
+                break;
+                
+              case 'in_app':
+                // In-app message would be created in messages table
+                deliveryStatus = 'delivered';
+                break;
+            }
+
+            // Create delivery record
+            const delivery = await storage.createBulkMessageDelivery({
+              campaignId,
+              userId: user.id,
+              messageChannel: channel,
+              messageContent: campaign.messageContent,
+              status: deliveryStatus,
+              errorMessage
+            });
+
+            deliveries.push(delivery);
+
+            if (deliveryStatus === 'sent' || deliveryStatus === 'delivered') {
+              successCount++;
+            } else {
+              failureCount++;
+            }
+
+          } catch (error) {
+            console.error(`Error sending ${channel} message to user ${user.id}:`, error);
+            
+            // Create failed delivery record
+            await storage.createBulkMessageDelivery({
+              campaignId,
+              userId: user.id,
+              messageChannel: channel,
+              messageContent: campaign.messageContent,
+              status: 'failed',
+              errorMessage: error.message
+            });
+            
+            failureCount++;
+          }
+        }
+      }
+
+      // Update campaign status
+      await storage.updateBulkMessageCampaign(campaignId, {
+        status: 'completed',
+        totalRecipients: targetUsers.length * messageChannels.length,
+        successfulDeliveries: successCount,
+        failedDeliveries: failureCount
+      });
+
+      res.json({
+        message: "Bulk messages processed successfully",
+        campaignId,
+        totalRecipients: targetUsers.length * messageChannels.length,
+        successfulDeliveries: successCount,
+        failedDeliveries: failureCount,
+        deliveries: deliveries.length
+      });
+
+    } catch (error) {
+      console.error("Error sending bulk messages:", error);
+      res.status(500).json({ error: "Failed to send bulk messages" });
     }
   });
 

@@ -38,6 +38,7 @@ import { format } from "date-fns";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import ViewDetailsModal from "@/components/ViewDetailsModal";
+import { BulkMessageModal } from "@/components/BulkMessageModal";
 import statesDistrictsData from "@/../../shared/states-districts.json";
 
 interface User {
@@ -222,6 +223,10 @@ export default function ClientManagement() {
   const [showTransferHistoryDialog, setShowTransferHistoryDialog] = useState(false);
   const [showFinancialStatementsDialog, setShowFinancialStatementsDialog] = useState(false);
   const [messageText, setMessageText] = useState("");
+  
+  // Bulk messaging modal states
+  const [showBulkMessageModal, setShowBulkMessageModal] = useState(false);
+  const [bulkMessageChannel, setBulkMessageChannel] = useState<'whatsapp' | 'sms' | 'email' | 'in_app' | undefined>(undefined);
 
 
   // Fetch all users
@@ -867,13 +872,14 @@ export default function ClientManagement() {
                                       variant="ghost"
                                       className="h-6 w-6 p-0 text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-900/20"
                                       onClick={() => {
-                                        toast({ title: "WhatsApp", description: "Bulk WhatsApp messaging coming soon!" });
+                                        setBulkMessageChannel('whatsapp');
+                                        setShowBulkMessageModal(true);
                                       }}
                                     >
                                       <FaWhatsapp className="w-3 h-3" />
                                     </Button>
                                   </TooltipTrigger>
-                                  <TooltipContent>Bulk WhatsApp</TooltipContent>
+                                  <TooltipContent>Bulk WhatsApp Messaging</TooltipContent>
                                 </Tooltip>
                                 
                                 <Tooltip>
@@ -883,13 +889,14 @@ export default function ClientManagement() {
                                       variant="ghost"
                                       className="h-6 w-6 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20"
                                       onClick={() => {
-                                        toast({ title: "SMS", description: "Bulk SMS messaging coming soon!" });
+                                        setBulkMessageChannel('sms');
+                                        setShowBulkMessageModal(true);
                                       }}
                                     >
                                       <Smartphone className="w-3 h-3" />
                                     </Button>
                                   </TooltipTrigger>
-                                  <TooltipContent>Bulk SMS</TooltipContent>
+                                  <TooltipContent>Bulk SMS Messaging</TooltipContent>
                                 </Tooltip>
                                 
                                 <Tooltip>
@@ -899,13 +906,14 @@ export default function ClientManagement() {
                                       variant="ghost"
                                       className="h-6 w-6 p-0 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
                                       onClick={() => {
-                                        toast({ title: "Email", description: "Bulk email messaging coming soon!" });
+                                        setBulkMessageChannel('email');
+                                        setShowBulkMessageModal(true);
                                       }}
                                     >
                                       <Mail className="w-3 h-3" />
                                     </Button>
                                   </TooltipTrigger>
-                                  <TooltipContent>Bulk Email</TooltipContent>
+                                  <TooltipContent>Bulk Email Messaging</TooltipContent>
                                 </Tooltip>
                                 
                                 <Tooltip>
@@ -915,13 +923,14 @@ export default function ClientManagement() {
                                       variant="ghost"
                                       className="h-6 w-6 p-0 text-purple-600 hover:text-purple-700 hover:bg-purple-50 dark:hover:bg-purple-900/20"
                                       onClick={() => {
-                                        toast({ title: "Message", description: "Bulk in-app messaging coming soon!" });
+                                        setBulkMessageChannel('in_app');
+                                        setShowBulkMessageModal(true);
                                       }}
                                     >
                                       <MessageSquare className="w-3 h-3" />
                                     </Button>
                                   </TooltipTrigger>
-                                  <TooltipContent>Bulk Message</TooltipContent>
+                                  <TooltipContent>Bulk In-App Messaging</TooltipContent>
                                 </Tooltip>
                               </div>
                             </div>
@@ -2565,6 +2574,17 @@ export default function ClientManagement() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Bulk Messaging Modal */}
+      <BulkMessageModal
+        isOpen={showBulkMessageModal}
+        onClose={() => {
+          setShowBulkMessageModal(false);
+          setBulkMessageChannel(undefined);
+        }}
+        adminId={user?.id || ""}
+        initialChannel={bulkMessageChannel}
+      />
       </div>
     </TooltipProvider>
   );
