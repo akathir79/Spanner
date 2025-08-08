@@ -1121,10 +1121,10 @@ export default function ClientManagement() {
                                             className="h-6 w-6 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
                                             onClick={(e) => {
                                               e.stopPropagation();
-                                              const fullAddress = `${(client as any).address}, ${client.district}, ${client.state}${(client as any).pincode ? `, PIN: ${(client as any).pincode}` : ''}`;
+                                              const fullAddress = `${client.firstName} ${client.lastName}\n${(client as any).address}, ${client.district}, ${client.state}${(client as any).pincode ? `, PIN: ${(client as any).pincode}` : ''}`;
                                               navigator.clipboard.writeText(fullAddress);
                                             }}
-                                            title="Copy Address"
+                                            title="Copy Address with Name"
                                           >
                                             <Copy className="w-3 h-3" />
                                           </Button>
@@ -1161,10 +1161,10 @@ export default function ClientManagement() {
                                             className="h-6 w-6 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
                                             onClick={(e) => {
                                               e.stopPropagation();
-                                              const fullAddress = `${(client as any).address}, ${client.district}, ${client.state}${(client as any).pincode ? `, PIN: ${(client as any).pincode}` : ''}`;
+                                              const fullAddress = `${client.firstName} ${client.lastName}\n${(client as any).address}, ${client.district}, ${client.state}${(client as any).pincode ? `, PIN: ${(client as any).pincode}` : ''}`;
                                               navigator.clipboard.writeText(fullAddress);
                                             }}
-                                            title="Copy Address"
+                                            title="Copy Address with Name"
                                           >
                                             <Copy className="w-3 h-3" />
                                           </Button>
@@ -2132,10 +2132,10 @@ export default function ClientManagement() {
                                           className="h-6 w-6 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
                                           onClick={(e) => {
                                             e.stopPropagation();
-                                            const fullAddress = `${(client as any).address}, ${client.district}, ${client.state}${(client as any).pincode ? `, PIN: ${(client as any).pincode}` : ''}`;
+                                            const fullAddress = `${client.firstName} ${client.lastName}\n${(client as any).address}, ${client.district}, ${client.state}${(client as any).pincode ? `, PIN: ${(client as any).pincode}` : ''}`;
                                             navigator.clipboard.writeText(fullAddress);
                                           }}
-                                          title="Copy Address"
+                                          title="Copy Address with Name"
                                         >
                                           <Copy className="w-3 h-3" />
                                         </Button>
