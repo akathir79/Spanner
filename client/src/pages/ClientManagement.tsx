@@ -962,130 +962,199 @@ export default function ClientManagement() {
                           return (
                             <TableRow key={client.id}>
                               <TableCell className="py-2">
-                              <div className="flex items-start gap-3">
-                                <Avatar className="h-10 w-10 flex-shrink-0">
-                                  <AvatarImage 
-                                    src={(client as any).profilePicture} 
-                                    alt={`${client.firstName} ${client.lastName}`} 
-                                  />
-                                  <AvatarFallback className="bg-blue-100 text-blue-600 font-semibold">
-                                    {client.firstName.charAt(0).toUpperCase()}{client.lastName.charAt(0).toUpperCase()}
-                                  </AvatarFallback>
-                                </Avatar>
-                                <div className="space-y-1 min-w-0 flex-1">
-                                  <div className="font-medium text-gray-900 dark:text-white text-sm">
-                                    {client.firstName} {client.lastName}
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <div className="flex items-start gap-3 cursor-pointer">
+                                    <Avatar className="h-10 w-10 flex-shrink-0">
+                                      <AvatarImage 
+                                        src={(client as any).profilePicture} 
+                                        alt={`${client.firstName} ${client.lastName}`} 
+                                      />
+                                      <AvatarFallback className="bg-blue-100 text-blue-600 font-semibold">
+                                        {client.firstName.charAt(0).toUpperCase()}{client.lastName.charAt(0).toUpperCase()}
+                                      </AvatarFallback>
+                                    </Avatar>
+                                    <div className="space-y-1 min-w-0 flex-1">
+                                      <div className="font-medium text-gray-900 dark:text-white text-sm">
+                                        {client.firstName} {client.lastName}
+                                      </div>
+                                      <div className="text-xs text-green-800 dark:text-green-400 font-mono font-bold">
+                                        ID: {client.id}
+                                      </div>
+                                      <div className="flex items-center gap-2 flex-wrap">
+                                        <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900 dark:text-blue-100 text-xs px-2 py-1">
+                                          Client
+                                        </Badge>
+                                        <Badge 
+                                          variant={activityStatus.variant}
+                                          className={`${activityStatus.className} text-xs px-1.5 py-0.5`}
+                                        >
+                                          {activityStatus.icon}
+                                          <span className="ml-1">{activityStatus.label}</span>
+                                        </Badge>
+                                        <Badge
+                                          variant={client.isVerified ? "default" : "secondary"}
+                                          className={client.isVerified 
+                                            ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100 text-xs" 
+                                            : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100 text-xs"
+                                          }
+                                        >
+                                          {client.isVerified ? "Verified" : "Pending"}
+                                        </Badge>
+                                      </div>
+                                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                                        Last: {client.lastLoginAt ? formatIndianDateTime(client.lastLoginAt) : 'Never'}
+                                      </div>
+                                      <div className="text-xs text-gray-400 dark:text-gray-500 italic">
+                                        Reg: {formatIndianDateTime(client.createdAt)}
+                                      </div>
+                                    </div>
                                   </div>
-                                  <div className="text-xs text-green-800 dark:text-green-400 font-mono font-bold">
-                                    ID: {client.id}
+                                </TooltipTrigger>
+                                <TooltipContent className="max-w-sm">
+                                  <div className="space-y-2">
+                                    <p className="font-medium">Client Profile Overview:</p>
+                                    <div className="space-y-1">
+                                      <div className="text-sm"><strong>Full Name:</strong> {client.firstName} {client.lastName}</div>
+                                      <div className="text-sm"><strong>Client ID:</strong> {client.id}</div>
+                                      <div className="text-sm"><strong>Role:</strong> Client User</div>
+                                      <div className="text-sm"><strong>Verification Status:</strong> {client.isVerified ? "✅ Verified" : "⏳ Pending Verification"}</div>
+                                      <div className="text-sm"><strong>Activity Status:</strong> {activityStatus.label}</div>
+                                      <div className="text-sm"><strong>Registration Date:</strong> {formatIndianDateTime(client.createdAt)}</div>
+                                      <div className="text-sm"><strong>Last Login:</strong> {client.lastLoginAt ? formatIndianDateTime(client.lastLoginAt) : 'Never logged in'}</div>
+                                      {client.mobile && (
+                                        <div className="text-sm"><strong>Mobile:</strong> {client.mobile}</div>
+                                      )}
+                                      {client.email && (
+                                        <div className="text-sm"><strong>Email:</strong> {client.email}</div>
+                                      )}
+                                    </div>
                                   </div>
-                                  <div className="flex items-center gap-2 flex-wrap">
-                                    <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900 dark:text-blue-100 text-xs px-2 py-1">
-                                      Client
-                                    </Badge>
-                                    <Badge 
-                                      variant={activityStatus.variant}
-                                      className={`${activityStatus.className} text-xs px-1.5 py-0.5`}
-                                    >
-                                      {activityStatus.icon}
-                                      <span className="ml-1">{activityStatus.label}</span>
-                                    </Badge>
-                                    <Badge
-                                      variant={client.isVerified ? "default" : "secondary"}
-                                      className={client.isVerified 
-                                        ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100 text-xs" 
-                                        : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100 text-xs"
-                                      }
-                                    >
-                                      {client.isVerified ? "Verified" : "Pending"}
-                                    </Badge>
-                                  </div>
-                                  <div className="text-xs text-gray-500 dark:text-gray-400">
-                                    Last: {client.lastLoginAt ? formatIndianDateTime(client.lastLoginAt) : 'Never'}
-                                  </div>
-                                  <div className="text-xs text-gray-400 dark:text-gray-500 italic">
-                                    Reg: {formatIndianDateTime(client.createdAt)}
-                                  </div>
-                                </div>
-                              </div>
+                                </TooltipContent>
+                              </Tooltip>
                             </TableCell>
                             <TableCell>
-                              <div className="text-sm space-y-1">
-                                {(client as any).address ? (
-                                  <div>
-                                    <div className="font-medium text-gray-600 dark:text-gray-400 text-xs">Address:</div>
-                                    <div className="text-gray-900 dark:text-white text-xs">
-                                      {(client as any).address}
-                                    </div>
-                                    <div className="text-gray-700 dark:text-gray-300 text-xs">
-                                      {client.district}, {client.state}
-                                    </div>
-                                    {(client as any).pincode && (
-                                      <div className="text-gray-600 dark:text-gray-400 text-xs">
-                                        PIN: {(client as any).pincode}
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <div className="text-sm space-y-1 cursor-pointer">
+                                    {(client as any).address ? (
+                                      <div>
+                                        <div className="font-medium text-gray-600 dark:text-gray-400 text-xs">Address:</div>
+                                        <div className="text-gray-900 dark:text-white text-xs">
+                                          {(client as any).address}
+                                        </div>
+                                        <div className="text-gray-700 dark:text-gray-300 text-xs">
+                                          {client.district}, {client.state}
+                                        </div>
+                                        {(client as any).pincode && (
+                                          <div className="text-gray-600 dark:text-gray-400 text-xs">
+                                            PIN: {(client as any).pincode}
+                                          </div>
+                                        )}
+                                      </div>
+                                    ) : client.district && client.state ? (
+                                      <div>
+                                        <div className="text-gray-900 dark:text-white">
+                                          {client.district}, {client.state}
+                                        </div>
+                                      </div>
+                                    ) : (
+                                      <span className="text-gray-500 dark:text-gray-400">
+                                        Not specified
+                                      </span>
+                                    )}
+                                  </div>
+                                </TooltipTrigger>
+                                <TooltipContent className="max-w-sm">
+                                  <div className="space-y-2">
+                                    <p className="font-medium">Location Details:</p>
+                                    {(client as any).address ? (
+                                      <div className="space-y-1">
+                                        <div className="text-sm"><strong>Full Address:</strong> {(client as any).address}</div>
+                                        <div className="text-sm"><strong>District:</strong> {client.district}</div>
+                                        <div className="text-sm"><strong>State:</strong> {client.state}</div>
+                                        {(client as any).pincode && (
+                                          <div className="text-sm"><strong>PIN Code:</strong> {(client as any).pincode}</div>
+                                        )}
+                                      </div>
+                                    ) : (
+                                      <div className="text-sm text-gray-500">
+                                        {client.district && client.state ? 
+                                          `Located in ${client.district}, ${client.state}` : 
+                                          'No location information provided'
+                                        }
                                       </div>
                                     )}
                                   </div>
-                                ) : client.district && client.state ? (
-                                  <div>
-                                    <div className="text-gray-900 dark:text-white">
-                                      {client.district}, {client.state}
-                                    </div>
-                                  </div>
-                                ) : (
-                                  <span className="text-gray-500 dark:text-gray-400">
-                                    Not specified
-                                  </span>
-                                )}
-                              </div>
+                                </TooltipContent>
+                              </Tooltip>
                             </TableCell>
                             <TableCell>
-                              <div className="text-sm text-gray-600 dark:text-gray-400 space-y-0.5">
-                                <div className="font-medium">Bookings: 0</div>
-                                <div className="text-xs text-gray-500 dark:text-gray-400 ml-3 space-y-0.5">
-                                  <div>• In progress: 0</div>
-                                  <div>• Completed: 0</div>
-                                </div>
-                                <div className="pt-1">Balance: ₹0</div>
-                                <div>Spent: ₹0</div>
-                                <div className="text-xs text-gray-500 dark:text-gray-400 pt-1 space-y-0.5">
-                                  <div>Commission: ₹0</div>
-                                  <div>GST: ₹0</div>
-                                </div>
-                                <div className="flex items-center gap-1 mt-1">
-                                  <Button
-                                    size="sm"
-                                    variant="ghost"
-                                    className="h-6 w-6 p-0 text-green-600 hover:text-green-700 hover:bg-green-50 group transition-all duration-300 hover:scale-110 hover:shadow-lg hover:animate-financial-glow rounded-full"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      const button = e.currentTarget;
-                                      if (button) {
-                                        button.classList.add('animate-financial-click');
-                                        setTimeout(() => {
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <div className="text-sm text-gray-600 dark:text-gray-400 space-y-0.5 cursor-pointer">
+                                    <div className="font-medium">Bookings: 0</div>
+                                    <div className="text-xs text-gray-500 dark:text-gray-400 ml-3 space-y-0.5">
+                                      <div>• In progress: 0</div>
+                                      <div>• Completed: 0</div>
+                                    </div>
+                                    <div className="pt-1">Balance: ₹0</div>
+                                    <div>Spent: ₹0</div>
+                                    <div className="text-xs text-gray-500 dark:text-gray-400 pt-1 space-y-0.5">
+                                      <div>Commission: ₹0</div>
+                                      <div>GST: ₹0</div>
+                                    </div>
+                                    <div className="flex items-center gap-1 mt-1">
+                                      <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        className="h-6 w-6 p-0 text-green-600 hover:text-green-700 hover:bg-green-50 group transition-all duration-300 hover:scale-110 hover:shadow-lg hover:animate-financial-glow rounded-full"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          const button = e.currentTarget;
                                           if (button) {
-                                            button.classList.remove('animate-financial-click');
+                                            button.classList.add('animate-financial-click');
+                                            setTimeout(() => {
+                                              if (button) {
+                                                button.classList.remove('animate-financial-click');
+                                              }
+                                            }, 200);
                                           }
-                                        }, 200);
-                                      }
-                                      handleViewFinancialStatements(client);
-                                    }}
-                                    onMouseEnter={(e) => {
-                                      const button = e.currentTarget;
-                                      const span = button.querySelector('span');
-                                      if (span) {
-                                        span.classList.add('animate-financial-bounce');
-                                        setTimeout(() => {
-                                          span.classList.remove('animate-financial-bounce');
-                                        }, 600);
-                                      }
-                                    }}
-                                    title="Financial Statements"
-                                  >
-                                    <span className="text-xs font-bold transition-all duration-300 group-hover:scale-125 group-hover:text-green-700">₹</span>
-                                  </Button>
-                                </div>
-                              </div>
+                                          handleViewFinancialStatements(client);
+                                        }}
+                                        onMouseEnter={(e) => {
+                                          const button = e.currentTarget;
+                                          const span = button.querySelector('span');
+                                          if (span) {
+                                            span.classList.add('animate-financial-bounce');
+                                            setTimeout(() => {
+                                              span.classList.remove('animate-financial-bounce');
+                                            }, 600);
+                                          }
+                                        }}
+                                        title="Financial Statements"
+                                      >
+                                        <span className="text-xs font-bold transition-all duration-300 group-hover:scale-125 group-hover:text-green-700">₹</span>
+                                      </Button>
+                                    </div>
+                                  </div>
+                                </TooltipTrigger>
+                                <TooltipContent className="max-w-sm">
+                                  <div className="space-y-2">
+                                    <p className="font-medium">Booking & Financial Summary:</p>
+                                    <div className="space-y-1">
+                                      <div className="text-sm"><strong>Total Bookings:</strong> 0</div>
+                                      <div className="text-sm ml-2">• In Progress: 0</div>
+                                      <div className="text-sm ml-2">• Completed: 0</div>
+                                      <div className="text-sm"><strong>Account Balance:</strong> ₹0</div>
+                                      <div className="text-sm"><strong>Total Spent:</strong> ₹0</div>
+                                      <div className="text-sm"><strong>Platform Commission:</strong> ₹0</div>
+                                      <div className="text-sm"><strong>GST Collected:</strong> ₹0</div>
+                                    </div>
+                                    <p className="text-xs text-gray-500">Click ₹ button for detailed financial statements</p>
+                                  </div>
+                                </TooltipContent>
+                              </Tooltip>
                             </TableCell>
                             <TableCell>
                               <Tooltip>
@@ -1809,70 +1878,88 @@ export default function ClientManagement() {
                           return (
                             <TableRow key={client.id}>
                               <TableCell>
-                                <div className="flex items-start gap-3">
-                                  <Avatar className="h-10 w-10 flex-shrink-0">
-                                    <AvatarImage 
-                                      src={(client as any).profilePicture} 
-                                      alt={`${client.firstName} ${client.lastName}`} 
-                                    />
-                                    <AvatarFallback className="bg-blue-100 text-blue-600 font-semibold">
-                                      {client.firstName.charAt(0).toUpperCase()}{client.lastName.charAt(0).toUpperCase()}
-                                    </AvatarFallback>
-                                  </Avatar>
-                                  <div className="min-w-0 flex-1">
-                                    <div className="font-medium text-gray-900 dark:text-white">
-                                      {client.firstName} {client.lastName}
-                                    </div>
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <div className="flex items-start gap-3 cursor-pointer">
+                                      <Avatar className="h-10 w-10 flex-shrink-0">
+                                        <AvatarImage 
+                                          src={(client as any).profilePicture} 
+                                          alt={`${client.firstName} ${client.lastName}`} 
+                                        />
+                                        <AvatarFallback className="bg-blue-100 text-blue-600 font-semibold">
+                                          {client.firstName.charAt(0).toUpperCase()}{client.lastName.charAt(0).toUpperCase()}
+                                        </AvatarFallback>
+                                      </Avatar>
+                                      <div className="min-w-0 flex-1">
+                                        <div className="font-medium text-gray-900 dark:text-white">
+                                          {client.firstName} {client.lastName}
+                                        </div>
                                         <div className="text-sm text-green-800 dark:text-green-400 font-mono font-bold truncate">
                                           ID: {client.id}
                                         </div>
-                                      </TooltipTrigger>
-                                      <TooltipContent>
-                                        <p className="font-mono">{client.id}</p>
-                                      </TooltipContent>
-                                    </Tooltip>
-                                    <div className="mt-1 space-y-1">
-                                      <div className="flex items-center gap-2 flex-wrap">
-                                        <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900 dark:text-blue-100 text-xs">
-                                          Client
-                                        </Badge>
-                                        <Badge 
-                                          variant={activityStatus.variant}
-                                          className={activityStatus.className}
-                                        >
-                                          {activityStatus.icon}
-                                          <span className="ml-1">{activityStatus.label}</span>
-                                        </Badge>
-                                        <Badge
-                                          variant={client.isVerified ? "default" : "secondary"}
-                                          className={client.isVerified 
-                                            ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100 text-xs" 
-                                            : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100 text-xs"
-                                          }
-                                        >
-                                          {client.isVerified ? "Verified" : "Pending"}
-                                        </Badge>
-                                      </div>
-                                      {client.lastLoginAt ? (
-                                        <div className="text-xs text-gray-500 dark:text-gray-400">
-                                          Last: {formatIndianDateTime(client.lastLoginAt)}
+                                        <div className="mt-1 space-y-1">
+                                          <div className="flex items-center gap-2 flex-wrap">
+                                            <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900 dark:text-blue-100 text-xs">
+                                              Client
+                                            </Badge>
+                                            <Badge 
+                                              variant={activityStatus.variant}
+                                              className={activityStatus.className}
+                                            >
+                                              {activityStatus.icon}
+                                              <span className="ml-1">{activityStatus.label}</span>
+                                            </Badge>
+                                            <Badge
+                                              variant={client.isVerified ? "default" : "secondary"}
+                                              className={client.isVerified 
+                                                ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100 text-xs" 
+                                                : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100 text-xs"
+                                              }
+                                            >
+                                              {client.isVerified ? "Verified" : "Pending"}
+                                            </Badge>
+                                          </div>
+                                          {client.lastLoginAt ? (
+                                            <div className="text-xs text-gray-500 dark:text-gray-400">
+                                              Last: {formatIndianDateTime(client.lastLoginAt)}
+                                            </div>
+                                          ) : (
+                                            <div className="text-xs text-gray-400 dark:text-gray-500 italic">
+                                              Never logged in
+                                            </div>
+                                          )}
+                                          <div className="text-xs text-gray-500 dark:text-gray-400">
+                                            Reg: {formatIndianDateTime(client.createdAt)}
+                                          </div>
+                                          <div className="text-xs text-gray-400 dark:text-gray-500 italic">
+                                            Member since {getMemberSince(client.createdAt)}
+                                          </div>
                                         </div>
-                                      ) : (
-                                        <div className="text-xs text-gray-400 dark:text-gray-500 italic">
-                                          Never logged in
-                                        </div>
-                                      )}
-                                      <div className="text-xs text-gray-500 dark:text-gray-400">
-                                        Reg: {formatIndianDateTime(client.createdAt)}
-                                      </div>
-                                      <div className="text-xs text-gray-400 dark:text-gray-500 italic">
-                                        Member since {getMemberSince(client.createdAt)}
                                       </div>
                                     </div>
-                                  </div>
-                                </div>
+                                  </TooltipTrigger>
+                                  <TooltipContent className="max-w-sm">
+                                    <div className="space-y-2">
+                                      <p className="font-medium">Client Profile Overview:</p>
+                                      <div className="space-y-1">
+                                        <div className="text-sm"><strong>Full Name:</strong> {client.firstName} {client.lastName}</div>
+                                        <div className="text-sm"><strong>Client ID:</strong> {client.id}</div>
+                                        <div className="text-sm"><strong>Role:</strong> Client User</div>
+                                        <div className="text-sm"><strong>Verification Status:</strong> {client.isVerified ? "✅ Verified" : "⏳ Pending Verification"}</div>
+                                        <div className="text-sm"><strong>Activity Status:</strong> {activityStatus.label}</div>
+                                        <div className="text-sm"><strong>Registration Date:</strong> {formatIndianDateTime(client.createdAt)}</div>
+                                        <div className="text-sm"><strong>Last Login:</strong> {client.lastLoginAt ? formatIndianDateTime(client.lastLoginAt) : 'Never logged in'}</div>
+                                        <div className="text-sm"><strong>Member Since:</strong> {getMemberSince(client.createdAt)}</div>
+                                        {client.mobile && (
+                                          <div className="text-sm"><strong>Mobile:</strong> {client.mobile}</div>
+                                        )}
+                                        {client.email && (
+                                          <div className="text-sm"><strong>Email:</strong> {client.email}</div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </TooltipContent>
+                                </Tooltip>
                               </TableCell>
                               <TableCell>
                                 <div className="text-sm space-y-1">
