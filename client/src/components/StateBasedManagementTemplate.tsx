@@ -38,7 +38,6 @@ import { format } from "date-fns";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import ViewDetailsModal from "@/components/ViewDetailsModal";
-import statesDistrictsData from "@/../../shared/states-districts.json";
 
 // Generic interfaces for the template
 interface BaseItem {
@@ -298,18 +297,35 @@ export default function StateBasedManagementTemplate({ config }: StateBasedManag
     },
   });
 
-  // Get states from JSON file
-  const states = (statesDistrictsData.states as StateData[]).map(s => s.state).sort();
+  // Get states from actual database data
+  const states = useMemo(() => {
+    const uniqueStates = [...new Set(allItems.map(item => item.state).filter(Boolean))];
+    return uniqueStates.sort();
+  }, [allItems]);
 
-  // Get districts for selected state from JSON file
-  const districtsForState = selectedState 
-    ? (statesDistrictsData.states as StateData[]).find(s => s.state === selectedState)?.districts || []
-    : [];
+  // Get districts for selected state from actual database data
+  const districtsForState = useMemo(() => {
+    if (!selectedState) return [];
+    const uniqueDistricts = [...new Set(
+      allItems
+        .filter(item => item.state === selectedState)
+        .map(item => item.district)
+        .filter(Boolean)
+    )];
+    return uniqueDistricts.sort();
+  }, [selectedState, allItems]);
 
-  // Get service types for selected state from JSON file
-  const serviceTypesForState = selectedState 
-    ? (statesDistrictsData.states as StateData[]).find(s => s.state === selectedState)?.serviceTypes || []
-    : [];
+  // Get service types for selected state from actual database data
+  const serviceTypesForState = useMemo(() => {
+    if (!selectedState) return [];
+    const uniqueServiceTypes = [...new Set(
+      allItems
+        .filter(item => item.state === selectedState)
+        .flatMap(item => item.serviceTypes || [])
+        .filter(Boolean)
+    )];
+    return uniqueServiceTypes.sort();
+  }, [selectedState, allItems]);
 
   // Filter items for total view
   const filteredItems = useMemo(() => {
