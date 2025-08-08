@@ -2170,14 +2170,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get all districts with optional filtering
+  // API endpoint to get states-districts data (reads fresh from file)
+  app.get('/api/states-districts', async (req, res) => {
+    try {
+      // Dynamic import to ensure fresh read from file system
+      delete require.cache[require.resolve('@shared/states-districts.json')];
+      const freshStatesDistrictsData = require('@shared/states-districts.json');
+      
+      return res.json(freshStatesDistrictsData);
+    } catch (error) {
+      console.error('Error fetching states-districts data:', error);
+      res.status(500).json({ error: 'Failed to fetch states-districts data' });
+    }
+  });
+
+  // Get all districts with optional filtering (reads fresh from file)
   app.get('/api/districts/:stateName?', async (req, res) => {
     try {
       const { stateName } = req.params;
       
+      // Dynamic import for fresh data
+      delete require.cache[require.resolve('@shared/states-districts.json')];
+      const freshStatesDistrictsData = require('@shared/states-districts.json');
+      
       if (stateName && stateName !== 'undefined') {
         // Return districts for specific state
-        const stateData = statesDistrictsData.states.find(
+        const stateData = (freshStatesDistrictsData.states as any[]).find(
           state => state.state.toLowerCase() === stateName.toLowerCase()
         );
         
@@ -2188,7 +2206,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res.json(stateData.districts);
       } else {
         // Return all states and their districts
-        res.json(statesDistrictsData.states);
+        res.json(freshStatesDistrictsData.states);
       }
     } catch (error) {
       console.error('Error fetching districts:', error);

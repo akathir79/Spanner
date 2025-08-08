@@ -38,7 +38,7 @@ import { format } from "date-fns";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import ViewDetailsModal from "@/components/ViewDetailsModal";
-import statesDistrictsData from "@/../../shared/states-districts.json";
+// statesDistrictsData is now fetched dynamically via API
 
 // Generic interfaces for the template
 interface BaseItem {
@@ -271,6 +271,20 @@ export default function StateBasedManagementTemplate({ config }: StateBasedManag
   const [showMessageDialog, setShowMessageDialog] = useState(false);
   const [messageText, setMessageText] = useState("");
 
+  // Fetch states-districts data dynamically from API
+  const { data: statesDistrictsData = { states: [] }, isLoading: statesDistrictsLoading } = useQuery({
+    queryKey: ['/api/states-districts'],
+    queryFn: async () => {
+      const response = await fetch('/api/states-districts');
+      if (!response.ok) {
+        throw new Error('Failed to fetch states-districts data');
+      }
+      return response.json();
+    },
+    staleTime: 0, // Always fetch fresh data
+    cacheTime: 0, // Don't cache
+  });
+
   // Fetch data based on configuration
   const { data: allItems = [], isLoading: itemsLoading } = useQuery({
     queryKey: [config.fetchUrl],
@@ -295,16 +309,16 @@ export default function StateBasedManagementTemplate({ config }: StateBasedManag
     },
   });
 
-  // Get states from JSON file
-  const states = (statesDistrictsData.states as StateData[]).map(s => s.state).sort();
+  // Get states from dynamically fetched data
+  const states = statesDistrictsData?.states ? (statesDistrictsData.states as StateData[]).map(s => s.state).sort() : [];
 
-  // Get districts for selected state from JSON file
-  const districtsForState = selectedState 
+  // Get districts for selected state from dynamically fetched data
+  const districtsForState = selectedState && statesDistrictsData?.states
     ? (statesDistrictsData.states as StateData[]).find(s => s.state === selectedState)?.districts || []
     : [];
 
-  // Get service types for selected state from JSON file
-  const serviceTypesForState = selectedState 
+  // Get service types for selected state from dynamically fetched data
+  const serviceTypesForState = selectedState && statesDistrictsData?.states
     ? (statesDistrictsData.states as StateData[]).find(s => s.state === selectedState)?.serviceTypes || []
     : [];
 
@@ -702,7 +716,7 @@ export default function StateBasedManagementTemplate({ config }: StateBasedManag
             )}
 
             {/* Total Item List View */}
-            {!itemsLoading && view === "total" && (
+            {!itemsLoading && !statesDistrictsLoading && view === "total" && (
               <div className="h-full flex flex-col">
                 <div className="p-6 border-b border-gray-200 dark:border-gray-700">
                   {/* Header with inline search */}
@@ -862,7 +876,7 @@ export default function StateBasedManagementTemplate({ config }: StateBasedManag
             )}
 
             {/* States View */}
-            {!itemsLoading && view === "states" && (
+            {!itemsLoading && !statesDistrictsLoading && view === "states" && (
               <div className="h-full flex items-center justify-center">
                 <div className="text-center">
                   <div className="w-16 h-16 mx-auto mb-4 text-gray-400">
@@ -879,7 +893,7 @@ export default function StateBasedManagementTemplate({ config }: StateBasedManag
             )}
 
             {/* Districts View */}
-            {!itemsLoading && view === "districts" && selectedState && (
+            {!itemsLoading && !statesDistrictsLoading && view === "districts" && selectedState && (
               <div className="p-6">
                 <div className="mb-6">
                   <Button variant="outline" onClick={handleBackClick} className="mb-4">
@@ -928,7 +942,7 @@ export default function StateBasedManagementTemplate({ config }: StateBasedManag
             )}
 
             {/* Service Types View */}
-            {!itemsLoading && view === "services" && selectedState && selectedDistrict && (
+            {!itemsLoading && !statesDistrictsLoading && view === "services" && selectedState && selectedDistrict && (
               <div className="p-6">
                 <div className="mb-6">
                   <Button variant="outline" onClick={handleBackClick} className="mb-4">
@@ -984,7 +998,7 @@ export default function StateBasedManagementTemplate({ config }: StateBasedManag
             )}
 
             {/* Items View */}
-            {!itemsLoading && view === "items" && selectedDistrict && selectedServiceType && (
+            {!itemsLoading && !statesDistrictsLoading && view === "items" && selectedDistrict && selectedServiceType && (
               <div className="h-full flex flex-col">
                 <div className="p-6 border-b border-gray-200 dark:border-gray-700">
                   <Button variant="outline" onClick={handleBackClick} className="mb-4">
