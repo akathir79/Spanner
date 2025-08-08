@@ -1698,17 +1698,13 @@ export default function ClientManagement() {
                                       Send Message
                                     </DropdownMenuSubTrigger>
                                     <DropdownMenuSubContent>
-                                      <DropdownMenuItem onClick={() => handleSendDirectMessage(client)}>
-                                        <MessageSquare className="w-4 h-4 mr-2 text-purple-600" />
-                                        <span className="text-purple-600">Message</span>
+                                      <DropdownMenuItem onClick={() => handleSendWhatsApp(client)}>
+                                        <MessageCircle className="w-4 h-4 mr-2 text-green-600" />
+                                        <span className="text-green-600">WhatsApp</span>
                                       </DropdownMenuItem>
                                       <DropdownMenuItem onClick={() => handleSendSMS(client)}>
                                         <Square className="w-4 h-4 mr-2" />
                                         SMS
-                                      </DropdownMenuItem>
-                                      <DropdownMenuItem onClick={() => handleSendWhatsApp(client)}>
-                                        <MessageCircle className="w-4 h-4 mr-2 text-green-600" />
-                                        <span className="text-green-600">WhatsApp</span>
                                       </DropdownMenuItem>
                                       {client.email && (
                                         <DropdownMenuItem onClick={() => window.location.href = `mailto:${client.email}`}>
@@ -1716,6 +1712,10 @@ export default function ClientManagement() {
                                           <span className="text-red-600">Email</span>
                                         </DropdownMenuItem>
                                       )}
+                                      <DropdownMenuItem onClick={() => handleSendDirectMessage(client)}>
+                                        <MessageSquare className="w-4 h-4 mr-2 text-purple-600" />
+                                        <span className="text-purple-600">Message</span>
+                                      </DropdownMenuItem>
                                     </DropdownMenuSubContent>
                                   </DropdownMenuSub>
                                   <DropdownMenuItem onClick={() => handleVerifyUser(client)}>
@@ -2696,17 +2696,17 @@ export default function ClientManagement() {
                                         Send Message
                                       </DropdownMenuSubTrigger>
                                       <DropdownMenuSubContent>
-                                        <DropdownMenuItem onClick={() => handleSendDirectMessage(client)}>
-                                          <MessageSquare className="w-4 h-4 mr-2 text-purple-600" />
-                                          <span className="text-purple-600">Message</span>
+                                        <DropdownMenuItem onClick={() => handleSendWhatsApp(client)}>
+                                          <MessageCircle className="w-4 h-4 mr-2 text-green-600" />
+                                          <span className="text-green-600">WhatsApp</span>
                                         </DropdownMenuItem>
                                         <DropdownMenuItem onClick={() => handleSendSMS(client)}>
                                           <Square className="w-4 h-4 mr-2" />
                                           SMS
                                         </DropdownMenuItem>
-                                        <DropdownMenuItem onClick={() => handleSendWhatsApp(client)}>
-                                          <MessageCircle className="w-4 h-4 mr-2 text-green-600" />
-                                          <span className="text-green-600">WhatsApp</span>
+                                        <DropdownMenuItem onClick={() => handleSendDirectMessage(client)}>
+                                          <MessageSquare className="w-4 h-4 mr-2 text-purple-600" />
+                                          <span className="text-purple-600">Message</span>
                                         </DropdownMenuItem>
                                         {client.email && (
                                           <DropdownMenuItem onClick={() => window.location.href = `mailto:${client.email}`}>
