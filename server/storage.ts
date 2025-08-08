@@ -74,7 +74,8 @@ export interface IStorage {
   getWorkersByService(service: string): Promise<(User & { workerProfile: WorkerProfile })[]>;
   getAllWorkersWithProfiles(): Promise<(User & { workerProfile?: WorkerProfile })[]>;
   
-  // Districts and Areas now handled via API - removed from storage
+  // Districts and Areas now handled via API - removed from storage  
+  getAllAreas(): Promise<any[]>;
   
   // Service categories
   getAllServiceCategories(): Promise<ServiceCategory[]>;
@@ -918,6 +919,13 @@ export class DatabaseStorage implements IStorage {
     await db
       .delete(workerBankDetails)
       .where(eq(workerBankDetails.id, id));
+  }
+
+  // Areas method implementation - returning empty array since areas are handled via API
+  async getAllAreas(): Promise<any[]> {
+    // Areas are now handled via the /api/areas endpoint and shared/states-districts.json
+    // This method is kept for backward compatibility
+    return [];
   }
 
   // Payment Methods Implementation

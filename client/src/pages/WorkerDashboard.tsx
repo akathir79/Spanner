@@ -511,31 +511,41 @@ export default function WorkerDashboard() {
   const { user, isLoading: authLoading } = useAuth();
   const { t } = useLanguage();
   const { toast } = useToast();
-
-  // Check if worker is approved
-  const isWorkerApproved = user?.status === "approved";
   const [, setLocation] = useLocation();
 
-  if (user.role !== "worker") {
-    if (user.role === "client") {
+  // Fetch worker's bookings (always call hooks)
+  const { data: bookings = [], isLoading: bookingsLoading } = useQuery({
+    queryKey: ["/api/bookings/user", user?.id, "worker"],
+    queryFn: () => fetch(`/api/bookings/user/${user?.id}?role=worker`).then(res => res.json()),
+    enabled: !!user?.id && user.role === "worker"
+  });
+
+  // Fetch worker profile (always call hooks)
+  const { data: workerProfile = {}, isLoading: profileLoading } = useQuery({
+    queryKey: ["/api/worker/profile", user?.id],
+    queryFn: () => fetch(`/api/worker/profile/${user?.id}`).then(res => res.json()),
+    enabled: !!user?.id && user.role === "worker"
+  });
+
+  // Check if worker is approved (after workerProfile is defined)
+  const isWorkerApproved = workerProfile?.workerProfile?.isApproved || false;
+
+  // Show loading state while auth is loading
+  if (authLoading) {
+    return <div className="min-h-screen bg-muted/30 pt-20 pb-8 flex items-center justify-center">
+      <div className="text-center">Loading...</div>
+    </div>;
+  }
+
+  // Redirect if user is null or wrong role
+  if (!user || user.role !== "worker") {
+    if (user?.role === "client") {
       setLocation("/dashboard");
-    } else if (user.role === "admin" || user.role === "super_admin") {
+    } else if (user?.role === "admin" || user?.role === "super_admin") {
       setLocation("/admin-dashboard");
     }
     return null;
   }
-
-  // Fetch worker's bookings
-  const { data: bookings = [], isLoading: bookingsLoading } = useQuery({
-    queryKey: ["/api/bookings/user", user.id, "worker"],
-    queryFn: () => fetch(`/api/bookings/user/${user.id}?role=worker`).then(res => res.json())
-  });
-
-  // Fetch worker profile
-  const { data: workerProfile = {}, isLoading: profileLoading } = useQuery({
-    queryKey: ["/api/worker/profile", user.id],
-    queryFn: () => fetch(`/api/worker/profile/${user.id}`).then(res => res.json())
-  });
 
   // Update booking status mutation
   const updateBookingMutation = useMutation({
@@ -655,11 +665,11 @@ export default function WorkerDashboard() {
                   <div className="flex items-center gap-4 text-sm text-yellow-600 dark:text-yellow-400">
                     <div className="flex items-center gap-2">
                       <Clock className="h-4 w-4" />
-                      <span>Status: {user?.status || 'Pending'}</span>
+                      <span>Status: {workerProfile?.workerProfile?.isApproved ? 'Approved' : 'Pending'}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Calendar className="h-4 w-4" />
-                      <span>Applied: {new Date(user?.createdAt || '').toLocaleDateString()}</span>
+                      <span>Applied: Recently</span>
                     </div>
                   </div>
                 </div>
@@ -1145,7 +1155,7 @@ export default function WorkerDashboard() {
                       <div>
                         <Label className="text-sm text-muted-foreground">Verification Status</Label>
                         <div className="flex flex-wrap gap-2 mt-1">
-                          {user.status === 'approved' ? (
+                          {workerProfile?.workerProfile?.isApproved ? (
                             <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100">
                               <CheckCircle className="h-3 w-3 mr-1" />
                               Account Approved
