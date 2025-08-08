@@ -1393,20 +1393,29 @@ export default function ClientManagement() {
                                       <div className="flex items-center gap-2">
                                         <Phone className="w-3 h-3" />
                                         <span>{client.mobile}</span>
+                                        <Button
+                                          size="sm"
+                                          variant="ghost"
+                                          className="h-4 w-4 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50 ml-1"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            navigator.clipboard.writeText(client.mobile);
+                                          }}
+                                          title="Copy Mobile Number"
+                                        >
+                                          <Copy className="w-2 h-2" />
+                                        </Button>
                                       </div>
                                       {client.email && (
                                         <div className="flex items-center gap-2">
                                           <Mail className="w-3 h-3" />
-                                          <span>{client.email}</span>
-                                        </div>
-                                      )}
-                                      {(client as any).address && (
-                                        <div className="mt-2">
-                                          <p className="font-medium text-xs">Complete Address:</p>
-                                          <p className="text-xs mt-1">{(client as any).address}</p>
-                                          {(client as any).pincode && (
-                                            <p className="text-xs">PIN: {(client as any).pincode}</p>
-                                          )}
+                                          <a 
+                                            href={`mailto:${client.email}`}
+                                            className="text-blue-600 hover:text-blue-700 underline"
+                                            onClick={(e) => e.stopPropagation()}
+                                          >
+                                            {client.email}
+                                          </a>
                                         </div>
                                       )}
                                       <div className="flex items-center gap-1 mt-3 pt-2 border-t border-gray-200 dark:border-gray-700">
