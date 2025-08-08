@@ -241,12 +241,18 @@ export default function ClientManagement() {
     queryKey: ["/api/transfer-history", selectedClient?.id],
     enabled: !!selectedClient?.id && showTransferHistoryDialog,
   });
+  
+  // Type the transferHistory as an array to fix TypeScript errors
+  const typedTransferHistory = (transferHistory as any[]) || [];
 
   // Fetch financial statements for selected client (last 2 years)
   const { data: financialStatements = [], isLoading: financialStatementsLoading } = useQuery({
     queryKey: ["/api/financial-statements", selectedClient?.id],
     enabled: !!selectedClient?.id && showFinancialStatementsDialog,
   });
+  
+  // Type the financialStatements as an array to fix TypeScript errors
+  const typedFinancialStatements = (financialStatements as any[]) || [];
 
   // Memoize filtered clients to prevent recalculation on every render
   const allClients = useMemo(() => {
@@ -2548,14 +2554,14 @@ export default function ClientManagement() {
                 <Loader2 className="w-6 h-6 animate-spin mr-2" />
                 <span>Loading transfer history...</span>
               </div>
-            ) : transferHistory.length === 0 ? (
+            ) : typedTransferHistory.length === 0 ? (
               <div className="text-center py-8 text-gray-500">
                 <History className="w-12 h-12 mx-auto mb-2 opacity-30" />
                 <p>No transfer history found for this client</p>
               </div>
             ) : (
               <div className="space-y-4 max-h-96 overflow-y-auto">
-                {transferHistory.map((transfer: any) => (
+                {typedTransferHistory.map((transfer: any) => (
                   <div key={transfer.id} className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
                     <div className="flex items-center justify-between">
                       <div className="flex-1">
@@ -2623,7 +2629,7 @@ export default function ClientManagement() {
                 <Loader2 className="w-6 h-6 animate-spin mr-2" />
                 <span>Loading financial statements...</span>
               </div>
-            ) : financialStatements.length === 0 ? (
+            ) : typedFinancialStatements.length === 0 ? (
               <div className="text-center py-8 text-gray-500">
                 <span className="text-6xl font-bold text-gray-300 block mb-2">₹</span>
                 <p>No financial data found for this client</p>
@@ -2632,7 +2638,7 @@ export default function ClientManagement() {
             ) : (
               <div className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {financialStatements.map((statement: any) => (
+                  {typedFinancialStatements.map((statement: any) => (
                     <Card key={statement.id} className="p-4">
                       <div className="space-y-3">
                         <div className="flex items-center justify-between">
