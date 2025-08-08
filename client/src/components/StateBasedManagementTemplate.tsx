@@ -272,31 +272,23 @@ export default function StateBasedManagementTemplate({ config }: StateBasedManag
   const [showMessageDialog, setShowMessageDialog] = useState(false);
   const [messageText, setMessageText] = useState("");
 
-  // Fetch states-districts data from JSON file with aggressive cache prevention
+  // Simple JSON file loading - create buttons from fresh data on page load
   const { data: statesDistrictsData = { states: [] }, isLoading: statesDistrictsLoading } = useQuery({
-    queryKey: ['/api/states-districts', Date.now()], // Force unique key each time
+    queryKey: ['/api/states-districts'],
     queryFn: async () => {
-      console.log('📄 Loading fresh buttons from JSON file...');
-      const response = await fetch(`/api/states-districts?t=${Date.now()}`, {
-        method: 'GET',
-        cache: 'no-store',
-        headers: {
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
-          'Pragma': 'no-cache',
-          'Expires': '0'
-        }
+      console.log('📄 Creating buttons from JSON file...');
+      const response = await fetch('/api/states-districts', {
+        cache: 'no-store'
       });
       if (!response.ok) {
         throw new Error('Failed to fetch states-districts data');
       }
       const data = await response.json();
-      console.log('✅ Fresh JSON loaded! Chandigarh serviceTypes:', data.states?.find((s: any) => s.state === 'Chandigarh (UT)')?.serviceTypes);
+      console.log('✅ Buttons created! Chandigarh has XYZ:', data.states?.find((s: any) => s.state === 'Chandigarh (UT)')?.serviceTypes?.includes('XYZ'));
       return data;
     },
-    staleTime: 0,
-    gcTime: 0,
-    refetchOnMount: 'always',
-    refetchOnWindowFocus: true
+    staleTime: Infinity, // Cache the data once loaded
+    gcTime: 5 * 60 * 1000 // Keep in cache for 5 minutes
   });
 
   // Fetch data based on configuration
