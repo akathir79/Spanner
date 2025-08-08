@@ -38,7 +38,7 @@ export default function AdminDashboard() {
       allUsers.filter((u: any) => u.role === "client" || u.role === "worker").length,
     totalClients: allUsers.filter((u: any) => u.role === "client").length,
     totalWorkers: allUsers.filter((u: any) => u.role === "worker").length,
-    totalAdmins: allUsers.filter((u: any) => u.role === "admin").length,
+    totalAdmins: allUsers.filter((u: any) => u.role === "admin" || u.role === "super_admin").length,
     totalSuperAdmins: allUsers.filter((u: any) => u.role === "super_admin").length,
     pendingVerifications: allUsers.filter((u: any) => u.role === "worker" && !u.isVerified).length,
     totalBookings: allBookings.length,
@@ -256,7 +256,7 @@ export default function AdminDashboard() {
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">Admin Management</p>
                     <p className="text-2xl font-bold text-purple-600">{stats.totalAdmins}</p>
-                    <p className="text-xs text-muted-foreground">Manage admins</p>
+                    <p className="text-xs text-muted-foreground">Super Admin: {stats.totalSuperAdmins} | Regular Admin: {stats.totalAdmins - stats.totalSuperAdmins}</p>
                   </div>
                   <Settings className="h-8 w-8 text-purple-600" />
                 </div>
