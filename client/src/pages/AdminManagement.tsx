@@ -234,13 +234,24 @@ export default function AdminManagement() {
                       </TooltipContent>
                     </Tooltip>
                     <div className="mt-1 space-y-1">
-                      <Badge 
-                        variant={activityStatus.variant}
-                        className={activityStatus.className}
-                      >
-                        {activityStatus.icon}
-                        <span className="ml-1">{activityStatus.label}</span>
-                      </Badge>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <Badge 
+                          variant={activityStatus.variant}
+                          className={activityStatus.className}
+                        >
+                          {activityStatus.icon}
+                          <span className="ml-1">{activityStatus.label}</span>
+                        </Badge>
+                        <Badge
+                          variant={admin.isVerified ? "default" : "secondary"}
+                          className={admin.isVerified 
+                            ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100 text-xs" 
+                            : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100 text-xs"
+                          }
+                        >
+                          {admin.isVerified ? "Verified" : "Pending"}
+                        </Badge>
+                      </div>
                       {admin.lastLoginAt ? (
                         <div className="text-xs text-gray-500 dark:text-gray-400">
                           Last: {formatIndianDateTime(admin.lastLoginAt)}
@@ -540,35 +551,7 @@ export default function AdminManagement() {
           </div>
         )
       },
-      {
-        key: "status",
-        label: "Status",
-        render: (admin: any) => {
-          const activityStatus = getActivityStatus(admin.lastLoginAt, admin.createdAt);
-          return (
-            <div className="space-y-1">
-              <Badge
-                variant={activityStatus.variant}
-                className={`${activityStatus.className} text-xs`}
-              >
-                {activityStatus.icon}
-                <span className="ml-1">{activityStatus.label}</span>
-              </Badge>
-              <div>
-                <Badge
-                  variant={admin.isVerified ? "default" : "secondary"}
-                  className={admin.isVerified 
-                    ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100 text-xs" 
-                    : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100 text-xs"
-                  }
-                >
-                  {admin.isVerified ? "Verified" : "Pending"}
-                </Badge>
-              </div>
-            </div>
-          );
-        }
-      },
+
       {
         key: "bankDetails",
         label: "Bank Details", 
