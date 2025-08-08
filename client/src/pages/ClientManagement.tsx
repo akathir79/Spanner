@@ -1369,7 +1369,7 @@ export default function ClientManagement() {
                                         }}
                                         title="Send Message"
                                       >
-                                        <Send className="w-3 h-3" />
+                                        <MessageSquare className="w-3 h-3" />
                                       </Button>
                                       <Button
                                         size="sm"
@@ -1467,7 +1467,7 @@ export default function ClientManagement() {
                                           }}
                                           title="Send Message"
                                         >
-                                          <Send className="w-3 h-3" />
+                                          <MessageSquare className="w-3 h-3" />
                                         </Button>
                                         <Button
                                           size="sm"
@@ -2376,7 +2376,7 @@ export default function ClientManagement() {
                                           }}
                                           title="Send Message"
                                         >
-                                          <Send className="w-3 h-3" />
+                                          <MessageSquare className="w-3 h-3" />
                                         </Button>
                                         <Button
                                           size="sm"
@@ -2463,7 +2463,7 @@ export default function ClientManagement() {
                                                 }}
                                                 title="Send Message"
                                               >
-                                                <Send className="w-3 h-3" />
+                                                <MessageSquare className="w-3 h-3" />
                                               </Button>
                                               <Button
                                                 size="sm"
