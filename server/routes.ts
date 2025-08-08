@@ -1,8 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-// Remove static import - we'll read dynamically  
-// import statesDistrictsData from "@shared/states-districts.json";
+import statesDistrictsData from "@shared/states-districts.json";
 import { z } from "zod";
 import { 
   insertUserSchema, 
@@ -2171,45 +2170,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // API endpoint to get states-districts data (reads fresh from filesystem on every request)
-  app.get('/api/states-districts', async (req, res) => {
-    try {
-      // Add no-cache headers to prevent browser caching
-      res.set({
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'Pragma': 'no-cache',
-        'Expires': '0'
-      });
-      
-      // Always read fresh from filesystem - truly dynamic
-      const fs = await import('fs');
-      const path = await import('path');
-      const filePath = path.join(process.cwd(), 'shared', 'states-districts.json');
-      const fileContent = fs.readFileSync(filePath, 'utf-8');
-      const freshData = JSON.parse(fileContent);
-      
-      return res.json(freshData);
-    } catch (error) {
-      console.error('Error fetching states-districts data:', error);
-      res.status(500).json({ error: 'Failed to fetch states-districts data' });
-    }
-  });
-
-  // Get all districts with optional filtering (reads fresh from file)
+  // Get all districts with optional filtering
   app.get('/api/districts/:stateName?', async (req, res) => {
     try {
       const { stateName } = req.params;
       
-      // Always read fresh from filesystem for districts endpoint too
-      const fs = await import('fs');
-      const path = await import('path');
-      const filePath = path.join(process.cwd(), 'shared', 'states-districts.json');
-      const fileContent = fs.readFileSync(filePath, 'utf-8');
-      const freshStatesDistrictsData = JSON.parse(fileContent);
-      
       if (stateName && stateName !== 'undefined') {
-        // Return complete state data with districts and service types
-        const stateData = (freshStatesDistrictsData.states as any[]).find(
+        // Return districts for specific state
+        const stateData = statesDistrictsData.states.find(
           state => state.state.toLowerCase() === stateName.toLowerCase()
         );
         
@@ -2217,11 +2185,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(404).json({ message: 'State not found' });
         }
         
-        // Return complete state data including service types
-        res.json(stateData);
+        res.json(stateData.districts);
       } else {
-        // Return all states with complete data (districts and service types)
-        res.json(freshStatesDistrictsData);
+        // Return all states and their districts
+        res.json(statesDistrictsData.states);
       }
     } catch (error) {
       console.error('Error fetching districts:', error);

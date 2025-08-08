@@ -42,7 +42,7 @@
         "BathRoom cleaning",
         "Pool Maintenance",
         "Cleaning",
-        "XYZ"
+        "Car Wash"
       ]
     },
     {
@@ -90,8 +90,7 @@
         "Gardening Services",
         "Pool Maintenance",
         "Pet Care Services",
-        "carwashing specialist ",
-        "XYZ"
+        "Car Wash"
       ]
     },
     {
@@ -147,7 +146,7 @@
         "Gardening Services",
         "Pool Maintenance",
         "Pet Care Services",
-        "carwashing"
+        "Car Wash"
       ]
     },
     {
@@ -206,7 +205,7 @@
         "Gardening Services",
         "Pool Maintenance",
         "Pet Care Services",
-        "carwashing"
+        "Car Wash"
       ]
     },
     {
@@ -260,12 +259,15 @@
         "Gardening Services",
         "Pool Maintenance",
         "Pet Care Services",
-        "carwashing"
+        "Car Wash"
       ]
     },
     {
       "state": "Goa",
-      "districts": ["North Goa", "South Goa"],
+      "districts": [
+        "North Goa",
+        "South Goa"
+      ],
       "serviceTypes": [
         "Plumbing",
         "Electrical",
@@ -280,7 +282,7 @@
         "Gardening Services",
         "Pool Maintenance",
         "Pet Care Services",
-        "carwashing"
+        "Car Wash"
       ]
     },
     {
@@ -334,7 +336,7 @@
         "Gardening Services",
         "Pool Maintenance",
         "Pet Care Services",
-        "carwashing"
+        "Car Wash"
       ]
     },
     {
@@ -377,7 +379,7 @@
         "Gardening Services",
         "Pool Maintenance",
         "Pet Care Services",
-        "carwashing"
+        "Car Wash"
       ]
     },
     {
@@ -410,7 +412,7 @@
         "Gardening Services",
         "Pool Maintenance",
         "Pet Care Services",
-        "carwashing"
+        "Car Wash"
       ]
     },
     {
@@ -455,7 +457,7 @@
         "Gardening Services",
         "Pool Maintenance",
         "Pet Care Services",
-        "carwashing"
+        "Car Wash"
       ]
     },
     {
@@ -507,7 +509,7 @@
         "Gardening Services",
         "Pool Maintenance",
         "Pet Care Services",
-        "carwashing"
+        "Car Wash"
       ]
     },
     {
@@ -542,7 +544,7 @@
         "Gardening Services",
         "Pool Maintenance",
         "Pet Care Services",
-        "carwashing"
+        "Car Wash"
       ]
     },
     {
@@ -619,7 +621,7 @@
         "Gardening Services",
         "Pool Maintenance",
         "Pet Care Services",
-        "carwashing"
+        "Car Wash"
       ]
     },
     {
@@ -676,7 +678,7 @@
         "Gardening Services",
         "Pool Maintenance",
         "Pet Care Services",
-        "carwashing"
+        "Car Wash"
       ]
     },
     {
@@ -713,7 +715,7 @@
         "Gardening Services",
         "Pool Maintenance",
         "Pet Care Services",
-        "carwashing"
+        "Car Wash"
       ]
     },
     {
@@ -747,7 +749,7 @@
         "Gardening Services",
         "Pool Maintenance",
         "Pet Care Services",
-        "carwashing"
+        "Car Wash"
       ]
     },
     {
@@ -779,7 +781,7 @@
         "Gardening Services",
         "Pool Maintenance",
         "Pet Care Services",
-        "carwashing"
+        "Car Wash"
       ]
     },
     {
@@ -816,7 +818,7 @@
         "Gardening Services",
         "Pool Maintenance",
         "Pet Care Services",
-        "carwashing"
+        "Car Wash"
       ]
     },
     {
@@ -867,7 +869,7 @@
         "Gardening Services",
         "Pool Maintenance",
         "Pet Care Services",
-        "carwashing"
+        "Car Wash"
       ]
     },
     {
@@ -911,7 +913,7 @@
         "Gardening Services",
         "Pool Maintenance",
         "Pet Care Services",
-        "carwashing"
+        "Car Wash"
       ]
     },
     {
@@ -982,7 +984,7 @@
         "Gardening Services",
         "Pool Maintenance",
         "Pet Care Services",
-        "carwashing"
+        "Car Wash"
       ]
     },
     {
@@ -1009,7 +1011,7 @@
         "Gardening Services",
         "Pool Maintenance",
         "Pet Care Services",
-        "carwashing"
+        "Car Wash"
       ]
     },
     {
@@ -1052,7 +1054,8 @@
         "Tiruvarur",
         "Vellore",
         "Viluppuram",
-        "Virudhunagar"
+        "Virudhunagar",
+        "XYZ"
       ],
       "serviceTypes": [
         "Plumbing",
@@ -1068,7 +1071,7 @@
         "Gardening Services",
         "Pool Maintenance",
         "Pet Care Services",
-        "carwashing"
+        "Car Wash"
       ]
     },
     {
@@ -1122,7 +1125,7 @@
         "Gardening Services",
         "Pool Maintenance",
         "Pet Care Services",
-        "carwashing"
+        "Car Wash"
       ]
     },
     {
@@ -1151,7 +1154,7 @@
         "Gardening Services",
         "Pool Maintenance",
         "Pet Care Services",
-        "carwashing"
+        "Car Wash"
       ]
     },
     {
@@ -1247,7 +1250,7 @@
         "Gardening Services",
         "Pool Maintenance",
         "Pet Care Services",
-        "carwashing"
+        "Car Wash"
       ]
     },
     {
@@ -1281,7 +1284,7 @@
         "Gardening Services",
         "Pool Maintenance",
         "Pet Care Services",
-        "carwashing"
+        "Car Wash"
       ]
     },
     {
@@ -1325,12 +1328,16 @@
         "Gardening Services",
         "Pool Maintenance",
         "Pet Care Services",
-        "carwashing"
+        "Car Wash"
       ]
     },
     {
       "state": "Andaman and Nicobar Islands (UT)",
-      "districts": ["Nicobars", "North and Middle Andaman", "South Andaman"],
+      "districts": [
+        "Nicobars",
+        "North and Middle Andaman",
+        "South Andaman"
+      ],
       "serviceTypes": [
         "Plumbing",
         "Electrical",
@@ -1345,12 +1352,14 @@
         "Gardening Services",
         "Pool Maintenance",
         "Pet Care Services",
-        "carwashing"
+        "Car Wash"
       ]
     },
     {
       "state": "Chandigarh (UT)",
-      "districts": ["Chandigarh"],
+      "districts": [
+        "Chandigarh"
+      ],
       "serviceTypes": [
         "Plumbing",
         "Electrical",
@@ -1365,12 +1374,16 @@
         "Gardening Services",
         "Pool Maintenance",
         "Pet Care Services",
-        "XYZ"
+        "Car Wash"
       ]
     },
     {
       "state": "Dadra and Nagar Haveli and Daman and Diu (UT)",
-      "districts": ["Dadra & Nagar Haveli", "Daman", "Diu"],
+      "districts": [
+        "Dadra & Nagar Haveli",
+        "Daman",
+        "Diu"
+      ],
       "serviceTypes": [
         "Plumbing",
         "Electrical",
@@ -1385,7 +1398,7 @@
         "Gardening Services",
         "Pool Maintenance",
         "Pet Care Services",
-        "carwashing"
+        "Car Wash"
       ]
     },
     {
@@ -1417,7 +1430,7 @@
         "Gardening Services",
         "Pool Maintenance",
         "Pet Care Services",
-        "carwashing"
+        "Car Wash"
       ]
     },
     {
@@ -1458,12 +1471,15 @@
         "Gardening Services",
         "Pool Maintenance",
         "Pet Care Services",
-        "carwashing"
+        "Car Wash"
       ]
     },
     {
       "state": "Ladakh (UT)",
-      "districts": ["Kargil", "Leh"],
+      "districts": [
+        "Kargil",
+        "Leh"
+      ],
       "serviceTypes": [
         "Plumbing",
         "Electrical",
@@ -1478,12 +1494,14 @@
         "Gardening Services",
         "Pool Maintenance",
         "Pet Care Services",
-        "carwashing"
+        "Car Wash"
       ]
     },
     {
       "state": "Lakshadweep (UT)",
-      "districts": ["Lakshadweep"],
+      "districts": [
+        "Lakshadweep"
+      ],
       "serviceTypes": [
         "Plumbing",
         "Electrical",
@@ -1498,12 +1516,17 @@
         "Gardening Services",
         "Pool Maintenance",
         "Pet Care Services",
-        "carwashing"
+        "Car Wash"
       ]
     },
     {
       "state": "Puducherry (UT)",
-      "districts": ["Karaikal", "Mahe", "Puducherry", "Yanam"],
+      "districts": [
+        "Karaikal",
+        "Mahe",
+        "Puducherry",
+        "Yanam"
+      ],
       "serviceTypes": [
         "Plumbing",
         "Electrical",
@@ -1518,7 +1541,7 @@
         "Gardening Services",
         "Pool Maintenance",
         "Pet Care Services",
-        "carwashing"
+        "Car Wash"
       ]
     }
   ]
