@@ -1013,9 +1013,11 @@ export default function ClientManagement() {
                                           {client.isVerified ? "Verified" : "Unverified"}
                                         </Badge>
                                       </div>
-                                      <div className="text-xs text-gray-500 dark:text-gray-400">
-                                        Last: {client.lastLoginAt ? formatIndianDateTime(client.lastLoginAt) : 'No Login'}
-                                      </div>
+                                      {client.lastLoginAt && (
+                                        <div className="text-xs text-gray-500 dark:text-gray-400">
+                                          Last: {formatIndianDateTime(client.lastLoginAt)}
+                                        </div>
+                                      )}
                                       <div className="text-xs text-gray-400 dark:text-gray-500 italic">
                                         Reg: {formatIndianDateTime(client.createdAt)}
                                       </div>
@@ -1984,13 +1986,9 @@ export default function ClientManagement() {
                                               {client.isVerified ? "Verified" : "Unverified"}
                                             </Badge>
                                           </div>
-                                          {client.lastLoginAt ? (
+                                          {client.lastLoginAt && (
                                             <div className="text-xs text-gray-500 dark:text-gray-400">
                                               Last: {formatIndianDateTime(client.lastLoginAt)}
-                                            </div>
-                                          ) : (
-                                            <div className="text-xs text-gray-400 dark:text-gray-500 italic">
-                                              No Login
                                             </div>
                                           )}
                                           <div className="text-xs text-gray-500 dark:text-gray-400">
