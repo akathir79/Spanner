@@ -246,7 +246,8 @@ export default function StateBasedManagementTemplate({ config }: StateBasedManag
   const queryClient = useQueryClient();
   const [selectedState, setSelectedState] = useState<string | null>(null);
   const [selectedDistrict, setSelectedDistrict] = useState<string | null>(null);
-  const [view, setView] = useState<"total" | "states" | "districts" | "items">("states");
+  const [selectedServiceType, setSelectedServiceType] = useState<string | null>(null);
+  const [view, setView] = useState<"total" | "states" | "districts" | "services" | "items">("states");
   
   // Ref for rolling animation
   const totalItemButtonRef = useRef<HTMLButtonElement>(null);
@@ -300,6 +301,11 @@ export default function StateBasedManagementTemplate({ config }: StateBasedManag
   // Get districts for selected state from JSON file
   const districtsForState = selectedState 
     ? (statesDistrictsData.states as StateData[]).find(s => s.state === selectedState)?.districts || []
+    : [];
+
+  // Get service types for selected state from JSON file
+  const serviceTypesForState = selectedState 
+    ? (statesDistrictsData.states as StateData[]).find(s => s.state === selectedState)?.serviceTypes || []
     : [];
 
   // Filter items for total view
@@ -424,11 +430,81 @@ export default function StateBasedManagementTemplate({ config }: StateBasedManag
     });
   }, [allItems, selectedDistrict, searchQuery, searchFilter, statusFilter, config]);
 
+  // Filtered service type items (filtered by district and service type)
+  const filteredServiceTypeItems = useMemo(() => {
+    if (!selectedDistrict || !selectedServiceType) return [];
+    
+    let serviceItems = allItems.filter((item: BaseItem) => 
+      item.district === selectedDistrict && 
+      (item.primaryService === selectedServiceType || (item.skills && item.skills.includes(selectedServiceType)))
+    );
+    
+    // Apply status filter
+    if (statusFilter !== "all") {
+      serviceItems = serviceItems.filter(item => {
+        const itemStatus = getItemStatusCategory(item);
+        
+        switch (statusFilter) {
+          case "active":
+            return itemStatus === "active";
+          case "inactive":
+            return itemStatus === "inactive";
+          case "no_login":
+            return itemStatus === "no_login";
+          case "just_registered":
+            return itemStatus === "just_registered";
+          case "verified":
+            return item.isVerified === true;
+          case "unverified":
+            return item.isVerified === false;
+          default:
+            return true;
+        }
+      });
+    }
+    
+    if (!searchQuery.trim()) return serviceItems;
+
+    const query = searchQuery.toLowerCase().trim();
+    return serviceItems.filter(item => {
+      const displayName = config.itemDisplayName(item).toLowerCase();
+      
+      switch (searchFilter) {
+        case "id":
+          return item.id.toLowerCase().includes(query);
+        case "name":
+          return displayName.includes(query);
+        case "email":
+          return item.email?.toLowerCase().includes(query) || false;
+        case "mobile":
+          return item.mobile?.includes(query) || false;
+        case "location":
+          return item.district?.toLowerCase().includes(query) || 
+                 item.state?.toLowerCase().includes(query) || false;
+        case "all":
+        default:
+          return (
+            item.id.toLowerCase().includes(query) ||
+            displayName.includes(query) ||
+            item.email?.toLowerCase().includes(query) ||
+            item.mobile?.includes(query) ||
+            item.district?.toLowerCase().includes(query) ||
+            item.state?.toLowerCase().includes(query)
+          );
+      }
+    });
+  }, [allItems, selectedDistrict, selectedServiceType, searchQuery, searchFilter, statusFilter, config]);
+
   // Paginated items for current view
   const itemsForDistrict = useMemo(() => {
     const startIndex = (districtCurrentPage - 1) * pageSize;
     return filteredDistrictItems.slice(startIndex, startIndex + pageSize);
   }, [filteredDistrictItems, districtCurrentPage, pageSize]);
+
+  const itemsForServiceType = useMemo(() => {
+    const startIndex = (districtCurrentPage - 1) * pageSize;
+    return filteredServiceTypeItems.slice(startIndex, startIndex + pageSize);
+  }, [filteredServiceTypeItems, districtCurrentPage, pageSize]);
 
   const paginatedItems = useMemo(() => {
     const startIndex = (currentPage - 1) * pageSize;
@@ -437,12 +513,14 @@ export default function StateBasedManagementTemplate({ config }: StateBasedManag
 
   const totalPages = Math.ceil(filteredItems.length / pageSize);
   const totalDistrictPages = Math.ceil(filteredDistrictItems.length / pageSize);
+  const totalServiceTypePages = Math.ceil(filteredServiceTypeItems.length / pageSize);
 
   // Navigation handlers
   const handleTotalItemsClick = () => {
     setView("total");
     setSelectedState(null);
     setSelectedDistrict(null);
+    setSelectedServiceType(null);
     setSearchQuery("");
     setSearchFilter(config.searchFilters[0]?.value || "all");
     setCurrentPage(1);
@@ -453,6 +531,7 @@ export default function StateBasedManagementTemplate({ config }: StateBasedManag
     setTimeout(() => {
       setSelectedState(state);
       setSelectedDistrict(null);
+      setSelectedServiceType(null);
       setView("districts");
       setLoadingState(null);
     }, 200);
@@ -462,6 +541,19 @@ export default function StateBasedManagementTemplate({ config }: StateBasedManag
     setLoadingState(district);
     setTimeout(() => {
       setSelectedDistrict(district);
+      setSelectedServiceType(null);
+      setView("services");
+      setLoadingState(null);
+      setDistrictCurrentPage(1);
+      setSearchQuery("");
+      setSearchFilter(config.searchFilters[0]?.value || "all");
+    }, 200);
+  };
+
+  const handleServiceTypeClick = async (serviceType: string) => {
+    setLoadingState(serviceType);
+    setTimeout(() => {
+      setSelectedServiceType(serviceType);
       setView("items");
       setLoadingState(null);
       setDistrictCurrentPage(1);
@@ -472,6 +564,9 @@ export default function StateBasedManagementTemplate({ config }: StateBasedManag
 
   const handleBackClick = () => {
     if (view === "items") {
+      setView("services");
+      setSelectedServiceType(null);
+    } else if (view === "services") {
       setView("districts");
       setSelectedDistrict(null);
     } else if (view === "districts") {
@@ -832,21 +927,77 @@ export default function StateBasedManagementTemplate({ config }: StateBasedManag
               </div>
             )}
 
-            {/* Items View */}
-            {!itemsLoading && view === "items" && selectedDistrict && (
-              <div className="h-full flex flex-col">
-                <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+            {/* Service Types View */}
+            {!itemsLoading && view === "services" && selectedState && selectedDistrict && (
+              <div className="p-6">
+                <div className="mb-6">
                   <Button variant="outline" onClick={handleBackClick} className="mb-4">
                     <ArrowLeft className="w-4 h-4 mr-2" />
                     Back to Districts
                   </Button>
+                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                    Service Types in {selectedDistrict}, {selectedState}
+                  </h2>
+                  <p className="text-gray-600 dark:text-gray-400">
+                    Select a service type to view workers
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                  {serviceTypesForState.map((serviceType) => {
+                    const serviceCount = allItems.filter((item: BaseItem) => 
+                      item.district === selectedDistrict && 
+                      (item.primaryService === serviceType || (item.skills && item.skills.includes(serviceType)))
+                    ).length;
+                    
+                    return (
+                      <Button
+                        key={serviceType}
+                        variant="outline"
+                        onClick={() => handleServiceTypeClick(serviceType)}
+                        disabled={loadingState === serviceType}
+                        className={`h-12 justify-start font-medium hover:bg-blue-50 hover:border-blue-200 dark:hover:bg-blue-900/20 relative pr-10 ${
+                          loadingState === serviceType ? 'opacity-75' : ''
+                        }`}
+                      >
+                        {loadingState === serviceType ? (
+                          <div className="flex items-center">
+                            <div className="inline-block w-3 h-3 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mr-2"></div>
+                            <span className="truncate">Loading...</span>
+                          </div>
+                        ) : (
+                          <>
+                            <span className="truncate">{serviceType}</span>
+                            <Badge 
+                              variant="secondary" 
+                              className={`absolute right-2 top-1/2 -translate-y-1/2 h-5 px-2 min-w-[20px] rounded-md flex items-center justify-center text-xs ${config.stateItemBadgeColor || 'bg-blue-500'} text-white hover:${config.stateItemBadgeColor || 'bg-blue-600'}`}
+                            >
+                              {serviceCount}
+                            </Badge>
+                          </>
+                        )}
+                      </Button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Items View */}
+            {!itemsLoading && view === "items" && selectedDistrict && selectedServiceType && (
+              <div className="h-full flex flex-col">
+                <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+                  <Button variant="outline" onClick={handleBackClick} className="mb-4">
+                    <ArrowLeft className="w-4 h-4 mr-2" />
+                    Back to Service Types
+                  </Button>
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex-1">
                       <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-1">
-                        Items in {selectedDistrict}, {selectedState}
+                        {selectedServiceType} Workers in {selectedDistrict}, {selectedState}
                       </h2>
                       <p className="text-gray-600 dark:text-gray-400">
-                        {filteredDistrictItems.length} items found • Showing {((districtCurrentPage - 1) * pageSize) + 1}-{Math.min(districtCurrentPage * pageSize, filteredDistrictItems.length)} of {filteredDistrictItems.length}
+                        {filteredServiceTypeItems.length} workers found • Showing {((districtCurrentPage - 1) * pageSize) + 1}-{Math.min(districtCurrentPage * pageSize, filteredServiceTypeItems.length)} of {filteredServiceTypeItems.length}
                       </p>
                     </div>
                     
@@ -914,7 +1065,7 @@ export default function StateBasedManagementTemplate({ config }: StateBasedManag
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {itemsForDistrict.length === 0 ? (
+                      {itemsForServiceType.length === 0 ? (
                         <TableRow>
                           <TableCell colSpan={config.tableColumns.length + (config.actions ? 1 : 0)} className="text-center py-8">
                             <div className="flex flex-col items-center gap-3">
@@ -926,7 +1077,7 @@ export default function StateBasedManagementTemplate({ config }: StateBasedManag
                           </TableCell>
                         </TableRow>
                       ) : (
-                        itemsForDistrict.map((item) => (
+                        itemsForServiceType.map((item) => (
                           <TableRow key={item.id}>
                             {config.tableColumns.map((column) => (
                               <TableCell key={column.key}>
@@ -964,10 +1115,10 @@ export default function StateBasedManagementTemplate({ config }: StateBasedManag
                 </div>
 
                 {/* Pagination */}
-                {totalDistrictPages > 1 && (
+                {totalServiceTypePages > 1 && (
                   <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200 dark:border-gray-700">
                     <div className="text-sm text-gray-700 dark:text-gray-300">
-                      Showing {((districtCurrentPage - 1) * pageSize) + 1} to {Math.min(districtCurrentPage * pageSize, filteredDistrictItems.length)} of {filteredDistrictItems.length} results
+                      Showing {((districtCurrentPage - 1) * pageSize) + 1} to {Math.min(districtCurrentPage * pageSize, filteredServiceTypeItems.length)} of {filteredServiceTypeItems.length} results
                     </div>
                     <div className="flex items-center gap-2">
                       <Button
@@ -979,13 +1130,13 @@ export default function StateBasedManagementTemplate({ config }: StateBasedManag
                         Previous
                       </Button>
                       <span className="text-sm text-gray-700 dark:text-gray-300">
-                        Page {districtCurrentPage} of {totalDistrictPages}
+                        Page {districtCurrentPage} of {totalServiceTypePages}
                       </span>
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => setDistrictCurrentPage(Math.min(totalDistrictPages, districtCurrentPage + 1))}
-                        disabled={districtCurrentPage === totalDistrictPages}
+                        onClick={() => setDistrictCurrentPage(Math.min(totalServiceTypePages, districtCurrentPage + 1))}
+                        disabled={districtCurrentPage === totalServiceTypePages}
                       >
                         Next
                       </Button>
