@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
-import { Eye, MessageSquare, CheckCircle, XCircle, Trash2, Edit, Smartphone, Mail, Calendar, Shield, Crown, Phone, MessageCircle, Send, MessageSquareText } from "lucide-react";
+import { Eye, MessageSquare, CheckCircle, XCircle, Trash2, Edit, Smartphone, Mail, Calendar, Shield, Crown, Phone, MessageCircle, Send, MessageSquareText, CreditCard, ArrowRightLeft, History } from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa";
 import { useToast } from "@/hooks/use-toast";
 
@@ -532,6 +532,11 @@ export default function AdminManagement() {
             <div className="text-sm text-gray-500 dark:text-gray-400">
               {admin.state || "Not specified"}
             </div>
+            {admin.address && (
+              <div className="text-xs text-gray-400 dark:text-gray-500 mt-1 truncate max-w-[160px]">
+                {admin.address}
+              </div>
+            )}
           </div>
         )
       },
@@ -565,21 +570,117 @@ export default function AdminManagement() {
         }
       },
       {
-        key: "created",
-        label: "Created",
-        render: (admin: any) => {
-          const creationDate = new Date(admin.createdAt);
-          return (
-            <div className="text-sm">
-              <div className="text-gray-900 dark:text-white">
-                {creationDate.toLocaleDateString()}
+        key: "bankDetails",
+        label: "Bank Details", 
+        render: (admin: any) => (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="text-sm space-y-1 cursor-pointer">
+                {admin.bank_account_number && admin.bank_ifsc ? (
+                  <>
+                    <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
+                      <CreditCard className="w-3 h-3" />
+                      <span className="font-mono text-xs">{admin.bank_account_number.slice(-4)}</span>
+                    </div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                      IFSC: {admin.bank_ifsc}
+                    </div>
+                    {admin.bank_micr && (
+                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                        MICR: {admin.bank_micr}
+                      </div>
+                    )}
+                    {admin.bank_name && (
+                      <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                        {admin.bank_name}
+                      </div>
+                    )}
+                    {admin.bank_address && (
+                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                        {(() => {
+                          const address = admin.bank_address;
+                          const parts = address.split(',').map((part: string) => part.trim());
+                          
+                          if (parts.length >= 2) {
+                            const lastPart = parts[parts.length - 1];
+                            const pincodeMatch = lastPart.match(/(\d{6})$/);
+                            
+                            if (pincodeMatch) {
+                              const pincode = pincodeMatch[1];
+                              const state = lastPart.replace(` - ${pincode}`, '').trim();
+                              const mainAddress = parts.slice(0, -1).join(', ');
+                              
+                              return (
+                                <div className="space-y-0.5">
+                                  <div className="truncate max-w-[140px]">{mainAddress}</div>
+                                  <div className="truncate max-w-[140px]">{state}</div>
+                                  <div className="text-[10px] text-gray-400">PIN: {pincode}</div>
+                                </div>
+                              );
+                            }
+                          }
+                          
+                          return (
+                            <div className="space-y-0.5">
+                              <div className="truncate max-w-[140px]">{address}</div>
+                            </div>
+                          );
+                        })()}
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <span className="text-gray-400 dark:text-gray-500 italic text-xs">
+                    Not provided
+                  </span>
+                )}
               </div>
-              <div className="text-gray-500 dark:text-gray-400">
-                {creationDate.toLocaleTimeString()}
-              </div>
-            </div>
-          );
-        }
+            </TooltipTrigger>
+            <TooltipContent className="max-w-sm">
+              {admin.bank_account_number && admin.bank_ifsc ? (
+                <div className="space-y-2">
+                  <p className="font-medium">Complete Bank Details:</p>
+                  <div className="space-y-1 text-xs">
+                    <div className="flex items-center gap-2">
+                      <CreditCard className="w-3 h-3" />
+                      <span>Account: {admin.bank_account_number}</span>
+                    </div>
+                    <div>
+                      <span className="font-medium">IFSC:</span> {admin.bank_ifsc}
+                    </div>
+                    {admin.bank_micr && (
+                      <div>
+                        <span className="font-medium">MICR:</span> {admin.bank_micr}
+                      </div>
+                    )}
+                    {admin.bank_name && (
+                      <div>
+                        <span className="font-medium">Bank Name:</span> {admin.bank_name}
+                      </div>
+                    )}
+                    {admin.bank_address && (
+                      <div>
+                        <span className="font-medium">Bank Address:</span> {admin.bank_address}
+                      </div>
+                    )}
+                    {admin.bank_account_holder_name && (
+                      <div>
+                        <span className="font-medium">Account Holder:</span> {admin.bank_account_holder_name}
+                      </div>
+                    )}
+                    {admin.bank_account_type && (
+                      <div>
+                        <span className="font-medium">Account Type:</span> {admin.bank_account_type}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <p>No bank details provided</p>
+              )}
+            </TooltipContent>
+          </Tooltip>
+        )
       }
     ],
     
