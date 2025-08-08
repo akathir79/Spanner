@@ -986,20 +986,30 @@ export default function ClientManagement() {
                                           Client
                                         </Badge>
                                         <Badge 
-                                          variant={activityStatus.variant}
-                                          className={`${activityStatus.className} text-xs px-1.5 py-0.5`}
+                                          variant={
+                                            activityStatus.label === 'Just Registered' || 
+                                            activityStatus.label === 'Never Login' || 
+                                            activityStatus.label === 'Inactive' ? "destructive" : activityStatus.variant
+                                          }
+                                          className={
+                                            activityStatus.label === 'Just Registered' || 
+                                            activityStatus.label === 'Never Login' || 
+                                            activityStatus.label === 'Inactive'
+                                              ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100 text-xs px-1.5 py-0.5" 
+                                              : `${activityStatus.className} text-xs px-1.5 py-0.5`
+                                          }
                                         >
                                           {activityStatus.icon}
                                           <span className="ml-1">{activityStatus.label}</span>
                                         </Badge>
                                         <Badge
-                                          variant={client.isVerified ? "default" : "secondary"}
+                                          variant={client.isVerified ? "default" : "destructive"}
                                           className={client.isVerified 
                                             ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100 text-xs" 
-                                            : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100 text-xs"
+                                            : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100 text-xs"
                                           }
                                         >
-                                          {client.isVerified ? "Verified" : "Pending"}
+                                          {client.isVerified ? "Verified" : "Unverified"}
                                         </Badge>
                                       </div>
                                       <div className="text-xs text-gray-500 dark:text-gray-400">
@@ -1947,20 +1957,30 @@ export default function ClientManagement() {
                                               Client
                                             </Badge>
                                             <Badge 
-                                              variant={activityStatus.variant}
-                                              className={activityStatus.className}
+                                              variant={
+                                                activityStatus.label === 'Just Registered' || 
+                                                activityStatus.label === 'Never Login' || 
+                                                activityStatus.label === 'Inactive' ? "destructive" : activityStatus.variant
+                                              }
+                                              className={
+                                                activityStatus.label === 'Just Registered' || 
+                                                activityStatus.label === 'Never Login' || 
+                                                activityStatus.label === 'Inactive'
+                                                  ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100 text-xs" 
+                                                  : activityStatus.className
+                                              }
                                             >
                                               {activityStatus.icon}
                                               <span className="ml-1">{activityStatus.label}</span>
                                             </Badge>
                                             <Badge
-                                              variant={client.isVerified ? "default" : "secondary"}
+                                              variant={client.isVerified ? "default" : "destructive"}
                                               className={client.isVerified 
                                                 ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100 text-xs" 
-                                                : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100 text-xs"
+                                                : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100 text-xs"
                                               }
                                             >
-                                              {client.isVerified ? "Verified" : "Pending"}
+                                              {client.isVerified ? "Verified" : "Unverified"}
                                             </Badge>
                                           </div>
                                           {client.lastLoginAt ? (
