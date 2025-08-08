@@ -313,13 +313,7 @@ export default function StateBasedManagementTemplate({ config }: StateBasedManag
   // Get states from dynamically fetched data (from API)
   const states = statesDistrictsData?.states ? (statesDistrictsData.states as StateData[]).map(s => s.state).sort() : [];
   
-  // Debug logging
-  console.log('StateBasedManagementTemplate Debug:', {
-    statesDistrictsLoading,
-    statesDistrictsData,
-    statesLength: states.length,
-    firstFewStates: states.slice(0, 3)
-  });
+  // Remove debug logging
 
   // Get districts for selected state from dynamically fetched data (from API)
   const districtsForState = selectedState && statesDistrictsData?.states
