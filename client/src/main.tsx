@@ -13,9 +13,15 @@ if (!rootElement) {
   console.error("Root element not found!");
 } else {
   console.log("Starting React application...");
-  createRoot(rootElement).render(
-    <StrictMode>
-      <App />
-    </StrictMode>
-  );
+  
+  // Add temporary content for debugging
+  rootElement.innerHTML = '<div style="background: white; color: black; padding: 20px; font-size: 24px;">LOADING REACT APP...</div>';
+  
+  setTimeout(() => {
+    createRoot(rootElement).render(
+      <StrictMode>
+        <App />
+      </StrictMode>
+    );
+  }, 1000);
 }

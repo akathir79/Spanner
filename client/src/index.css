@@ -2,6 +2,21 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Force visibility for debugging */
+html, body {
+  background-color: white !important;
+  color: black !important;
+  min-height: 100vh !important;
+}
+
+#root {
+  background-color: white !important;
+  color: black !important;
+  min-height: 100vh !important;
+  display: block !important;
+  width: 100% !important;
+}
+
 /* Smooth animations for dropdowns and selections */
 @layer utilities {
   .animate-dropdown-open {
