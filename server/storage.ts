@@ -207,8 +207,30 @@ export class DatabaseStorage implements IStorage {
 
   async getUserByAadhaar(aadhaarNumber: string): Promise<User | undefined> {
     if (!aadhaarNumber) return undefined;
-    const [user] = await db.select().from(users).where(eq(users.aadhaarNumber, aadhaarNumber));
-    return user || undefined;
+    try {
+      // First find the worker profile with the Aadhaar number
+      const [workerProfile] = await db
+        .select()
+        .from(workerProfiles)
+        .where(eq(workerProfiles.aadhaarNumber, aadhaarNumber))
+        .limit(1);
+      
+      if (!workerProfile) {
+        return undefined;
+      }
+      
+      // Then get the user with that userId
+      const [user] = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, workerProfile.userId))
+        .limit(1);
+      
+      return user || undefined;
+    } catch (error) {
+      console.error("Error in getUserByAadhaar:", error);
+      return undefined;
+    }
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
