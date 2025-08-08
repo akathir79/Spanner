@@ -60,7 +60,7 @@ import {
   FileText
 } from "lucide-react";
 import { useLocation } from "wouter";
-import WorkerApprovalSection from "@/components/WorkerApprovalSection";
+
 import { FloatingMessaging } from "@/components/FloatingMessaging";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -89,7 +89,7 @@ export default function AdminDashboard() {
 
   const [bookingFilter, setBookingFilter] = useState("");
 
-  const [activeTab, setActiveTab] = useState("approvals");
+  const [activeTab, setActiveTab] = useState("bookings");
   const [messageDialogUser, setMessageDialogUser] = useState<any>(null);
   const [createAdminModalOpen, setCreateAdminModalOpen] = useState(false);
   const [districtDropdownOpen, setDistrictDropdownOpen] = useState(false);
@@ -622,9 +622,7 @@ export default function AdminDashboard() {
           
           <Card 
             className="cursor-pointer transition-all hover:shadow-md border-2 hover:border-yellow-200"
-            onClick={() => {
-              setActiveTab("approvals");
-            }}
+            onClick={() => setLocation("/admin/pending-verifications")}
           >
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
@@ -653,8 +651,7 @@ export default function AdminDashboard() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className={`grid w-full ${user?.role === "super_admin" ? "grid-cols-5" : "grid-cols-4"} admin-tabs`}>
-            <TabsTrigger value="approvals">Worker Approvals</TabsTrigger>
+          <TabsList className={`grid w-full ${user?.role === "super_admin" ? "grid-cols-4" : "grid-cols-3"} admin-tabs`}>
             <TabsTrigger value="bookings">Booking Management</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
             {/* Platform Settings - Only for Super Admin */}
@@ -662,13 +659,6 @@ export default function AdminDashboard() {
               <TabsTrigger value="settings">Platform Settings</TabsTrigger>
             )}
           </TabsList>
-
-          {/* Worker Approvals Tab */}
-          <TabsContent value="approvals" className="space-y-6">
-            <WorkerApprovalSection />
-          </TabsContent>
-
-
 
           {/* Booking Management Tab */}
           <TabsContent value="bookings" className="space-y-6">
