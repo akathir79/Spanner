@@ -618,7 +618,7 @@ export default function AdminManagement() {
     <TooltipProvider>
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         {/* Fixed Header */}
-        <div className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 fixed top-0 left-0 right-0 z-10">
+        <div className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 fixed top-0 left-0 right-0 z-50">
           <div className="px-6 py-4">
             <div className="flex items-center justify-between">
               {/* Back Button */}
@@ -650,7 +650,7 @@ export default function AdminManagement() {
         {/* Main Content */}
         <div className="flex h-[calc(100vh-140px)] mt-20">
           {/* Left Sidebar */}
-          <div className={`${sidebarCollapsed ? 'w-0' : 'w-64'} bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col transition-all duration-300 overflow-hidden`}>
+          <div className={`${sidebarCollapsed ? 'w-0' : 'w-64'} bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col transition-all duration-300 overflow-hidden relative z-10`}>
             <div className="p-4 border-b border-gray-200 dark:border-gray-700">
               {/* Total Admin List Header */}
               <button
@@ -726,7 +726,7 @@ export default function AdminManagement() {
           </div>
 
           {/* Right Content Area */}
-          <div className="flex-1 bg-white dark:bg-gray-800 overflow-y-auto">
+          <div className="flex-1 bg-white dark:bg-gray-800 overflow-y-auto relative z-0">
             {/* Loading State */}
             {usersLoading && (
               <div className="flex items-center justify-center h-full">
