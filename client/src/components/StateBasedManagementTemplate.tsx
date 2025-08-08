@@ -820,7 +820,7 @@ export default function StateBasedManagementTemplate({ config }: StateBasedManag
                           <span className="truncate">{district}</span>
                           <Badge 
                             variant="secondary" 
-                            className={`absolute right-2 top-1/2 -translate-y-1/2 h-5 px-2 min-w-[20px] rounded-md flex items-center justify-center text-xs ${config.stateItemBadgeColor || 'bg-green-500'} text-white hover:${config.stateItemBadgeColor || 'bg-green-600'}`}
+                            className="absolute right-2 top-1/2 -translate-y-1/2 h-5 px-2 min-w-[20px] rounded-md flex items-center justify-center text-xs bg-green-500 text-white hover:bg-green-600"
                           >
                             {config.getItemCountForDistrict(district, allItems)}
                           </Badge>
