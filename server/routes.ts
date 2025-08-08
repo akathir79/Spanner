@@ -2170,14 +2170,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // API endpoint to get states-districts data (reads fresh from file)
+  // API endpoint to get states-districts data (simple approach)
   app.get('/api/states-districts', async (req, res) => {
     try {
-      // Dynamic import to ensure fresh read from file system
-      delete require.cache[require.resolve('@shared/states-districts.json')];
-      const freshStatesDistrictsData = require('@shared/states-districts.json');
-      
-      return res.json(freshStatesDistrictsData);
+      // Return the static data - React Query will handle invalidation on client side
+      return res.json(statesDistrictsData);
     } catch (error) {
       console.error('Error fetching states-districts data:', error);
       res.status(500).json({ error: 'Failed to fetch states-districts data' });
@@ -2189,9 +2186,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { stateName } = req.params;
       
-      // Dynamic import for fresh data
-      delete require.cache[require.resolve('@shared/states-districts.json')];
-      const freshStatesDistrictsData = require('@shared/states-districts.json');
+      // Use the static import for now
+      const freshStatesDistrictsData = statesDistrictsData;
       
       if (stateName && stateName !== 'undefined') {
         // Return districts for specific state

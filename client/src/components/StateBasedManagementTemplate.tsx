@@ -62,6 +62,7 @@ interface BaseItem {
 interface StateData {
   state: string;
   districts: string[];
+  serviceTypes?: string[]; // Optional for states that don't have service types defined
 }
 
 interface ManagementConfig {
@@ -282,7 +283,7 @@ export default function StateBasedManagementTemplate({ config }: StateBasedManag
       return response.json();
     },
     staleTime: 0, // Always fetch fresh data
-    cacheTime: 0, // Don't cache
+    gcTime: 0, // Don't cache (replaces cacheTime in React Query v5)
   });
 
   // Fetch data based on configuration
