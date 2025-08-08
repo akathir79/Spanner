@@ -2331,17 +2331,45 @@ export default function ClientManagement() {
                                   </div>
                                     </div>
                                   </TooltipTrigger>
-                                  <TooltipContent>
-                                    <div className="space-y-1">
-                                      <div className="text-sm"><strong>Booking Summary:</strong></div>
-                                      <div className="text-sm">Total Bookings: 0</div>
-                                      <div className="text-sm">• In Progress: 0</div>
-                                      <div className="text-sm">• Completed: 0</div>
-                                      <div className="text-sm mt-2"><strong>Financial Summary:</strong></div>
-                                      <div className="text-sm">Account Balance: ₹0</div>
-                                      <div className="text-sm">Total Spent: ₹0</div>
-                                      <div className="text-sm">Commission Earned: ₹0</div>
-                                      <div className="text-sm">GST Collected: ₹0</div>
+                                  <TooltipContent className="max-w-sm">
+                                    <div className="space-y-2">
+                                      <p className="font-medium">Booking & Financial Summary:</p>
+                                      <div className="space-y-1">
+                                        <div className="text-sm"><strong>Total Bookings:</strong> 0</div>
+                                        <div className="text-sm ml-2">• In Progress: 0</div>
+                                        <div className="text-sm ml-2">• Completed: 0</div>
+                                        <div className="text-sm"><strong>Account Balance:</strong> ₹0</div>
+                                        <div className="text-sm"><strong>Total Spent:</strong> ₹0</div>
+                                        <div className="text-sm"><strong>Platform Commission:</strong> ₹0</div>
+                                        <div className="text-sm"><strong>GST Collected:</strong> ₹0</div>
+                                      </div>
+                                      <div className="flex items-center gap-1 mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
+                                        <Button
+                                          size="sm"
+                                          variant="ghost"
+                                          className="h-6 w-6 p-0 text-green-600 hover:text-green-700 hover:bg-green-50"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleViewFinancialStatements(client);
+                                          }}
+                                          title="Financial Statements"
+                                        >
+                                          <span className="text-xs font-bold">₹</span>
+                                        </Button>
+                                        <Button
+                                          size="sm"
+                                          variant="ghost"
+                                          className="h-6 w-6 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            const financialData = `${client.firstName} ${client.lastName} - Financial Summary\nBookings: 0 (In progress: 0, Completed: 0)\nBalance: ₹0\nSpent: ₹0\nCommission: ₹0\nGST: ₹0`;
+                                            navigator.clipboard.writeText(financialData);
+                                          }}
+                                          title="Copy Financial Data"
+                                        >
+                                          <Copy className="w-3 h-3" />
+                                        </Button>
+                                      </div>
                                     </div>
                                   </TooltipContent>
                                 </Tooltip>
