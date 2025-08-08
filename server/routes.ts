@@ -2170,24 +2170,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // API endpoint to get states-districts data (reads fresh from file system)
+  // API endpoint to get states-districts data (use static import for now)
   app.get('/api/states-districts', async (req, res) => {
     try {
-      // Always read fresh from file system
-      const fs = require('fs');
-      const path = require('path');
-      const filePath = path.join(process.cwd(), 'shared', 'states-districts.json');
-      const fileContent = fs.readFileSync(filePath, 'utf-8');
-      const freshData = JSON.parse(fileContent);
-      
-      // Add no-cache headers
+      // Add no-cache headers to prevent browser caching
       res.set({
         'Cache-Control': 'no-cache, no-store, must-revalidate',
         'Pragma': 'no-cache',
         'Expires': '0'
       });
       
-      return res.json(freshData);
+      // For now, use the static import - server restart will pick up file changes
+      return res.json(statesDistrictsData);
     } catch (error) {
       console.error('Error fetching states-districts data:', error);
       res.status(500).json({ error: 'Failed to fetch states-districts data' });
@@ -2199,12 +2193,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { stateName } = req.params;
       
-      // Always read fresh from file system for districts endpoint too
-      const fs = require('fs');
-      const path = require('path');
-      const filePath = path.join(process.cwd(), 'shared', 'states-districts.json');
-      const fileContent = fs.readFileSync(filePath, 'utf-8');
-      const freshStatesDistrictsData = JSON.parse(fileContent);
+      // Use static import for now - server restart picks up file changes
+      const freshStatesDistrictsData = statesDistrictsData;
       
       if (stateName && stateName !== 'undefined') {
         // Return districts for specific state
