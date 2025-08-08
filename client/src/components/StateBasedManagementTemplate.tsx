@@ -272,30 +272,33 @@ export default function StateBasedManagementTemplate({ config }: StateBasedManag
   const [showMessageDialog, setShowMessageDialog] = useState(false);
   const [messageText, setMessageText] = useState("");
 
-  // Fetch states-districts data dynamically from API
+  // Fetch states-districts data dynamically from API - force fresh on every render
   const { data: statesDistrictsData = { states: [] }, isLoading: statesDistrictsLoading } = useQuery({
-    queryKey: ['/api/states-districts'], // Simple key
+    queryKey: ['/api/states-districts', view, selectedState, selectedDistrict], // Include current context to force refetch
     queryFn: async () => {
-      console.log('🔄 Loading states and districts from JSON file...');
-      const response = await fetch('/api/states-districts', {
+      console.log('🔄 Loading fresh JSON data - View:', view, 'State:', selectedState, 'District:', selectedDistrict);
+      const response = await fetch('/api/states-districts?' + Math.random(), { // Add random query to bypass all caching
+        method: 'GET',
         cache: 'no-store',
         headers: {
           'Cache-Control': 'no-cache, no-store, must-revalidate',
-          'Pragma': 'no-cache'
+          'Pragma': 'no-cache',
+          'Expires': '0'
         }
       });
       if (!response.ok) {
         throw new Error('Failed to fetch states-districts data');
       }
       const data = await response.json();
-      console.log('✅ Fresh data loaded:', data.states?.length || 0, 'states');
+      console.log('✅ JSON loaded - Found states:', data.states?.length || 0);
+      console.log('✅ Chandigarh service types:', data.states?.find((s: any) => s.state === 'Chandigarh (UT)')?.serviceTypes || 'not found');
       return data;
     },
-    staleTime: 0, // Always fetch fresh data
-    gcTime: 0, // Don't cache
-    refetchOnMount: 'always', // Always refetch when component mounts
-    refetchOnWindowFocus: true // Refetch when window gains focus
-    // Removed refetchInterval - no need for constant polling
+    staleTime: 0,
+    gcTime: 0, 
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true
   });
 
   // Fetch data based on configuration
