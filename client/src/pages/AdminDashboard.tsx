@@ -89,7 +89,7 @@ export default function AdminDashboard() {
 
   const [bookingFilter, setBookingFilter] = useState("");
 
-  const [activeTab, setActiveTab] = useState("bookings");
+  const [activeTab, setActiveTab] = useState("analytics");
   const [messageDialogUser, setMessageDialogUser] = useState<any>(null);
   const [createAdminModalOpen, setCreateAdminModalOpen] = useState(false);
   const [districtDropdownOpen, setDistrictDropdownOpen] = useState(false);
@@ -654,7 +654,7 @@ export default function AdminDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <Card 
             className="cursor-pointer transition-all hover:shadow-md border-2 hover:border-blue-200"
-            onClick={() => setActiveTab("bookings")}
+            onClick={() => setLocation("/admin/bookings")}
           >
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
@@ -720,135 +720,13 @@ export default function AdminDashboard() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className={`grid w-full ${user?.role === "super_admin" ? "grid-cols-4" : "grid-cols-3"} admin-tabs`}>
-            <TabsTrigger value="bookings">Booking Management</TabsTrigger>
+          <TabsList className={`grid w-full ${user?.role === "super_admin" ? "grid-cols-2" : "grid-cols-1"} admin-tabs`}>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
             {/* Platform Settings - Only for Super Admin */}
             {user?.role === "super_admin" && (
               <TabsTrigger value="settings">Platform Settings</TabsTrigger>
             )}
           </TabsList>
-
-          {/* Booking Management Tab */}
-          <TabsContent value="bookings" className="space-y-6">
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <Calendar className="h-5 w-5" />
-                    <span>Booking Management</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <div className="relative">
-                      <Search className="h-4 w-4 absolute left-3 top-3 text-muted-foreground" />
-                      <Input
-                        placeholder="Search bookings..."
-                        value={bookingFilter}
-                        onChange={(e) => setBookingFilter(e.target.value)}
-                        className="pl-9 w-64"
-                      />
-                    </div>
-                  </div>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {bookingsLoading ? (
-                  <div className="space-y-4">
-                    {[...Array(5)].map((_, i) => (
-                      <div key={i} className="animate-pulse">
-                        <div className="h-20 bg-muted rounded-lg"></div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Booking ID</TableHead>
-                          <TableHead>Service</TableHead>
-                          <TableHead>Client</TableHead>
-                          <TableHead>Worker</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead>Amount</TableHead>
-                          <TableHead>Date</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {filteredBookings.map((booking: any) => (
-                          <TableRow key={booking.id}>
-                            <TableCell>
-                              <p className="font-mono text-sm">
-                                {booking.id.substring(0, 8)}
-                              </p>
-                            </TableCell>
-                            <TableCell>
-                              <p className="capitalize">
-                                {booking.serviceCategory?.replace('_', ' ')}
-                              </p>
-                            </TableCell>
-                            <TableCell>
-                              <div>
-                                <p className="font-medium">
-                                  {booking.client?.firstName} {booking.client?.lastName}
-                                </p>
-                                <p className="text-sm text-muted-foreground">
-                                  {booking.client?.mobile}
-                                </p>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <div>
-                                <p className="font-medium">
-                                  {booking.worker?.firstName} {booking.worker?.lastName}
-                                </p>
-                                <p className="text-sm text-muted-foreground">
-                                  {booking.worker?.mobile}
-                                </p>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <Badge className={getStatusColor(booking.status)}>
-                                <div className="flex items-center space-x-1">
-                                  {getStatusIcon(booking.status)}
-                                  <span className="capitalize">
-                                    {booking.status?.replace('_', ' ')}
-                                  </span>
-                                </div>
-                              </Badge>
-                            </TableCell>
-                            <TableCell>
-                              {booking.totalAmount ? (
-                                <p className="font-semibold text-green-600">
-                                  ₹{booking.totalAmount}
-                                </p>
-                              ) : (
-                                <p className="text-muted-foreground">TBD</p>
-                              )}
-                            </TableCell>
-                            <TableCell>
-                              <p className="text-sm">
-                                {new Date(booking.scheduledDate).toLocaleDateString()}
-                              </p>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                        {filteredBookings.length === 0 && (
-                          <TableRow>
-                            <TableCell colSpan={7} className="text-center py-12">
-                              <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                              <p className="text-muted-foreground">No bookings found</p>
-                            </TableCell>
-                          </TableRow>
-                        )}
-                      </TableBody>
-                    </Table>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
 
           {/* Messaging Tab */}
 
