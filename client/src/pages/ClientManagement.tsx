@@ -880,7 +880,6 @@ export default function ClientManagement() {
                               </Select>
                             </div>
                           </TableHead>
-                          <TableHead className="w-[70px]">Role</TableHead>
                           <TableHead className="w-[140px]">Location</TableHead>
                           <TableHead className="w-[140px]">Bookings/Earnings</TableHead>
                           <TableHead className="w-[140px]">
@@ -981,6 +980,9 @@ export default function ClientManagement() {
                                     ID: {client.id}
                                   </div>
                                   <div className="flex items-center gap-2 flex-wrap">
+                                    <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900 dark:text-blue-100 text-xs px-2 py-1">
+                                      Client
+                                    </Badge>
                                     <Badge 
                                       variant={activityStatus.variant}
                                       className={`${activityStatus.className} text-xs px-1.5 py-0.5`}
@@ -1006,11 +1008,6 @@ export default function ClientManagement() {
                                   </div>
                                 </div>
                               </div>
-                            </TableCell>
-                            <TableCell className="py-2">
-                              <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900 dark:text-blue-100 text-xs px-2 py-1">
-                                Client
-                              </Badge>
                             </TableCell>
                             <TableCell>
                               <div className="text-sm space-y-1">
@@ -1730,7 +1727,6 @@ export default function ClientManagement() {
                               </Select>
                             </div>
                           </TableHead>
-                          <TableHead className="w-[70px]">Role</TableHead>
                           <TableHead className="w-[140px]">Location</TableHead>
                           <TableHead className="w-[140px]">Bookings/Earnings</TableHead>
                           <TableHead className="w-[140px]">
@@ -1839,6 +1835,9 @@ export default function ClientManagement() {
                                     </Tooltip>
                                     <div className="mt-1 space-y-1">
                                       <div className="flex items-center gap-2 flex-wrap">
+                                        <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900 dark:text-blue-100 text-xs">
+                                          Client
+                                        </Badge>
                                         <Badge 
                                           variant={activityStatus.variant}
                                           className={activityStatus.className}
@@ -1874,11 +1873,6 @@ export default function ClientManagement() {
                                     </div>
                                   </div>
                                 </div>
-                              </TableCell>
-                              <TableCell>
-                                <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900 dark:text-blue-100">
-                                  Client
-                                </Badge>
                               </TableCell>
                               <TableCell>
                                 <div className="text-sm space-y-1">
