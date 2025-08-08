@@ -1161,6 +1161,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/admin/database-info", async (req, res) => {
+    try {
+      const dbInfo = await storage.getDatabaseInfo();
+      res.json(dbInfo);
+    } catch (error) {
+      console.error("Get database info error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   app.get("/api/admin/bookings", async (req, res) => {
     try {
       const bookings = await storage.getBookingsWithDetails();

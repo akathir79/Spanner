@@ -49,6 +49,12 @@ export default function PlatformSettings() {
     refetchInterval: 30000, // Refresh every 30 seconds for file-based data
   });
 
+  // Fetch database information
+  const { data: databaseInfo, isLoading: databaseInfoLoading } = useQuery({
+    queryKey: ['/api/admin/database-info'],
+    refetchInterval: 60000, // Refresh every minute for database changes
+  });
+
   // Only super admins can access platform settings
   if (!user || user.role !== "super_admin") {
     return (
@@ -163,7 +169,27 @@ export default function PlatformSettings() {
               <CardContent className="p-6 text-center">
                 <Database className="w-12 h-12 mx-auto mb-4 text-purple-600" />
                 <h3 className="font-semibold mb-2">Database Management</h3>
-                <p className="text-sm text-muted-foreground">Backup, restore, and maintain data integrity</p>
+                <p className="text-sm text-muted-foreground mb-3">Backup, restore, and maintain data integrity</p>
+                {databaseInfoLoading ? (
+                  <div className="text-xs text-muted-foreground">Loading database info...</div>
+                ) : databaseInfo ? (
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-xs">
+                      <span>Type:</span>
+                      <Badge variant="outline" className="text-xs">{databaseInfo.databaseType}</Badge>
+                    </div>
+                    <div className="flex justify-between text-xs">
+                      <span>Database:</span>
+                      <Badge variant="outline" className="text-xs">{databaseInfo.databaseName}</Badge>
+                    </div>
+                    <div className="flex justify-between text-xs font-medium pt-1 border-t">
+                      <span>Tables:</span>
+                      <Badge variant="secondary" className="text-xs">{databaseInfo.tableCount}</Badge>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-xs text-muted-foreground">Unable to load database info</div>
+                )}
               </CardContent>
             </Card>
 

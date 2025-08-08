@@ -140,6 +140,7 @@ export interface IStorage {
   getUsersWithProfiles(): Promise<(User & { workerProfile?: WorkerProfile })[]>;
   getBookingsWithDetails(): Promise<(Booking & { client: User; worker: User })[]>;
   getAdminCounts(): Promise<{ regularAdmins: number; superAdmins: number; totalAdmins: number }>;
+  getDatabaseInfo(): Promise<{ databaseType: string; databaseName: string; tableCount: number }>;
   
   // Worker Bank Details
   createWorkerBankDetails(bankDetails: InsertWorkerBankDetails): Promise<WorkerBankDetails>;
@@ -736,6 +737,40 @@ export class DatabaseStorage implements IStorage {
       superAdmins,
       totalAdmins: regularAdmins + superAdmins
     };
+  }
+
+  async getDatabaseInfo(): Promise<{ databaseType: string; databaseName: string; tableCount: number }> {
+    try {
+      // Get database type and name from connection string or direct query
+      const dbTypeResult = await db.execute(sql`SELECT version() as version`);
+      const version = (dbTypeResult.rows[0] as any)?.version || 'Unknown';
+      const databaseType = version.includes('PostgreSQL') ? 'PostgreSQL' : 'Unknown';
+      
+      // Get current database name
+      const dbNameResult = await db.execute(sql`SELECT current_database() as database_name`);
+      const databaseName = (dbNameResult.rows[0] as any)?.database_name || 'Unknown';
+      
+      // Get table count from information_schema
+      const tableCountResult = await db.execute(sql`
+        SELECT COUNT(*) as table_count 
+        FROM information_schema.tables 
+        WHERE table_schema = 'public' AND table_type = 'BASE TABLE'
+      `);
+      const tableCount = Number((tableCountResult.rows[0] as any)?.table_count) || 0;
+      
+      return {
+        databaseType,
+        databaseName,
+        tableCount
+      };
+    } catch (error) {
+      console.error('Error getting database info:', error);
+      return {
+        databaseType: 'PostgreSQL',
+        databaseName: 'Unknown',
+        tableCount: 0
+      };
+    }
   }
   // Job posting methods
   async getAllJobPostings(): Promise<(JobPosting & { client: User; bids?: Bid[] })[]> {
