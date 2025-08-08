@@ -1343,7 +1343,7 @@ export default function ClientManagement() {
                                         }}
                                         title="SMS"
                                       >
-                                        <MessageSquare className="w-3 h-3" />
+                                        <Square className="w-3 h-3" />
                                       </Button>
                                       {client.email && (
                                         <Button
@@ -1441,7 +1441,7 @@ export default function ClientManagement() {
                                           }}
                                           title="SMS"
                                         >
-                                          <MessageSquare className="w-3 h-3" />
+                                          <Square className="w-3 h-3" />
                                         </Button>
                                         {client.email && (
                                           <Button
@@ -2350,7 +2350,7 @@ export default function ClientManagement() {
                                           }}
                                           title="SMS"
                                         >
-                                          <MessageSquare className="w-3 h-3" />
+                                          <Square className="w-3 h-3" />
                                         </Button>
                                         {client.email && (
                                           <Button
@@ -2437,7 +2437,7 @@ export default function ClientManagement() {
                                                 }}
                                                 title="SMS"
                                               >
-                                                <MessageSquare className="w-3 h-3" />
+                                                <Square className="w-3 h-3" />
                                               </Button>
                                               {client.email && (
                                                 <Button
