@@ -43,6 +43,12 @@ export default function PlatformSettings() {
     refetchInterval: 5000, // Refresh every 5 seconds to show real-time updates
   });
 
+  // Fetch location counts from states-districts.json
+  const { data: locationCounts, isLoading: locationCountsLoading } = useQuery({
+    queryKey: ['/api/admin/location-counts'],
+    refetchInterval: 30000, // Refresh every 30 seconds for file-based data
+  });
+
   // Only super admins can access platform settings
   if (!user || user.role !== "super_admin") {
     return (
@@ -129,7 +135,27 @@ export default function PlatformSettings() {
               <CardContent className="p-6 text-center">
                 <FileText className="w-12 h-12 mx-auto mb-4 text-green-600" />
                 <h3 className="font-semibold mb-2">District and State Manager</h3>
-                <p className="text-sm text-muted-foreground">Manage district-wise operations and coverage</p>
+                <p className="text-sm text-muted-foreground mb-3">Manage district-wise operations and coverage</p>
+                {locationCountsLoading ? (
+                  <div className="text-xs text-muted-foreground">Loading location data...</div>
+                ) : locationCounts ? (
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-xs">
+                      <span>States:</span>
+                      <Badge variant="outline" className="text-xs">{locationCounts.states}</Badge>
+                    </div>
+                    <div className="flex justify-between text-xs">
+                      <span>Districts:</span>
+                      <Badge variant="outline" className="text-xs">{locationCounts.districts}</Badge>
+                    </div>
+                    <div className="flex justify-between text-xs font-medium pt-1 border-t">
+                      <span>Total Locations:</span>
+                      <Badge variant="secondary" className="text-xs">{locationCounts.totalLocations}</Badge>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-xs text-muted-foreground">Unable to load location data</div>
+                )}
               </CardContent>
             </Card>
 

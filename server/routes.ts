@@ -1140,6 +1140,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/admin/location-counts", async (req, res) => {
+    try {
+      const data = statesDistrictsData as { states: Array<{ state: string; districts: string[] }> };
+      const stateCount = data.states.length;
+      let districtCount = 0;
+      
+      data.states.forEach(stateObj => {
+        districtCount += stateObj.districts.length;
+      });
+      
+      res.json({
+        states: stateCount,
+        districts: districtCount,
+        totalLocations: stateCount + districtCount
+      });
+    } catch (error) {
+      console.error("Get location counts error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   app.get("/api/admin/bookings", async (req, res) => {
     try {
       const bookings = await storage.getBookingsWithDetails();
