@@ -2205,8 +2205,10 @@ export default function ClientManagement() {
                                 </Tooltip>
                               </TableCell>
                               <TableCell>
-                                <div className="text-sm space-y-1">
-                                  {(client as any).address ? (
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <div className="text-sm space-y-1 cursor-pointer">
+                                      {(client as any).address ? (
                                     <div>
                                       <div className="text-gray-700 dark:text-gray-300 text-sm font-bold">
                                         {client.district}, {client.state}
@@ -2250,10 +2252,26 @@ export default function ClientManagement() {
                                       Not specified
                                     </span>
                                   )}
-                                </div>
+                                    </div>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <div className="max-w-xs">
+                                      <div className="space-y-1">
+                                        <div className="text-sm"><strong>Full Address:</strong> {(client as any).address}</div>
+                                        <div className="text-sm"><strong>District:</strong> {client.district}</div>
+                                        <div className="text-sm"><strong>State:</strong> {client.state}</div>
+                                        {(client as any).pincode && (
+                                          <div className="text-sm"><strong>PIN Code:</strong> {(client as any).pincode}</div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </TooltipContent>
+                                </Tooltip>
                               </TableCell>
                               <TableCell>
-                                <div className="text-sm text-gray-600 dark:text-gray-400 space-y-0.5">
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <div className="text-sm text-gray-600 dark:text-gray-400 space-y-0.5 cursor-pointer">
                                   <div className="font-medium">Bookings: 0</div>
                                   <div className="text-xs text-gray-500 dark:text-gray-400 ml-3 space-y-0.5">
                                     <div>• In progress: 0</div>
@@ -2311,7 +2329,22 @@ export default function ClientManagement() {
                                       <Copy className="w-3 h-3" />
                                     </Button>
                                   </div>
-                                </div>
+                                    </div>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <div className="space-y-1">
+                                      <div className="text-sm"><strong>Booking Summary:</strong></div>
+                                      <div className="text-sm">Total Bookings: 0</div>
+                                      <div className="text-sm">• In Progress: 0</div>
+                                      <div className="text-sm">• Completed: 0</div>
+                                      <div className="text-sm mt-2"><strong>Financial Summary:</strong></div>
+                                      <div className="text-sm">Account Balance: ₹0</div>
+                                      <div className="text-sm">Total Spent: ₹0</div>
+                                      <div className="text-sm">Commission Earned: ₹0</div>
+                                      <div className="text-sm">GST Collected: ₹0</div>
+                                    </div>
+                                  </TooltipContent>
+                                </Tooltip>
                               </TableCell>
                               <TableCell>
                                 <Tooltip>
