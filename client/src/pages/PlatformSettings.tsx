@@ -23,7 +23,11 @@ import {
   CheckCircle,
   AlertTriangle,
   User,
-  FileText
+  FileText,
+  Briefcase,
+  DollarSign,
+  TrendingUp,
+  UserCheck
 } from "lucide-react";
 
 export default function PlatformSettings() {
@@ -86,7 +90,7 @@ export default function PlatformSettings() {
             <Shield className="w-6 h-6 text-orange-600" />
             Super Admin Tools
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
             <Card className="hover:shadow-lg transition-shadow cursor-pointer">
               <CardContent className="p-6 text-center">
                 <User className="w-12 h-12 mx-auto mb-4 text-blue-600" />
@@ -132,6 +136,38 @@ export default function PlatformSettings() {
                 <Globe className="w-12 h-12 mx-auto mb-4 text-indigo-600" />
                 <h3 className="font-semibold mb-2">Advanced Analytics</h3>
                 <p className="text-sm text-muted-foreground">Detailed platform metrics and insights</p>
+              </CardContent>
+            </Card>
+
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+              <CardContent className="p-6 text-center">
+                <Briefcase className="w-12 h-12 mx-auto mb-4 text-orange-600" />
+                <h3 className="font-semibold mb-2">Service Type Management</h3>
+                <p className="text-sm text-muted-foreground">Add, edit, and manage all service categories</p>
+              </CardContent>
+            </Card>
+
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+              <CardContent className="p-6 text-center">
+                <UserCheck className="w-12 h-12 mx-auto mb-4 text-cyan-600" />
+                <h3 className="font-semibold mb-2">Super Admin Profile</h3>
+                <p className="text-sm text-muted-foreground">Manage super admin account and permissions</p>
+              </CardContent>
+            </Card>
+
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+              <CardContent className="p-6 text-center">
+                <DollarSign className="w-12 h-12 mx-auto mb-4 text-emerald-600" />
+                <h3 className="font-semibold mb-2">Site Financial Statement</h3>
+                <p className="text-sm text-muted-foreground">View comprehensive financial reports and analytics</p>
+              </CardContent>
+            </Card>
+
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+              <CardContent className="p-6 text-center">
+                <TrendingUp className="w-12 h-12 mx-auto mb-4 text-pink-600" />
+                <h3 className="font-semibold mb-2">Salary History</h3>
+                <p className="text-sm text-muted-foreground">Track worker payments and salary distributions</p>
               </CardContent>
             </Card>
           </div>
