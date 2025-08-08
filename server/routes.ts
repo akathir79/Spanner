@@ -1,7 +1,8 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import statesDistrictsData from "@shared/states-districts.json";
+// Remove static import - we'll read dynamically  
+// import statesDistrictsData from "@shared/states-districts.json";
 import { z } from "zod";
 import { 
   insertUserSchema, 
@@ -2170,7 +2171,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // API endpoint to get states-districts data (use static import for now)
+  // API endpoint to get states-districts data (reads fresh from filesystem on every request)
   app.get('/api/states-districts', async (req, res) => {
     try {
       // Add no-cache headers to prevent browser caching
@@ -2180,8 +2181,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         'Expires': '0'
       });
       
-      // For now, use the static import - server restart will pick up file changes
-      return res.json(statesDistrictsData);
+      // Always read fresh from filesystem - truly dynamic
+      const fs = await import('fs');
+      const path = await import('path');
+      const filePath = path.join(process.cwd(), 'shared', 'states-districts.json');
+      const fileContent = fs.readFileSync(filePath, 'utf-8');
+      const freshData = JSON.parse(fileContent);
+      
+      return res.json(freshData);
     } catch (error) {
       console.error('Error fetching states-districts data:', error);
       res.status(500).json({ error: 'Failed to fetch states-districts data' });
@@ -2193,8 +2200,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { stateName } = req.params;
       
-      // Use static import for now - server restart picks up file changes
-      const freshStatesDistrictsData = statesDistrictsData;
+      // Always read fresh from filesystem for districts endpoint too
+      const fs = await import('fs');
+      const path = await import('path');
+      const filePath = path.join(process.cwd(), 'shared', 'states-districts.json');
+      const fileContent = fs.readFileSync(filePath, 'utf-8');
+      const freshStatesDistrictsData = JSON.parse(fileContent);
       
       if (stateName && stateName !== 'undefined') {
         // Return districts for specific state
