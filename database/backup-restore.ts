@@ -18,6 +18,23 @@ import path from 'path';
  * Creates tables if they don't exist and loads all data
  */
 
+// Utility function to convert string timestamps to Date objects
+function transformTimestampFields(data: any[]): any[] {
+  return data.map(item => {
+    const transformed = { ...item };
+    // Convert timestamp fields from strings to Date objects
+    const timestampFields = ['createdAt', 'updatedAt', 'scheduledDate', 'deadline', 'lastLoginAt'];
+    
+    for (const field of timestampFields) {
+      if (transformed[field] && typeof transformed[field] === 'string') {
+        transformed[field] = new Date(transformed[field]);
+      }
+    }
+    
+    return transformed;
+  });
+}
+
 interface DatabaseBackup {
   metadata: {
     exportDate: string;
@@ -33,6 +50,9 @@ interface DatabaseBackup {
     jobPostings: any[];
     bids: any[];
     workerBankDetails: any[];
+    // Legacy fields (no longer used - districts/areas now via API)
+    districts?: any[];
+    areas?: any[];
   };
 }
 
@@ -75,42 +95,31 @@ async function restoreDatabase(backupFilePath?: string): Promise<void> {
       db.delete(workerBankDetails),
       db.delete(workerProfiles),
       db.delete(users),
-      db.delete(areas),
-      db.delete(serviceCategories),
-      db.delete(districts)
+      db.delete(serviceCategories)
     ]);
 
     // Restore data in correct order (respecting foreign key constraints)
     console.log('📊 Restoring data...');
     
-    // 1. Districts first (no dependencies)
-    if (backup.schema.districts.length > 0) {
-      console.log(`📍 Restoring ${backup.schema.districts.length} districts...`);
-      await db.insert(districts).values(backup.schema.districts);
-    }
-
-    // 2. Service Categories (no dependencies)
+    // 1. Service Categories first (no dependencies)
     if (backup.schema.serviceCategories.length > 0) {
       console.log(`🔧 Restoring ${backup.schema.serviceCategories.length} service categories...`);
-      await db.insert(serviceCategories).values(backup.schema.serviceCategories);
+      const transformedServiceCategories = transformTimestampFields(backup.schema.serviceCategories);
+      await db.insert(serviceCategories).values(transformedServiceCategories);
     }
 
-    // 3. Areas (depends on districts)
-    if (backup.schema.areas.length > 0) {
-      console.log(`🏘️  Restoring ${backup.schema.areas.length} areas...`);
-      await db.insert(areas).values(backup.schema.areas);
-    }
-
-    // 4. Users (depends on districts)
+    // 2. Users (no foreign key dependencies now since districts are API-based)
     if (backup.schema.users.length > 0) {
       console.log(`👥 Restoring ${backup.schema.users.length} users...`);
-      await db.insert(users).values(backup.schema.users);
+      const transformedUsers = transformTimestampFields(backup.schema.users);
+      await db.insert(users).values(transformedUsers);
     }
 
-    // 5. Worker Profiles (depends on users and service categories)
+    // 3. Worker Profiles (depends on users and service categories)
     if (backup.schema.workerProfiles.length > 0) {
       console.log(`🔨 Restoring ${backup.schema.workerProfiles.length} worker profiles...`);
-      await db.insert(workerProfiles).values(backup.schema.workerProfiles);
+      const transformedWorkerProfiles = transformTimestampFields(backup.schema.workerProfiles);
+      await db.insert(workerProfiles).values(transformedWorkerProfiles);
     }
 
     // 6. Worker Bank Details (depends on users)
@@ -148,8 +157,6 @@ async function restoreDatabase(backupFilePath?: string): Promise<void> {
     // Print summary
     console.log('\n📊 Restore Summary:');
     console.log(`- Users: ${backup.schema.users.length}`);
-    console.log(`- Districts: ${backup.schema.districts.length}`);
-    console.log(`- Areas: ${backup.schema.areas.length}`);
     console.log(`- Service Categories: ${backup.schema.serviceCategories.length}`);
     console.log(`- Worker Profiles: ${backup.schema.workerProfiles.length}`);
     console.log(`- OTP Verifications: ${backup.schema.otpVerifications.length}`);
@@ -157,6 +164,12 @@ async function restoreDatabase(backupFilePath?: string): Promise<void> {
     console.log(`- Job Postings: ${backup.schema.jobPostings.length}`);
     console.log(`- Bids: ${backup.schema.bids.length}`);
     console.log(`- Worker Bank Details: ${backup.schema.workerBankDetails.length}`);
+    if (backup.schema.districts) {
+      console.log(`- Districts (legacy): ${backup.schema.districts.length}`);
+    }
+    if (backup.schema.areas) {
+      console.log(`- Areas (legacy): ${backup.schema.areas.length}`);
+    }
 
   } catch (error) {
     console.error('❌ Database restore failed:', error);
