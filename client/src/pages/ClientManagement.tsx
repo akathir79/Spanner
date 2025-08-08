@@ -1229,6 +1229,19 @@ export default function ClientManagement() {
                                       >
                                         <span className="text-xs font-bold transition-all duration-300 group-hover:scale-125 group-hover:text-green-700">₹</span>
                                       </Button>
+                                      <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        className="h-6 w-6 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          const financialData = `${client.firstName} ${client.lastName} - Financial Summary\nBookings: 0 (In progress: 0, Completed: 0)\nBalance: ₹0\nSpent: ₹0\nCommission: ₹0\nGST: ₹0`;
+                                          navigator.clipboard.writeText(financialData);
+                                        }}
+                                        title="Copy Financial Data"
+                                      >
+                                        <Copy className="w-3 h-3" />
+                                      </Button>
                                     </div>
                                   </div>
                                 </TooltipTrigger>
@@ -1244,7 +1257,33 @@ export default function ClientManagement() {
                                       <div className="text-sm"><strong>Platform Commission:</strong> ₹0</div>
                                       <div className="text-sm"><strong>GST Collected:</strong> ₹0</div>
                                     </div>
-                                    <p className="text-xs text-gray-500">Click ₹ button for detailed financial statements</p>
+                                    <div className="flex items-center gap-1 mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
+                                      <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        className="h-6 w-6 p-0 text-green-600 hover:text-green-700 hover:bg-green-50"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleViewFinancialStatements(client);
+                                        }}
+                                        title="Financial Statements"
+                                      >
+                                        <span className="text-xs font-bold">₹</span>
+                                      </Button>
+                                      <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        className="h-6 w-6 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          const financialData = `${client.firstName} ${client.lastName} - Financial Summary\nBookings: 0 (In progress: 0, Completed: 0)\nBalance: ₹0\nSpent: ₹0\nCommission: ₹0\nGST: ₹0`;
+                                          navigator.clipboard.writeText(financialData);
+                                        }}
+                                        title="Copy Financial Data"
+                                      >
+                                        <Copy className="w-3 h-3" />
+                                      </Button>
+                                    </div>
                                   </div>
                                 </TooltipContent>
                               </Tooltip>
@@ -1256,11 +1295,29 @@ export default function ClientManagement() {
                                     <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
                                       <Phone className="w-3 h-3" />
                                       <span>{client.mobile}</span>
+                                      <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        className="h-4 w-4 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50 ml-1"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          navigator.clipboard.writeText(client.mobile);
+                                        }}
+                                        title="Copy Mobile Number"
+                                      >
+                                        <Copy className="w-2 h-2" />
+                                      </Button>
                                     </div>
                                     {client.email && (
                                       <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
                                         <Mail className="w-3 h-3" />
-                                        <span className="truncate max-w-[150px]">{client.email}</span>
+                                        <a 
+                                          href={`mailto:${client.email}`}
+                                          className="truncate max-w-[150px] text-blue-600 hover:text-blue-700 underline"
+                                          onClick={(e) => e.stopPropagation()}
+                                        >
+                                          {client.email}
+                                        </a>
                                       </div>
                                     )}
                                     <div className="flex items-center gap-1 mt-2">
@@ -1505,6 +1562,19 @@ export default function ClientManagement() {
                                             title="Transfer History"
                                           >
                                             <History className="w-3 h-3" />
+                                          </Button>
+                                          <Button
+                                            size="sm"
+                                            variant="ghost"
+                                            className="h-6 w-6 p-0 text-purple-600 hover:text-purple-700 hover:bg-purple-50"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              const bankDetails = `${client.firstName} ${client.lastName} - Bank Details\nAccount: ${(client as any).bankAccountNumber}\nIFSC: ${(client as any).bankIFSC}${(client as any).bankMICR ? `\nMICR: ${(client as any).bankMICR}` : ''}${(client as any).bankName ? `\nBank: ${(client as any).bankName}` : ''}${(client as any).bankAddress ? `\nAddress: ${(client as any).bankAddress}` : ''}`;
+                                              navigator.clipboard.writeText(bankDetails);
+                                            }}
+                                            title="Copy Bank Details"
+                                          >
+                                            <Copy className="w-3 h-3" />
                                           </Button>
                                         </div>
                                       </>
@@ -2198,6 +2268,19 @@ export default function ClientManagement() {
                                       title="Financial Statements"
                                     >
                                       <span className="text-xs font-bold transition-all duration-300 group-hover:scale-125 group-hover:text-green-700">₹</span>
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      className="h-6 w-6 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        const financialData = `${client.firstName} ${client.lastName} - Financial Summary\nBookings: 0 (In progress: 0, Completed: 0)\nBalance: ₹0\nSpent: ₹0\nCommission: ₹0\nGST: ₹0`;
+                                        navigator.clipboard.writeText(financialData);
+                                      }}
+                                      title="Copy Financial Data"
+                                    >
+                                      <Copy className="w-3 h-3" />
                                     </Button>
                                   </div>
                                 </div>
