@@ -576,29 +576,29 @@ export default function AdminManagement() {
           <Tooltip>
             <TooltipTrigger asChild>
               <div className="text-sm space-y-1 cursor-pointer">
-                {admin.bank_account_number && admin.bank_ifsc ? (
+                {(admin as any).bankAccountNumber && (admin as any).bankIFSC ? (
                   <>
                     <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
                       <CreditCard className="w-3 h-3" />
-                      <span className="font-mono text-xs">{admin.bank_account_number.slice(-4)}</span>
+                      <span className="font-mono text-xs">{(admin as any).bankAccountNumber.slice(-4)}</span>
                     </div>
                     <div className="text-xs text-gray-500 dark:text-gray-400">
-                      IFSC: {admin.bank_ifsc}
+                      IFSC: {(admin as any).bankIFSC}
                     </div>
-                    {admin.bank_micr && (
+                    {(admin as any).bankMICR && (
                       <div className="text-xs text-gray-500 dark:text-gray-400">
-                        MICR: {admin.bank_micr}
+                        MICR: {(admin as any).bankMICR}
                       </div>
                     )}
-                    {admin.bank_name && (
+                    {(admin as any).bankName && (
                       <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                        {admin.bank_name}
+                        {(admin as any).bankName}
                       </div>
                     )}
-                    {admin.bank_address && (
+                    {(admin as any).bankAddress && (
                       <div className="text-xs text-gray-500 dark:text-gray-400">
                         {(() => {
-                          const address = admin.bank_address;
+                          const address = (admin as any).bankAddress;
                           const parts = address.split(',').map((part: string) => part.trim());
                           
                           if (parts.length >= 2) {
@@ -637,40 +637,40 @@ export default function AdminManagement() {
               </div>
             </TooltipTrigger>
             <TooltipContent className="max-w-sm">
-              {admin.bank_account_number && admin.bank_ifsc ? (
+              {(admin as any).bankAccountNumber && (admin as any).bankIFSC ? (
                 <div className="space-y-2">
                   <p className="font-medium">Complete Bank Details:</p>
                   <div className="space-y-1 text-xs">
                     <div className="flex items-center gap-2">
                       <CreditCard className="w-3 h-3" />
-                      <span>Account: {admin.bank_account_number}</span>
+                      <span>Account: {(admin as any).bankAccountNumber}</span>
                     </div>
                     <div>
-                      <span className="font-medium">IFSC:</span> {admin.bank_ifsc}
+                      <span className="font-medium">IFSC:</span> {(admin as any).bankIFSC}
                     </div>
-                    {admin.bank_micr && (
+                    {(admin as any).bankMICR && (
                       <div>
-                        <span className="font-medium">MICR:</span> {admin.bank_micr}
+                        <span className="font-medium">MICR:</span> {(admin as any).bankMICR}
                       </div>
                     )}
-                    {admin.bank_name && (
+                    {(admin as any).bankName && (
                       <div>
-                        <span className="font-medium">Bank Name:</span> {admin.bank_name}
+                        <span className="font-medium">Bank Name:</span> {(admin as any).bankName}
                       </div>
                     )}
-                    {admin.bank_address && (
+                    {(admin as any).bankAddress && (
                       <div>
-                        <span className="font-medium">Bank Address:</span> {admin.bank_address}
+                        <span className="font-medium">Bank Address:</span> {(admin as any).bankAddress}
                       </div>
                     )}
-                    {admin.bank_account_holder_name && (
+                    {(admin as any).bankAccountHolderName && (
                       <div>
-                        <span className="font-medium">Account Holder:</span> {admin.bank_account_holder_name}
+                        <span className="font-medium">Account Holder:</span> {(admin as any).bankAccountHolderName}
                       </div>
                     )}
-                    {admin.bank_account_type && (
+                    {(admin as any).bankAccountType && (
                       <div>
-                        <span className="font-medium">Account Type:</span> {admin.bank_account_type}
+                        <span className="font-medium">Account Type:</span> {(admin as any).bankAccountType}
                       </div>
                     )}
                   </div>

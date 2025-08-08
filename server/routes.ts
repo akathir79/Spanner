@@ -906,15 +906,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const users = await storage.getUsersWithProfiles();
       const adminUsers = users.filter(user => user.role === "admin" || user.role === "super_admin");
       
-      // Debug log to check if bank details are included
-      if (adminUsers.length > 0) {
-        console.log("Admin user sample bank data:", {
-          id: adminUsers[0].id,
-          bank_account_number: adminUsers[0].bank_account_number,
-          bank_ifsc: adminUsers[0].bank_ifsc,
-          bank_name: adminUsers[0].bank_name
-        });
-      }
+
       
       res.json(adminUsers);
     } catch (error) {

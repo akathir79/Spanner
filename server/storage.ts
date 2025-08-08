@@ -674,6 +674,15 @@ export class DatabaseStorage implements IStorage {
     
     return results.map(result => ({
       ...result.users,
+      // Map database snake_case to frontend camelCase for consistency
+      bankAccountNumber: result.users.bank_account_number,
+      bankIFSC: result.users.bank_ifsc,
+      bankAccountHolderName: result.users.bank_account_holder_name,
+      bankName: result.users.bank_name,
+      bankBranch: result.users.bank_branch,
+      bankAddress: result.users.bank_address,
+      bankAccountType: result.users.bank_account_type,
+      bankMICR: result.users.bank_micr,
       workerProfile: result.worker_profiles || undefined
     }));
   }
