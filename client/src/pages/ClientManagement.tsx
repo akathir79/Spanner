@@ -1658,6 +1658,19 @@ export default function ClientManagement() {
                                           <History className="w-3 h-3 mr-1" />
                                           History
                                         </Button>
+                                        <Button
+                                          size="sm"
+                                          variant="outline"
+                                          className="h-7 px-2 text-purple-600 border-purple-200 hover:text-purple-700 hover:bg-purple-50"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            const bankDetails = `${client.firstName} ${client.lastName} - Bank Details\nAccount: ${(client as any).bankAccountNumber}\nIFSC: ${(client as any).bankIFSC}${(client as any).bankMICR ? `\nMICR: ${(client as any).bankMICR}` : ''}${(client as any).bankName ? `\nBank: ${(client as any).bankName}` : ''}${(client as any).bankAddress ? `\nAddress: ${(client as any).bankAddress}` : ''}`;
+                                            navigator.clipboard.writeText(bankDetails);
+                                          }}
+                                        >
+                                          <Copy className="w-3 h-3 mr-1" />
+                                          Copy
+                                        </Button>
                                       </div>
                                     </div>
                                   ) : (
@@ -2551,6 +2564,19 @@ export default function ClientManagement() {
                                             >
                                               <History className="w-3 h-3" />
                                             </Button>
+                                            <Button
+                                              size="sm"
+                                              variant="ghost"
+                                              className="h-6 w-6 p-0 text-purple-600 hover:text-purple-700 hover:bg-purple-50"
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                const bankDetails = `${client.firstName} ${client.lastName} - Bank Details\nAccount: ${(client as any).bankAccountNumber}\nIFSC: ${(client as any).bankIFSC}${(client as any).bankMICR ? `\nMICR: ${(client as any).bankMICR}` : ''}${(client as any).bankName ? `\nBank: ${(client as any).bankName}` : ''}${(client as any).bankAddress ? `\nAddress: ${(client as any).bankAddress}` : ''}`;
+                                                navigator.clipboard.writeText(bankDetails);
+                                              }}
+                                              title="Copy Bank Details"
+                                            >
+                                              <Copy className="w-3 h-3" />
+                                            </Button>
                                           </div>
                                         </>
                                       ) : (
@@ -2623,6 +2649,19 @@ export default function ClientManagement() {
                                           >
                                             <History className="w-3 h-3 mr-1" />
                                             History
+                                          </Button>
+                                          <Button
+                                            size="sm"
+                                            variant="outline"
+                                            className="h-7 px-2 text-purple-600 border-purple-200 hover:text-purple-700 hover:bg-purple-50"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              const bankDetails = `${client.firstName} ${client.lastName} - Bank Details\nAccount: ${(client as any).bankAccountNumber}\nIFSC: ${(client as any).bankIFSC}${(client as any).bankMICR ? `\nMICR: ${(client as any).bankMICR}` : ''}${(client as any).bankName ? `\nBank: ${(client as any).bankName}` : ''}${(client as any).bankAddress ? `\nAddress: ${(client as any).bankAddress}` : ''}`;
+                                              navigator.clipboard.writeText(bankDetails);
+                                            }}
+                                          >
+                                            <Copy className="w-3 h-3 mr-1" />
+                                            Copy
                                           </Button>
                                         </div>
                                       </div>
