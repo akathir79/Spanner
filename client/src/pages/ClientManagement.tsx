@@ -32,7 +32,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { ArrowLeft, Phone, Mail, Calendar, MoreHorizontal, Eye, MessageSquare, CheckCircle, XCircle, Trash2, Edit, AlertCircle, Search, X, Menu, Loader2, MessageCircle, Smartphone, CreditCard, Send, ArrowRightLeft, History, DollarSign, Filter } from "lucide-react";
+import { ArrowLeft, Phone, Mail, Calendar, MoreHorizontal, Eye, MessageSquare, CheckCircle, XCircle, Trash2, Edit, AlertCircle, Search, X, Menu, Loader2, MessageCircle, Smartphone, CreditCard, Send, ArrowRightLeft, History, DollarSign, Filter, Copy } from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa";
 import { format } from "date-fns";
 import { useLocation } from "wouter";
@@ -1114,6 +1114,21 @@ export default function ClientManagement() {
                                             PIN: {(client as any).pincode}
                                           </div>
                                         )}
+                                        <div className="flex items-center gap-1 mt-1">
+                                          <Button
+                                            size="sm"
+                                            variant="ghost"
+                                            className="h-6 w-6 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              const fullAddress = `${(client as any).address}, ${client.district}, ${client.state}${(client as any).pincode ? `, PIN: ${(client as any).pincode}` : ''}`;
+                                              navigator.clipboard.writeText(fullAddress);
+                                            }}
+                                            title="Copy Address"
+                                          >
+                                            <Copy className="w-3 h-3" />
+                                          </Button>
+                                        </div>
                                       </div>
                                     ) : client.district && client.state ? (
                                       <div>
@@ -1139,6 +1154,21 @@ export default function ClientManagement() {
                                         {(client as any).pincode && (
                                           <div className="text-sm"><strong>PIN Code:</strong> {(client as any).pincode}</div>
                                         )}
+                                        <div className="flex items-center gap-1 mt-2">
+                                          <Button
+                                            size="sm"
+                                            variant="ghost"
+                                            className="h-6 w-6 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              const fullAddress = `${(client as any).address}, ${client.district}, ${client.state}${(client as any).pincode ? `, PIN: ${(client as any).pincode}` : ''}`;
+                                              navigator.clipboard.writeText(fullAddress);
+                                            }}
+                                            title="Copy Address"
+                                          >
+                                            <Copy className="w-3 h-3" />
+                                          </Button>
+                                        </div>
                                       </div>
                                     ) : (
                                       <div className="text-sm text-gray-500">
@@ -2095,6 +2125,21 @@ export default function ClientManagement() {
                                           PIN: {(client as any).pincode}
                                         </div>
                                       )}
+                                      <div className="flex items-center gap-1 mt-1">
+                                        <Button
+                                          size="sm"
+                                          variant="ghost"
+                                          className="h-6 w-6 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            const fullAddress = `${(client as any).address}, ${client.district}, ${client.state}${(client as any).pincode ? `, PIN: ${(client as any).pincode}` : ''}`;
+                                            navigator.clipboard.writeText(fullAddress);
+                                          }}
+                                          title="Copy Address"
+                                        >
+                                          <Copy className="w-3 h-3" />
+                                        </Button>
+                                      </div>
                                     </div>
                                   ) : client.district && client.state ? (
                                     <div>
