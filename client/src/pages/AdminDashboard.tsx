@@ -650,6 +650,75 @@ export default function AdminDashboard() {
           </Card>
         </div>
 
+        {/* Management Cards Section */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <Card 
+            className="cursor-pointer transition-all hover:shadow-md border-2 hover:border-blue-200"
+            onClick={() => setActiveTab("bookings")}
+          >
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Booking Management</p>
+                  <p className="text-2xl font-bold text-blue-600">{stats.totalBookings}</p>
+                  <p className="text-xs text-muted-foreground">Total platform bookings</p>
+                </div>
+                <Calendar className="h-8 w-8 text-blue-600" />
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card 
+            className="cursor-pointer transition-all hover:shadow-md border-2 hover:border-purple-200"
+            onClick={() => setActiveTab("analytics")}
+          >
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Analytics</p>
+                  <p className="text-2xl font-bold text-purple-600">{stats.completedBookings}</p>
+                  <p className="text-xs text-muted-foreground">Completed services</p>
+                </div>
+                <TrendingUp className="h-8 w-8 text-purple-600" />
+              </div>
+            </CardContent>
+          </Card>
+          
+          {user?.role === "super_admin" && (
+            <Card 
+              className="cursor-pointer transition-all hover:shadow-md border-2 hover:border-gray-200"
+              onClick={() => setActiveTab("settings")}
+            >
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Platform Settings</p>
+                    <p className="text-2xl font-bold text-gray-600">Active</p>
+                    <p className="text-xs text-muted-foreground">System configuration</p>
+                  </div>
+                  <Settings className="h-8 w-8 text-gray-600" />
+                </div>
+              </CardContent>
+            </Card>
+          )}
+          
+          {/* Regular admin sees a different card */}
+          {user?.role !== "super_admin" && (
+            <Card className="opacity-50">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Platform Settings</p>
+                    <p className="text-2xl font-bold text-gray-400">Restricted</p>
+                    <p className="text-xs text-muted-foreground">Super admin only</p>
+                  </div>
+                  <Settings className="h-8 w-8 text-gray-400" />
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className={`grid w-full ${user?.role === "super_admin" ? "grid-cols-4" : "grid-cols-3"} admin-tabs`}>
             <TabsTrigger value="bookings">Booking Management</TabsTrigger>
