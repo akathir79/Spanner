@@ -1376,6 +1376,33 @@ export default function ClientManagement() {
                                           </div>
                                         )}
                                       </div>
+                                      <div className="flex items-center gap-2 mt-3 pt-2 border-t border-gray-200 dark:border-gray-700">
+                                        <Button
+                                          size="sm"
+                                          variant="outline"
+                                          className="h-7 px-2 text-green-600 border-green-200 hover:text-green-700 hover:bg-green-50"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            // Handle money transfer functionality
+                                            console.log('Transfer money to:', client.firstName, client.lastName);
+                                          }}
+                                        >
+                                          <ArrowRightLeft className="w-3 h-3 mr-1" />
+                                          Transfer Money
+                                        </Button>
+                                        <Button
+                                          size="sm"
+                                          variant="outline"
+                                          className="h-7 px-2 text-blue-600 border-blue-200 hover:text-blue-700 hover:bg-blue-50"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleViewTransferHistory(client);
+                                          }}
+                                        >
+                                          <History className="w-3 h-3 mr-1" />
+                                          History
+                                        </Button>
+                                      </div>
                                     </div>
                                   ) : (
                                     <p>No bank details provided</p>
