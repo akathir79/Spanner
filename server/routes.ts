@@ -234,15 +234,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let emailAvailable = true;
       let aadhaarAvailable = true;
       
-      // Check mobile availability if provided
+      // Check mobile availability if provided (globally across all users)
       if (mobile) {
-        const existingUserByMobile = await storage.getUserByMobileAndRole(mobile, role);
+        const existingUserByMobile = await storage.getUserByMobile(mobile);
         mobileAvailable = !existingUserByMobile;
       }
       
-      // Check email availability if provided
+      // Check email availability if provided (globally across all users)
       if (email) {
-        const existingUserByEmail = await storage.getUserByEmailAndRole(email, role);
+        const existingUserByEmail = await storage.getUserByEmail(email);
         emailAvailable = !existingUserByEmail;
       }
       
