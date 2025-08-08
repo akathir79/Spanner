@@ -284,6 +284,8 @@ export default function StateBasedManagementTemplate({ config }: StateBasedManag
     },
     staleTime: 0, // Always fetch fresh data
     gcTime: 0, // Don't cache (replaces cacheTime in React Query v5)
+    refetchOnMount: 'always', // Always refetch when component mounts
+    refetchOnWindowFocus: true // Refetch when window gains focus
   });
 
   // Fetch data based on configuration
