@@ -123,7 +123,7 @@ export default function ViewDetailsModal({
   const queryClient = useQueryClient();
   
   const [isEditing, setIsEditing] = useState(false);
-  const [editData, setEditData] = useState(data);
+  const [editData, setEditData] = useState(data || {});
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   
   // IFSC functionality state
@@ -131,8 +131,8 @@ export default function ViewDetailsModal({
   const [bankInfo, setBankInfo] = useState<BankInfo | null>(null);
   const [ifscErrors, setIfscErrors] = useState<Record<string, string>>({});
 
-  // Group fields by section
-  const groupedFields = fields.reduce((acc, field) => {
+  // Group fields by section - handle undefined fields
+  const groupedFields = (fields || []).reduce((acc, field) => {
     const section = field.section || 'main';
     if (!acc[section]) acc[section] = [];
     acc[section].push(field);
@@ -165,7 +165,7 @@ export default function ViewDetailsModal({
 
   // Handle IFSC lookup
   const handleIFSCLookup = useCallback(async () => {
-    const ifscCode = editData.bankIFSC;
+    const ifscCode = editData?.bankIFSC;
     if (!ifscCode || ifscCode.length !== 11) {
       setIfscErrors(prev => ({ ...prev, bankIFSC: 'Please enter a valid 11-character IFSC code' }));
       return;

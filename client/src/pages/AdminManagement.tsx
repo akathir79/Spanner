@@ -1567,12 +1567,37 @@ export default function AdminManagement() {
         </div>
 
         {/* Modals */}
-        <ViewDetailsModal
-          isOpen={isViewDetailsOpen}
-          onClose={() => setIsViewDetailsOpen(false)}
-          user={selectedUser}
-          userType="admin"
-        />
+        {selectedUser && (
+          <ViewDetailsModal
+            isOpen={isViewDetailsOpen}
+            onClose={() => setIsViewDetailsOpen(false)}
+            title="Administrator Details"
+            subtitle="Complete administrator registration information"
+            data={selectedUser}
+            avatar={{
+              src: undefined,
+              fallback: `${selectedUser.firstName?.charAt(0)}${selectedUser.lastName?.charAt(0)}`
+            }}
+            fields={[
+              // Personal Information
+              { key: "firstName", label: "First Name", type: "text", editable: true, required: true, section: "personal" },
+              { key: "lastName", label: "Last Name", type: "text", editable: true, required: true, section: "personal" },
+              { key: "id", label: "User ID", type: "display", section: "personal" },
+              { key: "mobile", label: "Mobile Number", type: "tel", editable: true, required: true, section: "personal" },
+              { key: "email", label: "Email Address", type: "email", editable: true, section: "personal" },
+              { key: "role", label: "User Role", type: "display", section: "personal" },
+              
+              // Address Information
+              { key: "address", label: "Full Address", type: "textarea", editable: true, section: "address" },
+              { key: "state", label: "State", type: "text", editable: true, section: "address" },
+              { key: "district", label: "District", type: "text", editable: true, section: "address" },
+              { key: "pincode", label: "Pincode", type: "text", editable: true, section: "address" },
+              
+              // Verification Status
+              { key: "isVerified", label: "Verification Status", type: "badge", section: "status" },
+            ]}
+          />
+        )}
 
         <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
           <AlertDialogContent>
