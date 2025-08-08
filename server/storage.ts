@@ -62,6 +62,7 @@ export interface IStorage {
   getUserByEmail(email: string): Promise<User | undefined>;
   getUserByMobileAndRole(mobile: string, role: string): Promise<User | undefined>;
   getUserByEmailAndRole(email: string, role: string): Promise<User | undefined>;
+  getUserByAadhaar(aadhaarNumber: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: string, updates: Partial<User>): Promise<User | undefined>;
   deleteUser(id: string): Promise<void>;
@@ -201,6 +202,12 @@ export class DatabaseStorage implements IStorage {
     const [user] = await db.select().from(users).where(
       and(eq(users.email, email), eq(users.role, role))
     );
+    return user || undefined;
+  }
+
+  async getUserByAadhaar(aadhaarNumber: string): Promise<User | undefined> {
+    if (!aadhaarNumber) return undefined;
+    const [user] = await db.select().from(users).where(eq(users.aadhaarNumber, aadhaarNumber));
     return user || undefined;
   }
 

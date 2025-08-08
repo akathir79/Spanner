@@ -114,6 +114,7 @@ export function AuthModal({ isOpen, onClose, mode, initialTab, onSwitchToSignup 
   const [clientEmailAvailability, setClientEmailAvailability] = useState<"checking" | "available" | "not-available" | "">("");
   const [workerMobileAvailability, setWorkerMobileAvailability] = useState<"checking" | "available" | "not-available" | "">("");
   const [workerEmailAvailability, setWorkerEmailAvailability] = useState<"checking" | "available" | "not-available" | "">("");
+  const [workerAadhaarAvailability, setWorkerAadhaarAvailability] = useState<"checking" | "available" | "not-available" | "">("");
   
   const { loginWithOtp, verifyOtp, signupClient, signupWorker, isLoading } = useAuth();
   const { t } = useLanguage();
@@ -951,6 +952,7 @@ export function AuthModal({ isOpen, onClose, mode, initialTab, onSwitchToSignup 
     setClientEmailAvailability("");
     setWorkerMobileAvailability("");
     setWorkerEmailAvailability("");
+    setWorkerAadhaarAvailability("");
     loginForm.reset();
     otpForm.reset();
     clientForm.reset();
@@ -965,12 +967,12 @@ export function AuthModal({ isOpen, onClose, mode, initialTab, onSwitchToSignup 
   }, [isOpen]);
 
   // Availability checking function
-  const checkAvailability = async (mobile: string, email: string, role: string, formType: "client" | "worker") => {
+  const checkAvailability = async (mobile: string, email: string, aadhaarNumber: string, role: string, formType: "client" | "worker") => {
     try {
       const response = await fetch("/api/auth/check-availability", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mobile, email, role }),
+        body: JSON.stringify({ mobile, email, aadhaarNumber, role }),
       });
       
       if (response.ok) {
@@ -990,6 +992,9 @@ export function AuthModal({ isOpen, onClose, mode, initialTab, onSwitchToSignup 
           if (email) {
             setWorkerEmailAvailability(result.email ? "available" : "not-available");
           }
+          if (aadhaarNumber) {
+            setWorkerAadhaarAvailability(result.aadhaar ? "available" : "not-available");
+          }
         }
       }
     } catch (error) {
@@ -997,18 +1002,19 @@ export function AuthModal({ isOpen, onClose, mode, initialTab, onSwitchToSignup 
     }
   };
 
-  // Watch for mobile/email changes in client form
+  // Watch for mobile/email/aadhaar changes in forms
   const clientMobile = clientForm.watch("mobile");
   const clientEmail = clientForm.watch("email");
   const workerMobile = workerForm.watch("mobile");
   const workerEmail = workerForm.watch("email");
+  const workerAadhaar = workerForm.watch("aadhaarNumber");
 
   // Debounced availability checking for client form
   useEffect(() => {
     if (clientMobile && clientMobile.length >= 10) {
       setClientMobileAvailability("checking");
       const timer = setTimeout(() => {
-        checkAvailability(clientMobile, "", "client", "client");
+        checkAvailability(clientMobile, "", "", "client", "client");
       }, 500);
       return () => clearTimeout(timer);
     } else {
@@ -1020,7 +1026,7 @@ export function AuthModal({ isOpen, onClose, mode, initialTab, onSwitchToSignup 
     if (clientEmail && clientEmail.includes("@")) {
       setClientEmailAvailability("checking");
       const timer = setTimeout(() => {
-        checkAvailability("", clientEmail, "client", "client");
+        checkAvailability("", clientEmail, "", "client", "client");
       }, 500);
       return () => clearTimeout(timer);
     } else {
@@ -1033,7 +1039,7 @@ export function AuthModal({ isOpen, onClose, mode, initialTab, onSwitchToSignup 
     if (workerMobile && workerMobile.length >= 10) {
       setWorkerMobileAvailability("checking");
       const timer = setTimeout(() => {
-        checkAvailability(workerMobile, "", "worker", "worker");
+        checkAvailability(workerMobile, "", "", "worker", "worker");
       }, 500);
       return () => clearTimeout(timer);
     } else {
@@ -1045,13 +1051,26 @@ export function AuthModal({ isOpen, onClose, mode, initialTab, onSwitchToSignup 
     if (workerEmail && workerEmail.includes("@")) {
       setWorkerEmailAvailability("checking");
       const timer = setTimeout(() => {
-        checkAvailability("", workerEmail, "worker", "worker");
+        checkAvailability("", workerEmail, "", "worker", "worker");
       }, 500);
       return () => clearTimeout(timer);
     } else {
       setWorkerEmailAvailability("");
     }
   }, [workerEmail]);
+
+  // Debounced availability checking for worker Aadhaar
+  useEffect(() => {
+    if (workerAadhaar && workerAadhaar.length === 12) {
+      setWorkerAadhaarAvailability("checking");
+      const timer = setTimeout(() => {
+        checkAvailability("", "", workerAadhaar, "worker", "worker");
+      }, 500);
+      return () => clearTimeout(timer);
+    } else {
+      setWorkerAadhaarAvailability("");
+    }
+  }, [workerAadhaar]);
 
   const handleBioDataUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -1814,6 +1833,37 @@ export function AuthModal({ isOpen, onClose, mode, initialTab, onSwitchToSignup 
                         </Button>
                       )}
                     </div>
+
+                    {/* Aadhaar Availability Indicator */}
+                    {workerAadhaarAvailability && (
+                      <div className="flex justify-end mt-1">
+                        {workerAadhaarAvailability === "checking" && (
+                          <div className="flex items-center text-blue-600">
+                            <svg className="animate-spin w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <span className="text-xs">Checking...</span>
+                          </div>
+                        )}
+                        {workerAadhaarAvailability === "available" && (
+                          <div className="flex items-center text-green-600">
+                            <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
+                            <span className="text-xs">Available</span>
+                          </div>
+                        )}
+                        {workerAadhaarAvailability === "not-available" && (
+                          <div className="flex items-center text-red-600">
+                            <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                            </svg>
+                            <span className="text-xs">Already registered</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
                     
                     {aadhaarVerificationStep === "verify" && (
                       <div className="space-y-2 p-3 bg-blue-50 border border-blue-200 rounded-md">

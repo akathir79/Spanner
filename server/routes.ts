@@ -225,13 +225,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Check availability of mobile/email for a specific role
+  // Check availability of mobile/email/aadhaar for a specific role
   app.post("/api/auth/check-availability", async (req, res) => {
     try {
-      const { mobile, email, role } = req.body;
+      const { mobile, email, aadhaarNumber, role } = req.body;
       
       let mobileAvailable = true;
       let emailAvailable = true;
+      let aadhaarAvailable = true;
       
       // Check mobile availability if provided
       if (mobile) {
@@ -245,9 +246,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         emailAvailable = !existingUserByEmail;
       }
       
+      // Check Aadhaar availability if provided
+      if (aadhaarNumber) {
+        const existingUserByAadhaar = await storage.getUserByAadhaar(aadhaarNumber);
+        aadhaarAvailable = !existingUserByAadhaar;
+      }
+      
       return res.json({
         mobile: mobileAvailable,
-        email: emailAvailable
+        email: emailAvailable,
+        aadhaar: aadhaarAvailable
       });
       
     } catch (error) {
@@ -314,6 +322,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const existingUserByEmail = await storage.getUserByEmailAndRole(userData.email, userData.role);
         if (existingUserByEmail) {
           return res.status(400).json({ message: "Email address already registered for this role" });
+        }
+      }
+
+      // Check Aadhaar number uniqueness (required for workers)
+      if (userData.aadhaarNumber) {
+        const existingUserByAadhaar = await storage.getUserByAadhaar(userData.aadhaarNumber);
+        if (existingUserByAadhaar) {
+          return res.status(400).json({ message: "Aadhaar number already registered" });
         }
       }
       
