@@ -209,15 +209,7 @@ export default function AdminDashboard() {
           )}
         </div>
 
-        {/* Welcome Message */}
-        <div className="text-center py-12">
-          <h2 className="text-2xl font-semibold mb-4">Welcome to Admin Dashboard</h2>
-          <p className="text-muted-foreground mb-8 max-w-2xl mx-auto">
-            Use the management cards above to navigate to different sections: 
-            Booking Management, Analytics, and Platform Settings (Super Admin only).
-            Each section now has its own dedicated page for better organization and functionality.
-          </p>
-        </div>
+
         
         {/* Quick Overview */}
         <Card>
