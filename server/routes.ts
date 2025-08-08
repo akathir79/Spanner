@@ -318,12 +318,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Create new user
+      // Use the first service district as the primary district for ID generation
+      const primaryDistrict = userData.serviceDistricts?.[0] || "Unknown";
+      
       const user = await storage.createUser({
         firstName: userData.firstName,
         lastName: userData.lastName,
         email: userData.email,
         mobile: userData.mobile,
         role: userData.role,
+        state: userData.state || "Tamil Nadu", // Default to Tamil Nadu for now
+        district: primaryDistrict,
         profilePicture: userData.profilePicture,
         isVerified: false,
       });
