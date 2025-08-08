@@ -1013,7 +1013,7 @@ export default function ClientManagement() {
                                         </Badge>
                                       </div>
                                       <div className="text-xs text-gray-500 dark:text-gray-400">
-                                        Last: {client.lastLoginAt ? formatIndianDateTime(client.lastLoginAt) : 'Never'}
+                                        Last: {client.lastLoginAt ? formatIndianDateTime(client.lastLoginAt) : 'No Login'}
                                       </div>
                                       <div className="text-xs text-gray-400 dark:text-gray-500 italic">
                                         Reg: {formatIndianDateTime(client.createdAt)}
@@ -1075,7 +1075,7 @@ export default function ClientManagement() {
                                         </Badge>
                                       </div>
                                       <div className="text-sm"><strong>Registration Date:</strong> {formatIndianDateTime(client.createdAt)}</div>
-                                      <div className="text-sm"><strong>Last Login:</strong> {client.lastLoginAt ? formatIndianDateTime(client.lastLoginAt) : 'Never logged in'}</div>
+                                      <div className="text-sm"><strong>Last Login:</strong> {client.lastLoginAt ? formatIndianDateTime(client.lastLoginAt) : 'No Login'}</div>
                                       {client.mobile && (
                                         <div className="text-sm"><strong>Mobile:</strong> {client.mobile}</div>
                                       )}
@@ -1989,7 +1989,7 @@ export default function ClientManagement() {
                                             </div>
                                           ) : (
                                             <div className="text-xs text-gray-400 dark:text-gray-500 italic">
-                                              Never logged in
+                                              No Login
                                             </div>
                                           )}
                                           <div className="text-xs text-gray-500 dark:text-gray-400">
@@ -2056,7 +2056,7 @@ export default function ClientManagement() {
                                           </Badge>
                                         </div>
                                         <div className="text-sm"><strong>Registration Date:</strong> {formatIndianDateTime(client.createdAt)}</div>
-                                        <div className="text-sm"><strong>Last Login:</strong> {client.lastLoginAt ? formatIndianDateTime(client.lastLoginAt) : 'Never logged in'}</div>
+                                        <div className="text-sm"><strong>Last Login:</strong> {client.lastLoginAt ? formatIndianDateTime(client.lastLoginAt) : 'No Login'}</div>
                                         <div className="text-sm"><strong>Member Since:</strong> {getMemberSince(client.createdAt)}</div>
                                         {client.mobile && (
                                           <div className="text-sm"><strong>Mobile:</strong> {client.mobile}</div>
@@ -2680,7 +2680,7 @@ export default function ClientManagement() {
             { key: "isActive", label: "Account Status", type: "display", section: "status" },
             { key: "createdAt", label: "Member Since", type: "display", section: "status", value: formatIndianDateTime(selectedClient.createdAt) },
             { key: "updatedAt", label: "Last Updated", type: "display", section: "status", value: selectedClient.updatedAt ? formatIndianDateTime(selectedClient.updatedAt) : "Not available" },
-            { key: "lastLoginAt", label: "Last Login", type: "display", section: "status", value: selectedClient.lastLoginAt ? formatIndianDateTime(selectedClient.lastLoginAt) : "Never logged in" },
+            { key: "lastLoginAt", label: "Last Login", type: "display", section: "status", value: selectedClient.lastLoginAt ? formatIndianDateTime(selectedClient.lastLoginAt) : "No Login" },
           ]}
           actions={[
             {
