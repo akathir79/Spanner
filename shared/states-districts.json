@@ -90,7 +90,8 @@
         "Gardening Services",
         "Pool Maintenance",
         "Pet Care Services",
-        "car washing specilist"
+        "xyz"
+        
       ]
     },
     {
@@ -264,10 +265,7 @@
     },
     {
       "state": "Goa",
-      "districts": [
-        "North Goa",
-        "South Goa"
-      ],
+      "districts": ["North Goa", "South Goa"],
       "serviceTypes": [
         "Plumbing",
         "Electrical",
@@ -1055,7 +1053,6 @@
         "Vellore",
         "Viluppuram",
         "Virudhunagar"
-        
       ],
       "serviceTypes": [
         "Plumbing",
@@ -1333,11 +1330,7 @@
     },
     {
       "state": "Andaman and Nicobar Islands (UT)",
-      "districts": [
-        "Nicobars",
-        "North and Middle Andaman",
-        "South Andaman"
-      ],
+      "districts": ["Nicobars", "North and Middle Andaman", "South Andaman"],
       "serviceTypes": [
         "Plumbing",
         "Electrical",
@@ -1357,9 +1350,7 @@
     },
     {
       "state": "Chandigarh (UT)",
-      "districts": [
-        "Chandigarh"
-      ],
+      "districts": ["Chandigarh"],
       "serviceTypes": [
         "Plumbing",
         "Electrical",
@@ -1379,11 +1370,7 @@
     },
     {
       "state": "Dadra and Nagar Haveli and Daman and Diu (UT)",
-      "districts": [
-        "Dadra & Nagar Haveli",
-        "Daman",
-        "Diu"
-      ],
+      "districts": ["Dadra & Nagar Haveli", "Daman", "Diu"],
       "serviceTypes": [
         "Plumbing",
         "Electrical",
@@ -1476,10 +1463,7 @@
     },
     {
       "state": "Ladakh (UT)",
-      "districts": [
-        "Kargil",
-        "Leh"
-      ],
+      "districts": ["Kargil", "Leh"],
       "serviceTypes": [
         "Plumbing",
         "Electrical",
@@ -1499,9 +1483,7 @@
     },
     {
       "state": "Lakshadweep (UT)",
-      "districts": [
-        "Lakshadweep"
-      ],
+      "districts": ["Lakshadweep"],
       "serviceTypes": [
         "Plumbing",
         "Electrical",
@@ -1521,12 +1503,7 @@
     },
     {
       "state": "Puducherry (UT)",
-      "districts": [
-        "Karaikal",
-        "Mahe",
-        "Puducherry",
-        "Yanam"
-      ],
+      "districts": ["Karaikal", "Mahe", "Puducherry", "Yanam"],
       "serviceTypes": [
         "Plumbing",
         "Electrical",

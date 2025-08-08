@@ -310,15 +310,23 @@ export default function StateBasedManagementTemplate({ config }: StateBasedManag
     },
   });
 
-  // Get states from dynamically fetched data
+  // Get states from dynamically fetched data (from API)
   const states = statesDistrictsData?.states ? (statesDistrictsData.states as StateData[]).map(s => s.state).sort() : [];
+  
+  // Debug logging
+  console.log('StateBasedManagementTemplate Debug:', {
+    statesDistrictsLoading,
+    statesDistrictsData,
+    statesLength: states.length,
+    firstFewStates: states.slice(0, 3)
+  });
 
-  // Get districts for selected state from dynamically fetched data
+  // Get districts for selected state from dynamically fetched data (from API)
   const districtsForState = selectedState && statesDistrictsData?.states
     ? (statesDistrictsData.states as StateData[]).find(s => s.state === selectedState)?.districts || []
     : [];
 
-  // Get service types for selected state from dynamically fetched data
+  // Get service types for selected state from dynamically fetched data (from API)
   const serviceTypesForState = selectedState && statesDistrictsData?.states
     ? (statesDistrictsData.states as StateData[]).find(s => s.state === selectedState)?.serviceTypes || []
     : [];
@@ -671,7 +679,18 @@ export default function StateBasedManagementTemplate({ config }: StateBasedManag
             {/* Scrollable States List */}
             <div className="flex-1 overflow-y-auto">
               <div className="p-4 space-y-1">
-                {states.map((state) => (
+                {statesDistrictsLoading && (
+                  <div className="text-center py-4">
+                    <div className="inline-block w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mb-2"></div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Loading states...</p>
+                  </div>
+                )}
+                {!statesDistrictsLoading && states.length === 0 && (
+                  <div className="text-center py-4">
+                    <p className="text-sm text-gray-600 dark:text-gray-400">No states available</p>
+                  </div>
+                )}
+                {!statesDistrictsLoading && states.map((state) => (
                   <button
                     key={state}
                     onClick={() => handleStateClick(state)}
