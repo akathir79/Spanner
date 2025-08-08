@@ -2,7 +2,9 @@ import React from "react";
 import StateBasedManagementTemplate from "@/components/StateBasedManagementTemplate";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Eye, MessageSquare, CheckCircle, XCircle, Trash2, Edit, Smartphone, Mail, Calendar, Shield, Crown } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Button } from "@/components/ui/button";
+import { Eye, MessageSquare, CheckCircle, XCircle, Trash2, Edit, Smartphone, Mail, Calendar, Shield, Crown, Phone, MessageCircle, Send, MessageSquareText } from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa";
 import { useToast } from "@/hooks/use-toast";
 
@@ -72,6 +74,45 @@ export default function AdminManagement() {
       const whatsappUrl = `https://wa.me/${phoneNumber}`;
       window.open(whatsappUrl, '_blank');
     }
+  };
+
+  const handleSendSMS = (admin: any) => {
+    const phoneNumber = admin.mobile?.replace(/\D/g, '');
+    if (phoneNumber) {
+      window.location.href = `sms:+91${phoneNumber}`;
+    }
+  };
+
+  const handleSendEmail = (admin: any) => {
+    if (admin.email) {
+      window.location.href = `mailto:${admin.email}`;
+    }
+  };
+
+  // Helper function to format Indian date/time
+  const formatIndianDateTime = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleString('en-IN', {
+      year: 'numeric',
+      month: 'short',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  // Helper function to get member since text
+  const getMemberSince = (createdAt: string) => {
+    const created = new Date(createdAt);
+    const now = new Date();
+    const diffTime = Math.abs(now.getTime() - created.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 1) return "today";
+    if (diffDays <= 7) return `${diffDays} days`;
+    if (diffDays <= 30) return `${Math.ceil(diffDays / 7)} weeks`;
+    if (diffDays <= 365) return `${Math.ceil(diffDays / 30)} months`;
+    return `${Math.ceil(diffDays / 365)} years`;
   };
 
   const handlePromoteToSuperAdmin = (admin: any) => {
@@ -154,33 +195,161 @@ export default function AdminManagement() {
     tableColumns: [
       {
         key: "admin",
-        label: "Administrator",
-        render: (admin: any) => (
-          <div className="flex items-center gap-3">
-            <Avatar className="h-8 w-8">
-              <AvatarImage src={admin.profilePicture} />
-              <AvatarFallback className="bg-purple-100 text-purple-700 text-xs">
-                {admin.firstName?.[0]}{admin.lastName?.[0]}
-              </AvatarFallback>
-            </Avatar>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="font-medium text-gray-900 dark:text-white">
-                  {admin.firstName} {admin.lastName}
-                </span>
-                {admin.role === "super_admin" && (
-                  <Crown className="w-4 h-4 text-yellow-500" title="Super Admin" />
-                )}
-                {admin.role === "admin" && (
-                  <Shield className="w-4 h-4 text-blue-500" title="Admin" />
-                )}
-              </div>
-              <div className="text-sm text-gray-500 dark:text-gray-400">
-                ID: {admin.id}
-              </div>
-            </div>
-          </div>
-        )
+        label: "User",
+        render: (admin: any) => {
+          const activityStatus = getActivityStatus(admin.lastLoginAt, admin.createdAt);
+          return (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="flex items-start gap-3 cursor-pointer">
+                  <Avatar className="h-10 w-10 flex-shrink-0">
+                    <AvatarImage 
+                      src={admin.profilePicture} 
+                      alt={`${admin.firstName} ${admin.lastName}`} 
+                    />
+                    <AvatarFallback className="bg-purple-100 text-purple-600 font-semibold">
+                      {admin.firstName?.charAt(0).toUpperCase()}{admin.lastName?.charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <div className="font-medium text-gray-900 dark:text-white">
+                        {admin.firstName} {admin.lastName}
+                      </div>
+                      {admin.role === "super_admin" && (
+                        <Crown className="w-4 h-4 text-yellow-500" title="Super Admin" />
+                      )}
+                      {admin.role === "admin" && (
+                        <Shield className="w-4 h-4 text-blue-500" title="Admin" />
+                      )}
+                    </div>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="text-sm text-green-800 dark:text-green-400 font-mono font-bold truncate">
+                          ID: {admin.id}
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className="font-mono">{admin.id}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                    <div className="mt-1 space-y-1">
+                      <Badge 
+                        variant={activityStatus.variant}
+                        className={activityStatus.className}
+                      >
+                        {activityStatus.icon}
+                        <span className="ml-1">{activityStatus.label}</span>
+                      </Badge>
+                      {admin.lastLoginAt ? (
+                        <div className="text-xs text-gray-500 dark:text-gray-400">
+                          Last: {formatIndianDateTime(admin.lastLoginAt)}
+                        </div>
+                      ) : (
+                        <div className="text-xs text-gray-400 dark:text-gray-500 italic">
+                          Never logged in
+                        </div>
+                      )}
+                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                        Reg: {formatIndianDateTime(admin.createdAt)}
+                      </div>
+                      <div className="text-xs text-gray-400 dark:text-gray-500 italic">
+                        Member since {getMemberSince(admin.createdAt)}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent className="max-w-sm">
+                <div className="space-y-2">
+                  <p className="font-medium">Complete Administrator Information:</p>
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <Phone className="w-3 h-3" />
+                      <span>{admin.mobile}</span>
+                    </div>
+                    {admin.email && (
+                      <div className="flex items-center gap-2">
+                        <Mail className="w-3 h-3" />
+                        <span>{admin.email}</span>
+                      </div>
+                    )}
+                    <div className="mt-2">
+                      <p className="font-medium text-xs">Role & Permissions:</p>
+                      <p className="text-xs mt-1">
+                        {admin.role === "super_admin" ? "Super Administrator - Full platform access" : "Administrator - Regional management"}
+                      </p>
+                      <div className="flex items-center gap-1 mt-2">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-6 w-6 p-0 text-green-600 hover:text-green-700 hover:bg-green-50"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleSendWhatsApp(admin);
+                          }}
+                          title="WhatsApp"
+                        >
+                          <MessageCircle className="w-3 h-3" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-6 w-6 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleSendSMS(admin);
+                          }}
+                          title="SMS"
+                        >
+                          <MessageSquareText className="w-3 h-3" />
+                        </Button>
+                        {admin.email && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-6 w-6 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleSendEmail(admin);
+                            }}
+                            title="Email"
+                          >
+                            <Mail className="w-3 h-3" />
+                          </Button>
+                        )}
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-6 w-6 p-0 text-purple-600 hover:text-purple-700 hover:bg-purple-50"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleSendMessage(admin);
+                          }}
+                          title="Send Message"
+                        >
+                          <Send className="w-3 h-3" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-6 w-6 p-0 text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            window.location.href = `tel:+91${admin.mobile}`;
+                          }}
+                          title="Call Phone"
+                        >
+                          <Phone className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </TooltipContent>
+            </Tooltip>
+          );
+        }
       },
       {
         key: "role",
@@ -201,18 +370,155 @@ export default function AdminManagement() {
         key: "contact",
         label: "Contact",
         render: (admin: any) => (
-          <div className="space-y-1">
-            <div className="flex items-center gap-1 text-sm">
-              <Smartphone className="w-3 h-3 text-gray-400" />
-              <span>{admin.mobile}</span>
-            </div>
-            {admin.email && (
-              <div className="flex items-center gap-1 text-sm text-gray-500">
-                <Mail className="w-3 h-3 text-gray-400" />
-                <span className="truncate max-w-[150px]">{admin.email}</span>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="text-sm space-y-1 cursor-pointer">
+                <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
+                  <Phone className="w-3 h-3" />
+                  <span>{admin.mobile}</span>
+                  {admin.mobile && (
+                    <div className="flex items-center gap-1 ml-2">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-6 w-6 p-0 text-green-600 hover:text-green-700 hover:bg-green-50"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleSendWhatsApp(admin);
+                        }}
+                        title="WhatsApp"
+                      >
+                        <MessageCircle className="w-3 h-3" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-6 w-6 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleSendSMS(admin);
+                        }}
+                        title="SMS"
+                      >
+                        <MessageSquareText className="w-3 h-3" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-6 w-6 p-0 text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          window.location.href = `tel:+91${admin.mobile}`;
+                        }}
+                        title="Call Phone"
+                      >
+                        <Phone className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  )}
+                </div>
+                {admin.email && (
+                  <div className="flex items-center gap-1 text-gray-500 dark:text-gray-400">
+                    <Mail className="w-3 h-3" />
+                    <span className="truncate max-w-[120px]">{admin.email}</span>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-6 w-6 p-0 text-red-600 hover:text-red-700 hover:bg-red-50 ml-1"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleSendEmail(admin);
+                      }}
+                      title="Email"
+                    >
+                      <Mail className="w-3 h-3" />
+                    </Button>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
+            </TooltipTrigger>
+            <TooltipContent className="max-w-sm">
+              <div className="space-y-2">
+                <p className="font-medium">Complete Contact Information:</p>
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <Phone className="w-3 h-3" />
+                    <span>{admin.mobile}</span>
+                  </div>
+                  {admin.email && (
+                    <div className="flex items-center gap-2">
+                      <Mail className="w-3 h-3" />
+                      <span>{admin.email}</span>
+                    </div>
+                  )}
+                  <div className="flex items-center gap-1 mt-2">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-6 w-6 p-0 text-green-600 hover:text-green-700 hover:bg-green-50"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleSendWhatsApp(admin);
+                      }}
+                      title="WhatsApp"
+                    >
+                      <MessageCircle className="w-3 h-3" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-6 w-6 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleSendSMS(admin);
+                      }}
+                      title="SMS"
+                    >
+                      <MessageSquareText className="w-3 h-3" />
+                    </Button>
+                    {admin.email && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-6 w-6 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleSendEmail(admin);
+                        }}
+                        title="Email"
+                      >
+                        <Mail className="w-3 h-3" />
+                      </Button>
+                    )}
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-6 w-6 p-0 text-purple-600 hover:text-purple-700 hover:bg-purple-50"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleSendMessage(admin);
+                      }}
+                      title="Send Message"
+                    >
+                      <Send className="w-3 h-3" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-6 w-6 p-0 text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        window.location.href = `tel:+91${admin.mobile}`;
+                      }}
+                      title="Call Phone"
+                    >
+                      <Phone className="w-3 h-3" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </TooltipContent>
+          </Tooltip>
         )
       },
       {
@@ -290,14 +596,33 @@ export default function AdminManagement() {
         icon: <MessageSquare className="w-4 h-4" />,
         onClick: handleSendMessage,
         color: "blue",
-        tooltip: "Send message to admin"
-      },
-      {
-        label: "WhatsApp",
-        icon: <FaWhatsapp className="w-4 h-4" />,
-        onClick: handleSendWhatsApp,
-        color: "green",
-        tooltip: "Contact via WhatsApp"
+        tooltip: "Send direct message",
+        subActions: [
+          {
+            label: "Message",
+            icon: <MessageCircle className="w-4 h-4" />,
+            onClick: handleSendMessage,
+            tooltip: "Send direct message"
+          },
+          {
+            label: "SMS", 
+            icon: <MessageSquareText className="w-4 h-4" />,
+            onClick: handleSendSMS,
+            tooltip: "Send SMS"
+          },
+          {
+            label: "WhatsApp",
+            icon: <FaWhatsapp className="w-4 h-4 text-green-600" />,
+            onClick: handleSendWhatsApp,
+            tooltip: "Send WhatsApp message"
+          },
+          {
+            label: "Email",
+            icon: <Mail className="w-4 h-4" />,
+            onClick: handleSendEmail,
+            tooltip: "Send email"
+          }
+        ]
       },
       {
         label: "Edit",
