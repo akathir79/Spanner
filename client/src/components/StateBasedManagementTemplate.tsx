@@ -805,9 +805,9 @@ export default function StateBasedManagementTemplate({ config }: StateBasedManag
                     >
                       <CardContent className="p-4">
                         <div className="flex items-center justify-between">
-                          <h3 className="font-medium text-gray-900 dark:text-white">
+                          <span className="text-sm font-medium text-gray-900 dark:text-white">
                             {district}
-                          </h3>
+                          </span>
                           <Badge
                             variant="secondary"
                             className={`${config.stateItemBadgeColor || 'bg-blue-500'} text-white`}
