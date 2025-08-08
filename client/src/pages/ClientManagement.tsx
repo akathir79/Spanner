@@ -882,7 +882,7 @@ export default function ClientManagement() {
                             </div>
                           </TableHead>
                           <TableHead className="w-[140px]">Location</TableHead>
-                          <TableHead className="w-[140px]">Bookings/Earnings</TableHead>
+                          <TableHead className="w-[200px]">Bookings/Earnings</TableHead>
                           <TableHead className="w-[140px]">
                             <div className="flex items-center gap-2">
                               <span>Contact</span>
@@ -1988,7 +1988,7 @@ export default function ClientManagement() {
                             </div>
                           </TableHead>
                           <TableHead className="w-[140px]">Location</TableHead>
-                          <TableHead className="w-[140px]">Bookings/Earnings</TableHead>
+                          <TableHead className="w-[200px]">Bookings/Earnings</TableHead>
                           <TableHead className="w-[140px]">
                             <div className="flex items-center gap-2">
                               <span>Contact</span>
