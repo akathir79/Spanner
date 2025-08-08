@@ -55,6 +55,12 @@ export default function PlatformSettings() {
     refetchInterval: 60000, // Refresh every minute for database changes
   });
 
+  // Fetch service counts from states-districts.json
+  const { data: serviceCounts, isLoading: serviceCountsLoading } = useQuery({
+    queryKey: ['/api/admin/service-counts'],
+    refetchInterval: 30000, // Refresh every 30 seconds for file-based data
+  });
+
   // Only super admins can access platform settings
   if (!user || user.role !== "super_admin") {
     return (
@@ -197,7 +203,27 @@ export default function PlatformSettings() {
               <CardContent className="p-6 text-center">
                 <Briefcase className="w-12 h-12 mx-auto mb-4 text-orange-600" />
                 <h3 className="font-semibold mb-2">Service Management</h3>
-                <p className="text-sm text-muted-foreground">Add, edit, and manage all service categories</p>
+                <p className="text-sm text-muted-foreground mb-3">Add, edit, and manage all service categories</p>
+                {serviceCountsLoading ? (
+                  <div className="text-xs text-muted-foreground">Loading service data...</div>
+                ) : serviceCounts ? (
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-xs">
+                      <span>Unique Services:</span>
+                      <Badge variant="outline" className="text-xs">{serviceCounts.uniqueServices}</Badge>
+                    </div>
+                    <div className="flex justify-between text-xs">
+                      <span>Total Entries:</span>
+                      <Badge variant="outline" className="text-xs">{serviceCounts.totalServices}</Badge>
+                    </div>
+                    <div className="flex justify-between text-xs font-medium pt-1 border-t">
+                      <span>States Covered:</span>
+                      <Badge variant="secondary" className="text-xs">{serviceCounts.statesWithServices}</Badge>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-xs text-muted-foreground">Unable to load service data</div>
+                )}
               </CardContent>
             </Card>
 

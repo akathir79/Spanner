@@ -1171,6 +1171,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/admin/service-counts", async (req, res) => {
+    try {
+      const data = statesDistrictsData as { states: Array<{ state: string; districts: string[]; serviceTypes: string[] }> };
+      let totalServices = 0;
+      let statesWithServices = 0;
+      const uniqueServices = new Set<string>();
+      
+      data.states.forEach(stateObj => {
+        if (stateObj.serviceTypes && stateObj.serviceTypes.length > 0) {
+          statesWithServices++;
+          stateObj.serviceTypes.forEach(service => {
+            uniqueServices.add(service.toLowerCase().trim());
+          });
+          totalServices += stateObj.serviceTypes.length;
+        }
+      });
+      
+      res.json({
+        uniqueServices: uniqueServices.size,
+        totalServices: totalServices,
+        statesWithServices: statesWithServices
+      });
+    } catch (error) {
+      console.error("Get service counts error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   app.get("/api/admin/bookings", async (req, res) => {
     try {
       const bookings = await storage.getBookingsWithDetails();
