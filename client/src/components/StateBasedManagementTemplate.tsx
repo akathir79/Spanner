@@ -274,8 +274,11 @@ export default function StateBasedManagementTemplate({ config }: StateBasedManag
   const { data: allItems = [], isLoading: itemsLoading } = useQuery({
     queryKey: [config.fetchUrl],
     queryFn: async () => {
-      const response = await apiRequest(config.fetchUrl);
-      let items = response;
+      const response = await fetch(config.fetchUrl);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch data from ${config.fetchUrl}`);
+      }
+      let items = await response.json();
       
       // Filter by role if specified
       if (config.itemRole) {
