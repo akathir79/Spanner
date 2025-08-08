@@ -1703,8 +1703,8 @@ export default function ClientManagement() {
                                         <span className="text-green-600">WhatsApp</span>
                                       </DropdownMenuItem>
                                       <DropdownMenuItem onClick={() => handleSendSMS(client)}>
-                                        <Square className="w-4 h-4 mr-2" />
-                                        SMS
+                                        <Square className="w-4 h-4 mr-2 text-blue-600" />
+                                        <span className="text-blue-600">SMS</span>
                                       </DropdownMenuItem>
                                       {client.email && (
                                         <DropdownMenuItem onClick={() => window.location.href = `mailto:${client.email}`}>
@@ -2701,8 +2701,8 @@ export default function ClientManagement() {
                                           <span className="text-green-600">WhatsApp</span>
                                         </DropdownMenuItem>
                                         <DropdownMenuItem onClick={() => handleSendSMS(client)}>
-                                          <Square className="w-4 h-4 mr-2" />
-                                          SMS
+                                          <Square className="w-4 h-4 mr-2 text-blue-600" />
+                                          <span className="text-blue-600">SMS</span>
                                         </DropdownMenuItem>
                                         <DropdownMenuItem onClick={() => handleSendDirectMessage(client)}>
                                           <MessageSquare className="w-4 h-4 mr-2 text-purple-600" />
