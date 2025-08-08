@@ -18,6 +18,8 @@ import WorkerManagement from "@/pages/WorkerManagement";
 import AdminManagement from "@/pages/AdminManagement";
 import BookingManagement from "@/pages/BookingManagement";
 import PendingVerificationsManagement from "@/pages/PendingVerificationsManagement";
+import AnalyticsManagement from "@/pages/AnalyticsManagement";
+import PlatformSettings from "@/pages/PlatformSettings";
 import DistrictManager from "@/pages/DistrictManager";
 import Payment from "@/pages/Payment";
 import ServiceHistory from "@/pages/ServiceHistory";
@@ -39,6 +41,8 @@ function Router() {
           <Route path="/admin/admins" component={AdminManagement} />
           <Route path="/admin/bookings" component={BookingManagement} />
           <Route path="/admin/pending-verifications" component={PendingVerificationsManagement} />
+          <Route path="/admin/analytics" component={AnalyticsManagement} />
+          <Route path="/admin/settings" component={PlatformSettings} />
           <Route path="/district-manager" component={DistrictManager} />
           <Route path="/payment/:bookingId" component={Payment} />
           <Route path="/service-history" component={ServiceHistory} />
