@@ -2046,11 +2046,13 @@ export default function ClientManagement() {
                                             variant={
                                               activityStatus.label === 'Just Registered' || 
                                               activityStatus.label === 'No Login' || 
+                                              activityStatus.label === 'Inactive' ||
                                               !client.isVerified ? "destructive" : "default"
                                             }
                                             className={
                                               activityStatus.label === 'Just Registered' || 
                                               activityStatus.label === 'No Login' || 
+                                              activityStatus.label === 'Inactive' ||
                                               !client.isVerified
                                                 ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100" 
                                                 : "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100"
