@@ -39,6 +39,10 @@ function Router() {
           <Route path="/admin/clients" component={ClientManagement} />
           <Route path="/admin/workers" component={WorkerManagement} />
           <Route path="/admin/admins" component={AdminManagement} />
+          <Route path="/client-management" component={ClientManagement} />
+          <Route path="/worker-management" component={WorkerManagement} />
+          <Route path="/admin-management" component={AdminManagement} />
+          <Route path="/booking-management" component={BookingManagement} />
           <Route path="/admin/bookings" component={BookingManagement} />
           <Route path="/admin/pending-verifications" component={PendingVerificationsManagement} />
           <Route path="/admin/analytics" component={AnalyticsManagement} />
