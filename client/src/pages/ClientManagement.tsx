@@ -1997,6 +1997,12 @@ export default function ClientManagement() {
                                           <div className="text-xs text-gray-400 dark:text-gray-500 italic">
                                             Member since {getMemberSince(client.createdAt)}
                                           </div>
+                                          <div className="text-xs text-gray-500 dark:text-gray-400">
+                                            Reg: {formatIndianDateTime(client.createdAt)}
+                                          </div>
+                                          <div className="text-xs text-gray-400 dark:text-gray-500 italic">
+                                            Member since {getMemberSince(client.createdAt)}
+                                          </div>
                                         </div>
                                       </div>
                                     </div>
