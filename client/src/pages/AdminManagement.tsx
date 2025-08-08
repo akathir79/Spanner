@@ -121,6 +121,7 @@ export default function AdminManagement() {
     // API Configuration
     fetchUrl: "/api/admin/users",
     itemRole: undefined, // Show both admin and super_admin
+    customFilter: (items: any[]) => items.filter(item => item.role === "admin" || item.role === "super_admin"),
     
     // Display Configuration
     itemDisplayName: (admin: any) => `${admin.firstName} ${admin.lastName}`,
