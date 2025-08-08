@@ -2208,7 +2208,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const freshStatesDistrictsData = JSON.parse(fileContent);
       
       if (stateName && stateName !== 'undefined') {
-        // Return districts for specific state
+        // Return complete state data with districts and service types
         const stateData = (freshStatesDistrictsData.states as any[]).find(
           state => state.state.toLowerCase() === stateName.toLowerCase()
         );
@@ -2217,10 +2217,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(404).json({ message: 'State not found' });
         }
         
-        res.json(stateData.districts);
+        // Return complete state data including service types
+        res.json(stateData);
       } else {
-        // Return all states and their districts
-        res.json(freshStatesDistrictsData.states);
+        // Return all states with complete data (districts and service types)
+        res.json(freshStatesDistrictsData);
       }
     } catch (error) {
       console.error('Error fetching districts:', error);
