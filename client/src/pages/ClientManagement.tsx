@@ -2353,11 +2353,29 @@ export default function ClientManagement() {
                                       <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
                                         <Phone className="w-3 h-3" />
                                         <span>{client.mobile}</span>
+                                        <Button
+                                          size="sm"
+                                          variant="ghost"
+                                          className="h-4 w-4 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50 ml-1"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            navigator.clipboard.writeText(client.mobile);
+                                          }}
+                                          title="Copy Mobile Number"
+                                        >
+                                          <Copy className="w-2 h-2" />
+                                        </Button>
                                       </div>
                                       {client.email && (
                                         <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
                                           <Mail className="w-3 h-3" />
-                                          <span className="truncate max-w-[150px]">{client.email}</span>
+                                          <a 
+                                            href={`mailto:${client.email}`}
+                                            className="truncate max-w-[150px] text-blue-600 hover:text-blue-700 underline"
+                                            onClick={(e) => e.stopPropagation()}
+                                          >
+                                            {client.email}
+                                          </a>
                                         </div>
                                       )}
                                       <div className="flex items-center gap-1 mt-2">
