@@ -208,6 +208,9 @@ export default function WorkerManagement() {
     refetchInterval: 60000,
   });
 
+  // Ensure workers is always an array
+  const safeWorkers = Array.isArray(workers) ? workers : [];
+
   // Fetch districts
   const { data: districts = [] } = useQuery<District[]>({
     queryKey: ['/api/districts'],
@@ -215,10 +218,11 @@ export default function WorkerManagement() {
   });
 
   // Get unique states and districts from the JSON data
-  const statesList = statesDistrictsData.map(item => item.state);
+  const statesList = statesDistrictsData?.states ? statesDistrictsData.states.map(item => item.state) : [];
   
   const getDistrictsForState = (stateName: string): string[] => {
-    const stateData = statesDistrictsData.find(item => item.state === stateName);
+    if (!statesDistrictsData?.states) return [];
+    const stateData = statesDistrictsData.states.find(item => item.state === stateName);
     return stateData ? stateData.districts : [];
   };
 
@@ -288,7 +292,7 @@ export default function WorkerManagement() {
 
   // Filter workers
   const filteredWorkers = useMemo(() => {
-    return workers.filter((worker: User) => {
+    return safeWorkers.filter((worker: User) => {
       const matchesSearch = 
         worker.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         worker.lastName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -370,7 +374,7 @@ export default function WorkerManagement() {
   // Get district counts
   const districtCounts = useMemo(() => {
     const counts: Record<string, number> = {};
-    workers.forEach((worker: User) => {
+    safeWorkers.forEach((worker: User) => {
       if (worker.district) {
         counts[worker.district] = (counts[worker.district] || 0) + 1;
       }
@@ -542,7 +546,7 @@ export default function WorkerManagement() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Workers</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{workers.length}</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{safeWorkers.length}</p>
                 </div>
                 <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
                   <Users className="w-6 h-6 text-blue-600 dark:text-blue-400" />
@@ -556,7 +560,7 @@ export default function WorkerManagement() {
                 <div>
                   <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Verified</p>
                   <p className="text-2xl font-bold text-green-600 dark:text-green-400">
-                    {workers.filter((w: User) => w.isVerified).length}
+                    {safeWorkers.filter((w: User) => w.isVerified).length}
                   </p>
                 </div>
                 <div className="p-2 bg-green-100 dark:bg-green-900 rounded-lg">
@@ -571,7 +575,7 @@ export default function WorkerManagement() {
                 <div>
                   <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Unverified</p>
                   <p className="text-2xl font-bold text-red-600 dark:text-red-400">
-                    {workers.filter((w: User) => !w.isVerified).length}
+                    {safeWorkers.filter((w: User) => !w.isVerified).length}
                   </p>
                 </div>
                 <div className="p-2 bg-red-100 dark:bg-red-900 rounded-lg">
@@ -601,7 +605,7 @@ export default function WorkerManagement() {
             <CardContent className="pt-4">
               <div className="flex items-center gap-2 mb-3">
                 <h3 className="font-semibold text-gray-900 dark:text-white">Top Districts</h3>
-                <Badge variant="secondary" className="text-xs">{workers.length} total</Badge>
+                <Badge variant="secondary" className="text-xs">{safeWorkers.length} total</Badge>
               </div>
               <div className="flex flex-wrap gap-2">
                 {topDistricts.map(([district, count]) => (

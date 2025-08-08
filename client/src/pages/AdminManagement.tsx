@@ -208,6 +208,9 @@ export default function AdminManagement() {
     refetchInterval: 60000,
   });
 
+  // Ensure admins is always an array
+  const safeAdmins = Array.isArray(admins) ? admins : [];
+
   // Fetch districts
   const { data: districts = [] } = useQuery<District[]>({
     queryKey: ['/api/districts'],
@@ -215,10 +218,11 @@ export default function AdminManagement() {
   });
 
   // Get unique states and districts from the JSON data
-  const statesList = statesDistrictsData.map(item => item.state);
+  const statesList = statesDistrictsData?.states ? statesDistrictsData.states.map(item => item.state) : [];
   
   const getDistrictsForState = (stateName: string): string[] => {
-    const stateData = statesDistrictsData.find(item => item.state === stateName);
+    if (!statesDistrictsData?.states) return [];
+    const stateData = statesDistrictsData.states.find(item => item.state === stateName);
     return stateData ? stateData.districts : [];
   };
 
@@ -288,7 +292,7 @@ export default function AdminManagement() {
 
   // Filter admins
   const filteredAdmins = useMemo(() => {
-    return admins.filter((admin: User) => {
+    return safeAdmins.filter((admin: User) => {
       const matchesSearch = 
         admin.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         admin.lastName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -370,7 +374,7 @@ export default function AdminManagement() {
   // Get district counts
   const districtCounts = useMemo(() => {
     const counts: Record<string, number> = {};
-    admins.forEach((admin: User) => {
+    safeAdmins.forEach((admin: User) => {
       if (admin.district) {
         counts[admin.district] = (counts[admin.district] || 0) + 1;
       }
@@ -542,7 +546,7 @@ export default function AdminManagement() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Admins</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{admins.length}</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{safeAdmins.length}</p>
                 </div>
                 <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
                   <Shield className="w-6 h-6 text-blue-600 dark:text-blue-400" />
@@ -556,7 +560,7 @@ export default function AdminManagement() {
                 <div>
                   <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Verified</p>
                   <p className="text-2xl font-bold text-green-600 dark:text-green-400">
-                    {admins.filter((a: User) => a.isVerified).length}
+                    {safeAdmins.filter((a: User) => a.isVerified).length}
                   </p>
                 </div>
                 <div className="p-2 bg-green-100 dark:bg-green-900 rounded-lg">
@@ -571,7 +575,7 @@ export default function AdminManagement() {
                 <div>
                   <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Unverified</p>
                   <p className="text-2xl font-bold text-red-600 dark:text-red-400">
-                    {admins.filter((a: User) => !a.isVerified).length}
+                    {safeAdmins.filter((a: User) => !a.isVerified).length}
                   </p>
                 </div>
                 <div className="p-2 bg-red-100 dark:bg-red-900 rounded-lg">
@@ -601,7 +605,7 @@ export default function AdminManagement() {
             <CardContent className="pt-4">
               <div className="flex items-center gap-2 mb-3">
                 <h3 className="font-semibold text-gray-900 dark:text-white">Top Districts</h3>
-                <Badge variant="secondary" className="text-xs">{admins.length} total</Badge>
+                <Badge variant="secondary" className="text-xs">{safeAdmins.length} total</Badge>
               </div>
               <div className="flex flex-wrap gap-2">
                 {topDistricts.map(([district, count]) => (

@@ -207,6 +207,9 @@ export default function BookingManagement() {
     refetchInterval: 60000,
   });
 
+  // Ensure bookings is always an array
+  const safeBookings = Array.isArray(bookings) ? bookings : [];
+
   // Fetch districts
   const { data: districts = [] } = useQuery<District[]>({
     queryKey: ['/api/districts'],
@@ -214,10 +217,11 @@ export default function BookingManagement() {
   });
 
   // Get unique states and districts from the JSON data
-  const statesList = statesDistrictsData.map(item => item.state);
+  const statesList = statesDistrictsData?.states ? statesDistrictsData.states.map(item => item.state) : [];
   
   const getDistrictsForState = (stateName: string): string[] => {
-    const stateData = statesDistrictsData.find(item => item.state === stateName);
+    if (!statesDistrictsData?.states) return [];
+    const stateData = statesDistrictsData.states.find(item => item.state === stateName);
     return stateData ? stateData.districts : [];
   };
 
@@ -287,7 +291,7 @@ export default function BookingManagement() {
 
   // Filter bookings
   const filteredBookings = useMemo(() => {
-    return bookings.filter((booking: Booking) => {
+    return safeBookings.filter((booking: Booking) => {
       const matchesSearch = 
         booking.clientName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         booking.workerName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -370,7 +374,7 @@ export default function BookingManagement() {
   // Get district counts
   const districtCounts = useMemo(() => {
     const counts: Record<string, number> = {};
-    bookings.forEach((booking: Booking) => {
+    safeBookings.forEach((booking: Booking) => {
       if (booking.district) {
         counts[booking.district] = (counts[booking.district] || 0) + 1;
       }
@@ -543,7 +547,7 @@ export default function BookingManagement() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Bookings</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{bookings.length}</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{safeBookings.length}</p>
                 </div>
                 <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
                   <ClipboardList className="w-6 h-6 text-blue-600 dark:text-blue-400" />
@@ -557,7 +561,7 @@ export default function BookingManagement() {
                 <div>
                   <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Completed</p>
                   <p className="text-2xl font-bold text-green-600 dark:text-green-400">
-                    {bookings.filter((b: Booking) => b.status === 'completed').length}
+                    {safeBookings.filter((b: Booking) => b.status === 'completed').length}
                   </p>
                 </div>
                 <div className="p-2 bg-green-100 dark:bg-green-900 rounded-lg">
@@ -572,7 +576,7 @@ export default function BookingManagement() {
                 <div>
                   <p className="text-sm font-medium text-gray-600 dark:text-gray-400">In Progress</p>
                   <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                    {bookings.filter((b: Booking) => b.status === 'in_progress').length}
+                    {safeBookings.filter((b: Booking) => b.status === 'in_progress').length}
                   </p>
                 </div>
                 <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
@@ -602,7 +606,7 @@ export default function BookingManagement() {
             <CardContent className="pt-4">
               <div className="flex items-center gap-2 mb-3">
                 <h3 className="font-semibold text-gray-900 dark:text-white">Top Districts</h3>
-                <Badge variant="secondary" className="text-xs">{bookings.length} total</Badge>
+                <Badge variant="secondary" className="text-xs">{safeBookings.length} total</Badge>
               </div>
               <div className="flex flex-wrap gap-2">
                 {topDistricts.map(([district, count]) => (
