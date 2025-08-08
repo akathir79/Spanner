@@ -964,25 +964,36 @@ export default function ClientManagement() {
                           return (
                             <TableRow key={client.id}>
                               <TableCell className="py-2">
-                              <div className="space-y-1">
-                                <div className="font-medium text-gray-900 dark:text-white text-sm">
-                                  {client.firstName} {client.lastName}
-                                </div>
-                                <div className="text-xs text-green-800 dark:text-green-400 font-mono font-bold">
-                                  ID: {client.id}
-                                </div>
-                                <Badge 
-                                  variant={activityStatus.variant}
-                                  className={`${activityStatus.className} text-xs px-1.5 py-0.5`}
-                                >
-                                  {activityStatus.icon}
-                                  <span className="ml-1">{activityStatus.label}</span>
-                                </Badge>
-                                <div className="text-xs text-gray-500 dark:text-gray-400">
-                                  Last: {client.lastLoginAt ? formatIndianDateTime(client.lastLoginAt) : 'Never'}
-                                </div>
-                                <div className="text-xs text-gray-400 dark:text-gray-500 italic">
-                                  Reg: {formatIndianDateTime(client.createdAt)}
+                              <div className="flex items-start gap-3">
+                                <Avatar className="h-10 w-10 flex-shrink-0">
+                                  <AvatarImage 
+                                    src={(client as any).profilePicture} 
+                                    alt={`${client.firstName} ${client.lastName}`} 
+                                  />
+                                  <AvatarFallback className="bg-blue-100 text-blue-600 font-semibold">
+                                    {client.firstName.charAt(0).toUpperCase()}{client.lastName.charAt(0).toUpperCase()}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <div className="space-y-1 min-w-0 flex-1">
+                                  <div className="font-medium text-gray-900 dark:text-white text-sm">
+                                    {client.firstName} {client.lastName}
+                                  </div>
+                                  <div className="text-xs text-green-800 dark:text-green-400 font-mono font-bold">
+                                    ID: {client.id}
+                                  </div>
+                                  <Badge 
+                                    variant={activityStatus.variant}
+                                    className={`${activityStatus.className} text-xs px-1.5 py-0.5`}
+                                  >
+                                    {activityStatus.icon}
+                                    <span className="ml-1">{activityStatus.label}</span>
+                                  </Badge>
+                                  <div className="text-xs text-gray-500 dark:text-gray-400">
+                                    Last: {client.lastLoginAt ? formatIndianDateTime(client.lastLoginAt) : 'Never'}
+                                  </div>
+                                  <div className="text-xs text-gray-400 dark:text-gray-500 italic">
+                                    Reg: {formatIndianDateTime(client.createdAt)}
+                                  </div>
                                 </div>
                               </div>
                             </TableCell>
@@ -1765,42 +1776,53 @@ export default function ClientManagement() {
                           return (
                             <TableRow key={client.id}>
                               <TableCell>
-                                <div>
-                                  <div className="font-medium text-gray-900 dark:text-white">
-                                    {client.firstName} {client.lastName}
-                                  </div>
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <div className="text-sm text-green-800 dark:text-green-400 font-mono font-bold truncate">
-                                        ID: {client.id}
-                                      </div>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                      <p className="font-mono">{client.id}</p>
-                                    </TooltipContent>
-                                  </Tooltip>
-                                  <div className="mt-1 space-y-1">
-                                    <Badge 
-                                      variant={activityStatus.variant}
-                                      className={activityStatus.className}
-                                    >
-                                      {activityStatus.icon}
-                                      <span className="ml-1">{activityStatus.label}</span>
-                                    </Badge>
-                                    {client.lastLoginAt ? (
-                                      <div className="text-xs text-gray-500 dark:text-gray-400">
-                                        Last: {formatIndianDateTime(client.lastLoginAt)}
-                                      </div>
-                                    ) : (
-                                      <div className="text-xs text-gray-400 dark:text-gray-500 italic">
-                                        Never logged in
-                                      </div>
-                                    )}
-                                    <div className="text-xs text-gray-500 dark:text-gray-400">
-                                      Reg: {formatIndianDateTime(client.createdAt)}
+                                <div className="flex items-start gap-3">
+                                  <Avatar className="h-10 w-10 flex-shrink-0">
+                                    <AvatarImage 
+                                      src={(client as any).profilePicture} 
+                                      alt={`${client.firstName} ${client.lastName}`} 
+                                    />
+                                    <AvatarFallback className="bg-blue-100 text-blue-600 font-semibold">
+                                      {client.firstName.charAt(0).toUpperCase()}{client.lastName.charAt(0).toUpperCase()}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <div className="min-w-0 flex-1">
+                                    <div className="font-medium text-gray-900 dark:text-white">
+                                      {client.firstName} {client.lastName}
                                     </div>
-                                    <div className="text-xs text-gray-400 dark:text-gray-500 italic">
-                                      Member since {getMemberSince(client.createdAt)}
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <div className="text-sm text-green-800 dark:text-green-400 font-mono font-bold truncate">
+                                          ID: {client.id}
+                                        </div>
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                        <p className="font-mono">{client.id}</p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                    <div className="mt-1 space-y-1">
+                                      <Badge 
+                                        variant={activityStatus.variant}
+                                        className={activityStatus.className}
+                                      >
+                                        {activityStatus.icon}
+                                        <span className="ml-1">{activityStatus.label}</span>
+                                      </Badge>
+                                      {client.lastLoginAt ? (
+                                        <div className="text-xs text-gray-500 dark:text-gray-400">
+                                          Last: {formatIndianDateTime(client.lastLoginAt)}
+                                        </div>
+                                      ) : (
+                                        <div className="text-xs text-gray-400 dark:text-gray-500 italic">
+                                          Never logged in
+                                        </div>
+                                      )}
+                                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                                        Reg: {formatIndianDateTime(client.createdAt)}
+                                      </div>
+                                      <div className="text-xs text-gray-400 dark:text-gray-500 italic">
+                                        Member since {getMemberSince(client.createdAt)}
+                                      </div>
                                     </div>
                                   </div>
                                 </div>
