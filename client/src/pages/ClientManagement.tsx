@@ -2048,7 +2048,7 @@ export default function ClientManagement() {
                                       variant="ghost"
                                       className="h-6 w-6 p-0 text-purple-600 hover:text-purple-700 hover:bg-purple-50 dark:hover:bg-purple-900/20"
                                       onClick={() => {
-                                        toast({ title: "Message", description: "Bulk messaging coming soon!" });
+                                        toast({ title: "Message", description: "Bulk in-app messaging coming soon!" });
                                       }}
                                     >
                                       <MessageSquare className="w-3 h-3" />
@@ -2068,8 +2068,8 @@ export default function ClientManagement() {
                           const activityStatus = getActivityStatus(client.lastLoginAt, client.createdAt);
                           return (
                             <TableRow key={client.id}>
-                              <TableCell>
-                                <Tooltip>
+                              <TableCell className="py-2">
+                              <Tooltip>
                                   <TooltipTrigger asChild>
                                     <div className="flex items-start gap-3 cursor-pointer">
                                       <Avatar className="h-10 w-10 flex-shrink-0">
