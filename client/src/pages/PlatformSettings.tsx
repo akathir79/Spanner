@@ -102,16 +102,8 @@ export default function PlatformSettings() {
             <Card className="hover:shadow-lg transition-shadow cursor-pointer">
               <CardContent className="p-6 text-center">
                 <FileText className="w-12 h-12 mx-auto mb-4 text-green-600" />
-                <h3 className="font-semibold mb-2">District Manager</h3>
+                <h3 className="font-semibold mb-2">District and State Manager</h3>
                 <p className="text-sm text-muted-foreground">Manage district-wise operations and coverage</p>
-              </CardContent>
-            </Card>
-
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-              <CardContent className="p-6 text-center">
-                <Lock className="w-12 h-12 mx-auto mb-4 text-red-600" />
-                <h3 className="font-semibold mb-2">Security Settings</h3>
-                <p className="text-sm text-muted-foreground">Configure authentication and access controls</p>
               </CardContent>
             </Card>
 
@@ -125,33 +117,9 @@ export default function PlatformSettings() {
 
             <Card className="hover:shadow-lg transition-shadow cursor-pointer">
               <CardContent className="p-6 text-center">
-                <Zap className="w-12 h-12 mx-auto mb-4 text-yellow-600" />
-                <h3 className="font-semibold mb-2">System Configuration</h3>
-                <p className="text-sm text-muted-foreground">Platform settings and performance tuning</p>
-              </CardContent>
-            </Card>
-
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-              <CardContent className="p-6 text-center">
-                <Globe className="w-12 h-12 mx-auto mb-4 text-indigo-600" />
-                <h3 className="font-semibold mb-2">Advanced Analytics</h3>
-                <p className="text-sm text-muted-foreground">Detailed platform metrics and insights</p>
-              </CardContent>
-            </Card>
-
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-              <CardContent className="p-6 text-center">
                 <Briefcase className="w-12 h-12 mx-auto mb-4 text-orange-600" />
-                <h3 className="font-semibold mb-2">Service Type Management</h3>
+                <h3 className="font-semibold mb-2">Service Management</h3>
                 <p className="text-sm text-muted-foreground">Add, edit, and manage all service categories</p>
-              </CardContent>
-            </Card>
-
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-              <CardContent className="p-6 text-center">
-                <UserCheck className="w-12 h-12 mx-auto mb-4 text-cyan-600" />
-                <h3 className="font-semibold mb-2">Super Admin Profile</h3>
-                <p className="text-sm text-muted-foreground">Manage super admin account and permissions</p>
               </CardContent>
             </Card>
 
@@ -168,6 +136,38 @@ export default function PlatformSettings() {
                 <TrendingUp className="w-12 h-12 mx-auto mb-4 text-pink-600" />
                 <h3 className="font-semibold mb-2">Salary History</h3>
                 <p className="text-sm text-muted-foreground">Track worker payments and salary distributions</p>
+              </CardContent>
+            </Card>
+
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+              <CardContent className="p-6 text-center">
+                <UserCheck className="w-12 h-12 mx-auto mb-4 text-cyan-600" />
+                <h3 className="font-semibold mb-2">Super Admin Profile</h3>
+                <p className="text-sm text-muted-foreground">Manage super admin account and permissions</p>
+              </CardContent>
+            </Card>
+
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+              <CardContent className="p-6 text-center">
+                <Globe className="w-12 h-12 mx-auto mb-4 text-indigo-600" />
+                <h3 className="font-semibold mb-2">Advanced Analytics</h3>
+                <p className="text-sm text-muted-foreground">Detailed platform metrics and insights</p>
+              </CardContent>
+            </Card>
+
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+              <CardContent className="p-6 text-center">
+                <Lock className="w-12 h-12 mx-auto mb-4 text-red-600" />
+                <h3 className="font-semibold mb-2">Security Settings</h3>
+                <p className="text-sm text-muted-foreground">Configure authentication and access controls</p>
+              </CardContent>
+            </Card>
+
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+              <CardContent className="p-6 text-center">
+                <Zap className="w-12 h-12 mx-auto mb-4 text-yellow-600" />
+                <h3 className="font-semibold mb-2">System Configuration</h3>
+                <p className="text-sm text-muted-foreground">Platform settings and performance tuning</p>
               </CardContent>
             </Card>
           </div>
