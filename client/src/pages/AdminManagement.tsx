@@ -1668,18 +1668,39 @@ export default function AdminManagement() {
         <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Delete Administrator</AlertDialogTitle>
+              <AlertDialogTitle>Delete User</AlertDialogTitle>
               <AlertDialogDescription>
-                Are you sure you want to delete {userToDelete?.firstName} {userToDelete?.lastName}? This action cannot be undone.
+                Are you sure you want to permanently delete this user? This action cannot be undone and will remove:
               </AlertDialogDescription>
             </AlertDialogHeader>
+            {userToDelete && (
+              <div className="space-y-4">
+                <div>
+                  <h4 className="font-medium text-gray-700">User Information:</h4>
+                  <ul className="mt-1 text-sm text-gray-600 list-disc list-inside">
+                    <li>{userToDelete.firstName} {userToDelete.lastName}</li>
+                    <li>{userToDelete.mobile}</li>
+                    {userToDelete.email && <li>{userToDelete.email}</li>}
+                  </ul>
+                </div>
+                <div>
+                  <h4 className="font-medium text-gray-700">All Associated Data:</h4>
+                  <ul className="mt-1 text-sm text-gray-600 list-disc list-inside">
+                    <li>Profile and account information</li>
+                    <li>All bookings and service history</li>
+                    <li>Payment records and transactions</li>
+                    <li>Messages and communications</li>
+                  </ul>
+                </div>
+              </div>
+            )}
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>
               <AlertDialogAction 
                 onClick={confirmDeleteUser}
                 className="bg-red-600 hover:bg-red-700"
               >
-                Delete Admin
+                Delete Permanently
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
