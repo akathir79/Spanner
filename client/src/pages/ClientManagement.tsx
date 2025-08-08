@@ -881,7 +881,16 @@ export default function ClientManagement() {
                               </Select>
                             </div>
                           </TableHead>
-                          <TableHead className="w-[160px]">Location</TableHead>
+                          <TableHead className="w-[160px]">
+                            <div className="flex items-center gap-2">
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <span className="cursor-help">Location</span>
+                                </TooltipTrigger>
+                                <TooltipContent>District and Area information</TooltipContent>
+                              </Tooltip>
+                            </div>
+                          </TableHead>
                           <TableHead className="w-[190px]">Bookings/Earnings</TableHead>
                           <TableHead className="w-[180px]">
                             <div className="flex items-center gap-2">
@@ -1980,7 +1989,16 @@ export default function ClientManagement() {
                                   <SelectItem value="active">Active</SelectItem>
                                   <SelectItem value="inactive">Inactive</SelectItem>
                                   <SelectItem value="no_login">No Login</SelectItem>
-                                  <SelectItem value="just_registered">Just Registered</SelectItem>
+                          <TableHead className="w-[160px]">
+                            <div className="flex items-center gap-2">
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <span className="cursor-help">Location</span>
+                                </TooltipTrigger>
+                                <TooltipContent>District and Area information</TooltipContent>
+                              </Tooltip>
+                            </div>
+                          </TableHead>
                                   <SelectItem value="verified">Verified</SelectItem>
                                   <SelectItem value="unverified">Unverified</SelectItem>
                                 </SelectContent>
