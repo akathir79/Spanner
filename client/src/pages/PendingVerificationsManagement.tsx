@@ -16,10 +16,15 @@ export default function PendingVerificationsManagement() {
   const [selectedWorker, setSelectedWorker] = useState<any>(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
 
-  // Fetch pending workers for verification
-  const { data: pendingWorkers = [] } = useQuery({
-    queryKey: ["/api/admin/pending-workers"],
+  // Fetch all users and filter for pending workers
+  const { data: allUsers = [] } = useQuery({
+    queryKey: ["/api/admin/users"],
   });
+
+  // Filter for pending workers (workers who are not verified)
+  const pendingWorkers = allUsers.filter((user: any) => 
+    user.role === "worker" && !user.isVerified
+  );
 
   // Verify worker mutation
   const verifyWorkerMutation = useMutation({
@@ -66,14 +71,16 @@ export default function PendingVerificationsManagement() {
     totalListLabel: "Total Pending Verifications",
     totalListBadgeColor: "bg-yellow-500 hover:bg-yellow-600",
     
-    fetchUrl: "/api/admin/pending-workers",
+    fetchUrl: "/api/admin/users",
+    itemRole: "worker", // This will be used to filter users by role
+    customFilter: (items: any[]) => items.filter((item: any) => !item.isVerified), // Only show unverified workers
     
     itemDisplayName: (worker: any) => `${worker.firstName} ${worker.lastName}`,
     itemDescription: (worker: any) => worker.email || "No email provided",
     getItemCountForState: (state: string, workers: any[]) => 
-      workers.filter((w: any) => w.state === state && !w.isVerified).length,
+      workers.filter((w: any) => w.state === state && w.role === "worker" && !w.isVerified).length,
     getItemCountForDistrict: (district: string, workers: any[]) => 
-      workers.filter((w: any) => w.district === district && !w.isVerified).length,
+      workers.filter((w: any) => w.district === district && w.role === "worker" && !w.isVerified).length,
     
     searchPlaceholder: "Search pending workers...",
     searchFilters: [

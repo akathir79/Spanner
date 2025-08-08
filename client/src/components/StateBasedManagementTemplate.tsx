@@ -74,6 +74,7 @@ interface ManagementConfig {
   // API Configuration
   fetchUrl: string;
   itemRole?: string; // Filter by role if needed
+  customFilter?: (items: BaseItem[]) => BaseItem[]; // Custom filter function
   
   // Display Configuration
   itemDisplayName: (item: BaseItem) => string;
@@ -279,6 +280,11 @@ export default function StateBasedManagementTemplate({ config }: StateBasedManag
       // Filter by role if specified
       if (config.itemRole) {
         items = items.filter((item: BaseItem) => item.role === config.itemRole);
+      }
+      
+      // Apply custom filter if specified
+      if (config.customFilter) {
+        items = config.customFilter(items);
       }
       
       return items;
