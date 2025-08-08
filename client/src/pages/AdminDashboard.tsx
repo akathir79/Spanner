@@ -209,8 +209,81 @@ export default function AdminDashboard() {
           )}
         </div>
 
+        {/* Management Sections */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          {/* Client Management */}
+          <Card 
+            className="cursor-pointer transition-all hover:shadow-md border-2 hover:border-blue-200"
+            onClick={() => setLocation("/admin/clients")}
+          >
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Client Management</p>
+                  <p className="text-2xl font-bold text-blue-600">{stats.totalClients}</p>
+                  <p className="text-xs text-muted-foreground">Manage clients</p>
+                </div>
+                <Users className="h-8 w-8 text-blue-600" />
+              </div>
+            </CardContent>
+          </Card>
 
-        
+          {/* Worker Management */}
+          <Card 
+            className="cursor-pointer transition-all hover:shadow-md border-2 hover:border-green-200"
+            onClick={() => setLocation("/admin/workers")}
+          >
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Worker Management</p>
+                  <p className="text-2xl font-bold text-green-600">{stats.totalWorkers}</p>
+                  <p className="text-xs text-muted-foreground">Manage workers</p>
+                </div>
+                <UserCheck className="h-8 w-8 text-green-600" />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Admin Management - Only for Super Admin */}
+          {user?.role === "super_admin" && (
+            <Card 
+              className="cursor-pointer transition-all hover:shadow-md border-2 hover:border-purple-200"
+              onClick={() => setLocation("/admin/admins")}
+            >
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Admin Management</p>
+                    <p className="text-2xl font-bold text-purple-600">{stats.totalAdmins}</p>
+                    <p className="text-xs text-muted-foreground">Manage admins</p>
+                  </div>
+                  <Settings className="h-8 w-8 text-purple-600" />
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Regular admin sees pending verifications instead */}
+          {user?.role !== "super_admin" && (
+            <Card 
+              className="cursor-pointer transition-all hover:shadow-md border-2 hover:border-yellow-200"
+              onClick={() => setLocation("/admin/pending-verifications")}
+            >
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Pending Verifications</p>
+                    <p className="text-2xl font-bold text-yellow-600">{stats.pendingVerifications}</p>
+                    <p className="text-xs text-muted-foreground">Workers to verify</p>
+                  </div>
+                  <Clock className="h-8 w-8 text-yellow-600" />
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+
         {/* Quick Overview */}
         <Card>
           <CardHeader>
