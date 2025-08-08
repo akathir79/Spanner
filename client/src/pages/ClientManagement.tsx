@@ -988,12 +988,12 @@ export default function ClientManagement() {
                                         <Badge 
                                           variant={
                                             activityStatus.label === 'Just Registered' || 
-                                            activityStatus.label === 'Never Login' || 
+                                            activityStatus.label === 'No Login' || 
                                             activityStatus.label === 'Inactive' ? "destructive" : activityStatus.variant
                                           }
                                           className={
                                             activityStatus.label === 'Just Registered' || 
-                                            activityStatus.label === 'Never Login' || 
+                                            activityStatus.label === 'No Login' || 
                                             activityStatus.label === 'Inactive'
                                               ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100 text-xs px-1.5 py-0.5" 
                                               : `${activityStatus.className} text-xs px-1.5 py-0.5`
@@ -1059,12 +1059,12 @@ export default function ClientManagement() {
                                         <Badge
                                           variant={
                                             activityStatus.label === 'Just Registered' || 
-                                            activityStatus.label === 'Never Login' || 
+                                            activityStatus.label === 'No Login' || 
                                             !client.isVerified ? "destructive" : "default"
                                           }
                                           className={
                                             activityStatus.label === 'Just Registered' || 
-                                            activityStatus.label === 'Never Login' || 
+                                            activityStatus.label === 'No Login' || 
                                             !client.isVerified
                                               ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100" 
                                               : "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100"
@@ -1959,12 +1959,12 @@ export default function ClientManagement() {
                                             <Badge 
                                               variant={
                                                 activityStatus.label === 'Just Registered' || 
-                                                activityStatus.label === 'Never Login' || 
+                                                activityStatus.label === 'No Login' || 
                                                 activityStatus.label === 'Inactive' ? "destructive" : activityStatus.variant
                                               }
                                               className={
                                                 activityStatus.label === 'Just Registered' || 
-                                                activityStatus.label === 'Never Login' || 
+                                                activityStatus.label === 'No Login' || 
                                                 activityStatus.label === 'Inactive'
                                                   ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100 text-xs" 
                                                   : activityStatus.className
@@ -2040,12 +2040,12 @@ export default function ClientManagement() {
                                           <Badge
                                             variant={
                                               activityStatus.label === 'Just Registered' || 
-                                              activityStatus.label === 'Never Login' || 
+                                              activityStatus.label === 'No Login' || 
                                               !client.isVerified ? "destructive" : "default"
                                             }
                                             className={
                                               activityStatus.label === 'Just Registered' || 
-                                              activityStatus.label === 'Never Login' || 
+                                              activityStatus.label === 'No Login' || 
                                               !client.isVerified
                                                 ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100" 
                                                 : "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100"
