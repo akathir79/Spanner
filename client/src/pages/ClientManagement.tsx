@@ -32,7 +32,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { ArrowLeft, Phone, Mail, Calendar, MoreHorizontal, Eye, MessageSquare, CheckCircle, XCircle, Trash2, Edit, AlertCircle, Search, X, Menu, Loader2, MessageCircle, Smartphone, CreditCard, Send, ArrowRightLeft, History, DollarSign, Filter, Copy } from "lucide-react";
+import { ArrowLeft, Phone, Mail, Calendar, MoreHorizontal, Eye, MessageSquare, CheckCircle, XCircle, Trash2, Edit, AlertCircle, Search, X, Menu, Loader2, MessageCircle, Smartphone, CreditCard, Send, ArrowRightLeft, History, DollarSign, Filter, Copy, Square } from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa";
 import { format } from "date-fns";
 import { useLocation } from "wouter";
@@ -1699,11 +1699,11 @@ export default function ClientManagement() {
                                     </DropdownMenuSubTrigger>
                                     <DropdownMenuSubContent>
                                       <DropdownMenuItem onClick={() => handleSendDirectMessage(client)}>
-                                        <MessageCircle className="w-4 h-4 mr-2" />
-                                        Message
+                                        <MessageSquare className="w-4 h-4 mr-2 text-purple-600" />
+                                        <span className="text-purple-600">Message</span>
                                       </DropdownMenuItem>
                                       <DropdownMenuItem onClick={() => handleSendSMS(client)}>
-                                        <MessageSquare className="w-4 h-4 mr-2" />
+                                        <Square className="w-4 h-4 mr-2" />
                                         SMS
                                       </DropdownMenuItem>
                                       <DropdownMenuItem onClick={() => handleSendWhatsApp(client)}>
@@ -1712,8 +1712,8 @@ export default function ClientManagement() {
                                       </DropdownMenuItem>
                                       {client.email && (
                                         <DropdownMenuItem onClick={() => window.location.href = `mailto:${client.email}`}>
-                                          <Mail className="w-4 h-4 mr-2" />
-                                          Email
+                                          <Mail className="w-4 h-4 mr-2 text-red-600" />
+                                          <span className="text-red-600">Email</span>
                                         </DropdownMenuItem>
                                       )}
                                     </DropdownMenuSubContent>
@@ -2697,11 +2697,11 @@ export default function ClientManagement() {
                                       </DropdownMenuSubTrigger>
                                       <DropdownMenuSubContent>
                                         <DropdownMenuItem onClick={() => handleSendDirectMessage(client)}>
-                                          <MessageCircle className="w-4 h-4 mr-2" />
-                                          Message
+                                          <MessageSquare className="w-4 h-4 mr-2 text-purple-600" />
+                                          <span className="text-purple-600">Message</span>
                                         </DropdownMenuItem>
                                         <DropdownMenuItem onClick={() => handleSendSMS(client)}>
-                                          <MessageSquare className="w-4 h-4 mr-2" />
+                                          <Square className="w-4 h-4 mr-2" />
                                           SMS
                                         </DropdownMenuItem>
                                         <DropdownMenuItem onClick={() => handleSendWhatsApp(client)}>
@@ -2710,8 +2710,8 @@ export default function ClientManagement() {
                                         </DropdownMenuItem>
                                         {client.email && (
                                           <DropdownMenuItem onClick={() => window.location.href = `mailto:${client.email}`}>
-                                            <Mail className="w-4 h-4 mr-2" />
-                                            Email
+                                            <Mail className="w-4 h-4 mr-2 text-red-600" />
+                                            <span className="text-red-600">Email</span>
                                           </DropdownMenuItem>
                                         )}
                                       </DropdownMenuSubContent>
