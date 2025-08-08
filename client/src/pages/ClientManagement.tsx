@@ -1254,20 +1254,35 @@ export default function ClientManagement() {
                                           <div className="text-xs text-gray-500 dark:text-gray-400">
                                             {(() => {
                                               const address = (client as any).bankAddress;
-                                              // Split address by comma and format compactly
+                                              // Split address and format properly
                                               const parts = address.split(',').map((part: string) => part.trim());
-                                              if (parts.length >= 3) {
-                                                // Show first part and state/pincode on separate lines
-                                                const mainPart = parts[0];
-                                                const statePinPart = parts.slice(-2).join(', '); // Last 2 parts usually contain state and pincode
-                                                return (
-                                                  <div className="space-y-0.5">
-                                                    <div className="truncate">{mainPart}</div>
-                                                    <div className="truncate">{statePinPart}</div>
-                                                  </div>
-                                                );
+                                              
+                                              if (parts.length >= 2) {
+                                                // Extract state and pincode from last part
+                                                const lastPart = parts[parts.length - 1];
+                                                const pincodeMatch = lastPart.match(/(\d{6})$/); // Match 6-digit pincode at end
+                                                
+                                                if (pincodeMatch) {
+                                                  const pincode = pincodeMatch[1];
+                                                  const state = lastPart.replace(` - ${pincode}`, '').trim();
+                                                  const mainAddress = parts.slice(0, -1).join(', ');
+                                                  
+                                                  return (
+                                                    <div className="space-y-0.5">
+                                                      <div className="truncate max-w-[140px]">{mainAddress}</div>
+                                                      <div className="truncate max-w-[140px]">{state}</div>
+                                                      <div className="text-[10px] text-gray-400">PIN: {pincode}</div>
+                                                    </div>
+                                                  );
+                                                }
                                               }
-                                              return <div className="truncate">{address}</div>;
+                                              
+                                              // Fallback for addresses without clear structure
+                                              return (
+                                                <div className="space-y-0.5">
+                                                  <div className="truncate max-w-[140px]">{address}</div>
+                                                </div>
+                                              );
                                             })()}
                                           </div>
                                         )}
@@ -1986,8 +2001,39 @@ export default function ClientManagement() {
                                             </div>
                                           )}
                                           {(client as any).bankAddress && (
-                                            <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                                              {(client as any).bankAddress}
+                                            <div className="text-xs text-gray-500 dark:text-gray-400">
+                                              {(() => {
+                                                const address = (client as any).bankAddress;
+                                                // Split address and format properly
+                                                const parts = address.split(',').map((part: string) => part.trim());
+                                                
+                                                if (parts.length >= 2) {
+                                                  // Extract state and pincode from last part
+                                                  const lastPart = parts[parts.length - 1];
+                                                  const pincodeMatch = lastPart.match(/(\d{6})$/); // Match 6-digit pincode at end
+                                                  
+                                                  if (pincodeMatch) {
+                                                    const pincode = pincodeMatch[1];
+                                                    const state = lastPart.replace(` - ${pincode}`, '').trim();
+                                                    const mainAddress = parts.slice(0, -1).join(', ');
+                                                    
+                                                    return (
+                                                      <div className="space-y-0.5">
+                                                        <div className="truncate max-w-[140px]">{mainAddress}</div>
+                                                        <div className="truncate max-w-[140px]">{state}</div>
+                                                        <div className="text-[10px] text-gray-400">PIN: {pincode}</div>
+                                                      </div>
+                                                    );
+                                                  }
+                                                }
+                                                
+                                                // Fallback for addresses without clear structure
+                                                return (
+                                                  <div className="space-y-0.5">
+                                                    <div className="truncate max-w-[140px]">{address}</div>
+                                                  </div>
+                                                );
+                                              })()}
                                             </div>
                                           )}
                                           <div className="flex items-center gap-1 mt-2">
