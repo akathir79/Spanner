@@ -672,19 +672,35 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(workerProfiles, eq(users.id, workerProfiles.userId))
       .orderBy(desc(users.createdAt));
     
-    return results.map(result => ({
-      ...result.users,
-      // Map database snake_case to frontend camelCase for consistency
-      bankAccountNumber: result.users.bank_account_number,
-      bankIFSC: result.users.bank_ifsc,
-      bankAccountHolderName: result.users.bank_account_holder_name,
-      bankName: result.users.bank_name,
-      bankBranch: result.users.bank_branch,
-      bankAddress: result.users.bank_address,
-      bankAccountType: result.users.bank_account_type,
-      bankMICR: result.users.bank_micr,
-      workerProfile: result.worker_profiles || undefined
-    }));
+    return results.map(result => {
+      const mapped = {
+        ...result.users,
+        // Map database snake_case to frontend camelCase for consistency
+        bankAccountNumber: result.users.bank_account_number,
+        bankIFSC: result.users.bank_ifsc,
+        bankAccountHolderName: result.users.bank_account_holder_name,
+        bankName: result.users.bank_name,
+        bankBranch: result.users.bank_branch,
+        bankAddress: result.users.bank_address,
+        bankAccountType: result.users.bank_account_type,
+        bankMICR: result.users.bank_micr,
+        workerProfile: result.worker_profiles || undefined
+      };
+      
+      // Debug log for admin users
+      if (result.users.role === 'admin' || result.users.role === 'super_admin') {
+        console.log('Admin user bank mapping:', {
+          id: result.users.id,
+          firstName: result.users.first_name,
+          raw_bank_account: result.users.bank_account_number,
+          mapped_bankAccountNumber: mapped.bankAccountNumber,
+          raw_bank_ifsc: result.users.bank_ifsc,
+          mapped_bankIFSC: mapped.bankIFSC
+        });
+      }
+      
+      return mapped;
+    });
   }
 
   async getBookingsWithDetails(): Promise<(Booking & { client: User; worker: User })[]> {
