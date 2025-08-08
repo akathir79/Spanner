@@ -62,6 +62,7 @@ interface BaseItem {
 interface StateData {
   state: string;
   districts: string[];
+  serviceTypes?: string[];
 }
 
 interface ManagementConfig {
@@ -70,6 +71,7 @@ interface ManagementConfig {
   backUrl: string;
   totalListLabel: string;
   totalListBadgeColor: string;
+  showServicesLevel?: boolean;
   
   // API Configuration
   fetchUrl: string;
@@ -81,6 +83,7 @@ interface ManagementConfig {
   itemDescription?: (item: BaseItem) => string;
   getItemCountForState: (state: string, items: BaseItem[]) => number;
   getItemCountForDistrict: (district: string, items: BaseItem[]) => number;
+  getItemCountForService?: (serviceType: string, items: BaseItem[]) => number;
   
   // Search Configuration
   searchPlaceholder: string;
@@ -246,7 +249,8 @@ export default function StateBasedManagementTemplate({ config }: StateBasedManag
   const queryClient = useQueryClient();
   const [selectedState, setSelectedState] = useState<string | null>(null);
   const [selectedDistrict, setSelectedDistrict] = useState<string | null>(null);
-  const [view, setView] = useState<"total" | "states" | "districts" | "items">("states");
+  const [selectedServiceType, setSelectedServiceType] = useState<string | null>(null);
+  const [view, setView] = useState<"total" | "states" | "districts" | "services" | "items">("states");
   
   // Ref for rolling animation
   const totalItemButtonRef = useRef<HTMLButtonElement>(null);
@@ -300,6 +304,11 @@ export default function StateBasedManagementTemplate({ config }: StateBasedManag
   // Get districts for selected state from JSON file
   const districtsForState = selectedState 
     ? (statesDistrictsData.states as StateData[]).find(s => s.state === selectedState)?.districts || []
+    : [];
+
+  // Get service types for selected state from JSON file
+  const serviceTypesForState = selectedState 
+    ? (statesDistrictsData.states as StateData[]).find(s => s.state === selectedState)?.serviceTypes || []
     : [];
 
   // Filter items for total view
@@ -368,6 +377,13 @@ export default function StateBasedManagementTemplate({ config }: StateBasedManag
     
     let districtItems = allItems.filter((item: BaseItem) => item.district === selectedDistrict);
     
+    // Apply service type filter if selected and available
+    if (selectedServiceType) {
+      districtItems = districtItems.filter((item: BaseItem) => {
+        return item.serviceTypes?.includes(selectedServiceType) || false;
+      });
+    }
+    
     // Apply status filter
     if (statusFilter !== "all") {
       districtItems = districtItems.filter(item => {
@@ -422,7 +438,7 @@ export default function StateBasedManagementTemplate({ config }: StateBasedManag
           );
       }
     });
-  }, [allItems, selectedDistrict, searchQuery, searchFilter, statusFilter, config]);
+  }, [allItems, selectedDistrict, selectedServiceType, searchQuery, searchFilter, statusFilter, config]);
 
   // Paginated items for current view
   const itemsForDistrict = useMemo(() => {
@@ -453,6 +469,7 @@ export default function StateBasedManagementTemplate({ config }: StateBasedManag
     setTimeout(() => {
       setSelectedState(state);
       setSelectedDistrict(null);
+      setSelectedServiceType(null);
       setView("districts");
       setLoadingState(null);
     }, 200);
@@ -462,6 +479,21 @@ export default function StateBasedManagementTemplate({ config }: StateBasedManag
     setLoadingState(district);
     setTimeout(() => {
       setSelectedDistrict(district);
+      setSelectedServiceType(null);
+      // Check if this template should show services level or go directly to items
+      const shouldShowServices = config.showServicesLevel && serviceTypesForState.length > 0;
+      setView(shouldShowServices ? "services" : "items");
+      setLoadingState(null);
+      setDistrictCurrentPage(1);
+      setSearchQuery("");
+      setSearchFilter(config.searchFilters[0]?.value || "all");
+    }, 200);
+  };
+
+  const handleServiceClick = async (serviceType: string) => {
+    setLoadingState(serviceType);
+    setTimeout(() => {
+      setSelectedServiceType(serviceType);
       setView("items");
       setLoadingState(null);
       setDistrictCurrentPage(1);
@@ -472,11 +504,22 @@ export default function StateBasedManagementTemplate({ config }: StateBasedManag
 
   const handleBackClick = () => {
     if (view === "items") {
+      if (selectedServiceType && config.showServicesLevel) {
+        setView("services");
+        setSelectedServiceType(null);
+      } else {
+        setView("districts");
+        setSelectedDistrict(null);
+        setSelectedServiceType(null);
+      }
+    } else if (view === "services") {
       setView("districts");
-      setSelectedDistrict(null);
+      setSelectedServiceType(null);
     } else if (view === "districts") {
       setView("states");
       setSelectedState(null);
+      setSelectedDistrict(null);
+      setSelectedServiceType(null);
     } else {
       setView("total");
     }
@@ -832,18 +875,68 @@ export default function StateBasedManagementTemplate({ config }: StateBasedManag
               </div>
             )}
 
-            {/* Items View */}
-            {!itemsLoading && view === "items" && selectedDistrict && (
+            {/* Services View */}
+            {!itemsLoading && view === "services" && selectedState && selectedDistrict && (
               <div className="h-full flex flex-col">
                 <div className="p-6 border-b border-gray-200 dark:border-gray-700">
                   <Button variant="outline" onClick={handleBackClick} className="mb-4">
                     <ArrowLeft className="w-4 h-4 mr-2" />
                     Back to Districts
                   </Button>
+                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-1">
+                    Service Types in {selectedDistrict}, {selectedState}
+                  </h2>
+                  <p className="text-gray-600 dark:text-gray-400">
+                    Select a service type to view workers
+                  </p>
+                </div>
+
+                <div className="flex-1 overflow-auto p-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {serviceTypesForState.map((serviceType) => (
+                      <Button
+                        key={serviceType}
+                        variant="outline"
+                        onClick={() => handleServiceClick(serviceType)}
+                        className={`h-12 justify-start font-medium hover:bg-blue-50 hover:border-blue-200 dark:hover:bg-blue-900/20 relative pr-10 ${
+                          loadingState === serviceType ? 'opacity-75' : ''
+                        }`}
+                      >
+                        {loadingState === serviceType ? (
+                          <div className="flex items-center">
+                            <div className="inline-block w-3 h-3 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mr-2"></div>
+                            <span className="truncate">Loading...</span>
+                          </div>
+                        ) : (
+                          <>
+                            <span className="truncate">{serviceType}</span>
+                            <Badge 
+                              variant="secondary" 
+                              className="absolute right-2 top-1/2 -translate-y-1/2 h-5 px-2 min-w-[20px] rounded-md flex items-center justify-center text-xs bg-purple-500 text-white hover:bg-purple-600"
+                            >
+                              {config.getItemCountForService ? config.getItemCountForService(serviceType, allItems) : 0}
+                            </Badge>
+                          </>
+                        )}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Items View */}
+            {!itemsLoading && view === "items" && selectedDistrict && (
+              <div className="h-full flex flex-col">
+                <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+                  <Button variant="outline" onClick={handleBackClick} className="mb-4">
+                    <ArrowLeft className="w-4 h-4 mr-2" />
+                    Back to {selectedServiceType && config.showServicesLevel ? 'Service Types' : 'Districts'}
+                  </Button>
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex-1">
                       <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-1">
-                        Items in {selectedDistrict}, {selectedState}
+                        {config.itemRole === 'worker' && selectedServiceType ? `${selectedServiceType} Workers` : 'Items'} in {selectedDistrict}, {selectedState}
                       </h2>
                       <p className="text-gray-600 dark:text-gray-400">
                         {filteredDistrictItems.length} items found • Showing {((districtCurrentPage - 1) * pageSize) + 1}-{Math.min(districtCurrentPage * pageSize, filteredDistrictItems.length)} of {filteredDistrictItems.length}

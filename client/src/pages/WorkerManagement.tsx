@@ -109,6 +109,7 @@ export default function WorkerManagement() {
     backUrl: "/admin",
     totalListLabel: "Total Worker List",
     totalListBadgeColor: "bg-green-500 hover:bg-green-600",
+    showServicesLevel: true,
     
     // API Configuration
     fetchUrl: "/api/admin/users",
@@ -121,6 +122,8 @@ export default function WorkerManagement() {
       workers.filter(w => w.state === state && w.role === "worker").length,
     getItemCountForDistrict: (district: string, workers: any[]) => 
       workers.filter(w => w.district === district && w.role === "worker").length,
+    getItemCountForService: (serviceType: string, workers: any[]) =>
+      workers.filter(w => w.role === "worker" && w.serviceTypes?.includes(serviceType)).length,
     
     // Search Configuration
     searchPlaceholder: "Search workers...",
