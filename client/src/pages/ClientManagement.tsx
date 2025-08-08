@@ -1703,13 +1703,19 @@ export default function ClientManagement() {
                                         Message
                                       </DropdownMenuItem>
                                       <DropdownMenuItem onClick={() => handleSendSMS(client)}>
-                                        <Smartphone className="w-4 h-4 mr-2" />
+                                        <MessageSquare className="w-4 h-4 mr-2" />
                                         SMS
                                       </DropdownMenuItem>
                                       <DropdownMenuItem onClick={() => handleSendWhatsApp(client)}>
-                                        <Phone className="w-4 h-4 mr-2 text-green-600" />
+                                        <MessageCircle className="w-4 h-4 mr-2 text-green-600" />
                                         <span className="text-green-600">WhatsApp</span>
                                       </DropdownMenuItem>
+                                      {client.email && (
+                                        <DropdownMenuItem onClick={() => window.location.href = `mailto:${client.email}`}>
+                                          <Mail className="w-4 h-4 mr-2" />
+                                          Email
+                                        </DropdownMenuItem>
+                                      )}
                                     </DropdownMenuSubContent>
                                   </DropdownMenuSub>
                                   <DropdownMenuItem onClick={() => handleVerifyUser(client)}>
@@ -2695,13 +2701,19 @@ export default function ClientManagement() {
                                           Message
                                         </DropdownMenuItem>
                                         <DropdownMenuItem onClick={() => handleSendSMS(client)}>
-                                          <Smartphone className="w-4 h-4 mr-2" />
+                                          <MessageSquare className="w-4 h-4 mr-2" />
                                           SMS
                                         </DropdownMenuItem>
                                         <DropdownMenuItem onClick={() => handleSendWhatsApp(client)}>
-                                          <Phone className="w-4 h-4 mr-2 text-green-600" />
+                                          <MessageCircle className="w-4 h-4 mr-2 text-green-600" />
                                           <span className="text-green-600">WhatsApp</span>
                                         </DropdownMenuItem>
+                                        {client.email && (
+                                          <DropdownMenuItem onClick={() => window.location.href = `mailto:${client.email}`}>
+                                            <Mail className="w-4 h-4 mr-2" />
+                                            Email
+                                          </DropdownMenuItem>
+                                        )}
                                       </DropdownMenuSubContent>
                                     </DropdownMenuSub>
                                     <DropdownMenuItem onClick={() => handleVerifyUser(client)}>
