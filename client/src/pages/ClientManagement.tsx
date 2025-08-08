@@ -1098,11 +1098,8 @@ export default function ClientManagement() {
                                     {(client as any).address ? (
                                       <div>
                                         <div className="font-medium text-gray-600 dark:text-gray-400 text-xs">Address:</div>
-                                        <div className="text-gray-900 dark:text-white text-xs">
+                                        <div className="text-gray-900 dark:text-white text-sm font-semibold">
                                           {(client as any).address}
-                                        </div>
-                                        <div className="text-gray-700 dark:text-gray-300 text-xs">
-                                          {client.district}, {client.state}
                                         </div>
                                         {(client as any).pincode && (
                                           <div className="text-gray-600 dark:text-gray-400 text-xs">
@@ -2074,11 +2071,8 @@ export default function ClientManagement() {
                                   {(client as any).address ? (
                                     <div>
                                       <div className="font-medium text-gray-600 dark:text-gray-400 text-xs">Address:</div>
-                                      <div className="text-gray-900 dark:text-white text-xs">
+                                      <div className="text-gray-900 dark:text-white text-sm font-semibold">
                                         {(client as any).address}
-                                      </div>
-                                      <div className="text-gray-700 dark:text-gray-300 text-xs">
-                                        {client.district}, {client.state}
                                       </div>
                                       {(client as any).pincode && (
                                         <div className="text-gray-600 dark:text-gray-400 text-xs">
