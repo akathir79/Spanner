@@ -900,6 +900,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Dedicated endpoint for admin management - only returns admin and super_admin users
+  app.get("/api/admin/admins", async (req, res) => {
+    try {
+      const users = await storage.getUsersWithProfiles();
+      const adminUsers = users.filter(user => user.role === "admin" || user.role === "super_admin");
+      res.json(adminUsers);
+    } catch (error) {
+      console.error("Get admin management users error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // Get all workers with their profiles for admin management
   app.get("/api/admin/workers", async (req, res) => {
     try {
