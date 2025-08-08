@@ -891,7 +891,16 @@ export default function ClientManagement() {
                               </Tooltip>
                             </div>
                           </TableHead>
-                          <TableHead className="w-[190px]">Bookings/Earnings</TableHead>
+                          <TableHead className="w-[190px]">
+                            <div className="flex items-center gap-2">
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <span className="cursor-help">Bookings/Earnings</span>
+                                </TooltipTrigger>
+                                <TooltipContent>Client booking history and financial summary</TooltipContent>
+                              </Tooltip>
+                            </div>
+                          </TableHead>
                           <TableHead className="w-[180px]">
                             <div className="flex items-center gap-2">
                               <span>Contact</span>
@@ -1989,6 +1998,13 @@ export default function ClientManagement() {
                                   <SelectItem value="active">Active</SelectItem>
                                   <SelectItem value="inactive">Inactive</SelectItem>
                                   <SelectItem value="no_login">No Login</SelectItem>
+                                  <SelectItem value="just_registered">Just Registered</SelectItem>
+                                  <SelectItem value="verified">Verified</SelectItem>
+                                  <SelectItem value="unverified">Unverified</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </TableHead>
                           <TableHead className="w-[160px]">
                             <div className="flex items-center gap-2">
                               <Tooltip>
@@ -1999,14 +2015,16 @@ export default function ClientManagement() {
                               </Tooltip>
                             </div>
                           </TableHead>
-                                  <SelectItem value="verified">Verified</SelectItem>
-                                  <SelectItem value="unverified">Unverified</SelectItem>
-                                </SelectContent>
-                              </Select>
+                          <TableHead className="w-[190px]">
+                            <div className="flex items-center gap-2">
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <span className="cursor-help">Bookings/Earnings</span>
+                                </TooltipTrigger>
+                                <TooltipContent>Client booking history and financial summary</TooltipContent>
+                              </Tooltip>
                             </div>
                           </TableHead>
-                          <TableHead className="w-[160px]">Location</TableHead>
-                          <TableHead className="w-[190px]">Bookings/Earnings</TableHead>
                           <TableHead className="w-[180px]">
                             <div className="flex items-center gap-2">
                               <span>Contact</span>
