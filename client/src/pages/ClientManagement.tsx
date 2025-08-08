@@ -859,7 +859,7 @@ export default function ClientManagement() {
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead className="w-[180px]">
+                          <TableHead className="w-[160px]">
                             <div className="flex items-center gap-2">
                               <span>User</span>
                               <Select value={statusFilter} onValueChange={(value) => {
@@ -881,9 +881,9 @@ export default function ClientManagement() {
                               </Select>
                             </div>
                           </TableHead>
-                          <TableHead className="w-[120px]">Location</TableHead>
-                          <TableHead className="w-[200px]">Bookings/Earnings</TableHead>
-                          <TableHead className="w-[180px]">
+                          <TableHead className="w-[150px]">Location</TableHead>
+                          <TableHead className="w-[180px]">Bookings/Earnings</TableHead>
+                          <TableHead className="w-[160px]">
                             <div className="flex items-center gap-2">
                               <span>Contact</span>
                               <div className="flex items-center gap-1">
@@ -1529,8 +1529,8 @@ export default function ClientManagement() {
                                                   
                                                   return (
                                                     <div className="space-y-0.5">
-                                                      <div className="truncate max-w-[180px]">{mainAddress}</div>
-                                                      <div className="truncate max-w-[180px]">{state}</div>
+                                                      <div className="truncate max-w-[160px]">{mainAddress}</div>
+                                                      <div className="truncate max-w-[160px]">{state}</div>
                                                       <div className="text-[10px] text-gray-400">PIN: {pincode}</div>
                                                     </div>
                                                   );
@@ -1540,7 +1540,7 @@ export default function ClientManagement() {
                                               // Fallback for addresses without clear structure
                                               return (
                                                 <div className="space-y-0.5">
-                                                  <div className="truncate max-w-[180px]">{address}</div>
+                                                  <div className="truncate max-w-[160px]">{address}</div>
                                                 </div>
                                               );
                                             })()}
@@ -1965,7 +1965,7 @@ export default function ClientManagement() {
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead className="w-[180px]">
+                          <TableHead className="w-[160px]">
                             <div className="flex items-center gap-2">
                               <span>User</span>
                               <Select value={statusFilter} onValueChange={(value) => {
@@ -1987,9 +1987,9 @@ export default function ClientManagement() {
                               </Select>
                             </div>
                           </TableHead>
-                          <TableHead className="w-[120px]">Location</TableHead>
-                          <TableHead className="w-[200px]">Bookings/Earnings</TableHead>
-                          <TableHead className="w-[180px]">
+                          <TableHead className="w-[150px]">Location</TableHead>
+                          <TableHead className="w-[180px]">Bookings/Earnings</TableHead>
+                          <TableHead className="w-[160px]">
                             <div className="flex items-center gap-2">
                               <span>Contact</span>
                               <div className="flex items-center gap-1">
@@ -2527,8 +2527,8 @@ export default function ClientManagement() {
                                                     
                                                     return (
                                                       <div className="space-y-0.5">
-                                                        <div className="truncate max-w-[180px]">{mainAddress}</div>
-                                                        <div className="truncate max-w-[180px]">{state}</div>
+                                                        <div className="truncate max-w-[160px]">{mainAddress}</div>
+                                                        <div className="truncate max-w-[160px]">{state}</div>
                                                         <div className="text-[10px] text-gray-400">PIN: {pincode}</div>
                                                       </div>
                                                     );
@@ -2538,7 +2538,7 @@ export default function ClientManagement() {
                                                 // Fallback for addresses without clear structure
                                                 return (
                                                   <div className="space-y-0.5">
-                                                    <div className="truncate max-w-[180px]">{address}</div>
+                                                    <div className="truncate max-w-[160px]">{address}</div>
                                                   </div>
                                                 );
                                               })()}
