@@ -32,44 +32,29 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { ArrowLeft, Phone, Mail, Calendar, MoreHorizontal, Eye, MessageSquare, CheckCircle, XCircle, Trash2, Edit, AlertCircle, Search, X, Menu, Loader2, MessageCircle, Smartphone, CreditCard, Send, ArrowRightLeft, History, DollarSign, Filter, Copy, Square, Clock, FileText, MapPin } from "lucide-react";
-// import { FaWhatsapp } from "react-icons/fa"; // Replaced with MessageCircle for consistency
+import { ArrowLeft, Phone, Mail, Calendar, MoreHorizontal, Eye, MessageSquare, CheckCircle, XCircle, Trash2, Edit, AlertCircle, Search, X, Menu, Loader2, MessageCircle, Smartphone, CreditCard, Send, ArrowRightLeft, History, DollarSign, Filter, Copy, Square, ClipboardList, Clock } from "lucide-react";
 import { format } from "date-fns";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import ViewDetailsModal from "@/components/ViewDetailsModal";
 import statesDistrictsData from "@/../../shared/states-districts.json";
 
-interface User {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email?: string;
-  mobile: string;
-  role: string;
-  isVerified: boolean;
-  createdAt: string;
-  updatedAt?: string;
-  lastLoginAt?: string;
-  district?: string;
-  state?: string;
-}
-
 interface Booking {
   id: string;
   clientId: string;
-  workerId?: string;
-  serviceType: string;
-  description: string;
+  clientName: string;
+  workerId: string;
+  workerName: string;
+  serviceCategory: string;
   status: string;
+  amount: number;
+  createdAt: string;
   scheduledAt?: string;
   completedAt?: string;
-  amount?: number;
-  location: string;
-  createdAt: string;
-  updatedAt?: string;
-  client?: User;
-  worker?: User;
+  description?: string;
+  location?: string;
+  district?: string;
+  state?: string;
 }
 
 interface District {
@@ -83,7 +68,7 @@ interface StateData {
   districts: string[];
 }
 
-// Helper functions for date formatting and activity status
+// Helper functions for date formatting and booking status
 function formatIndianDateTime(dateString: string | Date): string {
   if (!dateString) return "Not available";
   try {
@@ -91,347 +76,276 @@ function formatIndianDateTime(dateString: string | Date): string {
     const date = typeof dateString === 'string' ? new Date(dateString) : dateString;
     if (isNaN(date.getTime())) return "Invalid date";
     
-    // Use Intl.DateTimeFormat to properly convert to IST timezone
-    const istFormatter = new Intl.DateTimeFormat('en-IN', {
-      timeZone: 'Asia/Kolkata',
-      year: 'numeric',
-      month: 'short',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true
-    });
+    // Format in Indian timezone (UTC+5:30)
+    const istDate = new Date(date.getTime() + (5.5 * 60 * 60 * 1000));
     
-    return istFormatter.format(date) + " IST";
+    const day = istDate.getDate().toString().padStart(2, '0');
+    const month = (istDate.getMonth() + 1).toString().padStart(2, '0');
+    const year = istDate.getFullYear();
+    const hours = istDate.getHours().toString().padStart(2, '0');
+    const minutes = istDate.getMinutes().toString().padStart(2, '0');
+    
+    return `${day}/${month}/${year} ${hours}:${minutes}`;
   } catch (error) {
-    console.error("Date formatting error:", error);
-    return "Invalid date";
+    console.error('Date formatting error:', error);
+    return "Date error";
   }
 }
 
-function getBookingAge(createdDate: string): string {
-  const now = new Date();
-  const created = new Date(createdDate);
-  const diffTime = Math.abs(now.getTime() - created.getTime());
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  
-  if (diffDays < 1) {
-    const hours = Math.ceil(diffTime / (1000 * 60 * 60));
-    return `${hours} hour${hours > 1 ? 's' : ''} ago`;
-  } else if (diffDays < 30) {
-    return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
-  } else if (diffDays < 365) {
-    const months = Math.floor(diffDays / 30);
-    return `${months} month${months > 1 ? 's' : ''} ago`;
-  } else {
-    const years = Math.floor(diffDays / 365);
-    const remainingMonths = Math.floor((diffDays % 365) / 30);
-    if (remainingMonths === 0) {
-      return `${years} year${years > 1 ? 's' : ''} ago`;
+function getBookingAge(createdAt: string): string {
+  if (!createdAt) return "Unknown";
+  try {
+    const now = new Date();
+    const created = new Date(createdAt);
+    const diffTime = Math.abs(now.getTime() - created.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 1) return "1 day";
+    if (diffDays < 30) return `${diffDays} days`;
+    if (diffDays < 365) {
+      const months = Math.floor(diffDays / 30);
+      return months === 1 ? "1 month" : `${months} months`;
     }
-    return `${years} year${years > 1 ? 's' : ''}, ${remainingMonths} month${remainingMonths > 1 ? 's' : ''} ago`;
+    const years = Math.floor(diffDays / 365);
+    return years === 1 ? "1 year" : `${years} years`;
+  } catch (error) {
+    return "Unknown";
   }
 }
 
-function getBookingStatus(booking: Booking) {
-  switch (booking.status) {
-    case "pending":
+function getBookingStatus(status?: string, scheduledAt?: string | null, completedAt?: string) {
+  if (status === 'completed' && completedAt) {
+    return {
+      label: "Completed",
+      icon: <CheckCircle className="w-3 h-3" />,
+      variant: "default" as const,
+      className: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100"
+    };
+  }
+
+  if (status === 'in_progress') {
+    return {
+      label: "In Progress",
+      icon: <Clock className="w-3 h-3" />,
+      variant: "secondary" as const,
+      className: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100"
+    };
+  }
+
+  if (status === 'scheduled' && scheduledAt) {
+    const now = new Date();
+    const scheduled = new Date(scheduledAt);
+    const diffHours = Math.abs(now.getTime() - scheduled.getTime()) / (1000 * 60 * 60);
+
+    if (diffHours < 24) {
       return {
-        label: "Pending",
-        variant: "outline" as const,
-        icon: <Clock className="w-3 h-3" />,
+        label: "Due Soon",
+        icon: <AlertCircle className="w-3 h-3" />,
+        variant: "secondary" as const,
+        className: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-100"
+      };
+    } else {
+      return {
+        label: "Scheduled",
+        icon: <Calendar className="w-3 h-3" />,
+        variant: "secondary" as const,
         className: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100"
       };
-    case "accepted":
-      return {
-        label: "Accepted",
-        variant: "default" as const,
-        icon: <CheckCircle className="w-3 h-3" />,
-        className: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100"
-      };
-    case "in_progress":
-      return {
-        label: "In Progress",
-        variant: "default" as const,
-        icon: <Clock className="w-3 h-3" />,
-        className: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-100"
-      };
-    case "completed":
-      return {
-        label: "Completed",
-        variant: "default" as const,
-        icon: <CheckCircle className="w-3 h-3" />,
-        className: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100"
-      };
-    case "cancelled":
-      return {
-        label: "Cancelled",
-        variant: "destructive" as const,
-        icon: <XCircle className="w-3 h-3" />,
-        className: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100"
-      };
-    default:
-      return {
-        label: "Unknown",
-        variant: "secondary" as const,
-        icon: <AlertCircle className="w-3 h-3" />,
-        className: "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-100"
-      };
+    }
   }
-}
 
-function getBookingStatusCategory(booking: Booking): string {
-  return booking.status;
+  if (status === 'cancelled') {
+    return {
+      label: "Cancelled",
+      icon: <XCircle className="w-3 h-3" />,
+      variant: "destructive" as const,
+      className: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100"
+    };
+  }
+
+  return {
+    label: "Pending",
+    icon: <Clock className="w-3 h-3" />,
+    variant: "secondary" as const,
+    className: "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-100"
+  };
 }
 
 export default function BookingManagement() {
-  const { user } = useAuth();
+  const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [location, setLocation] = useLocation();
-  
-  // Current view state
-  const [view, setView] = useState<"total" | "districts" | "district">("total");
-  const [selectedState, setSelectedState] = useState<string | null>(null);
-  const [selectedDistrict, setSelectedDistrict] = useState<string | null>(null);
-  const [loadingState, setLoadingState] = useState<string | null>(null);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-
-  // Search and filter state
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchFilter, setSearchFilter] = useState<"all" | "id" | "service" | "client" | "worker" | "location">("all");
-  const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "accepted" | "in_progress" | "completed" | "cancelled">("all");
-
-  // Pagination state
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [districtCurrentPage, setDistrictCurrentPage] = useState(1);
-  const [districtTotalPages, setDistrictTotalPages] = useState(1);
-  const pageSize = 50;
-  const districtPageSize = 50;
-
-  // Modal states
-  const [isViewDetailsOpen, setIsViewDetailsOpen] = useState(false);
+  const { user } = useAuth();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedDistrict, setSelectedDistrict] = useState<string>("");
+  const [selectedState, setSelectedState] = useState<string>("");
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [bookingToDelete, setBookingToDelete] = useState<Booking | null>(null);
-  const [isMessageDialogOpen, setIsMessageDialogOpen] = useState(false);
-  const [messageText, setMessageText] = useState("");
-  const [userToMessage, setUserToMessage] = useState<User | null>(null);
-  const [sendingMessage, setSendingMessage] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [bookingToEdit, setBookingToEdit] = useState<Booking | null>(null);
+  const [editForm, setEditForm] = useState({
+    status: "",
+    amount: 0,
+    description: "",
+    location: "",
+    district: "",
+    state: ""
+  });
+  const [filterState, setFilterState] = useState<string>("");
+  const [filterDistrict, setFilterDistrict] = useState<string>("");
+  const [filterStatus, setFilterStatus] = useState<string>("");
+  const [showFilters, setShowFilters] = useState(false);
+  const [isFinancialModalOpen, setIsFinancialModalOpen] = useState(false);
+  const [selectedBookingForFinancial, setSelectedBookingForFinancial] = useState<Booking | null>(null);
 
-  // Animation refs
-  const totalBookingButtonRef = useRef<HTMLButtonElement>(null);
-
-  // Data fetching
-  const { data: bookings = [], isLoading: bookingsLoading, error: bookingsError } = useQuery<Booking[]>({
-    queryKey: ["/api/admin/bookings"],
+  // Fetch bookings
+  const { data: bookings = [], isLoading, error, refetch } = useQuery({
+    queryKey: ['/api/admin/bookings'],
+    staleTime: 30000,
+    refetchInterval: 60000,
   });
 
-  // Type the financialStatements as an array to fix TypeScript errors
-  const typedFinancialStatements = ([] as any[]) || [];
+  // Fetch districts
+  const { data: districts = [] } = useQuery<District[]>({
+    queryKey: ['/api/districts'],
+    staleTime: 300000,
+  });
 
-  // Memoize filtered bookings to prevent recalculation on every render
-  const allBookings = useMemo(() => {
-    return (bookings as Booking[]);
-  }, [bookings]);
+  // Get unique states and districts from the JSON data
+  const statesList = statesDistrictsData.map(item => item.state);
+  
+  const getDistrictsForState = (stateName: string): string[] => {
+    const stateData = statesDistrictsData.find(item => item.state === stateName);
+    return stateData ? stateData.districts : [];
+  };
 
-  // Filtered bookings (without pagination)
+  // Delete booking mutation
+  const deleteBookingMutation = useMutation({
+    mutationFn: async (bookingId: string) => {
+      const response = await fetch(`/api/admin/bookings/${bookingId}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) {
+        throw new Error('Failed to delete booking');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/bookings'] });
+      toast({
+        title: "Success",
+        description: "Booking deleted successfully.",
+        variant: "default",
+      });
+      setIsDeleteDialogOpen(false);
+      setBookingToDelete(null);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete booking.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Update booking mutation
+  const updateBookingMutation = useMutation({
+    mutationFn: async (data: { id: string; updates: Partial<Booking> }) => {
+      const response = await fetch(`/api/admin/bookings/${data.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data.updates),
+      });
+      if (!response.ok) {
+        throw new Error('Failed to update booking');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/bookings'] });
+      toast({
+        title: "Success",
+        description: "Booking updated successfully.",
+        variant: "default",
+      });
+      setIsEditDialogOpen(false);
+      setBookingToEdit(null);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update booking.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Filter bookings
   const filteredBookings = useMemo(() => {
-    let filtered = allBookings;
+    return bookings.filter((booking: Booking) => {
+      const matchesSearch = 
+        booking.clientName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        booking.workerName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        booking.serviceCategory?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        booking.id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        booking.description?.toLowerCase().includes(searchTerm.toLowerCase());
 
-    // Apply status filter
-    if (statusFilter !== "all") {
-      filtered = filtered.filter(booking => booking.status === statusFilter);
-    }
-
-    // Apply search filter
-    if (!searchQuery.trim()) return filtered;
-
-    const query = searchQuery.toLowerCase().trim();
-    return filtered.filter(booking => {
-      switch (searchFilter) {
-        case "id":
-          return booking.id.toLowerCase().includes(query);
-        case "service":
-          return booking.serviceType.toLowerCase().includes(query);
-        case "client":
-          return booking.client ? 
-            `${booking.client.firstName} ${booking.client.lastName}`.toLowerCase().includes(query) : false;
-        case "worker":
-          return booking.worker ? 
-            `${booking.worker.firstName} ${booking.worker.lastName}`.toLowerCase().includes(query) : false;
-        case "location":
-          return booking.location.toLowerCase().includes(query);
-        case "all":
-        default:
-          return (
-            booking.id.toLowerCase().includes(query) ||
-            booking.serviceType.toLowerCase().includes(query) ||
-            booking.description.toLowerCase().includes(query) ||
-            booking.location.toLowerCase().includes(query) ||
-            (booking.client && `${booking.client.firstName} ${booking.client.lastName}`.toLowerCase().includes(query)) ||
-            (booking.worker && `${booking.worker.firstName} ${booking.worker.lastName}`.toLowerCase().includes(query))
-          );
+      const matchesState = !filterState || booking.state === filterState;
+      const matchesDistrict = !filterDistrict || booking.district === filterDistrict;
+      
+      let matchesStatus = true;
+      if (filterStatus) {
+        const bookingStatus = getBookingStatus(booking.status, booking.scheduledAt, booking.completedAt);
+        if (filterStatus === 'completed') {
+          matchesStatus = booking.status === 'completed';
+        } else if (filterStatus === 'in_progress') {
+          matchesStatus = booking.status === 'in_progress';
+        } else if (filterStatus === 'scheduled') {
+          matchesStatus = booking.status === 'scheduled';
+        } else if (filterStatus === 'cancelled') {
+          matchesStatus = booking.status === 'cancelled';
+        } else if (filterStatus === 'pending') {
+          matchesStatus = booking.status === 'pending' || !booking.status;
+        }
       }
+
+      return matchesSearch && matchesState && matchesDistrict && matchesStatus;
     });
-  }, [allBookings, searchQuery, searchFilter, statusFilter]);
+  }, [bookings, searchTerm, filterState, filterDistrict, filterStatus]);
 
-  // Paginated bookings for current view
-  const paginatedBookings = useMemo(() => {
-    const startIndex = (currentPage - 1) * pageSize;
-    const endIndex = startIndex + pageSize;
-    const paginated = filteredBookings.slice(startIndex, endIndex);
-    
-    // Update total pages
-    const calculatedTotalPages = Math.ceil(filteredBookings.length / pageSize);
-    if (calculatedTotalPages !== totalPages) {
-      setTotalPages(calculatedTotalPages);
-    }
-    
-    return paginated;
-  }, [filteredBookings, currentPage, pageSize, totalPages]);
+  // Get unique districts for selected state
+  const availableDistricts = useMemo(() => {
+    return filterState ? getDistrictsForState(filterState) : [];
+  }, [filterState]);
 
-  // Roll-in animation effect on component load
+  // Reset district filter when state changes
   useEffect(() => {
-    const button = totalBookingButtonRef.current;
-    if (button) {
-      button.classList.add('animate-roll-in');
-      // Remove animation class after animation completes
-      const timer = setTimeout(() => {
-        button.classList.remove('animate-roll-in');
-      }, 600);
-      return () => clearTimeout(timer);
+    if (filterState && !availableDistricts.includes(filterDistrict)) {
+      setFilterDistrict("");
     }
-  }, []);
+  }, [filterState, filterDistrict, availableDistricts]);
 
-  // Get states from JSON file
-  const states = (statesDistrictsData.states as StateData[]).map(s => s.state).sort();
-
-  // Get districts for selected state from JSON file
-  const districtsForState = selectedState 
-    ? (statesDistrictsData.states as StateData[]).find(s => s.state === selectedState)?.districts || []
-    : [];
-
-  // Filtered district bookings (without pagination)
-  const filteredDistrictBookings = useMemo(() => {
-    if (!selectedDistrict) return [];
-    
-    let districtBookings = allBookings.filter((booking: Booking) => booking.location.includes(selectedDistrict));
-    
-    // Apply status filter
-    if (statusFilter !== "all") {
-      districtBookings = districtBookings.filter(booking => booking.status === statusFilter);
-    }
-    
-    // Apply search filter
-    if (!searchQuery.trim()) return districtBookings;
-
-    const query = searchQuery.toLowerCase().trim();
-    return districtBookings.filter(booking => {
-      switch (searchFilter) {
-        case "id":
-          return booking.id.toLowerCase().includes(query);
-        case "service":
-          return booking.serviceType.toLowerCase().includes(query);
-        case "client":
-          return booking.client ? 
-            `${booking.client.firstName} ${booking.client.lastName}`.toLowerCase().includes(query) : false;
-        case "worker":
-          return booking.worker ? 
-            `${booking.worker.firstName} ${booking.worker.lastName}`.toLowerCase().includes(query) : false;
-        case "location":
-          return booking.location.toLowerCase().includes(query);
-        case "all":
-        default:
-          return (
-            booking.id.toLowerCase().includes(query) ||
-            booking.serviceType.toLowerCase().includes(query) ||
-            booking.description.toLowerCase().includes(query) ||
-            booking.location.toLowerCase().includes(query) ||
-            (booking.client && `${booking.client.firstName} ${booking.client.lastName}`.toLowerCase().includes(query)) ||
-            (booking.worker && `${booking.worker.firstName} ${booking.worker.lastName}`.toLowerCase().includes(query))
-          );
-      }
-    });
-  }, [allBookings, selectedDistrict, searchQuery, searchFilter, statusFilter]);
-
-  // Paginated district bookings
-  const districtBookings = useMemo(() => {
-    const startIndex = (districtCurrentPage - 1) * districtPageSize;
-    const endIndex = startIndex + districtPageSize;
-    const paginated = filteredDistrictBookings.slice(startIndex, endIndex);
-    
-    // Update total pages for district view
-    const calculatedTotalPages = Math.ceil(filteredDistrictBookings.length / districtPageSize);
-    if (calculatedTotalPages !== districtTotalPages) {
-      setDistrictTotalPages(calculatedTotalPages);
-    }
-    
-    return paginated;
-  }, [filteredDistrictBookings, districtCurrentPage, districtPageSize, districtTotalPages]);
-
-  // Navigation handlers
-  const handleTotalBookingsClick = () => {
-    setView("total");
-    setSelectedState(null);
-    setSelectedDistrict(null);
-    setSearchQuery("");
-    setSearchFilter("all");
-    setCurrentPage(1);
-  };
-
-  const handleStateClick = async (state: string) => {
-    setLoadingState(state);
-    // Simulate loading delay for better UX
-    setTimeout(() => {
-      setSelectedState(state);
-      setSelectedDistrict(null);
-      setView("districts");
-      setLoadingState(null);
-    }, 200);
-  };
-
-  const handleDistrictClick = async (district: string) => {
-    setLoadingState(district);
-    setTimeout(() => {
-      setSelectedDistrict(district);
-      setView("district");
-      setLoadingState(null);
-      setDistrictCurrentPage(1);
-    }, 200);
-  };
-
-  const handleBackClick = () => {
-    if (view === "district") {
-      setView("districts");
-      setSelectedDistrict(null);
-    } else if (view === "districts") {
-      setView("total");
-      setSelectedState(null);
-    }
-  };
-
-  const getBookingCountForState = (state: string): number => {
-    return allBookings.filter((booking: Booking) => booking.location.includes(state)).length;
-  };
-
-  const getBookingCountForDistrict = (district: string): number => {
-    return allBookings.filter((booking: Booking) => booking.location.includes(district)).length;
-  };
-
-  // Action handlers
-  const handleViewDetails = (booking: Booking) => {
+  const handleViewBooking = (booking: Booking) => {
     setSelectedBooking(booking);
-    setIsViewDetailsOpen(true);
+    setIsViewModalOpen(true);
   };
 
   const handleEditBooking = (booking: Booking) => {
-    // Implement edit functionality
-    toast({
-      title: "Edit Booking",
-      description: `Edit functionality for booking ${booking.id} will be implemented.`,
+    setBookingToEdit(booking);
+    setEditForm({
+      status: booking.status || "",
+      amount: booking.amount || 0,
+      description: booking.description || "",
+      location: booking.location || "",
+      district: booking.district || "",
+      state: booking.state || ""
     });
+    setIsEditDialogOpen(true);
   };
 
   const handleDeleteBooking = (booking: Booking) => {
@@ -439,122 +353,56 @@ export default function BookingManagement() {
     setIsDeleteDialogOpen(true);
   };
 
-  const confirmDeleteBooking = async () => {
-    if (!bookingToDelete) return;
+  const handleUpdateBooking = () => {
+    if (!bookingToEdit) return;
     
-    try {
-      await apiRequest(`/api/admin/bookings/${bookingToDelete.id}`, {
-        method: "DELETE"
-      });
-      
-      queryClient.invalidateQueries({
-        queryKey: ["/api/admin/bookings"]
-      });
-      
-      toast({
-        title: "Booking Deleted",
-        description: `Booking ${bookingToDelete.id} has been successfully deleted.`,
-      });
-      
-      setIsDeleteDialogOpen(false);
-      setBookingToDelete(null);
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to delete booking. Please try again.",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleSendMessage = (user: User) => {
-    setUserToMessage(user);
-    setMessageText("");
-    setIsMessageDialogOpen(true);
-  };
-
-  const sendMessage = async () => {
-    if (!userToMessage || !messageText.trim()) return;
-    
-    setSendingMessage(true);
-    
-    try {
-      await apiRequest("/api/admin/send-message", {
-        method: "POST",
-        body: JSON.stringify({
-          userId: userToMessage.id,
-          message: messageText.trim()
-        })
-      });
-      
-      toast({
-        title: "Message Sent",
-        description: `Message sent successfully to ${userToMessage.firstName} ${userToMessage.lastName}.`,
-      });
-      
-      setIsMessageDialogOpen(false);
-      setUserToMessage(null);
-      setMessageText("");
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to send message. Please try again.",
-        variant: "destructive"
-      });
-    } finally {
-      setSendingMessage(false);
-    }
-  };
-
-  const handleContactClient = (booking: Booking) => {
-    if (booking.client?.mobile) {
-      window.open(`tel:${booking.client.mobile}`, '_blank');
-    } else {
-      toast({
-        title: "No Phone Number",
-        description: "This client doesn't have a phone number registered.",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleContactWorker = (booking: Booking) => {
-    if (booking.worker?.mobile) {
-      window.open(`tel:${booking.worker.mobile}`, '_blank');
-    } else {
-      toast({
-        title: "No Worker Assigned",
-        description: "No worker has been assigned to this booking yet.",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const copyToClipboard = (text: string, type: string) => {
-    navigator.clipboard.writeText(text).then(() => {
-      toast({
-        title: "Copied!",
-        description: `${type} copied to clipboard.`,
-      });
+    updateBookingMutation.mutate({
+      id: bookingToEdit.id,
+      updates: editForm
     });
   };
 
-  // Pagination handlers
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
+  const handleViewFinancialStatements = (booking: Booking) => {
+    setSelectedBookingForFinancial(booking);
+    setIsFinancialModalOpen(true);
   };
 
-  const handleDistrictPageChange = (page: number) => {
-    setDistrictCurrentPage(page);
-  };
+  // Get district counts
+  const districtCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    bookings.forEach((booking: Booking) => {
+      if (booking.district) {
+        counts[booking.district] = (counts[booking.district] || 0) + 1;
+      }
+    });
+    return counts;
+  }, [bookings]);
 
-  if (bookingsError) {
+  // Get top districts
+  const topDistricts = useMemo(() => {
+    return Object.entries(districtCounts)
+      .sort(([,a], [,b]) => b - a)
+      .slice(0, 10);
+  }, [districtCounts]);
+
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <Alert className="max-w-md">
-          <AlertCircle className="w-4 h-4" />
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+          <p className="text-sm text-gray-600 dark:text-gray-400">Loading bookings...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container mx-auto p-6">
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
           <AlertDescription>
-            Failed to load booking data. Please try refreshing the page.
+            Failed to load bookings. Please try again.
           </AlertDescription>
         </Alert>
       </div>
@@ -563,1058 +411,837 @@ export default function BookingManagement() {
 
   return (
     <TooltipProvider>
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pt-16">
-        {/* Fixed Header */}
-        <div className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 fixed top-16 left-0 right-0 z-10">
-          <div className="px-6 py-4">
-            <div className="flex items-center justify-between">
-              {/* Back Button */}
-              <Button 
-                variant="outline" 
-                onClick={() => setLocation("/admin")}
-                className="flex items-center gap-2"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                Back to Dashboard
-              </Button>
-
-              {/* Sidebar Toggle */}
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-                className="flex items-center justify-center w-8 h-8"
-              >
-                <Menu className="w-4 h-4" />
-              </Button>
-
-              {/* Title */}
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Booking Management</h1>
-            </div>
+      <div className="container mx-auto p-6">
+        {/* Header */}
+        <div className="flex items-center gap-4 mb-6">
+          <Button
+            variant="ghost"
+            onClick={() => setLocation("/dashboard")}
+            className="flex items-center gap-2"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back to Dashboard
+          </Button>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Booking Management</h1>
+            <p className="text-sm text-gray-600 dark:text-gray-400">Manage service bookings and transactions</p>
           </div>
         </div>
 
-        {/* Main Content */}
-        <div className="flex h-[calc(100vh-140px)] mt-20">
-          {/* Left Sidebar */}
-          <div className={`${sidebarCollapsed ? 'w-0' : 'w-64'} bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col transition-all duration-300 overflow-hidden relative z-10`}>
-            <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-              {/* Total Bookings List Header */}
-              <button
-                ref={totalBookingButtonRef}
-                onClick={(e) => {
-                  const button = e.currentTarget;
-                  button.classList.add('animate-roll-click');
-                  setTimeout(() => {
-                    button.classList.remove('animate-roll-click');
-                  }, 300);
-                  handleTotalBookingsClick();
-                }}
-                onMouseEnter={(e) => {
-                  const button = e.currentTarget;
-                  if (!button.classList.contains('animate-roll-hover')) {
-                    button.classList.add('animate-roll-hover');
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  const button = e.currentTarget;
-                  button.classList.remove('animate-roll-hover');
-                }}
-                className={`w-full bg-gray-100 dark:bg-gray-700 rounded-lg p-3 text-center font-medium border transition-all duration-300 relative transform-gpu ${
-                  view === "total" 
-                    ? 'bg-blue-100 text-blue-900 dark:bg-blue-900 dark:text-blue-100 border-blue-300' 
-                    : 'text-gray-900 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-600'
-                }`}
-              >
-                <span className="pr-8">Total Bookings</span>
-                <Badge 
-                  variant="secondary" 
-                  className="absolute right-2 top-1/2 -translate-y-1/2 h-5 px-2 min-w-[20px] rounded-md flex items-center justify-center text-xs bg-orange-500 text-white hover:bg-orange-600"
+        {/* Search and Filters */}
+        <div className="mb-6 space-y-4">
+          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <Input
+                placeholder="Search bookings by client, worker, service, or booking ID..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+              {searchTerm && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0"
+                  onClick={() => setSearchTerm("")}
                 >
-                  {filteredBookings.length}
+                  <X className="w-3 h-3" />
+                </Button>
+              )}
+            </div>
+            <Button
+              variant="outline"
+              onClick={() => setShowFilters(!showFilters)}
+              className="flex items-center gap-2"
+            >
+              <Filter className="w-4 h-4" />
+              Filters
+              {(filterState || filterDistrict || filterStatus) && (
+                <Badge variant="secondary" className="ml-1 text-xs">
+                  {[filterState, filterDistrict, filterStatus].filter(Boolean).length}
                 </Badge>
-              </button>
-            </div>
-            
-            {/* Scrollable States List */}
-            <div className="flex-1 overflow-y-auto">
-              <div className="p-4 space-y-1">
-                {states.map((state) => (
-                  <button
-                    key={state}
-                    onClick={() => handleStateClick(state)}
-                    disabled={loadingState === state}
-                    className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors relative ${
-                      selectedState === state
-                        ? 'bg-blue-100 text-blue-900 dark:bg-blue-900 dark:text-blue-100'
-                        : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-                    } ${loadingState === state ? 'opacity-75' : ''}`}
-                  >
-                    {loadingState === state ? (
-                      <div className="flex items-center">
-                        <Loader2 className="w-3 h-3 animate-spin mr-2" />
-                        <span>Loading...</span>
-                      </div>
-                    ) : (
-                      <>
-                        <span className="pr-8">{state}</span>
-                        <Badge 
-                          variant="secondary" 
-                          className="absolute right-2 top-1/2 -translate-y-1/2 h-5 px-2 min-w-[20px] rounded-md flex items-center justify-center text-xs bg-blue-500 text-white hover:bg-blue-600"
-                        >
-                          {getBookingCountForState(state)}
-                        </Badge>
-                      </>
-                    )}
-                  </button>
-                ))}
-              </div>
-            </div>
+              )}
+            </Button>
           </div>
 
-          {/* Right Content Area */}
-          <div className="flex-1 bg-white dark:bg-gray-800 overflow-y-auto relative z-0">
-            {/* Loading State */}
-            {bookingsLoading && (
-              <div className="flex items-center justify-center h-full">
-                <div className="text-center">
-                  <div className="inline-block w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mb-3"></div>
-                  <p className="text-gray-600 dark:text-gray-400">Loading booking data...</p>
-                </div>
-              </div>
-            )}
-
-            {/* Total Bookings List View */}
-            {!bookingsLoading && view === "total" && (
-              <div className="h-full flex flex-col">
-                <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-                  {/* Header with inline search */}
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex-1">
-                      <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-1">
-                        All Service Bookings
-                      </h2>
-                      <p className="text-gray-600 dark:text-gray-400">
-                        Complete booking database • {filteredBookings.length} total bookings • Showing {((currentPage - 1) * pageSize) + 1}-{Math.min(currentPage * pageSize, filteredBookings.length)} of {filteredBookings.length} {(searchQuery || statusFilter !== 'all') ? `filtered results` : ''}
-                      </p>
-                    </div>
-                    
-                    {/* Search Controls - moved inline */}
-                    <div className="flex gap-3 items-center ml-6">
-                      <div className="relative w-72">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                        <Input
-                          placeholder="Search bookings..."
-                          value={searchQuery}
-                          onChange={(e) => {
-                            setSearchQuery(e.target.value);
-                            setCurrentPage(1); // Reset to first page when searching
-                          }}
-                          className="pl-10 pr-8"
-                        />
-                        {searchQuery && (
-                          <button
-                            onClick={() => setSearchQuery("")}
-                            className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
-                        )}
-                      </div>
-                      <Select value={searchFilter} onValueChange={(value) => setSearchFilter(value as any)}>
-                        <SelectTrigger className="w-32">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">All Fields</SelectItem>
-                          <SelectItem value="id">Booking ID</SelectItem>
-                          <SelectItem value="service">Service</SelectItem>
-                          <SelectItem value="client">Client</SelectItem>
-                          <SelectItem value="worker">Worker</SelectItem>
-                          <SelectItem value="location">Location</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
+          {showFilters && (
+            <Card>
+              <CardContent className="pt-4">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div>
+                    <Label htmlFor="filter-state">State</Label>
+                    <Select value={filterState} onValueChange={setFilterState}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="All states" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">All states</SelectItem>
+                        {statesList.map((state) => (
+                          <SelectItem key={state} value={state}>
+                            {state}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
-                </div>
-                
-                <div className="flex-1 overflow-y-auto p-6">
-                  {paginatedBookings.length === 0 ? (
-                    <div className="text-center py-12">
-                      <div className="text-gray-400 mb-4">
-                        <FileText className="w-12 h-12 mx-auto" />
-                      </div>
-                      <p className="text-gray-500 dark:text-gray-400 text-lg">No bookings found</p>
-                      <p className="text-gray-400 dark:text-gray-500 text-sm mt-1">Service bookings will appear here</p>
-                    </div>
-                  ) : (
-                    <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead className="w-[190px]">
-                              <div className="flex items-center gap-2">
-                                <span>User</span>
-                                <Select value={statusFilter} onValueChange={(value) => {
-                                  setStatusFilter(value as any);
-                                  setCurrentPage(1); // Reset to first page when filtering
-                                }}>
-                                  <SelectTrigger className="w-8 h-8 p-1 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 rounded">
-                                    <Filter className="w-4 h-4 text-gray-600 dark:text-gray-300" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="all">All Status</SelectItem>
-                                    <SelectItem value="pending">Pending</SelectItem>
-                                    <SelectItem value="accepted">Accepted</SelectItem>
-                                    <SelectItem value="in_progress">In Progress</SelectItem>
-                                    <SelectItem value="completed">Completed</SelectItem>
-                                    <SelectItem value="cancelled">Cancelled</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                            </TableHead>
-                            <TableHead className="w-[140px]">Location</TableHead>
-                            <TableHead className="w-[160px]">
-                              <div className="flex items-center gap-1">
-                                <span>Bookings/Earnings</span>
-                                <div className="flex gap-1">
-                                  <FileText className="w-3 h-3 text-gray-400" />
-                                  <DollarSign className="w-3 h-3 text-gray-400" />
-                                </div>
-                              </div>
-                            </TableHead>
-                            <TableHead className="w-[160px]">
-                              <div className="flex items-center gap-1">
-                                <span>Contact</span>
-                                <div className="flex gap-1">
-                                  <Phone className="w-3 h-3 text-gray-400" />
-                                  <MessageSquare className="w-3 h-3 text-gray-400" />
-                                  <Mail className="w-3 h-3 text-gray-400" />
-                                  <Send className="w-3 h-3 text-gray-400" />
-                                </div>
-                              </div>
-                            </TableHead>
-                            <TableHead>Bank Details</TableHead>
-                            <TableHead></TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {paginatedBookings.map((booking) => {
-                            const bookingStatus = getBookingStatus(booking);
-                            
-                            return (
-                              <TableRow key={booking.id}>
-                                {/* User Info */}
-                                <TableCell>
-                                  <div className="flex items-start gap-3">
-                                    {booking.client ? (
-                                      <Avatar className="h-10 w-10 flex-shrink-0">
-                                        <AvatarImage 
-                                          src={`https://api.dicebear.com/7.x/initials/svg?seed=${booking.client.firstName}%20${booking.client.lastName}`} 
-                                          alt={`${booking.client.firstName} ${booking.client.lastName}`} 
-                                        />
-                                        <AvatarFallback className="bg-blue-100 text-blue-600 font-semibold">
-                                          {booking.client.firstName?.charAt(0).toUpperCase()}{booking.client.lastName?.charAt(0).toUpperCase()}
-                                        </AvatarFallback>
-                                      </Avatar>
-                                    ) : (
-                                      <div className="h-10 w-10 flex-shrink-0 bg-orange-100 dark:bg-orange-900 rounded-lg flex items-center justify-center">
-                                        <FileText className="w-5 h-5 text-orange-600 dark:text-orange-400" />
-                                      </div>
-                                    )}
-                                    <div className="min-w-0 flex-1">
-                                      <div className="flex items-center gap-2">
-                                        <div className="font-medium text-gray-900 dark:text-white">
-                                          {booking.client ? `${booking.client.firstName} ${booking.client.lastName}` : 'No Client'}
-                                        </div>
-                                        <Badge variant="outline" className="text-xs">
-                                          Client
-                                        </Badge>
-                                      </div>
-                                      <div className="text-sm text-orange-800 dark:text-orange-400 font-mono font-bold truncate">
-                                        #{booking.id.slice(-8)}
-                                      </div>
-                                      <div className="mt-1 space-y-1">
-                                        <div className="flex items-center gap-2 flex-wrap">
-                                          <Badge 
-                                            variant={bookingStatus.variant}
-                                            className={bookingStatus.className}
-                                          >
-                                            {bookingStatus.icon}
-                                            <span className="ml-1">{bookingStatus.label}</span>
-                                          </Badge>
-                                          {booking.worker && (
-                                            <Badge variant="secondary" className="text-xs">
-                                              Worker: {booking.worker.firstName} {booking.worker.lastName}
-                                            </Badge>
-                                          )}
-                                        </div>
-                                        <div className="text-xs text-gray-500 dark:text-gray-400">
-                                          Created: {getBookingAge(booking.createdAt)} ago
-                                        </div>
-                                        {booking.scheduledAt && (
-                                          <div className="text-xs text-gray-500 dark:text-gray-400">
-                                            Scheduled: {formatIndianDateTime(booking.scheduledAt)}
-                                          </div>
-                                        )}
-                                      </div>
-                                    </div>
-                                  </div>
-                                </TableCell>
-
-                                {/* Location */}
-                                <TableCell>
-                                  <div className="text-sm font-medium text-gray-900 dark:text-white">
-                                    {booking.location || "Not specified"}
-                                  </div>
-                                  <div className="text-xs text-gray-500 dark:text-gray-400">
-                                    Address: {booking.location || "Not provided"}
-                                  </div>
-                                  <div className="text-xs text-gray-500 dark:text-gray-400">
-                                    State: Not specified
-                                  </div>
-                                  <div className="text-xs text-gray-500 dark:text-gray-400">
-                                    PIN: Not provided
-                                  </div>
-                                </TableCell>
-
-                                {/* Bookings/Earnings */}
-                                <TableCell>
-                                  <div className="space-y-1">
-                                    <div className="text-sm">
-                                      <span className="text-gray-600 dark:text-gray-400">Service: </span>
-                                      <span className="font-medium">{booking.serviceType}</span>
-                                    </div>
-                                    <div className="text-xs text-gray-500 dark:text-gray-400">
-                                      • Status: {bookingStatus.label}
-                                    </div>
-                                    <div className="text-xs text-gray-500 dark:text-gray-400">
-                                      • Duration: {getBookingAge(booking.createdAt)}
-                                    </div>
-                                    <div className="text-sm">
-                                      <span className="text-gray-600 dark:text-gray-400">Amount: </span>
-                                      <span className="font-medium">
-                                        {booking.amount ? `₹${booking.amount}` : "TBD"}
-                                      </span>
-                                    </div>
-                                    <div className="text-xs text-gray-500 dark:text-gray-400">
-                                      Payment: {booking.completedAt ? "Completed" : "Pending"}
-                                    </div>
-                                    {booking.description && (
-                                      <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                                        Notes: {booking.description}
-                                      </div>
-                                    )}
-                                    <div className="flex items-center gap-1 mt-1">
-                                      <Badge variant="outline" className="bg-orange-50 text-orange-800 border-orange-200">
-                                        <FileText className="w-3 h-3 mr-1" />
-                                        Booking
-                                      </Badge>
-                                    </div>
-                                  </div>
-                                </TableCell>
-
-                                {/* Contact */}
-                                <TableCell>
-                                  <div className="space-y-1">
-                                    {booking.client ? (
-                                      <>
-                                        <div className="flex items-center gap-1 text-sm">
-                                          <Phone className="w-3 h-3" />
-                                          <span className="font-mono">{booking.client.mobile}</span>
-                                        </div>
-                                        {booking.client.email && (
-                                          <div className="flex items-center gap-1 text-xs truncate">
-                                            <Mail className="w-3 h-3 flex-shrink-0" />
-                                            <span className="truncate">{booking.client.email}</span>
-                                          </div>
-                                        )}
-                                        <div className="text-xs text-gray-500 dark:text-gray-400">
-                                          Client: {booking.client.firstName} {booking.client.lastName}
-                                        </div>
-                                        {booking.worker && (
-                                          <div className="text-xs text-gray-500 dark:text-gray-400">
-                                            Worker: {booking.worker.firstName} {booking.worker.lastName}
-                                          </div>
-                                        )}
-                                      </>
-                                    ) : (
-                                      <div className="text-xs text-gray-400 italic">No contact info</div>
-                                    )}
-                                    <div className="flex items-center gap-1 mt-2">
-                                      <Phone className="w-3 h-3 text-blue-600 cursor-pointer" />
-                                      <MessageSquare className="w-3 h-3 text-green-600 cursor-pointer" />
-                                      <Mail className="w-3 h-3 text-gray-600 cursor-pointer" />
-                                      <Send className="w-3 h-3 text-purple-600 cursor-pointer" />
-                                    </div>
-                                  </div>
-                                </TableCell>
-
-                                {/* Bank Details */}
-                                <TableCell>
-                                  <div className="space-y-1">
-                                    <div className="text-sm text-gray-600 dark:text-gray-400">
-                                      <span className="text-gray-400 italic">Transaction details</span>
-                                    </div>
-                                    {booking.amount && (
-                                      <div className="text-xs text-gray-500 dark:text-gray-400">
-                                        Amount: ₹{booking.amount}
-                                      </div>
-                                    )}
-                                    <div className="text-xs text-gray-500 dark:text-gray-400">
-                                      Payment: {booking.completedAt ? "Complete" : "Pending"}
-                                    </div>
-                                  </div>
-                                </TableCell>
-
-                                {/* Actions */}
-                                <TableCell className="text-right">
-                                  <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                      <Button variant="ghost" size="icon" className="h-8 w-8">
-                                        <MoreHorizontal className="w-4 h-4" />
-                                      </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end" className="w-48">
-                                      <DropdownMenuItem onClick={() => handleViewDetails(booking)}>
-                                        <Eye className="w-4 h-4 mr-2" />
-                                        View Details
-                                      </DropdownMenuItem>
-                                      <DropdownMenuItem onClick={() => handleEditBooking(booking)}>
-                                        <Edit className="w-4 h-4 mr-2" />
-                                        Edit Booking
-                                      </DropdownMenuItem>
-                                      <DropdownMenuSub>
-                                        <DropdownMenuSubTrigger>
-                                          <MessageSquare className="w-4 h-4 mr-2" />
-                                          Contact
-                                        </DropdownMenuSubTrigger>
-                                        <DropdownMenuSubContent>
-                                          {booking.client && (
-                                            <DropdownMenuItem onClick={() => handleContactClient(booking)}>
-                                              <Phone className="w-4 h-4 mr-2" />
-                                              Call Client
-                                            </DropdownMenuItem>
-                                          )}
-                                          {booking.worker && (
-                                            <DropdownMenuItem onClick={() => handleContactWorker(booking)}>
-                                              <Phone className="w-4 h-4 mr-2" />
-                                              Call Worker
-                                            </DropdownMenuItem>
-                                          )}
-                                          {booking.client && (
-                                            <DropdownMenuItem onClick={() => handleSendMessage(booking.client!)}>
-                                              <Send className="w-4 h-4 mr-2" />
-                                              Message Client
-                                            </DropdownMenuItem>
-                                          )}
-                                          {booking.worker && (
-                                            <DropdownMenuItem onClick={() => handleSendMessage(booking.worker!)}>
-                                              <Send className="w-4 h-4 mr-2" />
-                                              Message Worker
-                                            </DropdownMenuItem>
-                                          )}
-                                        </DropdownMenuSubContent>
-                                      </DropdownMenuSub>
-                                      <DropdownMenuItem 
-                                        onClick={() => handleDeleteBooking(booking)}
-                                        className="text-red-600 dark:text-red-400"
-                                      >
-                                        <Trash2 className="w-4 h-4 mr-2" />
-                                        Delete Booking
-                                      </DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                  </DropdownMenu>
-                                </TableCell>
-                              </TableRow>
-                            );
-                          })}
-                        </TableBody>
-                      </Table>
-                    </div>
-                  )}
-
-                  {/* Pagination */}
-                  {totalPages > 1 && (
-                    <div className="flex items-center justify-between mt-6">
-                      <div className="text-sm text-gray-500 dark:text-gray-400">
-                        Showing {((currentPage - 1) * pageSize) + 1} to {Math.min(currentPage * pageSize, filteredBookings.length)} of {filteredBookings.length} bookings
-                      </div>
-                      <div className="flex gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          disabled={currentPage === 1}
-                          onClick={() => handlePageChange(currentPage - 1)}
-                        >
-                          Previous
-                        </Button>
-                        {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                          const page = i + 1;
-                          return (
-                            <Button
-                              key={page}
-                              variant={currentPage === page ? "default" : "outline"}
-                              size="sm"
-                              onClick={() => handlePageChange(page)}
-                            >
-                              {page}
-                            </Button>
-                          );
-                        })}
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          disabled={currentPage === totalPages}
-                          onClick={() => handlePageChange(currentPage + 1)}
-                        >
-                          Next
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Districts View */}
-            {!bookingsLoading && view === "districts" && selectedState && (
-              <div className="h-full flex flex-col">
-                <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-                  <div className="flex items-center gap-4 mb-4">
-                    <Button variant="outline" size="sm" onClick={handleBackClick}>
-                      <ArrowLeft className="w-4 h-4 mr-2" />
-                      Back to All States
+                  <div>
+                    <Label htmlFor="filter-district">District</Label>
+                    <Select value={filterDistrict} onValueChange={setFilterDistrict} disabled={!filterState}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="All districts" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">All districts</SelectItem>
+                        {availableDistricts.map((district) => (
+                          <SelectItem key={district} value={district}>
+                            {district}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="filter-status">Status</Label>
+                    <Select value={filterStatus} onValueChange={setFilterStatus}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="All statuses" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">All statuses</SelectItem>
+                        <SelectItem value="pending">Pending</SelectItem>
+                        <SelectItem value="scheduled">Scheduled</SelectItem>
+                        <SelectItem value="in_progress">In Progress</SelectItem>
+                        <SelectItem value="completed">Completed</SelectItem>
+                        <SelectItem value="cancelled">Cancelled</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex items-end">
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setFilterState("");
+                        setFilterDistrict("");
+                        setFilterStatus("");
+                      }}
+                      className="w-full"
+                    >
+                      Clear Filters
                     </Button>
                   </div>
-                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-1">
-                    {selectedState} Districts
-                  </h2>
-                  <p className="text-gray-600 dark:text-gray-400">
-                    Browse bookings by district in {selectedState}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <Card>
+            <CardContent className="pt-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Bookings</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{bookings.length}</p>
+                </div>
+                <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
+                  <ClipboardList className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Completed</p>
+                  <p className="text-2xl font-bold text-green-600 dark:text-green-400">
+                    {bookings.filter((b: Booking) => b.status === 'completed').length}
                   </p>
                 </div>
-
-                <div className="flex-1 overflow-y-auto p-6">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {districtsForState.map((district) => (
-                      <Card 
-                        key={district} 
-                        className="cursor-pointer hover:shadow-md transition-shadow"
-                        onClick={() => handleDistrictClick(district)}
-                      >
-                        <CardContent className="p-4">
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <h3 className="font-medium text-gray-900 dark:text-white">{district}</h3>
-                              <p className="text-sm text-gray-500 dark:text-gray-400">
-                                {getBookingCountForDistrict(district)} bookings
-                              </p>
-                            </div>
-                            <Badge 
-                              variant="secondary" 
-                              className="h-5 px-2 min-w-[20px] rounded-md flex items-center justify-center text-xs bg-green-500 text-white hover:bg-green-600"
-                            >
-                              {getBookingCountForDistrict(district)}
-                            </Badge>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
+                <div className="p-2 bg-green-100 dark:bg-green-900 rounded-lg">
+                  <CheckCircle className="w-6 h-6 text-green-600 dark:text-green-400" />
                 </div>
               </div>
-            )}
-
-            {/* District Bookings View */}
-            {!bookingsLoading && view === "district" && selectedDistrict && (
-              <div className="h-full flex flex-col">
-                <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-                  <div className="flex items-center gap-4 mb-4">
-                    <Button variant="outline" size="sm" onClick={handleBackClick}>
-                      <ArrowLeft className="w-4 h-4 mr-2" />
-                      Back to {selectedState} Districts
-                    </Button>
-                  </div>
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex-1">
-                      <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-1">
-                        Bookings in {selectedDistrict}
-                      </h2>
-                      <p className="text-gray-600 dark:text-gray-400">
-                        {selectedState} • {filteredDistrictBookings.length} bookings • Showing {((districtCurrentPage - 1) * districtPageSize) + 1}-{Math.min(districtCurrentPage * districtPageSize, filteredDistrictBookings.length)} of {filteredDistrictBookings.length} {(searchQuery || statusFilter !== 'all') ? `filtered results` : ''}
-                      </p>
-                    </div>
-                    
-                    {/* Search Controls */}
-                    <div className="flex gap-3 items-center ml-6">
-                      <div className="relative w-72">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                        <Input
-                          placeholder="Search bookings..."
-                          value={searchQuery}
-                          onChange={(e) => {
-                            setSearchQuery(e.target.value);
-                            setDistrictCurrentPage(1);
-                          }}
-                          className="pl-10 pr-8"
-                        />
-                        {searchQuery && (
-                          <button
-                            onClick={() => setSearchQuery("")}
-                            className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
-                        )}
-                      </div>
-                      <Select value={searchFilter} onValueChange={(value) => setSearchFilter(value as any)}>
-                        <SelectTrigger className="w-32">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">All Fields</SelectItem>
-                          <SelectItem value="id">Booking ID</SelectItem>
-                          <SelectItem value="service">Service</SelectItem>
-                          <SelectItem value="client">Client</SelectItem>
-                          <SelectItem value="worker">Worker</SelectItem>
-                          <SelectItem value="location">Location</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">In Progress</p>
+                  <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                    {bookings.filter((b: Booking) => b.status === 'in_progress').length}
+                  </p>
                 </div>
-
-                <div className="flex-1 overflow-y-auto p-6">
-                  {districtBookings.length === 0 ? (
-                    <div className="text-center py-12">
-                      <div className="text-gray-400 mb-4">
-                        <FileText className="w-12 h-12 mx-auto" />
-                      </div>
-                      <p className="text-gray-500 dark:text-gray-400 text-lg">No bookings found in {selectedDistrict}</p>
-                      <p className="text-gray-400 dark:text-gray-500 text-sm mt-1">Bookings from this district will appear here</p>
-                    </div>
-                  ) : (
-                    <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead className="w-[190px]">
-                              <div className="flex items-center gap-2">
-                                <span>User</span>
-                                <Select value={statusFilter} onValueChange={(value) => {
-                                  setStatusFilter(value as any);
-                                  setDistrictCurrentPage(1);
-                                }}>
-                                  <SelectTrigger className="w-8 h-8 p-1 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 rounded">
-                                    <Filter className="w-4 h-4 text-gray-600 dark:text-gray-300" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="all">All Status</SelectItem>
-                                    <SelectItem value="pending">Pending</SelectItem>
-                                    <SelectItem value="accepted">Accepted</SelectItem>
-                                    <SelectItem value="in_progress">In Progress</SelectItem>
-                                    <SelectItem value="completed">Completed</SelectItem>
-                                    <SelectItem value="cancelled">Cancelled</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                            </TableHead>
-                            <TableHead className="w-[140px]">Location</TableHead>
-                            <TableHead className="w-[160px]">
-                              <div className="flex items-center gap-1">
-                                <span>Bookings/Earnings</span>
-                                <div className="flex gap-1">
-                                  <FileText className="w-3 h-3 text-gray-400" />
-                                  <DollarSign className="w-3 h-3 text-gray-400" />
-                                </div>
-                              </div>
-                            </TableHead>
-                            <TableHead className="w-[160px]">
-                              <div className="flex items-center gap-1">
-                                <span>Contact</span>
-                                <div className="flex gap-1">
-                                  <Phone className="w-3 h-3 text-gray-400" />
-                                  <MessageSquare className="w-3 h-3 text-gray-400" />
-                                  <Mail className="w-3 h-3 text-gray-400" />
-                                  <Send className="w-3 h-3 text-gray-400" />
-                                </div>
-                              </div>
-                            </TableHead>
-                            <TableHead>Bank Details</TableHead>
-                            <TableHead></TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {districtBookings.map((booking) => {
-                            const bookingStatus = getBookingStatus(booking);
-                            
-                            return (
-                              <TableRow key={booking.id}>
-                                {/* User Info */}
-                                <TableCell>
-                                  <div className="flex items-start gap-3">
-                                    {booking.client ? (
-                                      <Avatar className="h-10 w-10 flex-shrink-0">
-                                        <AvatarImage 
-                                          src={`https://api.dicebear.com/7.x/initials/svg?seed=${booking.client.firstName}%20${booking.client.lastName}`} 
-                                          alt={`${booking.client.firstName} ${booking.client.lastName}`} 
-                                        />
-                                        <AvatarFallback className="bg-blue-100 text-blue-600 font-semibold">
-                                          {booking.client.firstName?.charAt(0).toUpperCase()}{booking.client.lastName?.charAt(0).toUpperCase()}
-                                        </AvatarFallback>
-                                      </Avatar>
-                                    ) : (
-                                      <div className="h-10 w-10 flex-shrink-0 bg-orange-100 dark:bg-orange-900 rounded-lg flex items-center justify-center">
-                                        <FileText className="w-5 h-5 text-orange-600 dark:text-orange-400" />
-                                      </div>
-                                    )}
-                                    <div className="min-w-0 flex-1">
-                                      <div className="flex items-center gap-2">
-                                        <div className="font-medium text-gray-900 dark:text-white">
-                                          {booking.client ? `${booking.client.firstName} ${booking.client.lastName}` : 'No Client'}
-                                        </div>
-                                        <Badge variant="outline" className="text-xs">
-                                          Client
-                                        </Badge>
-                                      </div>
-                                      <div className="text-sm text-orange-800 dark:text-orange-400 font-mono font-bold truncate">
-                                        #{booking.id.slice(-8)}
-                                      </div>
-                                      <div className="mt-1 space-y-1">
-                                        <div className="flex items-center gap-2 flex-wrap">
-                                          <Badge 
-                                            variant={bookingStatus.variant}
-                                            className={bookingStatus.className}
-                                          >
-                                            {bookingStatus.icon}
-                                            <span className="ml-1">{bookingStatus.label}</span>
-                                          </Badge>
-                                          {booking.worker && (
-                                            <Badge variant="secondary" className="text-xs">
-                                              Worker: {booking.worker.firstName} {booking.worker.lastName}
-                                            </Badge>
-                                          )}
-                                        </div>
-                                        <div className="text-xs text-gray-500 dark:text-gray-400">
-                                          Created: {getBookingAge(booking.createdAt)} ago
-                                        </div>
-                                        {booking.scheduledAt && (
-                                          <div className="text-xs text-gray-500 dark:text-gray-400">
-                                            Scheduled: {formatIndianDateTime(booking.scheduledAt)}
-                                          </div>
-                                        )}
-                                      </div>
-                                    </div>
-                                  </div>
-                                </TableCell>
-
-                                {/* Location */}
-                                <TableCell>
-                                  <div className="text-sm font-medium text-gray-900 dark:text-white">
-                                    {booking.location || "Not specified"}
-                                  </div>
-                                  <div className="text-xs text-gray-500 dark:text-gray-400">
-                                    Address: {booking.location || "Not provided"}
-                                  </div>
-                                  <div className="text-xs text-gray-500 dark:text-gray-400">
-                                    State: Not specified
-                                  </div>
-                                  <div className="text-xs text-gray-500 dark:text-gray-400">
-                                    PIN: Not provided
-                                  </div>
-                                </TableCell>
-
-                                {/* Bookings/Earnings */}
-                                <TableCell>
-                                  <div className="space-y-1">
-                                    <div className="text-sm">
-                                      <span className="text-gray-600 dark:text-gray-400">Service: </span>
-                                      <span className="font-medium">{booking.serviceType}</span>
-                                    </div>
-                                    <div className="text-xs text-gray-500 dark:text-gray-400">
-                                      • Status: {bookingStatus.label}
-                                    </div>
-                                    <div className="text-xs text-gray-500 dark:text-gray-400">
-                                      • Duration: {getBookingAge(booking.createdAt)}
-                                    </div>
-                                    <div className="text-sm">
-                                      <span className="text-gray-600 dark:text-gray-400">Amount: </span>
-                                      <span className="font-medium">
-                                        {booking.amount ? `₹${booking.amount}` : "TBD"}
-                                      </span>
-                                    </div>
-                                    <div className="text-xs text-gray-500 dark:text-gray-400">
-                                      Payment: {booking.completedAt ? "Completed" : "Pending"}
-                                    </div>
-                                    {booking.description && (
-                                      <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                                        Notes: {booking.description}
-                                      </div>
-                                    )}
-                                    <div className="flex items-center gap-1 mt-1">
-                                      <Badge variant="outline" className="bg-orange-50 text-orange-800 border-orange-200">
-                                        <FileText className="w-3 h-3 mr-1" />
-                                        Booking
-                                      </Badge>
-                                    </div>
-                                  </div>
-                                </TableCell>
-
-                                {/* Contact */}
-                                <TableCell>
-                                  <div className="space-y-1">
-                                    {booking.client ? (
-                                      <>
-                                        <div className="flex items-center gap-1 text-sm">
-                                          <Phone className="w-3 h-3" />
-                                          <span className="font-mono">{booking.client.mobile}</span>
-                                        </div>
-                                        {booking.client.email && (
-                                          <div className="flex items-center gap-1 text-xs truncate">
-                                            <Mail className="w-3 h-3 flex-shrink-0" />
-                                            <span className="truncate">{booking.client.email}</span>
-                                          </div>
-                                        )}
-                                        <div className="text-xs text-gray-500 dark:text-gray-400">
-                                          Client: {booking.client.firstName} {booking.client.lastName}
-                                        </div>
-                                        {booking.worker && (
-                                          <div className="text-xs text-gray-500 dark:text-gray-400">
-                                            Worker: {booking.worker.firstName} {booking.worker.lastName}
-                                          </div>
-                                        )}
-                                      </>
-                                    ) : (
-                                      <div className="text-xs text-gray-400 italic">No contact info</div>
-                                    )}
-                                    <div className="flex items-center gap-1 mt-2">
-                                      <Phone className="w-3 h-3 text-blue-600 cursor-pointer" />
-                                      <MessageSquare className="w-3 h-3 text-green-600 cursor-pointer" />
-                                      <Mail className="w-3 h-3 text-gray-600 cursor-pointer" />
-                                      <Send className="w-3 h-3 text-purple-600 cursor-pointer" />
-                                    </div>
-                                  </div>
-                                </TableCell>
-
-                                {/* Bank Details */}
-                                <TableCell>
-                                  <div className="space-y-1">
-                                    <div className="text-sm text-gray-600 dark:text-gray-400">
-                                      <span className="text-gray-400 italic">Transaction details</span>
-                                    </div>
-                                    {booking.amount && (
-                                      <div className="text-xs text-gray-500 dark:text-gray-400">
-                                        Amount: ₹{booking.amount}
-                                      </div>
-                                    )}
-                                    <div className="text-xs text-gray-500 dark:text-gray-400">
-                                      Payment: {booking.completedAt ? "Complete" : "Pending"}
-                                    </div>
-                                  </div>
-                                </TableCell>
-
-                                {/* Actions */}
-                                <TableCell className="text-right">
-                                  <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                      <Button variant="ghost" size="icon" className="h-8 w-8">
-                                        <MoreHorizontal className="w-4 h-4" />
-                                      </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end" className="w-48">
-                                      <DropdownMenuItem onClick={() => handleViewDetails(booking)}>
-                                        <Eye className="w-4 h-4 mr-2" />
-                                        View Details
-                                      </DropdownMenuItem>
-                                      <DropdownMenuItem onClick={() => handleEditBooking(booking)}>
-                                        <Edit className="w-4 h-4 mr-2" />
-                                        Edit Booking
-                                      </DropdownMenuItem>
-                                      <DropdownMenuSub>
-                                        <DropdownMenuSubTrigger>
-                                          <MessageSquare className="w-4 h-4 mr-2" />
-                                          Contact
-                                        </DropdownMenuSubTrigger>
-                                        <DropdownMenuSubContent>
-                                          {booking.client && (
-                                            <DropdownMenuItem onClick={() => handleContactClient(booking)}>
-                                              <Phone className="w-4 h-4 mr-2" />
-                                              Call Client
-                                            </DropdownMenuItem>
-                                          )}
-                                          {booking.worker && (
-                                            <DropdownMenuItem onClick={() => handleContactWorker(booking)}>
-                                              <Phone className="w-4 h-4 mr-2" />
-                                              Call Worker
-                                            </DropdownMenuItem>
-                                          )}
-                                          {booking.client && (
-                                            <DropdownMenuItem onClick={() => handleSendMessage(booking.client!)}>
-                                              <Send className="w-4 h-4 mr-2" />
-                                              Message Client
-                                            </DropdownMenuItem>
-                                          )}
-                                          {booking.worker && (
-                                            <DropdownMenuItem onClick={() => handleSendMessage(booking.worker!)}>
-                                              <Send className="w-4 h-4 mr-2" />
-                                              Message Worker
-                                            </DropdownMenuItem>
-                                          )}
-                                        </DropdownMenuSubContent>
-                                      </DropdownMenuSub>
-                                      <DropdownMenuItem 
-                                        onClick={() => handleDeleteBooking(booking)}
-                                        className="text-red-600 dark:text-red-400"
-                                      >
-                                        <Trash2 className="w-4 h-4 mr-2" />
-                                        Delete Booking
-                                      </DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                  </DropdownMenu>
-                                </TableCell>
-                              </TableRow>
-                            );
-                          })}
-                        </TableBody>
-                      </Table>
-                    </div>
-                  )}
-
-                  {/* District Pagination */}
-                  {districtTotalPages > 1 && (
-                    <div className="flex items-center justify-between mt-6">
-                      <div className="text-sm text-gray-500 dark:text-gray-400">
-                        Showing {((districtCurrentPage - 1) * districtPageSize) + 1} to {Math.min(districtCurrentPage * districtPageSize, filteredDistrictBookings.length)} of {filteredDistrictBookings.length} bookings in {selectedDistrict}
-                      </div>
-                      <div className="flex gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          disabled={districtCurrentPage === 1}
-                          onClick={() => handleDistrictPageChange(districtCurrentPage - 1)}
-                        >
-                          Previous
-                        </Button>
-                        {Array.from({ length: Math.min(5, districtTotalPages) }, (_, i) => {
-                          const page = i + 1;
-                          return (
-                            <Button
-                              key={page}
-                              variant={districtCurrentPage === page ? "default" : "outline"}
-                              size="sm"
-                              onClick={() => handleDistrictPageChange(page)}
-                            >
-                              {page}
-                            </Button>
-                          );
-                        })}
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          disabled={districtCurrentPage === districtTotalPages}
-                          onClick={() => handleDistrictPageChange(districtCurrentPage + 1)}
-                        >
-                          Next
-                        </Button>
-                      </div>
-                    </div>
-                  )}
+                <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
+                  <Clock className="w-6 h-6 text-blue-600 dark:text-blue-400" />
                 </div>
               </div>
-            )}
-          </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Filtered Results</p>
+                  <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">{filteredBookings.length}</p>
+                </div>
+                <div className="p-2 bg-purple-100 dark:bg-purple-900 rounded-lg">
+                  <Search className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
-        {/* Modals */}
-        <Dialog open={isViewDetailsOpen} onOpenChange={setIsViewDetailsOpen}>
-          <DialogContent className="sm:max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>Booking Details</DialogTitle>
-              <DialogDescription>
-                Complete information for booking #{selectedBooking?.id.slice(-8)}
-              </DialogDescription>
-            </DialogHeader>
-            {selectedBooking && (
-              <div className="space-y-6">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-sm font-medium">Booking ID</Label>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 font-mono">#{selectedBooking.id.slice(-8)}</p>
-                  </div>
-                  <div>
-                    <Label className="text-sm font-medium">Service Type</Label>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">{selectedBooking.serviceType}</p>
-                  </div>
-                  <div>
-                    <Label className="text-sm font-medium">Status</Label>
-                    <Badge variant="outline" className={getBookingStatus(selectedBooking).className}>
-                      {getBookingStatus(selectedBooking).icon}
-                      <span className="ml-1">{getBookingStatus(selectedBooking).label}</span>
-                    </Badge>
-                  </div>
-                  <div>
-                    <Label className="text-sm font-medium">Amount</Label>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      {selectedBooking.amount ? `₹${selectedBooking.amount}` : "To be determined"}
-                    </p>
-                  </div>
-                </div>
-                
-                <div>
-                  <Label className="text-sm font-medium">Location</Label>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">{selectedBooking.location}</p>
-                </div>
-                
-                {selectedBooking.description && (
-                  <div>
-                    <Label className="text-sm font-medium">Description</Label>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">{selectedBooking.description}</p>
-                  </div>
-                )}
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-sm font-medium">Created</Label>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      {formatIndianDateTime(selectedBooking.createdAt)}
-                    </p>
-                  </div>
-                  {selectedBooking.scheduledAt && (
-                    <div>
-                      <Label className="text-sm font-medium">Scheduled</Label>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                        {formatIndianDateTime(selectedBooking.scheduledAt)}
-                      </p>
-                    </div>
-                  )}
-                </div>
-
-                {selectedBooking.completedAt && (
-                  <div>
-                    <Label className="text-sm font-medium">Completed</Label>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      {formatIndianDateTime(selectedBooking.completedAt)}
-                    </p>
-                  </div>
-                )}
+        {/* Top Districts */}
+        {topDistricts.length > 0 && (
+          <Card className="mb-6">
+            <CardContent className="pt-4">
+              <div className="flex items-center gap-2 mb-3">
+                <h3 className="font-semibold text-gray-900 dark:text-white">Top Districts</h3>
+                <Badge variant="secondary" className="text-xs">{bookings.length} total</Badge>
               </div>
-            )}
-          </DialogContent>
-        </Dialog>
+              <div className="flex flex-wrap gap-2">
+                {topDistricts.map(([district, count]) => (
+                  <Button
+                    key={district}
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setFilterDistrict(district);
+                      // Set the state for this district if not already set
+                      if (!filterState) {
+                        const stateForDistrict = statesDistrictsData.find(s => 
+                          s.districts.includes(district)
+                        )?.state;
+                        if (stateForDistrict) {
+                          setFilterState(stateForDistrict);
+                        }
+                      }
+                    }}
+                    className="h-5 px-2 min-w-[20px] rounded-md text-xs bg-green-500 text-white hover:bg-green-600"
+                  >
+                    <span>{district}</span>
+                    <Badge variant="secondary" className="ml-1 text-xs bg-white text-green-700">
+                      {count}
+                    </Badge>
+                  </Button>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
+        {/* Bookings Table */}
+        <Card>
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Booking Info</TableHead>
+                    <TableHead>Location</TableHead>
+                    <TableHead>Payment & Status</TableHead>
+                    <TableHead>
+                      <span>Contact</span>
+                      <div className="flex items-center gap-1">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-6 w-6 p-0 text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-900/20"
+                              onClick={() => {
+                                toast({ title: "WhatsApp", description: "Bulk WhatsApp messaging coming soon!" });
+                              }}
+                            >
+                              <MessageCircle className="w-3 h-3" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Bulk WhatsApp</p>
+                          </TooltipContent>
+                        </Tooltip>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-6 w-6 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                              onClick={() => {
+                                toast({ title: "SMS", description: "Bulk SMS messaging coming soon!" });
+                              }}
+                            >
+                              <Square className="w-3 h-3" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Bulk SMS</p>
+                          </TooltipContent>
+                        </Tooltip>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-6 w-6 p-0 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
+                              onClick={() => {
+                                toast({ title: "Email", description: "Bulk email messaging coming soon!" });
+                              }}
+                            >
+                              <Mail className="w-3 h-3" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Bulk Email</p>
+                          </TooltipContent>
+                        </Tooltip>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-6 w-6 p-0 text-purple-600 hover:text-purple-700 hover:bg-purple-50 dark:hover:bg-purple-900/20"
+                              onClick={() => {
+                                toast({ title: "Messages", description: "Bulk internal messaging coming soon!" });
+                              }}
+                            >
+                              <Send className="w-3 h-3" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Bulk Messages</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </div>
+                    </TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredBookings.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center py-8">
+                        <div className="flex flex-col items-center gap-3">
+                          <ClipboardList className="w-12 h-12 text-gray-400" />
+                          <div className="text-sm text-gray-600 dark:text-gray-400">
+                            No bookings found
+                          </div>
+                          <div className="text-xs text-gray-500 dark:text-gray-500">
+                            Bookings will appear here once services are booked
+                          </div>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    filteredBookings.map((booking) => {
+                      const bookingStatus = getBookingStatus(booking.status, booking.scheduledAt, booking.completedAt);
+                      
+                      return (
+                        <TableRow key={booking.id}>
+                          {/* Booking Info */}
+                          <TableCell>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div className="flex items-start gap-3 cursor-pointer">
+                                  <Avatar className="h-10 w-10 flex-shrink-0">
+                                    <AvatarImage 
+                                      src={`https://api.dicebear.com/7.x/initials/svg?seed=${booking.serviceCategory}`} 
+                                      alt={`${booking.serviceCategory}`} 
+                                    />
+                                    <AvatarFallback className="bg-blue-100 text-blue-600 font-semibold">
+                                      {booking.serviceCategory?.charAt(0).toUpperCase() || "S"}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <div className="min-w-0 flex-1">
+                                    <div className="font-medium text-gray-900 dark:text-white text-sm">
+                                      {booking.serviceCategory || "Service Booking"}
+                                    </div>
+                                    <div className="text-xs text-orange-800 dark:text-orange-400 font-mono font-bold">
+                                      #{booking.id.slice(-8)}
+                                    </div>
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                      <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900 dark:text-blue-100 text-xs px-2 py-1">
+                                        Booking
+                                      </Badge>
+                                      <Badge 
+                                        variant={bookingStatus.variant}
+                                        className={`${bookingStatus.className} text-xs px-1.5 py-0.5`}
+                                      >
+                                        {bookingStatus.icon}
+                                        <span className="ml-1">{bookingStatus.label}</span>
+                                      </Badge>
+                                    </div>
+                                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                                      Client: {booking.clientName || "Unknown"}
+                                    </div>
+                                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                                      Worker: {booking.workerName || "Unassigned"}
+                                    </div>
+                                    <div className="text-xs text-gray-400 dark:text-gray-500 italic">
+                                      Created: {formatIndianDateTime(booking.createdAt)}
+                                    </div>
+                                    <div className="text-xs text-gray-400 dark:text-gray-500 italic">
+                                      Age: {getBookingAge(booking.createdAt)}
+                                    </div>
+                                  </div>
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent className="max-w-sm">
+                                <div className="space-y-3">
+                                  <div className="flex items-center gap-3">
+                                    <Avatar className="h-16 w-16 flex-shrink-0">
+                                      <AvatarImage 
+                                        src={`https://api.dicebear.com/7.x/initials/svg?seed=${booking.serviceCategory}`} 
+                                        alt={`${booking.serviceCategory}`} 
+                                      />
+                                      <AvatarFallback className="bg-blue-100 text-blue-600 font-bold text-lg">
+                                        {booking.serviceCategory?.charAt(0).toUpperCase() || "S"}
+                                      </AvatarFallback>
+                                    </Avatar>
+                                    <div>
+                                      <p className="font-medium text-base">Booking Overview</p>
+                                      <p className="text-sm text-gray-600 dark:text-gray-400">Complete booking information</p>
+                                    </div>
+                                  </div>
+                                  <div className="space-y-2">
+                                    <div className="text-sm"><strong>Service:</strong> {booking.serviceCategory}</div>
+                                    <div className="text-sm"><strong>Booking ID:</strong> {booking.id}</div>
+                                    <div className="text-sm"><strong>Client:</strong> {booking.clientName || "Unknown"}</div>
+                                    <div className="text-sm"><strong>Worker:</strong> {booking.workerName || "Unassigned"}</div>
+                                    <div className="flex items-center gap-2">
+                                      <strong className="text-sm">Status:</strong>
+                                      <Badge
+                                        variant={bookingStatus.variant}
+                                        className={bookingStatus.className}
+                                      >
+                                        {bookingStatus.icon}
+                                        <span className="ml-1">{bookingStatus.label}</span>
+                                      </Badge>
+                                    </div>
+                                    <div className="text-sm"><strong>Amount:</strong> ₹{booking.amount || 0}</div>
+                                    <div className="text-sm"><strong>Created:</strong> {formatIndianDateTime(booking.createdAt)}</div>
+                                    {booking.scheduledAt && (
+                                      <div className="text-sm"><strong>Scheduled:</strong> {formatIndianDateTime(booking.scheduledAt)}</div>
+                                    )}
+                                    {booking.completedAt && (
+                                      <div className="text-sm"><strong>Completed:</strong> {formatIndianDateTime(booking.completedAt)}</div>
+                                    )}
+                                  </div>
+                                </div>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TableCell>
+                          
+                          {/* Location */}
+                          <TableCell>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div className="text-sm space-y-1 cursor-pointer">
+                                  {booking.district && booking.state ? (
+                                    <div>
+                                      <div className="text-gray-900 dark:text-white">
+                                        {booking.district}, {booking.state}
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    <span className="text-gray-500 dark:text-gray-400">
+                                      Not specified
+                                    </span>
+                                  )}
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent className="max-w-sm">
+                                <div className="space-y-2">
+                                  <p className="font-medium">Service Location:</p>
+                                  <div className="text-sm text-gray-500">
+                                    {booking.district && booking.state ? 
+                                      `Service in ${booking.district}, ${booking.state}` : 
+                                      'No location information provided'
+                                    }
+                                  </div>
+                                  {booking.location && (
+                                    <div className="text-sm"><strong>Address:</strong> {booking.location}</div>
+                                  )}
+                                </div>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TableCell>
+
+                          {/* Payment & Status */}
+                          <TableCell>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div className="text-sm text-gray-600 dark:text-gray-400 space-y-0.5 cursor-pointer">
+                                  <div className="font-medium">Amount: ₹{booking.amount || 0}</div>
+                                  <div className="text-xs text-gray-500 dark:text-gray-400 ml-3 space-y-0.5">
+                                    <div>• Platform fee: ₹{Math.round((booking.amount || 0) * 0.05)}</div>
+                                    <div>• Worker gets: ₹{Math.round((booking.amount || 0) * 0.95)}</div>
+                                  </div>
+                                  <div className="pt-1">Status: {bookingStatus.label}</div>
+                                  {booking.scheduledAt && (
+                                    <div>Due: {formatIndianDateTime(booking.scheduledAt).split(' ')[0]}</div>
+                                  )}
+                                  {booking.completedAt && (
+                                    <div>Done: {formatIndianDateTime(booking.completedAt).split(' ')[0]}</div>
+                                  )}
+                                  <div className="flex items-center gap-1 mt-1">
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      className="h-6 w-6 p-0 text-green-600 hover:text-green-700 hover:bg-green-50 group transition-all duration-300 hover:scale-110 hover:shadow-lg hover:animate-financial-glow rounded-full"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        const button = e.currentTarget;
+                                        if (button) {
+                                          button.classList.add('animate-financial-click');
+                                          setTimeout(() => {
+                                            if (button) {
+                                              button.classList.remove('animate-financial-click');
+                                            }
+                                          }, 200);
+                                        }
+                                        handleViewFinancialStatements(booking);
+                                      }}
+                                      onMouseEnter={(e) => {
+                                        const button = e.currentTarget;
+                                        const span = button.querySelector('span');
+                                        if (span) {
+                                          span.classList.add('animate-financial-bounce');
+                                          setTimeout(() => {
+                                            span.classList.remove('animate-financial-bounce');
+                                          }, 600);
+                                        }
+                                      }}
+                                      title="Payment Details"
+                                    >
+                                      <span className="text-xs font-bold transition-all duration-300 group-hover:scale-125 group-hover:text-green-700">₹</span>
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      className="h-6 w-6 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        const paymentData = `${booking.serviceCategory} - Payment Details\nAmount: ₹${booking.amount || 0}\nPlatform fee: ₹${Math.round((booking.amount || 0) * 0.05)}\nWorker gets: ₹${Math.round((booking.amount || 0) * 0.95)}\nStatus: ${bookingStatus.label}`;
+                                        navigator.clipboard.writeText(paymentData);
+                                      }}
+                                      title="Copy Payment Data"
+                                    >
+                                      <Copy className="w-3 h-3" />
+                                    </Button>
+                                  </div>
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent className="max-w-sm">
+                                <div className="space-y-2">
+                                  <p className="font-medium">Payment & Status Summary:</p>
+                                  <div className="space-y-1">
+                                    <div className="text-sm"><strong>Total Amount:</strong> ₹{booking.amount || 0}</div>
+                                    <div className="text-sm"><strong>Platform Fee (5%):</strong> ₹{Math.round((booking.amount || 0) * 0.05)}</div>
+                                    <div className="text-sm"><strong>Worker Receives:</strong> ₹{Math.round((booking.amount || 0) * 0.95)}</div>
+                                    <div className="text-sm"><strong>Current Status:</strong> {bookingStatus.label}</div>
+                                    {booking.scheduledAt && (
+                                      <div className="text-sm"><strong>Scheduled Date:</strong> {formatIndianDateTime(booking.scheduledAt)}</div>
+                                    )}
+                                    {booking.completedAt && (
+                                      <div className="text-sm"><strong>Completed Date:</strong> {formatIndianDateTime(booking.completedAt)}</div>
+                                    )}
+                                  </div>
+                                  <div className="flex items-center gap-1 mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      className="h-6 w-6 p-0 text-green-600 hover:text-green-700 hover:bg-green-50"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleViewFinancialStatements(booking);
+                                      }}
+                                      title="Payment Details"
+                                    >
+                                      <span className="text-xs font-bold">₹</span>
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      className="h-6 w-6 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        const paymentData = `${booking.serviceCategory} - Payment Details\nAmount: ₹${booking.amount || 0}\nPlatform fee: ₹${Math.round((booking.amount || 0) * 0.05)}\nWorker gets: ₹${Math.round((booking.amount || 0) * 0.95)}\nStatus: ${bookingStatus.label}`;
+                                        navigator.clipboard.writeText(paymentData);
+                                      }}
+                                      title="Copy Payment Data"
+                                    >
+                                      <Copy className="w-3 h-3" />
+                                    </Button>
+                                  </div>
+                                </div>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TableCell>
+
+                          {/* Contact */}
+                          <TableCell>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div className="text-sm space-y-1 cursor-pointer">
+                                  <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
+                                    <Phone className="w-3 h-3" />
+                                    <span>Contact Both</span>
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      className="h-4 w-4 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50 ml-1"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        const contactData = `Booking #${booking.id} - Client: ${booking.clientName}, Worker: ${booking.workerName}`;
+                                        navigator.clipboard.writeText(contactData);
+                                      }}
+                                      title="Copy Contact Info"
+                                    >
+                                      <Copy className="w-2 h-2" />
+                                    </Button>
+                                  </div>
+                                  <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
+                                    <Mail className="w-3 h-3" />
+                                    <span className="truncate max-w-[150px]">Via Platform</span>
+                                  </div>
+                                  <div className="flex items-center gap-1 mt-2">
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      className="h-6 w-6 p-0 text-green-600 hover:text-green-700 hover:bg-green-50"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        toast({
+                                          title: "WhatsApp Group",
+                                          description: "Creating group chat for this booking...",
+                                        });
+                                      }}
+                                      title="WhatsApp Group"
+                                    >
+                                      <MessageCircle className="w-3 h-3" />
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      className="h-6 w-6 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        toast({
+                                          title: "SMS Alert",
+                                          description: "Sending booking update via SMS...",
+                                        });
+                                      }}
+                                      title="SMS Both"
+                                    >
+                                      <Square className="w-3 h-3" />
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      className="h-6 w-6 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        toast({
+                                          title: "Email Notification",
+                                          description: "Sending booking update via email...",
+                                        });
+                                      }}
+                                      title="Email Both"
+                                    >
+                                      <Mail className="w-3 h-3" />
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      className="h-6 w-6 p-0 text-purple-600 hover:text-purple-700 hover:bg-purple-50"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        toast({
+                                          title: "Platform Message",
+                                          description: "Sending internal message...",
+                                        });
+                                      }}
+                                      title="Send Platform Message"
+                                    >
+                                      <MessageSquare className="w-3 h-3" />
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      className="h-6 w-6 p-0 text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        toast({
+                                          title: "Conference Call",
+                                          description: "Initiating 3-way call...",
+                                        });
+                                      }}
+                                      title="Call Both"
+                                    >
+                                      <Phone className="w-3 h-3" />
+                                    </Button>
+                                  </div>
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent className="max-w-sm">
+                                <div className="space-y-2">
+                                  <p className="font-medium">Booking Communication:</p>
+                                  <div className="space-y-1">
+                                    <div className="text-sm"><strong>Client:</strong> {booking.clientName || "Unknown"}</div>
+                                    <div className="text-sm"><strong>Worker:</strong> {booking.workerName || "Unassigned"}</div>
+                                    <div className="text-sm"><strong>Service:</strong> {booking.serviceCategory}</div>
+                                    <div className="text-sm"><strong>Booking ID:</strong> {booking.id.slice(-8)}</div>
+                                  </div>
+                                  <div className="flex items-center gap-1 mt-3 pt-2 border-t border-gray-200 dark:border-gray-700">
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      className="h-6 w-6 p-0 text-green-600 hover:text-green-700 hover:bg-green-50"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        toast({
+                                          title: "WhatsApp Group",
+                                          description: "Creating group chat for this booking...",
+                                        });
+                                      }}
+                                      title="WhatsApp Group"
+                                    >
+                                      <MessageCircle className="w-3 h-3" />
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      className="h-6 w-6 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        toast({
+                                          title: "SMS Alert",
+                                          description: "Sending booking update via SMS...",
+                                        });
+                                      }}
+                                      title="SMS Both"
+                                    >
+                                      <Square className="w-3 h-3" />
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      className="h-6 w-6 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        toast({
+                                          title: "Email Notification",
+                                          description: "Sending booking update via email...",
+                                        });
+                                      }}
+                                      title="Email Both"
+                                    >
+                                      <Mail className="w-3 h-3" />
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      className="h-6 w-6 p-0 text-purple-600 hover:text-purple-700 hover:bg-purple-50"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        toast({
+                                          title: "Platform Message",
+                                          description: "Sending internal message...",
+                                        });
+                                      }}
+                                      title="Send Platform Message"
+                                    >
+                                      <MessageSquare className="w-3 h-3" />
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      className="h-6 w-6 p-0 text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        toast({
+                                          title: "Conference Call",
+                                          description: "Initiating 3-way call...",
+                                        });
+                                      }}
+                                      title="Call Both"
+                                    >
+                                      <Phone className="w-3 h-3" />
+                                    </Button>
+                                  </div>
+                                </div>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TableCell>
+
+                          {/* Actions */}
+                          <TableCell>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="sm">
+                                  <MoreHorizontal className="w-4 h-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => handleViewBooking(booking)}>
+                                  <Eye className="w-4 h-4 mr-2" />
+                                  View Details
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleEditBooking(booking)}>
+                                  <Edit className="w-4 h-4 mr-2" />
+                                  Edit Booking
+                                </DropdownMenuItem>
+                                <DropdownMenuItem 
+                                  onClick={() => handleDeleteBooking(booking)}
+                                  className="text-red-600"
+                                >
+                                  <Trash2 className="w-4 h-4 mr-2" />
+                                  Delete Booking
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Modals and Dialogs */}
+        {selectedBooking && (
+          <ViewDetailsModal
+            user={selectedBooking as any}
+            isOpen={isViewModalOpen}
+            onClose={() => {
+              setIsViewModalOpen(false);
+              setSelectedBooking(null);
+            }}
+          />
+        )}
+
+        {/* Delete Dialog */}
         <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Delete Booking</AlertDialogTitle>
+              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
               <AlertDialogDescription>
-                Are you sure you want to delete booking #{bookingToDelete?.id.slice(-8)}? This action cannot be undone.
+                This action cannot be undone. This will permanently delete the booking
+                "#{bookingToDelete?.id.slice(-8)}" and remove all related data from our servers.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction 
-                onClick={confirmDeleteBooking}
+              <AlertDialogAction
+                onClick={() => bookingToDelete && deleteBookingMutation.mutate(bookingToDelete.id)}
                 className="bg-red-600 hover:bg-red-700"
               >
                 Delete Booking
@@ -1623,37 +1250,138 @@ export default function BookingManagement() {
           </AlertDialogContent>
         </AlertDialog>
 
-        <Dialog open={isMessageDialogOpen} onOpenChange={setIsMessageDialogOpen}>
-          <DialogContent className="sm:max-w-md">
+        {/* Edit Dialog */}
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <DialogContent className="max-w-md">
             <DialogHeader>
-              <DialogTitle>Send Message</DialogTitle>
+              <DialogTitle>Edit Booking</DialogTitle>
               <DialogDescription>
-                Send a message to {userToMessage?.firstName} {userToMessage?.lastName}
+                Update booking information. Changes will be saved immediately.
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div>
-                <Label htmlFor="message">Message</Label>
-                <Textarea
-                  id="message"
-                  placeholder="Type your message here..."
-                  value={messageText}
-                  onChange={(e) => setMessageText(e.target.value)}
-                  rows={4}
+                <Label htmlFor="status">Status</Label>
+                <Select
+                  value={editForm.status}
+                  onValueChange={(value) => setEditForm(prev => ({ ...prev, status: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="scheduled">Scheduled</SelectItem>
+                    <SelectItem value="in_progress">In Progress</SelectItem>
+                    <SelectItem value="completed">Completed</SelectItem>
+                    <SelectItem value="cancelled">Cancelled</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="amount">Amount (₹)</Label>
+                <Input
+                  id="amount"
+                  type="number"
+                  value={editForm.amount}
+                  onChange={(e) => setEditForm(prev => ({ ...prev, amount: parseFloat(e.target.value) || 0 }))}
                 />
+              </div>
+              <div>
+                <Label htmlFor="description">Description</Label>
+                <Textarea
+                  id="description"
+                  value={editForm.description}
+                  onChange={(e) => setEditForm(prev => ({ ...prev, description: e.target.value }))}
+                  rows={3}
+                />
+              </div>
+              <div>
+                <Label htmlFor="location">Location</Label>
+                <Input
+                  id="location"
+                  value={editForm.location}
+                  onChange={(e) => setEditForm(prev => ({ ...prev, location: e.target.value }))}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="state">State</Label>
+                  <Select
+                    value={editForm.state}
+                    onValueChange={(value) => {
+                      setEditForm(prev => ({ ...prev, state: value, district: "" }));
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select state" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {statesList.map((state) => (
+                        <SelectItem key={state} value={state}>
+                          {state}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="district">District</Label>
+                  <Select
+                    value={editForm.district}
+                    onValueChange={(value) => setEditForm(prev => ({ ...prev, district: value }))}
+                    disabled={!editForm.state}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select district" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {editForm.state && getDistrictsForState(editForm.state).map((district) => (
+                        <SelectItem key={district} value={district}>
+                          {district}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setIsMessageDialogOpen(false)}>
+              <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
                 Cancel
               </Button>
-              <Button 
-                onClick={sendMessage} 
-                disabled={!messageText.trim() || sendingMessage}
-              >
-                {sendingMessage ? "Sending..." : "Send Message"}
+              <Button onClick={handleUpdateBooking} disabled={updateBookingMutation.isPending}>
+                {updateBookingMutation.isPending ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Updating...
+                  </>
+                ) : (
+                  "Update Booking"
+                )}
               </Button>
             </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Payment Details Modal */}
+        <Dialog open={isFinancialModalOpen} onOpenChange={setIsFinancialModalOpen}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Payment Details</DialogTitle>
+              <DialogDescription>
+                {selectedBookingForFinancial && `Payment breakdown for booking #${selectedBookingForFinancial.id.slice(-8)}`}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-6">
+              <div className="text-center p-8 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                <DollarSign className="w-12 h-12 mx-auto mb-4 text-green-600" />
+                <p className="text-lg font-semibold mb-2">Payment Processing Coming Soon</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Detailed payment tracking and transaction history will be available in the next update.
+                </p>
+              </div>
+            </div>
           </DialogContent>
         </Dialog>
       </div>
