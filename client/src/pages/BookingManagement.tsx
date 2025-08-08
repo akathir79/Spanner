@@ -1111,7 +1111,10 @@ export default function BookingManagement() {
                                 {getBookingCountForDistrict(district)} bookings
                               </p>
                             </div>
-                            <Badge variant="secondary">
+                            <Badge 
+                              variant="secondary" 
+                              className="h-5 px-2 min-w-[20px] rounded-md flex items-center justify-center text-xs bg-green-500 text-white hover:bg-green-600"
+                            >
                               {getBookingCountForDistrict(district)}
                             </Badge>
                           </div>

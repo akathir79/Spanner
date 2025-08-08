@@ -863,57 +863,119 @@ export default function WorkerManagement() {
                                           </AvatarFallback>
                                         </Avatar>
                                         <div className="min-w-0 flex-1">
-                                          <div className="font-medium text-gray-900 dark:text-white">
+                                          <div className="font-medium text-gray-900 dark:text-white text-sm">
                                             {worker.firstName} {worker.lastName}
                                           </div>
-                                          <Tooltip>
-                                            <TooltipTrigger asChild>
-                                              <div className="text-sm text-green-800 dark:text-green-400 font-mono font-bold truncate">
-                                                ID: {worker.id}
-                                              </div>
-                                            </TooltipTrigger>
-                                            <TooltipContent>
-                                              <p className="font-mono">{worker.id}</p>
-                                            </TooltipContent>
-                                          </Tooltip>
-                                          <div className="mt-1 space-y-1">
-                                            <div className="flex items-center gap-2 flex-wrap">
-                                              <Badge 
-                                                variant={activityStatus.variant}
-                                                className={activityStatus.className}
-                                              >
-                                                {activityStatus.icon}
-                                                <span className="ml-1">{activityStatus.label}</span>
-                                              </Badge>
-                                              <Badge 
-                                                variant={worker.isVerified ? "default" : "secondary"}
-                                                className={
-                                                  worker.isVerified 
-                                                    ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100" 
-                                                    : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100"
-                                                }
-                                              >
-                                                {worker.isVerified ? "Verified" : "Unverified"}
-                                              </Badge>
-                                            </div>
-                                            <div className="text-xs text-gray-500 dark:text-gray-400">
-                                              Member since: {getMemberSince(worker.createdAt)}
-                                            </div>
-                                            {worker.lastLoginAt && (
-                                              <div className="text-xs text-gray-500 dark:text-gray-400">
-                                                Last login: {formatIndianDateTime(worker.lastLoginAt)}
-                                              </div>
-                                            )}
+                                          <div className="text-xs text-green-800 dark:text-green-400 font-mono font-bold">
+                                            ID: {worker.id}
+                                          </div>
+                                          <div className="flex items-center gap-2 flex-wrap">
+                                            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 dark:bg-green-900 dark:text-green-100 text-xs px-2 py-1">
+                                              Worker
+                                            </Badge>
+                                            <Badge 
+                                              variant={
+                                                activityStatus.label === 'Just Registered' || 
+                                                activityStatus.label === 'No Login' || 
+                                                activityStatus.label === 'Inactive' ? "destructive" : activityStatus.variant
+                                              }
+                                              className={
+                                                activityStatus.label === 'Just Registered' || 
+                                                activityStatus.label === 'No Login' || 
+                                                activityStatus.label === 'Inactive'
+                                                  ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100 text-xs px-1.5 py-0.5" 
+                                                  : `${activityStatus.className} text-xs px-1.5 py-0.5`
+                                              }
+                                            >
+                                              {activityStatus.icon}
+                                              <span className="ml-1">{activityStatus.label}</span>
+                                            </Badge>
+                                            <Badge
+                                              variant={worker.isVerified ? "default" : "destructive"}
+                                              className={worker.isVerified 
+                                                ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100 text-xs" 
+                                                : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100 text-xs"
+                                              }
+                                            >
+                                              {worker.isVerified ? "Verified" : "Unverified"}
+                                            </Badge>
+                                          </div>
+                                          <div className="text-xs text-gray-500 dark:text-gray-400">
+                                            Last: {worker.lastLoginAt ? formatIndianDateTime(worker.lastLoginAt) : 'No Login'}
+                                          </div>
+                                          <div className="text-xs text-gray-400 dark:text-gray-500 italic">
+                                            Reg: {formatIndianDateTime(worker.createdAt)}
+                                          </div>
+                                          <div className="text-xs text-gray-400 dark:text-gray-500 italic">
+                                            Member since {getMemberSince(worker.createdAt)}
                                           </div>
                                         </div>
                                       </div>
                                     </TooltipTrigger>
-                                    <TooltipContent>
-                                      <div className="text-left">
-                                        <p className="font-semibold">{worker.firstName} {worker.lastName}</p>
-                                        <p className="text-sm">ID: {worker.id}</p>
-                                        <p className="text-sm">Status: {activityStatus.label}</p>
-                                        <p className="text-sm">Verification: {worker.isVerified ? "Verified" : "Unverified"}</p>
+                                    <TooltipContent className="max-w-sm">
+                                      <div className="space-y-3">
+                                        <div className="flex items-center gap-3">
+                                          <Avatar className="h-16 w-16 flex-shrink-0">
+                                            <AvatarImage 
+                                              src={(worker as any).profilePicture} 
+                                              alt={`${worker.firstName} ${worker.lastName}`} 
+                                            />
+                                            <AvatarFallback className="bg-green-100 text-green-600 font-bold text-lg">
+                                              {worker.firstName.charAt(0).toUpperCase()}{worker.lastName.charAt(0).toUpperCase()}
+                                            </AvatarFallback>
+                                          </Avatar>
+                                          <div>
+                                            <p className="font-medium text-base">Worker Profile Overview</p>
+                                            <p className="text-sm text-gray-600 dark:text-gray-400">Complete user information</p>
+                                          </div>
+                                        </div>
+                                        <div className="space-y-2">
+                                          <div className="text-sm"><strong>Full Name:</strong> {worker.firstName} {worker.lastName}</div>
+                                          <div className="text-sm"><strong>Worker ID:</strong> {worker.id}</div>
+                                          <div className="text-sm"><strong>Role:</strong> Service Worker</div>
+                                          <div className="flex items-center gap-2">
+                                            <strong className="text-sm">Verification Status:</strong>
+                                            <Badge
+                                              variant={worker.isVerified ? "default" : "destructive"}
+                                              className={worker.isVerified 
+                                                ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100" 
+                                                : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100"
+                                              }
+                                            >
+                                              {worker.isVerified ? "Verified" : "Unverified"}
+                                            </Badge>
+                                          </div>
+                                          <div className="flex items-center gap-2">
+                                            <strong className="text-sm">Activity Status:</strong>
+                                            <Badge
+                                              variant={
+                                                activityStatus.label === 'Just Registered' || 
+                                                activityStatus.label === 'No Login' || 
+                                                activityStatus.label === 'Inactive' ||
+                                                !worker.isVerified ? "destructive" : "default"
+                                              }
+                                              className={
+                                                activityStatus.label === 'Just Registered' || 
+                                                activityStatus.label === 'No Login' || 
+                                                activityStatus.label === 'Inactive' ||
+                                                !worker.isVerified
+                                                  ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100" 
+                                                  : "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100"
+                                              }
+                                            >
+                                              {activityStatus.icon}
+                                              <span className="ml-1">{activityStatus.label}</span>
+                                            </Badge>
+                                          </div>
+                                          <div className="text-sm"><strong>Registration Date:</strong> {formatIndianDateTime(worker.createdAt)}</div>
+                                          <div className="text-sm"><strong>Last Login:</strong> {worker.lastLoginAt ? formatIndianDateTime(worker.lastLoginAt) : 'No Login'}</div>
+                                          {worker.mobile && (
+                                            <div className="text-sm"><strong>Mobile:</strong> {worker.mobile}</div>
+                                          )}
+                                          {worker.email && (
+                                            <div className="text-sm"><strong>Email:</strong> {worker.email}</div>
+                                          )}
+                                        </div>
                                       </div>
                                     </TooltipContent>
                                   </Tooltip>
@@ -1153,7 +1215,10 @@ export default function WorkerManagement() {
                                 {getWorkerCountForDistrict(district)} workers
                               </p>
                             </div>
-                            <Badge variant="secondary">
+                            <Badge 
+                              variant="secondary" 
+                              className="h-5 px-2 min-w-[20px] rounded-md flex items-center justify-center text-xs bg-green-500 text-white hover:bg-green-600"
+                            >
                               {getWorkerCountForDistrict(district)}
                             </Badge>
                           </div>
@@ -1322,32 +1387,45 @@ export default function WorkerManagement() {
                                           </Tooltip>
                                           <div className="mt-1 space-y-1">
                                             <div className="flex items-center gap-2 flex-wrap">
+                                              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 dark:bg-green-900 dark:text-green-100 text-xs">
+                                                Worker
+                                              </Badge>
                                               <Badge 
-                                                variant={activityStatus.variant}
-                                                className={activityStatus.className}
+                                                variant={
+                                                  activityStatus.label === 'Just Registered' || 
+                                                  activityStatus.label === 'No Login' || 
+                                                  activityStatus.label === 'Inactive' ? "destructive" : activityStatus.variant
+                                                }
+                                                className={
+                                                  activityStatus.label === 'Just Registered' || 
+                                                  activityStatus.label === 'No Login' || 
+                                                  activityStatus.label === 'Inactive'
+                                                    ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100 text-xs px-1.5 py-0.5" 
+                                                    : `${activityStatus.className} text-xs px-1.5 py-0.5`
+                                                }
                                               >
                                                 {activityStatus.icon}
                                                 <span className="ml-1">{activityStatus.label}</span>
                                               </Badge>
-                                              <Badge 
-                                                variant={worker.isVerified ? "default" : "secondary"}
-                                                className={
-                                                  worker.isVerified 
-                                                    ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100" 
-                                                    : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100"
+                                              <Badge
+                                                variant={worker.isVerified ? "default" : "destructive"}
+                                                className={worker.isVerified 
+                                                  ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100 text-xs" 
+                                                  : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100 text-xs"
                                                 }
                                               >
                                                 {worker.isVerified ? "Verified" : "Unverified"}
                                               </Badge>
                                             </div>
                                             <div className="text-xs text-gray-500 dark:text-gray-400">
-                                              Member since: {getMemberSince(worker.createdAt)}
+                                              Last: {worker.lastLoginAt ? formatIndianDateTime(worker.lastLoginAt) : 'No Login'}
                                             </div>
-                                            {worker.lastLoginAt && (
-                                              <div className="text-xs text-gray-500 dark:text-gray-400">
-                                                Last login: {formatIndianDateTime(worker.lastLoginAt)}
-                                              </div>
-                                            )}
+                                            <div className="text-xs text-gray-400 dark:text-gray-500 italic">
+                                              Reg: {formatIndianDateTime(worker.createdAt)}
+                                            </div>
+                                            <div className="text-xs text-gray-400 dark:text-gray-500 italic">
+                                              Member since {getMemberSince(worker.createdAt)}
+                                            </div>
                                           </div>
                                         </div>
                                       </div>

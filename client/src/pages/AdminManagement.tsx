@@ -886,66 +886,121 @@ export default function AdminManagement() {
                                           </AvatarFallback>
                                         </Avatar>
                                         <div className="min-w-0 flex-1">
-                                          <div className="flex items-center gap-2">
-                                            <div className="font-medium text-gray-900 dark:text-white">
-                                              {admin.firstName} {admin.lastName}
-                                            </div>
-                                            {admin.role === "super_admin" && (
-                                              <Crown className="w-4 h-4 text-yellow-500" title="Super Admin" />
-                                            )}
-                                            {admin.role === "admin" && (
-                                              <Shield className="w-4 h-4 text-blue-500" title="Admin" />
-                                            )}
+                                          <div className="font-medium text-gray-900 dark:text-white text-sm">
+                                            {admin.firstName} {admin.lastName}
                                           </div>
-                                          <Tooltip>
-                                            <TooltipTrigger asChild>
-                                              <div className="text-sm text-green-800 dark:text-green-400 font-mono font-bold truncate">
-                                                ID: {admin.id}
-                                              </div>
-                                            </TooltipTrigger>
-                                            <TooltipContent>
-                                              <p className="font-mono">{admin.id}</p>
-                                            </TooltipContent>
-                                          </Tooltip>
-                                          <div className="mt-1 space-y-1">
-                                            <div className="flex items-center gap-2 flex-wrap">
-                                              <Badge 
-                                                variant={activityStatus.variant}
-                                                className={activityStatus.className}
-                                              >
-                                                {activityStatus.icon}
-                                                <span className="ml-1">{activityStatus.label}</span>
-                                              </Badge>
-                                              <Badge 
-                                                variant={admin.isVerified ? "default" : "secondary"}
-                                                className={
-                                                  admin.isVerified 
-                                                    ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100" 
-                                                    : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100"
-                                                }
-                                              >
-                                                {admin.isVerified ? "Verified" : "Unverified"}
-                                              </Badge>
-                                            </div>
-                                            <div className="text-xs text-gray-500 dark:text-gray-400">
-                                              Created: {getMemberSince(admin.createdAt)} ago
-                                            </div>
-                                            {admin.lastLoginAt && (
-                                              <div className="text-xs text-gray-500 dark:text-gray-400">
-                                                Last login: {formatIndianDateTime(admin.lastLoginAt)}
-                                              </div>
-                                            )}
+                                          <div className="text-xs text-green-800 dark:text-green-400 font-mono font-bold">
+                                            ID: {admin.id}
+                                          </div>
+                                          <div className="flex items-center gap-2 flex-wrap">
+                                            <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-900 dark:text-purple-100 text-xs px-2 py-1">
+                                              {admin.role === "super_admin" ? "Super Admin" : "Admin"}
+                                            </Badge>
+                                            <Badge 
+                                              variant={
+                                                activityStatus.label === 'Just Registered' || 
+                                                activityStatus.label === 'No Login' || 
+                                                activityStatus.label === 'Inactive' ? "destructive" : activityStatus.variant
+                                              }
+                                              className={
+                                                activityStatus.label === 'Just Registered' || 
+                                                activityStatus.label === 'No Login' || 
+                                                activityStatus.label === 'Inactive'
+                                                  ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100 text-xs px-1.5 py-0.5" 
+                                                  : `${activityStatus.className} text-xs px-1.5 py-0.5`
+                                              }
+                                            >
+                                              {activityStatus.icon}
+                                              <span className="ml-1">{activityStatus.label}</span>
+                                            </Badge>
+                                            <Badge
+                                              variant={admin.isVerified ? "default" : "destructive"}
+                                              className={admin.isVerified 
+                                                ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100 text-xs" 
+                                                : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100 text-xs"
+                                              }
+                                            >
+                                              {admin.isVerified ? "Verified" : "Unverified"}
+                                            </Badge>
+                                          </div>
+                                          <div className="text-xs text-gray-500 dark:text-gray-400">
+                                            Last: {admin.lastLoginAt ? formatIndianDateTime(admin.lastLoginAt) : 'No Login'}
+                                          </div>
+                                          <div className="text-xs text-gray-400 dark:text-gray-500 italic">
+                                            Reg: {formatIndianDateTime(admin.createdAt)}
+                                          </div>
+                                          <div className="text-xs text-gray-400 dark:text-gray-500 italic">
+                                            Member since {getMemberSince(admin.createdAt)}
                                           </div>
                                         </div>
                                       </div>
                                     </TooltipTrigger>
-                                    <TooltipContent>
-                                      <div className="text-left">
-                                        <p className="font-semibold">{admin.firstName} {admin.lastName}</p>
-                                        <p className="text-sm">ID: {admin.id}</p>
-                                        <p className="text-sm">Role: {admin.role === "super_admin" ? "Super Admin" : "Admin"}</p>
-                                        <p className="text-sm">Status: {activityStatus.label}</p>
-                                        <p className="text-sm">Verification: {admin.isVerified ? "Verified" : "Unverified"}</p>
+                                    <TooltipContent className="max-w-sm">
+                                      <div className="space-y-3">
+                                        <div className="flex items-center gap-3">
+                                          <Avatar className="h-16 w-16 flex-shrink-0">
+                                            <AvatarImage 
+                                              src={(admin as any).profilePicture} 
+                                              alt={`${admin.firstName} ${admin.lastName}`} 
+                                            />
+                                            <AvatarFallback className="bg-purple-100 text-purple-600 font-bold text-lg">
+                                              {admin.firstName.charAt(0).toUpperCase()}{admin.lastName.charAt(0).toUpperCase()}
+                                            </AvatarFallback>
+                                          </Avatar>
+                                          <div>
+                                            <p className="font-medium text-base">
+                                              {admin.role === "super_admin" ? "Super Admin" : "Admin"} Profile Overview
+                                            </p>
+                                            <p className="text-sm text-gray-600 dark:text-gray-400">Complete user information</p>
+                                          </div>
+                                        </div>
+                                        <div className="space-y-2">
+                                          <div className="text-sm"><strong>Full Name:</strong> {admin.firstName} {admin.lastName}</div>
+                                          <div className="text-sm"><strong>Admin ID:</strong> {admin.id}</div>
+                                          <div className="text-sm"><strong>Role:</strong> {admin.role === "super_admin" ? "Super Administrator" : "Administrator"}</div>
+                                          <div className="flex items-center gap-2">
+                                            <strong className="text-sm">Verification Status:</strong>
+                                            <Badge
+                                              variant={admin.isVerified ? "default" : "destructive"}
+                                              className={admin.isVerified 
+                                                ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100" 
+                                                : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100"
+                                              }
+                                            >
+                                              {admin.isVerified ? "Verified" : "Unverified"}
+                                            </Badge>
+                                          </div>
+                                          <div className="flex items-center gap-2">
+                                            <strong className="text-sm">Activity Status:</strong>
+                                            <Badge
+                                              variant={
+                                                activityStatus.label === 'Just Registered' || 
+                                                activityStatus.label === 'No Login' || 
+                                                activityStatus.label === 'Inactive' ||
+                                                !admin.isVerified ? "destructive" : "default"
+                                              }
+                                              className={
+                                                activityStatus.label === 'Just Registered' || 
+                                                activityStatus.label === 'No Login' || 
+                                                activityStatus.label === 'Inactive' ||
+                                                !admin.isVerified
+                                                  ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100" 
+                                                  : "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100"
+                                              }
+                                            >
+                                              {activityStatus.icon}
+                                              <span className="ml-1">{activityStatus.label}</span>
+                                            </Badge>
+                                          </div>
+                                          <div className="text-sm"><strong>Registration Date:</strong> {formatIndianDateTime(admin.createdAt)}</div>
+                                          <div className="text-sm"><strong>Last Login:</strong> {admin.lastLoginAt ? formatIndianDateTime(admin.lastLoginAt) : 'No Login'}</div>
+                                          {admin.mobile && (
+                                            <div className="text-sm"><strong>Mobile:</strong> {admin.mobile}</div>
+                                          )}
+                                          {admin.email && (
+                                            <div className="text-sm"><strong>Email:</strong> {admin.email}</div>
+                                          )}
+                                        </div>
                                       </div>
                                     </TooltipContent>
                                   </Tooltip>
@@ -1173,7 +1228,10 @@ export default function AdminManagement() {
                                 {getAdminCountForDistrict(district)} administrators
                               </p>
                             </div>
-                            <Badge variant="secondary">
+                            <Badge 
+                              variant="secondary" 
+                              className="h-5 px-2 min-w-[20px] rounded-md flex items-center justify-center text-xs bg-green-500 text-white hover:bg-green-600"
+                            >
                               {getAdminCountForDistrict(district)}
                             </Badge>
                           </div>
@@ -1339,66 +1397,121 @@ export default function AdminManagement() {
                                           </AvatarFallback>
                                         </Avatar>
                                         <div className="min-w-0 flex-1">
-                                          <div className="flex items-center gap-2">
-                                            <div className="font-medium text-gray-900 dark:text-white">
-                                              {admin.firstName} {admin.lastName}
-                                            </div>
-                                            {admin.role === "super_admin" && (
-                                              <Crown className="w-4 h-4 text-yellow-500" title="Super Admin" />
-                                            )}
-                                            {admin.role === "admin" && (
-                                              <Shield className="w-4 h-4 text-blue-500" title="Admin" />
-                                            )}
+                                          <div className="font-medium text-gray-900 dark:text-white text-sm">
+                                            {admin.firstName} {admin.lastName}
                                           </div>
-                                          <Tooltip>
-                                            <TooltipTrigger asChild>
-                                              <div className="text-sm text-green-800 dark:text-green-400 font-mono font-bold truncate">
-                                                ID: {admin.id}
-                                              </div>
-                                            </TooltipTrigger>
-                                            <TooltipContent>
-                                              <p className="font-mono">{admin.id}</p>
-                                            </TooltipContent>
-                                          </Tooltip>
-                                          <div className="mt-1 space-y-1">
-                                            <div className="flex items-center gap-2 flex-wrap">
-                                              <Badge 
-                                                variant={activityStatus.variant}
-                                                className={activityStatus.className}
-                                              >
-                                                {activityStatus.icon}
-                                                <span className="ml-1">{activityStatus.label}</span>
-                                              </Badge>
-                                              <Badge 
-                                                variant={admin.isVerified ? "default" : "secondary"}
-                                                className={
-                                                  admin.isVerified 
-                                                    ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100" 
-                                                    : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100"
-                                                }
-                                              >
-                                                {admin.isVerified ? "Verified" : "Unverified"}
-                                              </Badge>
-                                            </div>
-                                            <div className="text-xs text-gray-500 dark:text-gray-400">
-                                              Created: {getMemberSince(admin.createdAt)} ago
-                                            </div>
-                                            {admin.lastLoginAt && (
-                                              <div className="text-xs text-gray-500 dark:text-gray-400">
-                                                Last login: {formatIndianDateTime(admin.lastLoginAt)}
-                                              </div>
-                                            )}
+                                          <div className="text-xs text-green-800 dark:text-green-400 font-mono font-bold">
+                                            ID: {admin.id}
+                                          </div>
+                                          <div className="flex items-center gap-2 flex-wrap">
+                                            <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-900 dark:text-purple-100 text-xs px-2 py-1">
+                                              {admin.role === "super_admin" ? "Super Admin" : "Admin"}
+                                            </Badge>
+                                            <Badge 
+                                              variant={
+                                                activityStatus.label === 'Just Registered' || 
+                                                activityStatus.label === 'No Login' || 
+                                                activityStatus.label === 'Inactive' ? "destructive" : activityStatus.variant
+                                              }
+                                              className={
+                                                activityStatus.label === 'Just Registered' || 
+                                                activityStatus.label === 'No Login' || 
+                                                activityStatus.label === 'Inactive'
+                                                  ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100 text-xs px-1.5 py-0.5" 
+                                                  : `${activityStatus.className} text-xs px-1.5 py-0.5`
+                                              }
+                                            >
+                                              {activityStatus.icon}
+                                              <span className="ml-1">{activityStatus.label}</span>
+                                            </Badge>
+                                            <Badge
+                                              variant={admin.isVerified ? "default" : "destructive"}
+                                              className={admin.isVerified 
+                                                ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100 text-xs" 
+                                                : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100 text-xs"
+                                              }
+                                            >
+                                              {admin.isVerified ? "Verified" : "Unverified"}
+                                            </Badge>
+                                          </div>
+                                          <div className="text-xs text-gray-500 dark:text-gray-400">
+                                            Last: {admin.lastLoginAt ? formatIndianDateTime(admin.lastLoginAt) : 'No Login'}
+                                          </div>
+                                          <div className="text-xs text-gray-400 dark:text-gray-500 italic">
+                                            Reg: {formatIndianDateTime(admin.createdAt)}
+                                          </div>
+                                          <div className="text-xs text-gray-400 dark:text-gray-500 italic">
+                                            Member since {getMemberSince(admin.createdAt)}
                                           </div>
                                         </div>
                                       </div>
                                     </TooltipTrigger>
-                                    <TooltipContent>
-                                      <div className="text-left">
-                                        <p className="font-semibold">{admin.firstName} {admin.lastName}</p>
-                                        <p className="text-sm">ID: {admin.id}</p>
-                                        <p className="text-sm">Role: {admin.role === "super_admin" ? "Super Admin" : "Admin"}</p>
-                                        <p className="text-sm">Status: {activityStatus.label}</p>
-                                        <p className="text-sm">Verification: {admin.isVerified ? "Verified" : "Unverified"}</p>
+                                    <TooltipContent className="max-w-sm">
+                                      <div className="space-y-3">
+                                        <div className="flex items-center gap-3">
+                                          <Avatar className="h-16 w-16 flex-shrink-0">
+                                            <AvatarImage 
+                                              src={(admin as any).profilePicture} 
+                                              alt={`${admin.firstName} ${admin.lastName}`} 
+                                            />
+                                            <AvatarFallback className="bg-purple-100 text-purple-600 font-bold text-lg">
+                                              {admin.firstName.charAt(0).toUpperCase()}{admin.lastName.charAt(0).toUpperCase()}
+                                            </AvatarFallback>
+                                          </Avatar>
+                                          <div>
+                                            <p className="font-medium text-base">
+                                              {admin.role === "super_admin" ? "Super Admin" : "Admin"} Profile Overview
+                                            </p>
+                                            <p className="text-sm text-gray-600 dark:text-gray-400">Complete user information</p>
+                                          </div>
+                                        </div>
+                                        <div className="space-y-2">
+                                          <div className="text-sm"><strong>Full Name:</strong> {admin.firstName} {admin.lastName}</div>
+                                          <div className="text-sm"><strong>Admin ID:</strong> {admin.id}</div>
+                                          <div className="text-sm"><strong>Role:</strong> {admin.role === "super_admin" ? "Super Administrator" : "Administrator"}</div>
+                                          <div className="flex items-center gap-2">
+                                            <strong className="text-sm">Verification Status:</strong>
+                                            <Badge
+                                              variant={admin.isVerified ? "default" : "destructive"}
+                                              className={admin.isVerified 
+                                                ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100" 
+                                                : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100"
+                                              }
+                                            >
+                                              {admin.isVerified ? "Verified" : "Unverified"}
+                                            </Badge>
+                                          </div>
+                                          <div className="flex items-center gap-2">
+                                            <strong className="text-sm">Activity Status:</strong>
+                                            <Badge
+                                              variant={
+                                                activityStatus.label === 'Just Registered' || 
+                                                activityStatus.label === 'No Login' || 
+                                                activityStatus.label === 'Inactive' ||
+                                                !admin.isVerified ? "destructive" : "default"
+                                              }
+                                              className={
+                                                activityStatus.label === 'Just Registered' || 
+                                                activityStatus.label === 'No Login' || 
+                                                activityStatus.label === 'Inactive' ||
+                                                !admin.isVerified
+                                                  ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100" 
+                                                  : "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100"
+                                              }
+                                            >
+                                              {activityStatus.icon}
+                                              <span className="ml-1">{activityStatus.label}</span>
+                                            </Badge>
+                                          </div>
+                                          <div className="text-sm"><strong>Registration Date:</strong> {formatIndianDateTime(admin.createdAt)}</div>
+                                          <div className="text-sm"><strong>Last Login:</strong> {admin.lastLoginAt ? formatIndianDateTime(admin.lastLoginAt) : 'No Login'}</div>
+                                          {admin.mobile && (
+                                            <div className="text-sm"><strong>Mobile:</strong> {admin.mobile}</div>
+                                          )}
+                                          {admin.email && (
+                                            <div className="text-sm"><strong>Email:</strong> {admin.email}</div>
+                                          )}
+                                        </div>
                                       </div>
                                     </TooltipContent>
                                   </Tooltip>
