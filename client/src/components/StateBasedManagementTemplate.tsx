@@ -274,18 +274,28 @@ export default function StateBasedManagementTemplate({ config }: StateBasedManag
 
   // Fetch states-districts data dynamically from API
   const { data: statesDistrictsData = { states: [] }, isLoading: statesDistrictsLoading } = useQuery({
-    queryKey: ['/api/states-districts'],
+    queryKey: ['/api/states-districts', Date.now()], // Force unique query each time
     queryFn: async () => {
-      const response = await fetch('/api/states-districts');
+      console.log('🔄 Fetching fresh states-districts data from JSON file...');
+      const response = await fetch('/api/states-districts', {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache'
+        }
+      });
       if (!response.ok) {
         throw new Error('Failed to fetch states-districts data');
       }
-      return response.json();
+      const data = await response.json();
+      console.log('✅ Fresh data loaded from JSON:', data);
+      return data;
     },
     staleTime: 0, // Always fetch fresh data
     gcTime: 0, // Don't cache (replaces cacheTime in React Query v5)
     refetchOnMount: 'always', // Always refetch when component mounts
-    refetchOnWindowFocus: true // Refetch when window gains focus
+    refetchOnWindowFocus: true, // Refetch when window gains focus
+    refetchInterval: 1000 // Refetch every second for testing
   });
 
   // Fetch data based on configuration
