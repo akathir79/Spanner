@@ -933,28 +933,6 @@ export default function ClientManagement() {
                             </div>
                           </TableHead>
                           <TableHead className="w-[160px]">Bank Details</TableHead>
-                          <TableHead className="w-[90px]">
-                            <div className="flex items-center gap-2">
-                              <span>Status</span>
-                              <Select value={statusFilter} onValueChange={(value) => {
-                                setStatusFilter(value as any);
-                                setCurrentPage(1); // Reset to first page when filtering
-                              }}>
-                                <SelectTrigger className="w-8 h-8 p-1 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 rounded">
-                                  <Filter className="w-4 h-4 text-gray-600 dark:text-gray-300" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="all">All Status</SelectItem>
-                                  <SelectItem value="active">Active</SelectItem>
-                                  <SelectItem value="inactive">Inactive</SelectItem>
-                                  <SelectItem value="no_login">No Login</SelectItem>
-                                  <SelectItem value="just_registered">Just Registered</SelectItem>
-                                  <SelectItem value="verified">Verified</SelectItem>
-                                  <SelectItem value="unverified">Unverified</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-                          </TableHead>
                           <TableHead className="w-[50px]"></TableHead>
                         </TableRow>
                       </TableHeader>
@@ -981,13 +959,24 @@ export default function ClientManagement() {
                                   <div className="text-xs text-green-800 dark:text-green-400 font-mono font-bold">
                                     ID: {client.id}
                                   </div>
-                                  <Badge 
-                                    variant={activityStatus.variant}
-                                    className={`${activityStatus.className} text-xs px-1.5 py-0.5`}
-                                  >
-                                    {activityStatus.icon}
-                                    <span className="ml-1">{activityStatus.label}</span>
-                                  </Badge>
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <Badge 
+                                      variant={activityStatus.variant}
+                                      className={`${activityStatus.className} text-xs px-1.5 py-0.5`}
+                                    >
+                                      {activityStatus.icon}
+                                      <span className="ml-1">{activityStatus.label}</span>
+                                    </Badge>
+                                    <Badge
+                                      variant={client.isVerified ? "default" : "secondary"}
+                                      className={client.isVerified 
+                                        ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100 text-xs" 
+                                        : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100 text-xs"
+                                      }
+                                    >
+                                      {client.isVerified ? "Verified" : "Pending"}
+                                    </Badge>
+                                  </div>
                                   <div className="text-xs text-gray-500 dark:text-gray-400">
                                     Last: {client.lastLoginAt ? formatIndianDateTime(client.lastLoginAt) : 'Never'}
                                   </div>
@@ -1410,14 +1399,7 @@ export default function ClientManagement() {
                                 </TooltipContent>
                               </Tooltip>
                             </TableCell>
-                            <TableCell>
-                              <Badge 
-                                variant={client.isVerified ? "default" : "destructive"}
-                                className={client.isVerified ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100" : ""}
-                              >
-                                {client.isVerified ? "Verified" : "Pending"}
-                              </Badge>
-                            </TableCell>
+
                             <TableCell>
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
@@ -1772,28 +1754,6 @@ export default function ClientManagement() {
                             </div>
                           </TableHead>
                           <TableHead className="w-[160px]">Bank Details</TableHead>
-                          <TableHead className="w-[90px]">
-                            <div className="flex items-center gap-2">
-                              <span>Status</span>
-                              <Select value={statusFilter} onValueChange={(value) => {
-                                setStatusFilter(value as any);
-                                setDistrictCurrentPage(1); // Reset to first page when filtering
-                              }}>
-                                <SelectTrigger className="w-8 h-8 p-1 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 rounded">
-                                  <Filter className="w-4 h-4 text-gray-600 dark:text-gray-300" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="all">All Status</SelectItem>
-                                  <SelectItem value="active">Active</SelectItem>
-                                  <SelectItem value="inactive">Inactive</SelectItem>
-                                  <SelectItem value="no_login">No Login</SelectItem>
-                                  <SelectItem value="just_registered">Just Registered</SelectItem>
-                                  <SelectItem value="verified">Verified</SelectItem>
-                                  <SelectItem value="unverified">Unverified</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-                          </TableHead>
                           <TableHead className="w-[50px]"></TableHead>
                         </TableRow>
                       </TableHeader>
@@ -1828,13 +1788,24 @@ export default function ClientManagement() {
                                       </TooltipContent>
                                     </Tooltip>
                                     <div className="mt-1 space-y-1">
-                                      <Badge 
-                                        variant={activityStatus.variant}
-                                        className={activityStatus.className}
-                                      >
-                                        {activityStatus.icon}
-                                        <span className="ml-1">{activityStatus.label}</span>
-                                      </Badge>
+                                      <div className="flex items-center gap-2 flex-wrap">
+                                        <Badge 
+                                          variant={activityStatus.variant}
+                                          className={activityStatus.className}
+                                        >
+                                          {activityStatus.icon}
+                                          <span className="ml-1">{activityStatus.label}</span>
+                                        </Badge>
+                                        <Badge
+                                          variant={client.isVerified ? "default" : "secondary"}
+                                          className={client.isVerified 
+                                            ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100 text-xs" 
+                                            : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100 text-xs"
+                                          }
+                                        >
+                                          {client.isVerified ? "Verified" : "Pending"}
+                                        </Badge>
+                                      </div>
                                       {client.lastLoginAt ? (
                                         <div className="text-xs text-gray-500 dark:text-gray-400">
                                           Last: {formatIndianDateTime(client.lastLoginAt)}
@@ -2267,14 +2238,7 @@ export default function ClientManagement() {
                                   </TooltipContent>
                                 </Tooltip>
                               </TableCell>
-                              <TableCell>
-                                <Badge 
-                                  variant={client.isVerified ? "default" : "destructive"}
-                                  className={client.isVerified ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100" : ""}
-                                >
-                                  {client.isVerified ? "Verified" : "Pending"}
-                                </Badge>
-                              </TableCell>
+
                               <TableCell>
                                 <DropdownMenu>
                                   <DropdownMenuTrigger asChild>
