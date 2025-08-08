@@ -2257,12 +2257,28 @@ export default function ClientManagement() {
                                   <TooltipContent>
                                     <div className="max-w-xs">
                                       <div className="space-y-1">
+                                        <div className="text-sm"><strong>Location Details:</strong></div>
                                         <div className="text-sm"><strong>Full Address:</strong> {(client as any).address}</div>
                                         <div className="text-sm"><strong>District:</strong> {client.district}</div>
                                         <div className="text-sm"><strong>State:</strong> {client.state}</div>
                                         {(client as any).pincode && (
                                           <div className="text-sm"><strong>PIN Code:</strong> {(client as any).pincode}</div>
                                         )}
+                                        <div className="flex items-center gap-1 mt-2">
+                                          <Button
+                                            size="sm"
+                                            variant="ghost"
+                                            className="h-6 w-6 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              const fullAddress = `${client.firstName} ${client.lastName}\n${(client as any).address}, ${client.district}, ${client.state}${(client as any).pincode ? `, PIN: ${(client as any).pincode}` : ''}`;
+                                              navigator.clipboard.writeText(fullAddress);
+                                            }}
+                                            title="Copy Address with Name"
+                                          >
+                                            <Copy className="w-3 h-3" />
+                                          </Button>
+                                        </div>
                                       </div>
                                     </div>
                                   </TooltipContent>
