@@ -1097,11 +1097,14 @@ export default function ClientManagement() {
                                   <div className="text-sm space-y-1 cursor-pointer">
                                     {(client as any).address ? (
                                       <div>
-                                        <div className="font-medium text-gray-600 dark:text-gray-400 text-xs">Address:</div>
+                                        <div className="text-gray-700 dark:text-gray-300 text-sm font-bold">
+                                          {client.district}, {client.state}
+                                        </div>
+                                        <div className="font-medium text-gray-600 dark:text-gray-400 text-xs mt-1">Address:</div>
                                         <div className="text-gray-900 dark:text-white text-xs">
                                           {(client as any).address}
                                         </div>
-                                        <div className="text-gray-700 dark:text-gray-300 text-sm font-semibold">
+                                        <div className="text-gray-700 dark:text-gray-300 text-xs">
                                           {client.district}, {client.state}
                                         </div>
                                         {(client as any).pincode && (
@@ -2073,11 +2076,14 @@ export default function ClientManagement() {
                                 <div className="text-sm space-y-1">
                                   {(client as any).address ? (
                                     <div>
-                                      <div className="font-medium text-gray-600 dark:text-gray-400 text-xs">Address:</div>
+                                      <div className="text-gray-700 dark:text-gray-300 text-sm font-bold">
+                                        {client.district}, {client.state}
+                                      </div>
+                                      <div className="font-medium text-gray-600 dark:text-gray-400 text-xs mt-1">Address:</div>
                                       <div className="text-gray-900 dark:text-white text-xs">
                                         {(client as any).address}
                                       </div>
-                                      <div className="text-gray-700 dark:text-gray-300 text-sm font-semibold">
+                                      <div className="text-gray-700 dark:text-gray-300 text-xs">
                                         {client.district}, {client.state}
                                       </div>
                                       {(client as any).pincode && (
