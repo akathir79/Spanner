@@ -800,6 +800,26 @@ export function AuthModal({ isOpen, onClose, mode, initialTab, onSwitchToSignup 
   };
 
   const handleClientSignup = async (data: z.infer<typeof clientSignupSchema>) => {
+    // Check mobile availability before proceeding
+    if (clientMobileAvailability === "not-available") {
+      toast({
+        title: "Mobile Number Not Available",
+        description: "This mobile number is already registered. Please use a different number.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Check email availability before proceeding (if email is provided)
+    if (data.email && clientEmailAvailability === "not-available") {
+      toast({
+        title: "Email Not Available",
+        description: "This email address is already registered. Please use a different email.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const { termsAccepted, districtId, ...signupData } = data;
     
     // Convert districtId to district name
@@ -845,6 +865,36 @@ export function AuthModal({ isOpen, onClose, mode, initialTab, onSwitchToSignup 
       toast({
         title: "Aadhaar Verification Required",
         description: "Please verify your Aadhaar number before submitting the application.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Check mobile availability before proceeding
+    if (workerMobileAvailability === "not-available") {
+      toast({
+        title: "Mobile Number Not Available",
+        description: "This mobile number is already registered. Please use a different number.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Check email availability before proceeding (if email is provided)
+    if (data.email && workerEmailAvailability === "not-available") {
+      toast({
+        title: "Email Not Available",
+        description: "This email address is already registered. Please use a different email.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Check Aadhaar availability before proceeding
+    if (workerAadhaarAvailability === "not-available") {
+      toast({
+        title: "Aadhaar Number Not Available",
+        description: "This Aadhaar number is already registered. Please verify your Aadhaar number is correct.",
         variant: "destructive",
       });
       return;
