@@ -603,7 +603,10 @@ export default function AdminDashboard() {
           
           {/* Total Admins Card - Only for Super Admin */}
           {user?.role === "super_admin" && (
-            <Card>
+            <Card 
+              className="cursor-pointer transition-all hover:shadow-md border-2 hover:border-orange-200"
+              onClick={() => setLocation("/admin/admins")}
+            >
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
