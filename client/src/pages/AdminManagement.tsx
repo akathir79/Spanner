@@ -583,6 +583,30 @@ export default function AdminManagement() {
     }
   };
 
+  const handleSendSMS = (admin: User) => {
+    // Handle SMS functionality
+    toast({
+      title: "SMS Feature",
+      description: `SMS will be sent to ${admin.firstName} ${admin.lastName} (${admin.mobile})`,
+    });
+  };
+
+  const handleVerifyUser = (admin: User) => {
+    // Handle user verification
+    toast({
+      title: "Verify User",
+      description: `Verification status updated for ${admin.firstName} ${admin.lastName}`,
+    });
+  };
+
+  const handleSuspendUser = (admin: User) => {
+    // Handle user suspension
+    toast({
+      title: "Suspend User",
+      description: `${admin.firstName} ${admin.lastName} has been suspended`,
+    });
+  };
+
   const copyToClipboard = (text: string, type: string) => {
     navigator.clipboard.writeText(text).then(() => {
       toast({
@@ -1054,36 +1078,43 @@ export default function AdminManagement() {
                                         <Eye className="w-4 h-4 mr-2" />
                                         View Details
                                       </DropdownMenuItem>
-                                      <DropdownMenuItem onClick={() => handleEditUser(admin)}>
-                                        <Edit className="w-4 h-4 mr-2" />
-                                        Edit Admin
-                                      </DropdownMenuItem>
                                       <DropdownMenuSub>
                                         <DropdownMenuSubTrigger>
                                           <MessageSquare className="w-4 h-4 mr-2" />
-                                          Contact
+                                          Send Message
                                         </DropdownMenuSubTrigger>
                                         <DropdownMenuSubContent>
-                                          <DropdownMenuItem onClick={() => handleCallAdmin(admin)}>
-                                            <Phone className="w-4 h-4 mr-2" />
-                                            Call Admin
-                                          </DropdownMenuItem>
                                           <DropdownMenuItem onClick={() => handleWhatsAppAdmin(admin)}>
-                                            <MessageCircle className="w-4 h-4 mr-2" />
-                                            WhatsApp
+                                            <MessageCircle className="w-4 h-4 mr-2 text-green-600" />
+                                            <span className="text-green-600">WhatsApp</span>
                                           </DropdownMenuItem>
+                                          <DropdownMenuItem onClick={() => handleSendSMS(admin)}>
+                                            <Square className="w-4 h-4 mr-2 text-blue-600" />
+                                            <span className="text-blue-600">SMS</span>
+                                          </DropdownMenuItem>
+                                          {admin.email && (
+                                            <DropdownMenuItem onClick={() => window.location.href = `mailto:${admin.email}`}>
+                                              <Mail className="w-4 h-4 mr-2 text-red-600" />
+                                              <span className="text-red-600">Email</span>
+                                            </DropdownMenuItem>
+                                          )}
                                           <DropdownMenuItem onClick={() => handleSendMessage(admin)}>
-                                            <Send className="w-4 h-4 mr-2" />
-                                            Send Message
+                                            <MessageSquare className="w-4 h-4 mr-2 text-purple-600" />
+                                            <span className="text-purple-600">Message</span>
                                           </DropdownMenuItem>
                                         </DropdownMenuSubContent>
                                       </DropdownMenuSub>
-                                      <DropdownMenuItem 
-                                        onClick={() => handleDeleteUser(admin)}
-                                        className="text-red-600 dark:text-red-400"
-                                      >
-                                        <Trash2 className="w-4 h-4 mr-2" />
-                                        Delete Admin
+                                      <DropdownMenuItem onClick={() => handleVerifyUser(admin)}>
+                                        <CheckCircle className="w-4 h-4 mr-2 text-green-600" />
+                                        <span className="text-green-600">Verify User</span>
+                                      </DropdownMenuItem>
+                                      <DropdownMenuItem onClick={() => handleSuspendUser(admin)}>
+                                        <XCircle className="w-4 h-4 mr-2 text-red-600" />
+                                        <span className="text-red-600">Suspend User</span>
+                                      </DropdownMenuItem>
+                                      <DropdownMenuItem onClick={() => handleDeleteUser(admin)}>
+                                        <Trash2 className="w-4 h-4 mr-2 text-red-600" />
+                                        <span className="text-red-600">Delete User</span>
                                       </DropdownMenuItem>
                                     </DropdownMenuContent>
                                   </DropdownMenu>
@@ -1507,36 +1538,43 @@ export default function AdminManagement() {
                                         <Eye className="w-4 h-4 mr-2" />
                                         View Details
                                       </DropdownMenuItem>
-                                      <DropdownMenuItem onClick={() => handleEditUser(admin)}>
-                                        <Edit className="w-4 h-4 mr-2" />
-                                        Edit Admin
-                                      </DropdownMenuItem>
                                       <DropdownMenuSub>
                                         <DropdownMenuSubTrigger>
                                           <MessageSquare className="w-4 h-4 mr-2" />
-                                          Contact
+                                          Send Message
                                         </DropdownMenuSubTrigger>
                                         <DropdownMenuSubContent>
-                                          <DropdownMenuItem onClick={() => handleCallAdmin(admin)}>
-                                            <Phone className="w-4 h-4 mr-2" />
-                                            Call Admin
-                                          </DropdownMenuItem>
                                           <DropdownMenuItem onClick={() => handleWhatsAppAdmin(admin)}>
-                                            <MessageCircle className="w-4 h-4 mr-2" />
-                                            WhatsApp
+                                            <MessageCircle className="w-4 h-4 mr-2 text-green-600" />
+                                            <span className="text-green-600">WhatsApp</span>
                                           </DropdownMenuItem>
+                                          <DropdownMenuItem onClick={() => handleSendSMS(admin)}>
+                                            <Square className="w-4 h-4 mr-2 text-blue-600" />
+                                            <span className="text-blue-600">SMS</span>
+                                          </DropdownMenuItem>
+                                          {admin.email && (
+                                            <DropdownMenuItem onClick={() => window.location.href = `mailto:${admin.email}`}>
+                                              <Mail className="w-4 h-4 mr-2 text-red-600" />
+                                              <span className="text-red-600">Email</span>
+                                            </DropdownMenuItem>
+                                          )}
                                           <DropdownMenuItem onClick={() => handleSendMessage(admin)}>
-                                            <Send className="w-4 h-4 mr-2" />
-                                            Send Message
+                                            <MessageSquare className="w-4 h-4 mr-2 text-purple-600" />
+                                            <span className="text-purple-600">Message</span>
                                           </DropdownMenuItem>
                                         </DropdownMenuSubContent>
                                       </DropdownMenuSub>
-                                      <DropdownMenuItem 
-                                        onClick={() => handleDeleteUser(admin)}
-                                        className="text-red-600 dark:text-red-400"
-                                      >
-                                        <Trash2 className="w-4 h-4 mr-2" />
-                                        Delete Admin
+                                      <DropdownMenuItem onClick={() => handleVerifyUser(admin)}>
+                                        <CheckCircle className="w-4 h-4 mr-2 text-green-600" />
+                                        <span className="text-green-600">Verify User</span>
+                                      </DropdownMenuItem>
+                                      <DropdownMenuItem onClick={() => handleSuspendUser(admin)}>
+                                        <XCircle className="w-4 h-4 mr-2 text-red-600" />
+                                        <span className="text-red-600">Suspend User</span>
+                                      </DropdownMenuItem>
+                                      <DropdownMenuItem onClick={() => handleDeleteUser(admin)}>
+                                        <Trash2 className="w-4 h-4 mr-2 text-red-600" />
+                                        <span className="text-red-600">Delete User</span>
                                       </DropdownMenuItem>
                                     </DropdownMenuContent>
                                   </DropdownMenu>
