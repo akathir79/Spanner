@@ -493,9 +493,7 @@ export default function AdminManagement() {
     if (!userToDelete) return;
     
     try {
-      await apiRequest(`/api/admin/users/${userToDelete.id}`, {
-        method: "DELETE"
-      });
+      await apiRequest("DELETE", `/api/admin/delete-user/${userToDelete.id}`);
       
       queryClient.invalidateQueries({
         queryKey: ["/api/admin/admins"]
