@@ -799,27 +799,34 @@ export default function StateBasedManagementTemplate({ config }: StateBasedManag
                   </p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                   {districtsForState.map((district) => (
-                    <Card
+                    <Button
                       key={district}
-                      className="cursor-pointer hover:shadow-md transition-shadow"
+                      variant="outline"
                       onClick={() => handleDistrictClick(district)}
+                      disabled={loadingState === district}
+                      className={`h-12 justify-start font-medium hover:bg-blue-50 hover:border-blue-200 dark:hover:bg-blue-900/20 relative pr-10 ${
+                        loadingState === district ? 'opacity-75' : ''
+                      }`}
                     >
-                      <CardContent className="p-4">
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm font-medium text-gray-900 dark:text-white">
-                            {district}
-                          </span>
-                          <Badge
-                            variant="secondary"
-                            className={`${config.stateItemBadgeColor || 'bg-blue-500'} text-white`}
+                      {loadingState === district ? (
+                        <div className="flex items-center">
+                          <div className="inline-block w-3 h-3 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mr-2"></div>
+                          <span className="truncate">Loading...</span>
+                        </div>
+                      ) : (
+                        <>
+                          <span className="truncate">{district}</span>
+                          <Badge 
+                            variant="secondary" 
+                            className={`absolute right-2 top-1/2 -translate-y-1/2 h-5 px-2 min-w-[20px] rounded-md flex items-center justify-center text-xs ${config.stateItemBadgeColor || 'bg-green-500'} text-white hover:${config.stateItemBadgeColor || 'bg-green-600'}`}
                           >
                             {config.getItemCountForDistrict(district, allItems)}
                           </Badge>
-                        </div>
-                      </CardContent>
-                    </Card>
+                        </>
+                      )}
+                    </Button>
                   ))}
                 </div>
               </div>
