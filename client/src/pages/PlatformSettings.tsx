@@ -207,38 +207,19 @@ export default function PlatformSettings() {
                 {serviceCountsLoading ? (
                   <div className="text-xs text-muted-foreground">Loading service data...</div>
                 ) : serviceCounts ? (
-                  <div className="space-y-2">
-                    <div className="space-y-1">
-                      <div className="flex justify-between text-xs">
-                        <span>Unique Services:</span>
-                        <Badge variant="outline" className="text-xs">{serviceCounts.uniqueServices}</Badge>
-                      </div>
-                      <div className="flex justify-between text-xs">
-                        <span>Total Entries:</span>
-                        <Badge variant="outline" className="text-xs">{serviceCounts.totalServices}</Badge>
-                      </div>
-                      <div className="flex justify-between text-xs font-medium pt-1 border-t">
-                        <span>States Covered:</span>
-                        <Badge variant="secondary" className="text-xs">{serviceCounts.statesWithServices}</Badge>
-                      </div>
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-xs">
+                      <span>Unique Services:</span>
+                      <Badge variant="outline" className="text-xs">{serviceCounts.uniqueServices}</Badge>
                     </div>
-                    {serviceCounts.serviceNames && (
-                      <div className="pt-2 border-t">
-                        <div className="text-xs font-medium mb-2">Available Services:</div>
-                        <div className="flex flex-wrap gap-1 max-h-20 overflow-y-auto">
-                          {serviceCounts.serviceNames.slice(0, 8).map((service: string, index: number) => (
-                            <Badge key={index} variant="outline" className="text-xs px-1 py-0">
-                              {service}
-                            </Badge>
-                          ))}
-                          {serviceCounts.serviceNames.length > 8 && (
-                            <Badge variant="secondary" className="text-xs px-1 py-0">
-                              +{serviceCounts.serviceNames.length - 8} more
-                            </Badge>
-                          )}
-                        </div>
-                      </div>
-                    )}
+                    <div className="flex justify-between text-xs">
+                      <span>Total Entries:</span>
+                      <Badge variant="outline" className="text-xs">{serviceCounts.totalServices}</Badge>
+                    </div>
+                    <div className="flex justify-between text-xs font-medium pt-1 border-t">
+                      <span>States Covered:</span>
+                      <Badge variant="secondary" className="text-xs">{serviceCounts.statesWithServices}</Badge>
+                    </div>
                   </div>
                 ) : (
                   <div className="text-xs text-muted-foreground">Unable to load service data</div>

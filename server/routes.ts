@@ -1177,18 +1177,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let totalServices = 0;
       let statesWithServices = 0;
       const uniqueServices = new Set<string>();
-      const serviceNames: string[] = [];
       
       data.states.forEach(stateObj => {
         if (stateObj.serviceTypes && stateObj.serviceTypes.length > 0) {
           statesWithServices++;
           stateObj.serviceTypes.forEach(service => {
-            const cleanService = service.trim();
-            const lowerService = cleanService.toLowerCase();
-            if (!uniqueServices.has(lowerService)) {
-              uniqueServices.add(lowerService);
-              serviceNames.push(cleanService);
-            }
+            uniqueServices.add(service.toLowerCase().trim());
           });
           totalServices += stateObj.serviceTypes.length;
         }
@@ -1197,8 +1191,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({
         uniqueServices: uniqueServices.size,
         totalServices: totalServices,
-        statesWithServices: statesWithServices,
-        serviceNames: serviceNames.sort()
+        statesWithServices: statesWithServices
       });
     } catch (error) {
       console.error("Get service counts error:", error);
