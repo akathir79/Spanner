@@ -13,7 +13,7 @@ import { z } from "zod";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/components/LanguageProvider";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { UserPlus, LogIn, Smartphone, Info, MapPin, Upload, User, X, Plus, CheckCircle, AlertTriangle, Clock, ChevronDown, CreditCard, Shield } from "lucide-react";
+import { UserPlus, LogIn, Smartphone, Info, MapPin, Upload, User, X, Plus, CheckCircle, AlertTriangle, Clock, ChevronDown, CreditCard } from "lucide-react";
 import BankDetailsModal from "@/components/BankDetailsModal";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -2593,123 +2593,6 @@ export function AuthModal({ isOpen, onClose, mode, initialTab, onSwitchToSignup 
                       {workerForm.formState.errors.bio.message}
                     </p>
                   )}
-                </div>
-
-                <div>
-                  <Label htmlFor="aadhaar">Aadhaar Number *</Label>
-                  <div className="space-y-2">
-                    <div className="flex gap-2">
-                      <div className="relative flex-1">
-                        <Input
-                          id="aadhaar"
-                          placeholder="XXXX XXXX XXXX"
-                          maxLength={12}
-                          {...workerForm.register("aadhaarNumber")}
-                          disabled={aadhaarVerificationStep === "verified"}
-                          className={aadhaarVerificationStep === "verified" ? "bg-green-50 border-green-200" : ""}
-                        />
-                        {workerAadhaarAvailability && (
-                          <div className="absolute right-2 top-2.5 flex items-center">
-                            {workerAadhaarAvailability === "checking" && (
-                              <div className="w-4 h-4 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin"></div>
-                            )}
-                            {workerAadhaarAvailability === "available" && (
-                              <div className="flex items-center text-green-600">
-                                <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                </svg>
-                                <span className="text-xs">Available</span>
-                              </div>
-                            )}
-                            {workerAadhaarAvailability === "not-available" && (
-                              <div className="flex items-center text-red-600">
-                                <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                                </svg>
-                                <span className="text-xs">Not Available</span>
-                              </div>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                      {aadhaarVerificationStep === "input" && (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={handleAadhaarVerificationRequest}
-                          disabled={!workerForm.watch("aadhaarNumber") || workerForm.watch("aadhaarNumber").length !== 12}
-                        >
-                          Verify
-                        </Button>
-                      )}
-                      {aadhaarVerificationStep === "verified" && (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          className="bg-green-100 text-green-700 border-green-200"
-                          disabled
-                        >
-                          <CheckCircle className="h-4 w-4 mr-1" />
-                          Verified
-                        </Button>
-                      )}
-                    </div>
-
-                    {/* Aadhaar OTP Verification */}
-                    {aadhaarVerificationStep === "verify" && (
-                      <div className="space-y-2 border rounded-md p-3 bg-blue-50">
-                        <div className="flex items-center gap-2 text-blue-700">
-                          <Shield className="h-4 w-4" />
-                          <span className="font-medium text-sm">Aadhaar OTP Verification</span>
-                        </div>
-                        <p className="text-xs text-blue-600">
-                          Enter the OTP sent to your Aadhaar-registered mobile number
-                        </p>
-                        <div className="flex gap-2">
-                          <Input
-                            placeholder="Enter 6-digit OTP"
-                            value={aadhaarOtp}
-                            onChange={(e) => setAadhaarOtp(e.target.value)}
-                            maxLength={6}
-                            className="text-center tracking-widest"
-                          />
-                          <Button
-                            type="button"
-                            size="sm"
-                            onClick={handleAadhaarOtpVerification}
-                            disabled={aadhaarOtp.length !== 6}
-                          >
-                            Verify OTP
-                          </Button>
-                        </div>
-                        {generatedAadhaarOtp && (
-                          <div className="bg-yellow-50 border border-yellow-200 rounded p-2">
-                            <p className="text-xs text-yellow-800">
-                              <strong>Development Mode:</strong> OTP is {generatedAadhaarOtp}
-                            </p>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              className="text-xs p-1 h-auto text-yellow-700 hover:text-yellow-900"
-                              onClick={() => setAadhaarOtp(generatedAadhaarOtp)}
-                            >
-                              Click to paste OTP
-                            </Button>
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    <p className="text-xs text-muted-foreground mt-1">Required for identity verification</p>
-                    {workerForm.formState.errors.aadhaarNumber && (
-                      <p className="text-sm text-destructive mt-1">
-                        {workerForm.formState.errors.aadhaarNumber.message}
-                      </p>
-                    )}
-                  </div>
                 </div>
 
                 <div>
