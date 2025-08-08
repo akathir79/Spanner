@@ -13,11 +13,9 @@ import {
   Settings,
   ArrowLeft,
   Shield,
-  DollarSign,
   Activity,
   Database,
   Users,
-  Briefcase,
   Bell,
   Lock,
   Globe,
@@ -25,8 +23,7 @@ import {
   CheckCircle,
   AlertTriangle,
   User,
-  FileText,
-  Save
+  FileText
 } from "lucide-react";
 
 export default function PlatformSettings() {
@@ -34,8 +31,6 @@ export default function PlatformSettings() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   
-  const [platformFee, setPlatformFee] = useState("15");
-  const [paymentProcessingFee, setPaymentProcessingFee] = useState("2.5");
   const [isLoading, setIsLoading] = useState(false);
 
   // Only super admins can access platform settings
@@ -58,26 +53,7 @@ export default function PlatformSettings() {
     );
   }
 
-  const handleSaveSettings = async () => {
-    setIsLoading(true);
-    try {
-      // Simulate API call to save settings
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      toast({
-        title: "Settings Updated",
-        description: "Platform settings have been updated successfully.",
-      });
-    } catch (error) {
-      toast({
-        title: "Update Failed",
-        description: "Failed to update platform settings.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+
 
   return (
     <div className="min-h-screen bg-muted/30 pt-20 pb-8">
@@ -99,86 +75,71 @@ export default function PlatformSettings() {
               Platform Settings
             </h1>
             <p className="text-muted-foreground">
-              Configure platform-wide settings and commission structure
+              Configure platform-wide settings and manage super admin tools
             </p>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left Column - Commission Structure */}
-          <div className="lg:col-span-2 space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <DollarSign className="w-5 h-5 text-green-600" />
-                  Commission Structure
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="platform-fee">Platform Fee (%)</Label>
-                    <Input
-                      id="platform-fee"
-                      type="number"
-                      value={platformFee}
-                      onChange={(e) => setPlatformFee(e.target.value)}
-                      min="0"
-                      max="50"
-                      step="0.1"
-                    />
-                    <p className="text-sm text-muted-foreground">
-                      Current platform commission rate
-                    </p>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="payment-fee">Payment Processing Fee (%)</Label>
-                    <Input
-                      id="payment-fee"
-                      type="number"
-                      value={paymentProcessingFee}
-                      onChange={(e) => setPaymentProcessingFee(e.target.value)}
-                      min="0"
-                      max="10"
-                      step="0.1"
-                    />
-                    <p className="text-sm text-muted-foreground">
-                      Gateway processing charges
-                    </p>
-                  </div>
-                </div>
-                
-                <div className="bg-muted/50 p-4 rounded-lg">
-                  <h4 className="font-medium mb-2">Commission Breakdown</h4>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span>Worker receives:</span>
-                      <span className="font-medium text-green-600">
-                        {100 - parseFloat(platformFee) - parseFloat(paymentProcessingFee)}%
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Platform fee:</span>
-                      <span className="font-medium">{platformFee}%</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Payment processing:</span>
-                      <span className="font-medium">{paymentProcessingFee}%</span>
-                    </div>
-                  </div>
-                </div>
-                
-                <Button 
-                  onClick={handleSaveSettings}
-                  disabled={isLoading}
-                  className="flex items-center gap-2"
-                >
-                  <Save className="w-4 h-4" />
-                  {isLoading ? "Saving..." : "Save Settings"}
-                </Button>
+        {/* Super Admin Tools Cards */}
+        <div className="mb-8">
+          <h2 className="text-2xl font-semibold mb-6 flex items-center gap-2">
+            <Shield className="w-6 h-6 text-orange-600" />
+            Super Admin Tools
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+              <CardContent className="p-6 text-center">
+                <User className="w-12 h-12 mx-auto mb-4 text-blue-600" />
+                <h3 className="font-semibold mb-2">Create Admin User</h3>
+                <p className="text-sm text-muted-foreground">Add new admin accounts for district management</p>
               </CardContent>
             </Card>
+
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+              <CardContent className="p-6 text-center">
+                <FileText className="w-12 h-12 mx-auto mb-4 text-green-600" />
+                <h3 className="font-semibold mb-2">District Manager</h3>
+                <p className="text-sm text-muted-foreground">Manage district-wise operations and coverage</p>
+              </CardContent>
+            </Card>
+
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+              <CardContent className="p-6 text-center">
+                <Lock className="w-12 h-12 mx-auto mb-4 text-red-600" />
+                <h3 className="font-semibold mb-2">Security Settings</h3>
+                <p className="text-sm text-muted-foreground">Configure authentication and access controls</p>
+              </CardContent>
+            </Card>
+
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+              <CardContent className="p-6 text-center">
+                <Database className="w-12 h-12 mx-auto mb-4 text-purple-600" />
+                <h3 className="font-semibold mb-2">Database Management</h3>
+                <p className="text-sm text-muted-foreground">Backup, restore, and maintain data integrity</p>
+              </CardContent>
+            </Card>
+
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+              <CardContent className="p-6 text-center">
+                <Zap className="w-12 h-12 mx-auto mb-4 text-yellow-600" />
+                <h3 className="font-semibold mb-2">System Configuration</h3>
+                <p className="text-sm text-muted-foreground">Platform settings and performance tuning</p>
+              </CardContent>
+            </Card>
+
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+              <CardContent className="p-6 text-center">
+                <Globe className="w-12 h-12 mx-auto mb-4 text-indigo-600" />
+                <h3 className="font-semibold mb-2">Advanced Analytics</h3>
+                <p className="text-sm text-muted-foreground">Detailed platform metrics and insights</p>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Left Column - Platform Status */}
+          <div className="space-y-6">
 
             {/* Platform Status */}
             <Card>
@@ -218,54 +179,15 @@ export default function PlatformSettings() {
                     </Badge>
                   </div>
                   <p className="text-sm text-green-700">
-                    All platform services are running normally across Tamil Nadu districts.
+                    All platform services are running normally across Indian districts.
                   </p>
                 </div>
               </CardContent>
             </Card>
           </div>
 
-          {/* Right Column - Super Admin Tools */}
+          {/* Right Column - System Information */}
           <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Shield className="w-5 h-5 text-orange-600" />
-                  Super Admin Tools
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <Button variant="outline" className="w-full justify-start gap-2">
-                  <User className="w-4 h-4" />
-                  Create Admin User
-                </Button>
-                
-                <Button variant="outline" className="w-full justify-start gap-2">
-                  <FileText className="w-4 h-4" />
-                  District Manager
-                </Button>
-                
-                <Button variant="outline" className="w-full justify-start gap-2">
-                  <Lock className="w-4 h-4" />
-                  Security Settings
-                </Button>
-                
-                <Button variant="outline" className="w-full justify-start gap-2">
-                  <Database className="w-4 h-4" />
-                  Database Management
-                </Button>
-                
-                <Button variant="outline" className="w-full justify-start gap-2">
-                  <Zap className="w-4 h-4" />
-                  System Configuration
-                </Button>
-                
-                <Button variant="outline" className="w-full justify-start gap-2">
-                  <Globe className="w-4 h-4" />
-                  Advanced Analytics
-                </Button>
-              </CardContent>
-            </Card>
 
             {/* Platform Statistics */}
             <Card>
