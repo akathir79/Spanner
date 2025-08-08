@@ -1,12 +1,87 @@
-import React from "react";
-import StateBasedManagementTemplate from "@/components/StateBasedManagementTemplate";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Eye, MessageSquare, CheckCircle, XCircle, Trash2, Edit, Smartphone, Mail, Calendar, Users } from "lucide-react";
-import { FaWhatsapp } from "react-icons/fa";
+import { useState, useMemo, useEffect, useRef } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { ArrowLeft, Phone, Mail, Calendar, Search, X, Menu, Loader2, MessageCircle, Filter, Eye, MessageSquare, CheckCircle, XCircle, Trash2, Edit, Smartphone, Users, Copy, Square, MessageSquareText, CreditCard, ArrowRightLeft, History, DollarSign } from "lucide-react";
+import { FaWhatsapp } from "react-icons/fa";
+import { useLocation } from "wouter";
+import { useAuth } from "@/hooks/useAuth";
+import statesDistrictsData from "@/../../shared/states-districts.json";
 
-// Helper function to get activity status
+// Types
+interface User {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email?: string;
+  mobile: string;
+  role: string;
+  isVerified: boolean;
+  createdAt: string;
+  updatedAt?: string;
+  lastLoginAt?: string;
+  district?: string;
+  state?: string;
+  profilePicture?: string;
+}
+
+interface StateData {
+  state: string;
+  districts: string[];
+}
+
+// Helper functions
+function formatIndianDateTime(dateString: string | Date): string {
+  if (!dateString) return "Not available";
+  try {
+    const date = typeof dateString === 'string' ? new Date(dateString) : dateString;
+    if (isNaN(date.getTime())) return "Invalid date";
+    
+    const istFormatter = new Intl.DateTimeFormat('en-IN', {
+      timeZone: 'Asia/Kolkata',
+      year: 'numeric',
+      month: 'short',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    });
+    
+    return istFormatter.format(date) + " IST";
+  } catch (error) {
+    console.error("Date formatting error:", error);
+    return "Invalid date";
+  }
+}
+
+function getMemberSince(registrationDate: string): string {
+  const now = new Date();
+  const regDate = new Date(registrationDate);
+  const diffTime = Math.abs(now.getTime() - regDate.getTime());
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  
+  if (diffDays < 30) {
+    return `${diffDays} days`;
+  } else if (diffDays < 365) {
+    const months = Math.floor(diffDays / 30);
+    return `${months} month${months > 1 ? 's' : ''}`;
+  } else {
+    const years = Math.floor(diffDays / 365);
+    const remainingMonths = Math.floor((diffDays % 365) / 30);
+    if (remainingMonths === 0) {
+      return `${years} year${years > 1 ? 's' : ''}`;
+    }
+    return `${years} year${years > 1 ? 's' : ''}, ${remainingMonths} month${remainingMonths > 1 ? 's' : ''}`;
+  }
+}
+
 function getActivityStatus(lastLoginAt?: string, createdAt?: string) {
   if (!lastLoginAt) {
     if (createdAt) {
@@ -24,7 +99,7 @@ function getActivityStatus(lastLoginAt?: string, createdAt?: string) {
       }
     }
     return {
-      label: "Never Logged In",
+      label: "No Login",
       variant: "secondary" as const,
       icon: <XCircle className="w-3 h-3" />,
       className: "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-100"
@@ -35,7 +110,28 @@ function getActivityStatus(lastLoginAt?: string, createdAt?: string) {
   const now = new Date();
   const daysSinceLogin = Math.floor((now.getTime() - lastLogin.getTime()) / (1000 * 60 * 60 * 24));
 
-  if (daysSinceLogin > 15) {
+  if (daysSinceLogin === 0) {
+    return {
+      label: "Active Today",
+      variant: "default" as const,
+      icon: <CheckCircle className="w-3 h-3" />,
+      className: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100"
+    };
+  } else if (daysSinceLogin <= 7) {
+    return {
+      label: "Active",
+      variant: "default" as const,
+      icon: <CheckCircle className="w-3 h-3" />,
+      className: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100"
+    };
+  } else if (daysSinceLogin <= 30) {
+    return {
+      label: "Less Active",
+      variant: "outline" as const,
+      icon: <Calendar className="w-3 h-3" />,
+      className: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100"
+    };
+  } else {
     return {
       label: "Inactive",
       variant: "destructive" as const,
@@ -43,273 +139,234 @@ function getActivityStatus(lastLoginAt?: string, createdAt?: string) {
       className: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100"
     };
   }
-
-  return {
-    label: "Active",
-    variant: "default" as const,
-    icon: <CheckCircle className="w-3 h-3" />,
-    className: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100"
-  };
 }
 
 export default function WorkerManagement() {
+  const { user } = useAuth();
   const { toast } = useToast();
+  const [location, setLocation] = useLocation();
+  
+  // Refs for animations
+  const totalWorkerButtonRef = useRef<HTMLButtonElement>(null);
 
-  // Action handlers
-  const handleViewDetails = (worker: any) => {
-    console.log("View worker details:", worker);
-    // Implement view details logic
+  // State for view management
+  const [view, setView] = useState<"total" | "districts" | "district">("total");
+  const [selectedState, setSelectedState] = useState<string | null>(null);
+  const [selectedDistrict, setSelectedDistrict] = useState<string | null>(null);
+  const [loadingState, setLoadingState] = useState<string | null>(null);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
+  // Search and filter state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchFilter, setSearchFilter] = useState<"all" | "id" | "name" | "email" | "mobile" | "location">("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive" | "no_login" | "just_registered" | "verified" | "unverified">("all");
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [districtCurrentPage, setDistrictCurrentPage] = useState(1);
+  const pageSize = 50;
+  const districtPageSize = 50;
+
+  // Data fetching
+  const { data: allWorkers = [], isLoading } = useQuery<User[]>({
+    queryKey: ["/api/admin/users"],
+  });
+
+  // Get states from districts data
+  const states = useMemo(() => {
+    if (!statesDistrictsData?.states || !Array.isArray(statesDistrictsData.states)) return [];
+    return statesDistrictsData.states.map((state: any) => state.state).sort();
+  }, []);
+
+  // Get districts for selected state
+  const districts = useMemo(() => {
+    if (!selectedState || !statesDistrictsData?.states) return [];
+    const stateData = statesDistrictsData.states.find((state: any) => state.state === selectedState);
+    return stateData ? stateData.districts.sort() : [];
+  }, [selectedState]);
+
+  // Filter workers by role (only workers)
+  const workers = useMemo(() => {
+    return allWorkers.filter((user: User) => user.role === "worker");
+  }, [allWorkers]);
+
+  // Get worker count for each state from database
+  const getWorkerCountForState = (stateName: string) => {
+    return workers.filter((worker: User) => worker.state === stateName).length;
   };
 
-  const handleSendMessage = (worker: any) => {
-    console.log("Send message to worker:", worker);
-    // Implement send message logic
+  // Get worker count for each district from database
+  const getWorkerCountForDistrict = (districtName: string) => {
+    return workers.filter((worker: User) => worker.district === districtName).length;
   };
 
-  const handleSendWhatsApp = (worker: any) => {
-    const phoneNumber = worker.mobile?.replace(/\D/g, '');
-    if (phoneNumber) {
-      const whatsappUrl = `https://wa.me/${phoneNumber}`;
-      window.open(whatsappUrl, '_blank');
+  // Navigation handlers
+  const handleTotalWorkersClick = () => {
+    setView("total");
+    setSelectedState(null);
+    setSelectedDistrict(null);
+    setSearchQuery("");
+    setSearchFilter("all");
+    setCurrentPage(1);
+  };
+
+  const handleStateClick = async (state: string) => {
+    setLoadingState(state);
+    setTimeout(() => {
+      setSelectedState(state);
+      setSelectedDistrict(null);
+      setView("districts");
+      setLoadingState(null);
+    }, 200);
+  };
+
+  const handleDistrictClick = async (district: string) => {
+    setLoadingState(district);
+    setTimeout(() => {
+      setSelectedDistrict(district);
+      setView("district");
+      setLoadingState(null);
+    }, 200);
+  };
+
+  const handleBackClick = () => {
+    if (view === "district") {
+      setView("districts");
+      setSelectedDistrict(null);
+    } else if (view === "districts") {
+      setView("total");
+      setSelectedState(null);
     }
   };
 
-  const handleVerifyWorker = (worker: any) => {
-    console.log("Verify worker:", worker);
-    toast({
-      title: "Worker Verified",
-      description: `${worker.firstName} ${worker.lastName} has been verified.`,
-    });
-  };
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-blue-600" />
+          <p className="text-gray-600 dark:text-gray-400">Loading worker data...</p>
+        </div>
+      </div>
+    );
+  }
 
-  const handleSuspendWorker = (worker: any) => {
-    console.log("Suspend worker:", worker);
-    toast({
-      title: "Worker Suspended",
-      description: `${worker.firstName} ${worker.lastName} has been suspended.`,
-    });
-  };
-
-  const handleDeleteWorker = (worker: any) => {
-    console.log("Delete worker:", worker);
-    toast({
-      title: "Worker Deleted",
-      description: `${worker.firstName} ${worker.lastName} has been deleted.`,
-    });
-  };
-
-  const handleEditWorker = (worker: any) => {
-    console.log("Edit worker:", worker);
-    // Implement edit worker logic
-  };
-
-  const config = {
-    // Page Configuration
-    title: "Worker Management",
-    backUrl: "/admin",
-    totalListLabel: "Total Worker List",
-    totalListBadgeColor: "bg-green-500 hover:bg-green-600",
-    showServicesLevel: true,
-    
-    // API Configuration
-    fetchUrl: "/api/admin/users",
-    itemRole: "worker",
-    
-    // Display Configuration
-    itemDisplayName: (worker: any) => `${worker.firstName} ${worker.lastName}`,
-    itemDescription: (worker: any) => worker.email || "No email provided",
-    getItemCountForState: (state: string, workers: any[]) => 
-      workers.filter(w => w.state === state && w.role === "worker").length,
-    getItemCountForDistrict: (district: string, workers: any[]) => 
-      workers.filter(w => w.district === district && w.role === "worker").length,
-    getItemCountForService: (serviceType: string, workers: any[]) =>
-      workers.filter(w => w.role === "worker" && w.serviceTypes?.includes(serviceType)).length,
-    
-    // Search Configuration
-    searchPlaceholder: "Search workers...",
-    searchFilters: [
-      { value: "all", label: "All Fields" },
-      { value: "id", label: "Worker ID" },
-      { value: "name", label: "Name" },
-      { value: "email", label: "Email" },
-      { value: "mobile", label: "Mobile" },
-      { value: "location", label: "Location" }
-    ],
-    statusFilters: [
-      { value: "all", label: "All Status" },
-      { value: "active", label: "Active" },
-      { value: "inactive", label: "Inactive" },
-      { value: "no_login", label: "Never Logged In" },
-      { value: "just_registered", label: "Just Registered" },
-      { value: "verified", label: "Verified" },
-      { value: "unverified", label: "Unverified" }
-    ],
-    
-    // Table Configuration
-    tableColumns: [
-      {
-        key: "worker",
-        label: "Worker",
-        render: (worker: any) => (
-          <div className="flex items-center gap-3">
-            <Avatar className="h-8 w-8">
-              <AvatarImage src={worker.profilePicture} />
-              <AvatarFallback className="bg-blue-100 text-blue-700 text-xs">
-                {worker.firstName?.[0]}{worker.lastName?.[0]}
-              </AvatarFallback>
-            </Avatar>
-            <div>
-              <div className="font-medium text-gray-900 dark:text-white">
-                {worker.firstName} {worker.lastName}
-              </div>
-              <div className="text-sm text-gray-500 dark:text-gray-400">
-                ID: {worker.id}
-              </div>
-            </div>
+  return (
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      {/* Top Header */}
+      <div className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 fixed top-0 left-0 right-0 z-10">
+        <div className="px-6 py-4">
+          <div className="flex items-center justify-between">
+            <Button 
+              variant="outline" 
+              onClick={() => setLocation("/admin")}
+              className="flex items-center gap-2"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Back to Dashboard
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+              className="flex items-center justify-center w-8 h-8"
+            >
+              <Menu className="w-4 h-4" />
+            </Button>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Worker Management</h1>
           </div>
-        )
-      },
-      {
-        key: "contact",
-        label: "Contact",
-        render: (worker: any) => (
-          <div className="space-y-1">
-            <div className="flex items-center gap-1 text-sm">
-              <Smartphone className="w-3 h-3 text-gray-400" />
-              <span>{worker.mobile}</span>
-            </div>
-            {worker.email && (
-              <div className="flex items-center gap-1 text-sm text-gray-500">
-                <Mail className="w-3 h-3 text-gray-400" />
-                <span className="truncate max-w-[150px]">{worker.email}</span>
-              </div>
-            )}
-          </div>
-        )
-      },
-      {
-        key: "location",
-        label: "Location",
-        render: (worker: any) => (
-          <div>
-            <div className="font-medium text-gray-900 dark:text-white">
-              {worker.district || "Not specified"}
-            </div>
-            <div className="text-sm text-gray-500 dark:text-gray-400">
-              {worker.state || "Not specified"}
-            </div>
-          </div>
-        )
-      },
-      {
-        key: "status",
-        label: "Status",
-        render: (worker: any) => {
-          const activityStatus = getActivityStatus(worker.lastLoginAt, worker.createdAt);
-          return (
-            <div className="space-y-1">
-              <Badge
-                variant={activityStatus.variant}
-                className={`${activityStatus.className} text-xs`}
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="flex h-[calc(100vh-140px)] mt-20">
+        
+        {/* Left Sidebar */}
+        <div className={`${sidebarCollapsed ? 'w-0' : 'w-64'} bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col transition-all duration-300 overflow-hidden`}>
+          <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+            {/* Total Worker List Header */}
+            <button
+              ref={totalWorkerButtonRef}
+              onClick={(e) => {
+                const button = e.currentTarget;
+                button.classList.add('animate-roll-click');
+                setTimeout(() => {
+                  button.classList.remove('animate-roll-click');
+                }, 300);
+                handleTotalWorkersClick();
+              }}
+              onMouseEnter={(e) => {
+                const button = e.currentTarget;
+                if (!button.classList.contains('animate-roll-hover')) {
+                  button.classList.add('animate-roll-hover');
+                }
+              }}
+              onMouseLeave={(e) => {
+                const button = e.currentTarget;
+                button.classList.remove('animate-roll-hover');
+              }}
+              className={`w-full bg-gray-100 dark:bg-gray-700 rounded-lg p-3 text-center font-medium border transition-all duration-300 relative transform-gpu ${
+                view === "total" 
+                  ? 'bg-blue-100 text-blue-900 dark:bg-blue-900 dark:text-blue-100 border-blue-300' 
+                  : 'text-gray-900 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-600'
+              }`}
+            >
+              <span className="pr-8">Total Worker List</span>
+              <Badge 
+                variant="secondary" 
+                className="absolute right-2 top-1/2 -translate-y-1/2 h-5 px-2 min-w-[20px] rounded-md flex items-center justify-center text-xs bg-green-500 text-white hover:bg-green-600"
               >
-                {activityStatus.icon}
-                <span className="ml-1">{activityStatus.label}</span>
+                {workers.length}
               </Badge>
-              <div>
-                <Badge
-                  variant={worker.isVerified ? "default" : "secondary"}
-                  className={worker.isVerified 
-                    ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100 text-xs" 
-                    : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100 text-xs"
-                  }
+            </button>
+          </div>
+          
+          {/* Scrollable States List */}
+          <div className="flex-1 overflow-y-auto">
+            <div className="p-4 space-y-1">
+              {states.map((state) => (
+                <button
+                  key={state}
+                  onClick={() => handleStateClick(state)}
+                  disabled={loadingState === state}
+                  className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors relative ${
+                    selectedState === state
+                      ? 'bg-blue-100 text-blue-900 dark:bg-blue-900 dark:text-blue-100'
+                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                  } ${loadingState === state ? 'opacity-75' : ''}`}
                 >
-                  {worker.isVerified ? "Verified" : "Pending"}
-                </Badge>
-              </div>
+                  {loadingState === state ? (
+                    <div className="flex items-center">
+                      <Loader2 className="w-3 h-3 animate-spin mr-2" />
+                      <span>Loading...</span>
+                    </div>
+                  ) : (
+                    <>
+                      <span className="pr-8">{state}</span>
+                      <Badge 
+                        variant="secondary" 
+                        className="absolute right-2 top-1/2 -translate-y-1/2 h-5 px-2 min-w-[20px] rounded-md flex items-center justify-center text-xs bg-blue-500 text-white hover:bg-blue-600"
+                      >
+                        {getWorkerCountForState(state)}
+                      </Badge>
+                    </>
+                  )}
+                </button>
+              ))}
             </div>
-          );
-        }
-      },
-      {
-        key: "registration",
-        label: "Registered",
-        render: (worker: any) => {
-          const registrationDate = new Date(worker.createdAt);
-          return (
-            <div className="text-sm">
-              <div className="text-gray-900 dark:text-white">
-                {registrationDate.toLocaleDateString()}
-              </div>
-              <div className="text-gray-500 dark:text-gray-400">
-                {registrationDate.toLocaleTimeString()}
-              </div>
-            </div>
-          );
-        }
-      }
-    ],
-    
-    // Actions Configuration
-    actions: [
-      {
-        label: "View Details",
-        icon: <Eye className="w-4 h-4" />,
-        onClick: handleViewDetails,
-        tooltip: "View worker details"
-      },
-      {
-        label: "Send Message",
-        icon: <MessageSquare className="w-4 h-4" />,
-        onClick: handleSendMessage,
-        color: "blue",
-        tooltip: "Send message to worker"
-      },
-      {
-        label: "WhatsApp",
-        icon: <FaWhatsapp className="w-4 h-4" />,
-        onClick: handleSendWhatsApp,
-        color: "green",
-        tooltip: "Contact via WhatsApp"
-      },
-      {
-        label: "Edit",
-        icon: <Edit className="w-4 h-4" />,
-        onClick: handleEditWorker,
-        color: "blue",
-        tooltip: "Edit worker details"
-      },
-      {
-        label: "Verify",
-        icon: <CheckCircle className="w-4 h-4" />,
-        onClick: handleVerifyWorker,
-        color: "green",
-        tooltip: "Verify worker"
-      },
-      {
-        label: "Suspend",
-        icon: <XCircle className="w-4 h-4" />,
-        onClick: handleSuspendWorker,
-        color: "orange",
-        tooltip: "Suspend worker"
-      },
-      {
-        label: "Delete",
-        icon: <Trash2 className="w-4 h-4" />,
-        onClick: handleDeleteWorker,
-        color: "red",
-        tooltip: "Delete worker"
-      }
-    ],
-    
-    // Permissions
-    requiredRoles: ["admin", "super_admin"],
-    
-    // Styling
-    stateItemBadgeColor: "bg-green-500",
-    loadingText: "Loading worker data...",
-    emptyStateText: "No workers found",
-    emptyStateIcon: <Users className="w-8 h-8 text-gray-400" />
-  };
+          </div>
+        </div>
 
-  return <StateBasedManagementTemplate config={config} />;
+        {/* Right Content */}
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <div className="text-center py-12">
+            <div className="text-gray-400 mb-4">
+              <Users className="w-12 h-12 mx-auto" />
+            </div>
+            <p className="text-gray-500 dark:text-gray-400 text-lg">Worker Management System</p>
+            <p className="text-gray-400 dark:text-gray-500 text-sm mt-1">Manage all worker accounts and activities</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
