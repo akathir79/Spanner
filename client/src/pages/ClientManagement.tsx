@@ -1013,11 +1013,28 @@ export default function ClientManagement() {
                               </Badge>
                             </TableCell>
                             <TableCell>
-                              <div className="text-sm">
-                                {client.district && client.state ? (
-                                  <span className="text-gray-900 dark:text-white">
-                                    {client.district}, {client.state}
-                                  </span>
+                              <div className="text-sm space-y-1">
+                                {(client as any).address ? (
+                                  <div>
+                                    <div className="font-medium text-gray-600 dark:text-gray-400 text-xs">Address:</div>
+                                    <div className="text-gray-900 dark:text-white text-xs">
+                                      {(client as any).address}
+                                    </div>
+                                    <div className="text-gray-700 dark:text-gray-300 text-xs">
+                                      {client.district}, {client.state}
+                                    </div>
+                                    {(client as any).pincode && (
+                                      <div className="text-gray-600 dark:text-gray-400 text-xs">
+                                        PIN: {(client as any).pincode}
+                                      </div>
+                                    )}
+                                  </div>
+                                ) : client.district && client.state ? (
+                                  <div>
+                                    <div className="text-gray-900 dark:text-white">
+                                      {client.district}, {client.state}
+                                    </div>
+                                  </div>
                                 ) : (
                                   <span className="text-gray-500 dark:text-gray-400">
                                     Not specified
@@ -1087,79 +1104,70 @@ export default function ClientManagement() {
                                         <span className="truncate max-w-[150px]">{client.email}</span>
                                       </div>
                                     )}
-                                    {(client as any).address && (
-                                      <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                        <div className="font-medium text-gray-700 dark:text-gray-300">Address:</div>
-                                        <div className="break-words line-clamp-1 truncate max-w-[140px]">{(client as any).address}</div>
-                                        {(client as any).pincode && (
-                                          <div>PIN: {(client as any).pincode}</div>
-                                        )}
-                                        <div className="flex items-center gap-1 mt-2">
-                                          <Button
-                                            size="sm"
-                                            variant="ghost"
-                                            className="h-6 w-6 p-0 text-green-600 hover:text-green-700 hover:bg-green-50"
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              window.open(`https://wa.me/91${client.mobile}`, '_blank');
-                                            }}
-                                            title="WhatsApp"
-                                          >
-                                            <MessageCircle className="w-3 h-3" />
-                                          </Button>
-                                          <Button
-                                            size="sm"
-                                            variant="ghost"
-                                            className="h-6 w-6 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              window.location.href = `sms:+91${client.mobile}`;
-                                            }}
-                                            title="SMS"
-                                          >
-                                            <MessageSquare className="w-3 h-3" />
-                                          </Button>
-                                          {client.email && (
-                                            <Button
-                                              size="sm"
-                                              variant="ghost"
-                                              className="h-6 w-6 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
-                                              onClick={(e) => {
-                                                e.stopPropagation();
-                                                window.location.href = `mailto:${client.email}`;
-                                              }}
-                                              title="Email"
-                                            >
-                                              <Mail className="w-3 h-3" />
-                                            </Button>
-                                          )}
-                                          <Button
-                                            size="sm"
-                                            variant="ghost"
-                                            className="h-6 w-6 p-0 text-purple-600 hover:text-purple-700 hover:bg-purple-50"
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              // Handle internal messaging system
-                                            }}
-                                            title="Send Message"
-                                          >
-                                            <Send className="w-3 h-3" />
-                                          </Button>
-                                          <Button
-                                            size="sm"
-                                            variant="ghost"
-                                            className="h-6 w-6 p-0 text-orange-600 hover:text-orange-700 hover:bg-orange-50"
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              window.location.href = `tel:+91${client.mobile}`;
-                                            }}
-                                            title="Call Phone"
-                                          >
-                                            <Phone className="w-3 h-3" />
-                                          </Button>
-                                        </div>
-                                      </div>
-                                    )}
+                                    <div className="flex items-center gap-1 mt-2">
+                                      <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        className="h-6 w-6 p-0 text-green-600 hover:text-green-700 hover:bg-green-50"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          window.open(`https://wa.me/91${client.mobile}`, '_blank');
+                                        }}
+                                        title="WhatsApp"
+                                      >
+                                        <MessageCircle className="w-3 h-3" />
+                                      </Button>
+                                      <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        className="h-6 w-6 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          window.location.href = `sms:+91${client.mobile}`;
+                                        }}
+                                        title="SMS"
+                                      >
+                                        <MessageSquare className="w-3 h-3" />
+                                      </Button>
+                                      {client.email && (
+                                        <Button
+                                          size="sm"
+                                          variant="ghost"
+                                          className="h-6 w-6 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            window.location.href = `mailto:${client.email}`;
+                                          }}
+                                          title="Email"
+                                        >
+                                          <Mail className="w-3 h-3" />
+                                        </Button>
+                                      )}
+                                      <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        className="h-6 w-6 p-0 text-purple-600 hover:text-purple-700 hover:bg-purple-50"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          // Handle internal messaging system
+                                        }}
+                                        title="Send Message"
+                                      >
+                                        <Send className="w-3 h-3" />
+                                      </Button>
+                                      <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        className="h-6 w-6 p-0 text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          window.location.href = `tel:+91${client.mobile}`;
+                                        }}
+                                        title="Call Phone"
+                                      >
+                                        <Phone className="w-3 h-3" />
+                                      </Button>
+                                    </div>
                                   </div>
                                 </TooltipTrigger>
                                 <TooltipContent className="max-w-sm">
@@ -1873,11 +1881,28 @@ export default function ClientManagement() {
                                 </Badge>
                               </TableCell>
                               <TableCell>
-                                <div className="text-sm">
-                                  {client.district && client.state ? (
-                                    <span className="text-gray-900 dark:text-white">
-                                      {client.district}, {client.state}
-                                    </span>
+                                <div className="text-sm space-y-1">
+                                  {(client as any).address ? (
+                                    <div>
+                                      <div className="font-medium text-gray-600 dark:text-gray-400 text-xs">Address:</div>
+                                      <div className="text-gray-900 dark:text-white text-xs">
+                                        {(client as any).address}
+                                      </div>
+                                      <div className="text-gray-700 dark:text-gray-300 text-xs">
+                                        {client.district}, {client.state}
+                                      </div>
+                                      {(client as any).pincode && (
+                                        <div className="text-gray-600 dark:text-gray-400 text-xs">
+                                          PIN: {(client as any).pincode}
+                                        </div>
+                                      )}
+                                    </div>
+                                  ) : client.district && client.state ? (
+                                    <div>
+                                      <div className="text-gray-900 dark:text-white">
+                                        {client.district}, {client.state}
+                                      </div>
+                                    </div>
                                   ) : (
                                     <span className="text-gray-500 dark:text-gray-400">
                                       Not specified
@@ -1947,79 +1972,70 @@ export default function ClientManagement() {
                                           <span className="truncate max-w-[150px]">{client.email}</span>
                                         </div>
                                       )}
-                                      {(client as any).address && (
-                                        <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                          <div className="font-medium text-gray-700 dark:text-gray-300">Address:</div>
-                                          <div className="break-words line-clamp-2">{(client as any).address}</div>
-                                          {(client as any).pincode && (
-                                            <div>PIN: {(client as any).pincode}</div>
-                                          )}
-                                          <div className="flex items-center gap-1 mt-2">
-                                            <Button
-                                              size="sm"
-                                              variant="ghost"
-                                              className="h-6 w-6 p-0 text-green-600 hover:text-green-700 hover:bg-green-50"
-                                              onClick={(e) => {
-                                                e.stopPropagation();
-                                                window.open(`https://wa.me/91${client.mobile}`, '_blank');
-                                              }}
-                                              title="WhatsApp"
-                                            >
-                                              <MessageCircle className="w-3 h-3" />
-                                            </Button>
-                                            <Button
-                                              size="sm"
-                                              variant="ghost"
-                                              className="h-6 w-6 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                                              onClick={(e) => {
-                                                e.stopPropagation();
-                                                window.location.href = `sms:+91${client.mobile}`;
-                                              }}
-                                              title="SMS"
-                                            >
-                                              <MessageSquare className="w-3 h-3" />
-                                            </Button>
-                                            {client.email && (
-                                              <Button
-                                                size="sm"
-                                                variant="ghost"
-                                                className="h-6 w-6 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
-                                                onClick={(e) => {
-                                                  e.stopPropagation();
-                                                  window.location.href = `mailto:${client.email}`;
-                                                }}
-                                                title="Email"
-                                              >
-                                                <Mail className="w-3 h-3" />
-                                              </Button>
-                                            )}
-                                            <Button
-                                              size="sm"
-                                              variant="ghost"
-                                              className="h-6 w-6 p-0 text-purple-600 hover:text-purple-700 hover:bg-purple-50"
-                                              onClick={(e) => {
-                                                e.stopPropagation();
-                                                // Handle internal messaging system
-                                              }}
-                                              title="Send Message"
-                                            >
-                                              <Send className="w-3 h-3" />
-                                            </Button>
-                                            <Button
-                                              size="sm"
-                                              variant="ghost"
-                                              className="h-6 w-6 p-0 text-orange-600 hover:text-orange-700 hover:bg-orange-50"
-                                              onClick={(e) => {
-                                                e.stopPropagation();
-                                                window.location.href = `tel:+91${client.mobile}`;
-                                              }}
-                                              title="Call Phone"
-                                            >
-                                              <Phone className="w-3 h-3" />
-                                            </Button>
-                                          </div>
-                                        </div>
-                                      )}
+                                      <div className="flex items-center gap-1 mt-2">
+                                        <Button
+                                          size="sm"
+                                          variant="ghost"
+                                          className="h-6 w-6 p-0 text-green-600 hover:text-green-700 hover:bg-green-50"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            window.open(`https://wa.me/91${client.mobile}`, '_blank');
+                                          }}
+                                          title="WhatsApp"
+                                        >
+                                          <MessageCircle className="w-3 h-3" />
+                                        </Button>
+                                        <Button
+                                          size="sm"
+                                          variant="ghost"
+                                          className="h-6 w-6 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            window.location.href = `sms:+91${client.mobile}`;
+                                          }}
+                                          title="SMS"
+                                        >
+                                          <MessageSquare className="w-3 h-3" />
+                                        </Button>
+                                        {client.email && (
+                                          <Button
+                                            size="sm"
+                                            variant="ghost"
+                                            className="h-6 w-6 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              window.location.href = `mailto:${client.email}`;
+                                            }}
+                                            title="Email"
+                                          >
+                                            <Mail className="w-3 h-3" />
+                                          </Button>
+                                        )}
+                                        <Button
+                                          size="sm"
+                                          variant="ghost"
+                                          className="h-6 w-6 p-0 text-purple-600 hover:text-purple-700 hover:bg-purple-50"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            // Handle internal messaging system
+                                          }}
+                                          title="Send Message"
+                                        >
+                                          <Send className="w-3 h-3" />
+                                        </Button>
+                                        <Button
+                                          size="sm"
+                                          variant="ghost"
+                                          className="h-6 w-6 p-0 text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            window.location.href = `tel:+91${client.mobile}`;
+                                          }}
+                                          title="Call Phone"
+                                        >
+                                          <Phone className="w-3 h-3" />
+                                        </Button>
+                                      </div>
                                     </div>
                                   </TooltipTrigger>
                                   <TooltipContent className="max-w-sm">
