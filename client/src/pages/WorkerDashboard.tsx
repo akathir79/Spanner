@@ -44,9 +44,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import LocationTracker from "@/components/LocationTracker";
 import BankDetailsModal from "@/components/BankDetailsModal";
 
-// Bank Details Component
-const BankDetailsCard = () => {
-  const { user } = useAuth();
+// Bank Details Component (moved outside main component)
+const BankDetailsCard = ({ user }: { user: any }) => {
   const { toast } = useToast();
   const [showBankModal, setShowBankModal] = useState(false);
   const [showAccountNumber, setShowAccountNumber] = useState(false);
@@ -193,9 +192,8 @@ const BankDetailsCard = () => {
   );
 };
 
-// Worker Jobs Component
-const WorkerJobsTab = () => {
-  const { user } = useAuth();
+// Worker Jobs Component (moved outside main component) 
+const WorkerJobsTab = ({ user }: { user: any }) => {
   const { toast } = useToast();
   
   const [bidFormData, setBidFormData] = useState({
@@ -882,7 +880,7 @@ export default function WorkerDashboard() {
 
           {/* Browse Jobs Tab */}
           <TabsContent value="jobs" className="space-y-6">
-            <WorkerJobsTab />
+            <WorkerJobsTab user={user} />
           </TabsContent>
 
           {/* Earnings Tab */}
@@ -1231,7 +1229,7 @@ export default function WorkerDashboard() {
             </Card>
 
             {/* Bank Details Section */}
-            <BankDetailsCard />
+            <BankDetailsCard user={user} />
           </TabsContent>
 
           {/* Settings Tab */}
