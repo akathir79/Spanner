@@ -1012,14 +1012,58 @@ export default function ClientManagement() {
                                   </div>
                                 </TooltipTrigger>
                                 <TooltipContent className="max-w-sm">
-                                  <div className="space-y-2">
-                                    <p className="font-medium">Client Profile Overview:</p>
-                                    <div className="space-y-1">
+                                  <div className="space-y-3">
+                                    <div className="flex items-center gap-3">
+                                      <Avatar className="h-16 w-16 flex-shrink-0">
+                                        <AvatarImage 
+                                          src={(client as any).profilePicture} 
+                                          alt={`${client.firstName} ${client.lastName}`} 
+                                        />
+                                        <AvatarFallback className="bg-blue-100 text-blue-600 font-bold text-lg">
+                                          {client.firstName.charAt(0).toUpperCase()}{client.lastName.charAt(0).toUpperCase()}
+                                        </AvatarFallback>
+                                      </Avatar>
+                                      <div>
+                                        <p className="font-medium text-base">Client Profile Overview</p>
+                                        <p className="text-sm text-gray-600 dark:text-gray-400">Complete user information</p>
+                                      </div>
+                                    </div>
+                                    <div className="space-y-2">
                                       <div className="text-sm"><strong>Full Name:</strong> {client.firstName} {client.lastName}</div>
                                       <div className="text-sm"><strong>Client ID:</strong> {client.id}</div>
                                       <div className="text-sm"><strong>Role:</strong> Client User</div>
-                                      <div className="text-sm"><strong>Verification Status:</strong> {client.isVerified ? "✅ Verified" : "⏳ Pending Verification"}</div>
-                                      <div className="text-sm"><strong>Activity Status:</strong> {activityStatus.label}</div>
+                                      <div className="flex items-center gap-2">
+                                        <strong className="text-sm">Verification Status:</strong>
+                                        <Badge
+                                          variant={client.isVerified ? "default" : "destructive"}
+                                          className={client.isVerified 
+                                            ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100" 
+                                            : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100"
+                                          }
+                                        >
+                                          {client.isVerified ? "Verified" : "Unverified"}
+                                        </Badge>
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                        <strong className="text-sm">Activity Status:</strong>
+                                        <Badge
+                                          variant={
+                                            activityStatus.label === 'Just Registered' || 
+                                            activityStatus.label === 'Never Login' || 
+                                            !client.isVerified ? "destructive" : "default"
+                                          }
+                                          className={
+                                            activityStatus.label === 'Just Registered' || 
+                                            activityStatus.label === 'Never Login' || 
+                                            !client.isVerified
+                                              ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100" 
+                                              : "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100"
+                                          }
+                                        >
+                                          {activityStatus.icon}
+                                          <span className="ml-1">{activityStatus.label}</span>
+                                        </Badge>
+                                      </div>
                                       <div className="text-sm"><strong>Registration Date:</strong> {formatIndianDateTime(client.createdAt)}</div>
                                       <div className="text-sm"><strong>Last Login:</strong> {client.lastLoginAt ? formatIndianDateTime(client.lastLoginAt) : 'Never logged in'}</div>
                                       {client.mobile && (
@@ -1939,14 +1983,58 @@ export default function ClientManagement() {
                                     </div>
                                   </TooltipTrigger>
                                   <TooltipContent className="max-w-sm">
-                                    <div className="space-y-2">
-                                      <p className="font-medium">Client Profile Overview:</p>
-                                      <div className="space-y-1">
+                                    <div className="space-y-3">
+                                      <div className="flex items-center gap-3">
+                                        <Avatar className="h-16 w-16 flex-shrink-0">
+                                          <AvatarImage 
+                                            src={(client as any).profilePicture} 
+                                            alt={`${client.firstName} ${client.lastName}`} 
+                                          />
+                                          <AvatarFallback className="bg-blue-100 text-blue-600 font-bold text-lg">
+                                            {client.firstName.charAt(0).toUpperCase()}{client.lastName.charAt(0).toUpperCase()}
+                                          </AvatarFallback>
+                                        </Avatar>
+                                        <div>
+                                          <p className="font-medium text-base">Client Profile Overview</p>
+                                          <p className="text-sm text-gray-600 dark:text-gray-400">Complete user information</p>
+                                        </div>
+                                      </div>
+                                      <div className="space-y-2">
                                         <div className="text-sm"><strong>Full Name:</strong> {client.firstName} {client.lastName}</div>
                                         <div className="text-sm"><strong>Client ID:</strong> {client.id}</div>
                                         <div className="text-sm"><strong>Role:</strong> Client User</div>
-                                        <div className="text-sm"><strong>Verification Status:</strong> {client.isVerified ? "✅ Verified" : "⏳ Pending Verification"}</div>
-                                        <div className="text-sm"><strong>Activity Status:</strong> {activityStatus.label}</div>
+                                        <div className="flex items-center gap-2">
+                                          <strong className="text-sm">Verification Status:</strong>
+                                          <Badge
+                                            variant={client.isVerified ? "default" : "destructive"}
+                                            className={client.isVerified 
+                                              ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100" 
+                                              : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100"
+                                            }
+                                          >
+                                            {client.isVerified ? "Verified" : "Unverified"}
+                                          </Badge>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                          <strong className="text-sm">Activity Status:</strong>
+                                          <Badge
+                                            variant={
+                                              activityStatus.label === 'Just Registered' || 
+                                              activityStatus.label === 'Never Login' || 
+                                              !client.isVerified ? "destructive" : "default"
+                                            }
+                                            className={
+                                              activityStatus.label === 'Just Registered' || 
+                                              activityStatus.label === 'Never Login' || 
+                                              !client.isVerified
+                                                ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100" 
+                                                : "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100"
+                                            }
+                                          >
+                                            {activityStatus.icon}
+                                            <span className="ml-1">{activityStatus.label}</span>
+                                          </Badge>
+                                        </div>
                                         <div className="text-sm"><strong>Registration Date:</strong> {formatIndianDateTime(client.createdAt)}</div>
                                         <div className="text-sm"><strong>Last Login:</strong> {client.lastLoginAt ? formatIndianDateTime(client.lastLoginAt) : 'Never logged in'}</div>
                                         <div className="text-sm"><strong>Member Since:</strong> {getMemberSince(client.createdAt)}</div>
