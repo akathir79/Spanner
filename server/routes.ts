@@ -1130,6 +1130,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/admin/admin-counts", async (req, res) => {
+    try {
+      const adminCounts = await storage.getAdminCounts();
+      res.json(adminCounts);
+    } catch (error) {
+      console.error("Get admin counts error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   app.get("/api/admin/bookings", async (req, res) => {
     try {
       const bookings = await storage.getBookingsWithDetails();

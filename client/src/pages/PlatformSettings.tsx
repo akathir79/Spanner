@@ -37,6 +37,12 @@ export default function PlatformSettings() {
   
   const [isLoading, setIsLoading] = useState(false);
 
+  // Fetch admin counts
+  const { data: adminCounts, isLoading: adminCountsLoading } = useQuery({
+    queryKey: ['/api/admin/admin-counts'],
+    refetchInterval: 5000, // Refresh every 5 seconds to show real-time updates
+  });
+
   // Only super admins can access platform settings
   if (!user || user.role !== "super_admin") {
     return (
@@ -95,7 +101,27 @@ export default function PlatformSettings() {
               <CardContent className="p-6 text-center">
                 <User className="w-12 h-12 mx-auto mb-4 text-blue-600" />
                 <h3 className="font-semibold mb-2">Create Admin User</h3>
-                <p className="text-sm text-muted-foreground">Add new admin accounts for district management</p>
+                <p className="text-sm text-muted-foreground mb-3">Add new admin accounts for district management</p>
+                {adminCountsLoading ? (
+                  <div className="text-xs text-muted-foreground">Loading counts...</div>
+                ) : adminCounts ? (
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-xs">
+                      <span>Super Admins:</span>
+                      <Badge variant="outline" className="text-xs">{adminCounts.superAdmins}</Badge>
+                    </div>
+                    <div className="flex justify-between text-xs">
+                      <span>Regular Admins:</span>
+                      <Badge variant="outline" className="text-xs">{adminCounts.regularAdmins}</Badge>
+                    </div>
+                    <div className="flex justify-between text-xs font-medium pt-1 border-t">
+                      <span>Total Admins:</span>
+                      <Badge variant="secondary" className="text-xs">{adminCounts.totalAdmins}</Badge>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-xs text-muted-foreground">Unable to load counts</div>
+                )}
               </CardContent>
             </Card>
 

@@ -139,6 +139,7 @@ export interface IStorage {
   getAllUsers(): Promise<User[]>;
   getUsersWithProfiles(): Promise<(User & { workerProfile?: WorkerProfile })[]>;
   getBookingsWithDetails(): Promise<(Booking & { client: User; worker: User })[]>;
+  getAdminCounts(): Promise<{ regularAdmins: number; superAdmins: number; totalAdmins: number }>;
   
   // Worker Bank Details
   createWorkerBankDetails(bankDetails: InsertWorkerBankDetails): Promise<WorkerBankDetails>;
@@ -707,6 +708,34 @@ export class DatabaseStorage implements IStorage {
     );
     
     return enrichedBookings;
+  }
+
+  async getAdminCounts(): Promise<{ regularAdmins: number; superAdmins: number; totalAdmins: number }> {
+    const adminCounts = await db
+      .select({
+        role: users.role,
+        count: sql<number>`count(*)::int`
+      })
+      .from(users)
+      .where(or(eq(users.role, 'admin'), eq(users.role, 'super_admin')))
+      .groupBy(users.role);
+    
+    let regularAdmins = 0;
+    let superAdmins = 0;
+    
+    for (const count of adminCounts) {
+      if (count.role === 'admin') {
+        regularAdmins = count.count;
+      } else if (count.role === 'super_admin') {
+        superAdmins = count.count;
+      }
+    }
+    
+    return {
+      regularAdmins,
+      superAdmins,
+      totalAdmins: regularAdmins + superAdmins
+    };
   }
   // Job posting methods
   async getAllJobPostings(): Promise<(JobPosting & { client: User; bids?: Bid[] })[]> {
