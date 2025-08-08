@@ -2413,7 +2413,7 @@ export default function ClientManagement() {
                                   </TooltipTrigger>
                                   <TooltipContent className="max-w-sm">
                                     <div className="space-y-2">
-                                      <p className="font-medium">Complete Contact Information:</p>
+                                      <p className="font-medium">Contact Information:</p>
                                       <div className="space-y-1">
                                         <div className="flex items-center gap-2">
                                           <Phone className="w-3 h-3" />
@@ -2423,79 +2423,6 @@ export default function ClientManagement() {
                                           <div className="flex items-center gap-2">
                                             <Mail className="w-3 h-3" />
                                             <span>{client.email}</span>
-                                          </div>
-                                        )}
-                                        {(client as any).address && (
-                                          <div className="mt-2">
-                                            <p className="font-medium text-xs">Complete Address:</p>
-                                            <p className="text-xs mt-1">{(client as any).address}</p>
-                                            {(client as any).pincode && (
-                                              <p className="text-xs">PIN: {(client as any).pincode}</p>
-                                            )}
-                                            <div className="flex items-center gap-1 mt-2">
-                                              <Button
-                                                size="sm"
-                                                variant="ghost"
-                                                className="h-6 w-6 p-0 text-green-600 hover:text-green-700 hover:bg-green-50"
-                                                onClick={(e) => {
-                                                  e.stopPropagation();
-                                                  window.open(`https://wa.me/91${client.mobile}`, '_blank');
-                                                }}
-                                                title="WhatsApp"
-                                              >
-                                                <MessageCircle className="w-3 h-3" />
-                                              </Button>
-                                              <Button
-                                                size="sm"
-                                                variant="ghost"
-                                                className="h-6 w-6 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                                                onClick={(e) => {
-                                                  e.stopPropagation();
-                                                  window.location.href = `sms:+91${client.mobile}`;
-                                                }}
-                                                title="SMS"
-                                              >
-                                                <Square className="w-3 h-3" />
-                                              </Button>
-                                              {client.email && (
-                                                <Button
-                                                  size="sm"
-                                                  variant="ghost"
-                                                  className="h-6 w-6 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
-                                                  onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    window.location.href = `mailto:${client.email}`;
-                                                  }}
-                                                  title="Email"
-                                                >
-                                                  <Mail className="w-3 h-3" />
-                                                </Button>
-                                              )}
-                                              <Button
-                                                size="sm"
-                                                variant="ghost"
-                                                className="h-6 w-6 p-0 text-purple-600 hover:text-purple-700 hover:bg-purple-50"
-                                                onClick={(e) => {
-                                                  e.stopPropagation();
-                                                  // Handle internal messaging system
-                                                }}
-                                                title="Send Message"
-                                              >
-                                                <MessageSquare className="w-3 h-3" />
-                                              </Button>
-                                              <Button
-                                                size="sm"
-                                                variant="ghost"
-                                                className="h-6 w-6 p-0 text-orange-600 hover:text-orange-700 hover:bg-orange-50"
-                                                onClick={(e) => {
-                                                  e.stopPropagation();
-                                                  window.location.href = `tel:+91${client.mobile}`;
-                                                }}
-                                                title="Call Phone"
-                                              >
-                                                <Phone className="w-3 h-3" />
-                                              </Button>
-                                            </div>
                                           </div>
                                         )}
                                       </div>
