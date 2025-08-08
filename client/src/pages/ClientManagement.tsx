@@ -926,7 +926,7 @@ export default function ClientManagement() {
                               </div>
                             </div>
                           </TableHead>
-                          <TableHead className="w-[130px]">Bank Details</TableHead>
+                          <TableHead className="w-[160px]">Bank Details</TableHead>
                           <TableHead className="w-[90px]">
                             <div className="flex items-center gap-2">
                               <span>Status</span>
@@ -1063,7 +1063,7 @@ export default function ClientManagement() {
                                     {(client as any).address && (
                                       <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                                         <div className="font-medium text-gray-700 dark:text-gray-300">Address:</div>
-                                        <div className="break-words line-clamp-2">{(client as any).address}</div>
+                                        <div className="break-words line-clamp-1 truncate max-w-[140px]">{(client as any).address}</div>
                                         {(client as any).pincode && (
                                           <div>PIN: {(client as any).pincode}</div>
                                         )}
@@ -1251,8 +1251,24 @@ export default function ClientManagement() {
                                           </div>
                                         )}
                                         {(client as any).bankAddress && (
-                                          <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                                            {(client as any).bankAddress}
+                                          <div className="text-xs text-gray-500 dark:text-gray-400">
+                                            {(() => {
+                                              const address = (client as any).bankAddress;
+                                              // Split address by comma and format compactly
+                                              const parts = address.split(',').map((part: string) => part.trim());
+                                              if (parts.length >= 3) {
+                                                // Show first part and state/pincode on separate lines
+                                                const mainPart = parts[0];
+                                                const statePinPart = parts.slice(-2).join(', '); // Last 2 parts usually contain state and pincode
+                                                return (
+                                                  <div className="space-y-0.5">
+                                                    <div className="truncate">{mainPart}</div>
+                                                    <div className="truncate">{statePinPart}</div>
+                                                  </div>
+                                                );
+                                              }
+                                              return <div className="truncate">{address}</div>;
+                                            })()}
                                           </div>
                                         )}
                                         <div className="flex items-center gap-1 mt-2">
@@ -1627,7 +1643,7 @@ export default function ClientManagement() {
                           <TableHead className="w-[140px]">Location</TableHead>
                           <TableHead className="w-[140px]">Bookings/Earnings</TableHead>
                           <TableHead className="w-[140px]">Contact</TableHead>
-                          <TableHead className="w-[130px]">Bank Details</TableHead>
+                          <TableHead className="w-[160px]">Bank Details</TableHead>
                           <TableHead className="w-[90px]">
                             <div className="flex items-center gap-2">
                               <span>Status</span>
