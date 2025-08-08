@@ -858,7 +858,28 @@ export default function ClientManagement() {
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead className="w-[140px]">User</TableHead>
+                          <TableHead className="w-[140px]">
+                            <div className="flex items-center gap-2">
+                              <span>User</span>
+                              <Select value={statusFilter} onValueChange={(value) => {
+                                setStatusFilter(value as any);
+                                setCurrentPage(1); // Reset to first page when filtering
+                              }}>
+                                <SelectTrigger className="w-8 h-8 p-1 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 rounded">
+                                  <Filter className="w-4 h-4 text-gray-600 dark:text-gray-300" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="all">All Status</SelectItem>
+                                  <SelectItem value="active">Active</SelectItem>
+                                  <SelectItem value="inactive">Inactive</SelectItem>
+                                  <SelectItem value="no_login">No Login</SelectItem>
+                                  <SelectItem value="just_registered">Just Registered</SelectItem>
+                                  <SelectItem value="verified">Verified</SelectItem>
+                                  <SelectItem value="unverified">Unverified</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </TableHead>
                           <TableHead className="w-[70px]">Role</TableHead>
                           <TableHead className="w-[140px]">Location</TableHead>
                           <TableHead className="w-[140px]">Bookings/Earnings</TableHead>
@@ -1679,7 +1700,28 @@ export default function ClientManagement() {
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead className="w-[140px]">User</TableHead>
+                          <TableHead className="w-[140px]">
+                            <div className="flex items-center gap-2">
+                              <span>User</span>
+                              <Select value={statusFilter} onValueChange={(value) => {
+                                setStatusFilter(value as any);
+                                setCurrentPage(1); // Reset to first page when filtering
+                              }}>
+                                <SelectTrigger className="w-8 h-8 p-1 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 rounded">
+                                  <Filter className="w-4 h-4 text-gray-600 dark:text-gray-300" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="all">All Status</SelectItem>
+                                  <SelectItem value="active">Active</SelectItem>
+                                  <SelectItem value="inactive">Inactive</SelectItem>
+                                  <SelectItem value="no_login">No Login</SelectItem>
+                                  <SelectItem value="just_registered">Just Registered</SelectItem>
+                                  <SelectItem value="verified">Verified</SelectItem>
+                                  <SelectItem value="unverified">Unverified</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </TableHead>
                           <TableHead className="w-[70px]">Role</TableHead>
                           <TableHead className="w-[140px]">Location</TableHead>
                           <TableHead className="w-[140px]">Bookings/Earnings</TableHead>
