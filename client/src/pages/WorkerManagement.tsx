@@ -807,7 +807,7 @@ export default function WorkerManagement() {
                           <TableRow>
                             <TableHead className="w-[190px]">
                               <div className="flex items-center gap-2">
-                                <span>Worker</span>
+                                <span>User</span>
                                 <Select value={statusFilter} onValueChange={(value) => {
                                   setStatusFilter(value as any);
                                   setCurrentPage(1); // Reset to first page when filtering
@@ -827,30 +827,19 @@ export default function WorkerManagement() {
                                 </Select>
                               </div>
                             </TableHead>
-                            <TableHead className="w-[140px]">
-                              <Tooltip>
-                                <TooltipTrigger className="flex items-center gap-1 cursor-help">
-                                  <span>Location</span>
-                                  <Copy className="w-3 h-3 text-gray-400" />
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  <p>Click to copy location info</p>
-                                </TooltipContent>
-                              </Tooltip>
+                            <TableHead>Location</TableHead>
+                            <TableHead>Bookings/Earnings</TableHead>
+                            <TableHead>
+                              Contact
+                              <div className="inline-flex items-center gap-1 ml-1">
+                                <Phone className="w-3 h-3 text-gray-400" />
+                                <MessageSquare className="w-3 h-3 text-gray-400" />
+                                <Mail className="w-3 h-3 text-gray-400" />
+                                <Send className="w-3 h-3 text-gray-400" />
+                              </div>
                             </TableHead>
-                            <TableHead className="w-[120px]">Earnings</TableHead>
-                            <TableHead className="w-[160px]">
-                              <Tooltip>
-                                <TooltipTrigger className="flex items-center gap-1 cursor-help">
-                                  <span>Contact</span>
-                                  <Copy className="w-3 h-3 text-gray-400" />
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  <p>Click to copy contact info</p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </TableHead>
-                            <TableHead className="text-right">Actions</TableHead>
+                            <TableHead>Bank Details</TableHead>
+                            <TableHead></TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -859,7 +848,7 @@ export default function WorkerManagement() {
                             
                             return (
                               <TableRow key={worker.id}>
-                                {/* Worker Info */}
+                                {/* User Info */}
                                 <TableCell>
                                   <Tooltip>
                                     <TooltipTrigger asChild>
@@ -932,34 +921,48 @@ export default function WorkerManagement() {
 
                                 {/* Location */}
                                 <TableCell>
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <div 
-                                        className="cursor-pointer"
-                                        onClick={() => copyToClipboard(`${worker.district}, ${worker.state}`, "Location")}
-                                      >
-                                        <div className="text-sm font-medium text-gray-900 dark:text-white">
-                                          {worker.district || "Not specified"}
-                                        </div>
-                                        <div className="text-xs text-gray-500 dark:text-gray-400">
-                                          {worker.state || "Not specified"}
-                                        </div>
-                                      </div>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                      <p>Click to copy: {worker.district}, {worker.state}</p>
-                                    </TooltipContent>
-                                  </Tooltip>
+                                  <div className="text-sm font-medium text-gray-900 dark:text-white">
+                                    {worker.district || "Not specified"}
+                                  </div>
+                                  <div className="text-xs text-gray-500 dark:text-gray-400">
+                                    Address:
+                                  </div>
+                                  <div className="text-xs text-gray-500 dark:text-gray-400">
+                                    {worker.address ? worker.address.slice(0, 50) + (worker.address.length > 50 ? '...' : '') : 'Not provided'}
+                                  </div>
+                                  <div className="text-xs text-gray-500 dark:text-gray-400">
+                                    {worker.state || "Not specified"}
+                                  </div>
+                                  <div className="text-xs text-gray-500 dark:text-gray-400">
+                                    PIN: {worker.pincode || "Not provided"}
+                                  </div>
                                 </TableCell>
 
-                                {/* Earnings */}
+                                {/* Bookings/Earnings */}
                                 <TableCell>
-                                  <div className="text-center">
-                                    <div className="text-sm font-medium text-gray-900 dark:text-white">
-                                      ₹0
+                                  <div className="space-y-1">
+                                    <div className="text-sm">
+                                      <span className="text-gray-600 dark:text-gray-400">Bookings: </span>
+                                      <span className="font-medium">0</span>
                                     </div>
                                     <div className="text-xs text-gray-500 dark:text-gray-400">
-                                      Total Earnings
+                                      • In progress: 0
+                                    </div>
+                                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                                      • Completed: 0
+                                    </div>
+                                    <div className="text-sm">
+                                      <span className="text-gray-600 dark:text-gray-400">Balance: </span>
+                                      <span className="font-medium">₹0</span>
+                                    </div>
+                                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                                      Spent: ₹0
+                                    </div>
+                                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                                      Commission: ₹0
+                                    </div>
+                                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                                      GST: ₹0
                                     </div>
                                   </div>
                                 </TableCell>
@@ -967,43 +970,59 @@ export default function WorkerManagement() {
                                 {/* Contact */}
                                 <TableCell>
                                   <div className="space-y-1">
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <div 
-                                          className="flex items-center gap-1 text-sm cursor-pointer hover:text-blue-600 dark:hover:text-blue-400"
-                                          onClick={() => copyToClipboard(worker.mobile, "Phone number")}
-                                        >
-                                          <Phone className="w-3 h-3" />
-                                          <span className="font-mono">{worker.mobile}</span>
-                                          <Copy className="w-3 h-3 opacity-50" />
-                                        </div>
-                                      </TooltipTrigger>
-                                      <TooltipContent>
-                                        <p>Click to copy: {worker.mobile}</p>
-                                      </TooltipContent>
-                                    </Tooltip>
+                                    <div className="flex items-center gap-1 text-sm">
+                                      <Phone className="w-3 h-3" />
+                                      <span className="font-mono">{worker.mobile}</span>
+                                    </div>
                                     {worker.email && (
-                                      <Tooltip>
-                                        <TooltipTrigger asChild>
-                                          <div 
-                                            className="flex items-center gap-1 text-xs cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 truncate"
-                                            onClick={() => copyToClipboard(worker.email!, "Email")}
-                                          >
-                                            <Mail className="w-3 h-3 flex-shrink-0" />
-                                            <span className="truncate">{worker.email}</span>
-                                            <Copy className="w-3 h-3 opacity-50 flex-shrink-0" />
-                                          </div>
-                                        </TooltipTrigger>
-                                        <TooltipContent>
-                                          <p>Click to copy: {worker.email}</p>
-                                        </TooltipContent>
-                                      </Tooltip>
+                                      <div className="flex items-center gap-1 text-xs truncate">
+                                        <Mail className="w-3 h-3 flex-shrink-0" />
+                                        <span className="truncate">{worker.email}</span>
+                                      </div>
                                     )}
+                                    <div className="flex items-center gap-1 mt-2">
+                                      <Phone className="w-3 h-3 text-blue-600 cursor-pointer" onClick={() => handleCallWorker(worker)} />
+                                      <MessageSquare className="w-3 h-3 text-green-600 cursor-pointer" onClick={() => handleWhatsAppWorker(worker)} />
+                                      <Mail className="w-3 h-3 text-gray-600 cursor-pointer" onClick={() => copyToClipboard(worker.email || '', "Email")} />
+                                      <Send className="w-3 h-3 text-purple-600 cursor-pointer" onClick={() => handleSendMessage(worker)} />
+                                    </div>
+                                  </div>
+                                </TableCell>
+
+                                {/* Bank Details */}
+                                <TableCell>
+                                  <div className="space-y-1">
+                                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                                      {worker.bankName ? (
+                                        <>
+                                          <div className="font-medium text-gray-900 dark:text-white">
+                                            4399
+                                          </div>
+                                          <div className="text-xs">
+                                            IFSC: {worker.bankIFSC || "Not provided"}
+                                          </div>
+                                          <div className="text-xs">
+                                            MICR: {worker.bankMICR || "Not provided"}
+                                          </div>
+                                          <div className="text-xs font-medium">
+                                            {worker.bankName}
+                                          </div>
+                                          <div className="text-xs">
+                                            {worker.bankBranch || "Not provided"}
+                                          </div>
+                                          <div className="text-xs text-gray-500">
+                                            PIN: {worker.pincode || "Not provided"}
+                                          </div>
+                                        </>
+                                      ) : (
+                                        <span className="text-gray-400 italic">Not provided</span>
+                                      )}
+                                    </div>
                                   </div>
                                 </TableCell>
 
                                 {/* Actions */}
-                                <TableCell className="text-right">
+                                <TableCell>
                                   <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
                                       <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -1273,7 +1292,7 @@ export default function WorkerManagement() {
                             
                             return (
                               <TableRow key={worker.id}>
-                                {/* Worker Info */}
+                                {/* User Info */}
                                 <TableCell>
                                   <Tooltip>
                                     <TooltipTrigger asChild>
@@ -1346,34 +1365,48 @@ export default function WorkerManagement() {
 
                                 {/* Location */}
                                 <TableCell>
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <div 
-                                        className="cursor-pointer"
-                                        onClick={() => copyToClipboard(`${worker.district}, ${worker.state}`, "Location")}
-                                      >
-                                        <div className="text-sm font-medium text-gray-900 dark:text-white">
-                                          {worker.district || "Not specified"}
-                                        </div>
-                                        <div className="text-xs text-gray-500 dark:text-gray-400">
-                                          {worker.state || "Not specified"}
-                                        </div>
-                                      </div>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                      <p>Click to copy: {worker.district}, {worker.state}</p>
-                                    </TooltipContent>
-                                  </Tooltip>
+                                  <div className="text-sm font-medium text-gray-900 dark:text-white">
+                                    {worker.district || "Not specified"}
+                                  </div>
+                                  <div className="text-xs text-gray-500 dark:text-gray-400">
+                                    Address:
+                                  </div>
+                                  <div className="text-xs text-gray-500 dark:text-gray-400">
+                                    {worker.address ? worker.address.slice(0, 50) + (worker.address.length > 50 ? '...' : '') : 'Not provided'}
+                                  </div>
+                                  <div className="text-xs text-gray-500 dark:text-gray-400">
+                                    {worker.state || "Not specified"}
+                                  </div>
+                                  <div className="text-xs text-gray-500 dark:text-gray-400">
+                                    PIN: {worker.pincode || "Not provided"}
+                                  </div>
                                 </TableCell>
 
-                                {/* Earnings */}
+                                {/* Bookings/Earnings */}
                                 <TableCell>
-                                  <div className="text-center">
-                                    <div className="text-sm font-medium text-gray-900 dark:text-white">
-                                      ₹0
+                                  <div className="space-y-1">
+                                    <div className="text-sm">
+                                      <span className="text-gray-600 dark:text-gray-400">Bookings: </span>
+                                      <span className="font-medium">0</span>
                                     </div>
                                     <div className="text-xs text-gray-500 dark:text-gray-400">
-                                      Total Earnings
+                                      • In progress: 0
+                                    </div>
+                                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                                      • Completed: 0
+                                    </div>
+                                    <div className="text-sm">
+                                      <span className="text-gray-600 dark:text-gray-400">Balance: </span>
+                                      <span className="font-medium">₹0</span>
+                                    </div>
+                                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                                      Spent: ₹0
+                                    </div>
+                                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                                      Commission: ₹0
+                                    </div>
+                                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                                      GST: ₹0
                                     </div>
                                   </div>
                                 </TableCell>
@@ -1381,43 +1414,59 @@ export default function WorkerManagement() {
                                 {/* Contact */}
                                 <TableCell>
                                   <div className="space-y-1">
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <div 
-                                          className="flex items-center gap-1 text-sm cursor-pointer hover:text-blue-600 dark:hover:text-blue-400"
-                                          onClick={() => copyToClipboard(worker.mobile, "Phone number")}
-                                        >
-                                          <Phone className="w-3 h-3" />
-                                          <span className="font-mono">{worker.mobile}</span>
-                                          <Copy className="w-3 h-3 opacity-50" />
-                                        </div>
-                                      </TooltipTrigger>
-                                      <TooltipContent>
-                                        <p>Click to copy: {worker.mobile}</p>
-                                      </TooltipContent>
-                                    </Tooltip>
+                                    <div className="flex items-center gap-1 text-sm">
+                                      <Phone className="w-3 h-3" />
+                                      <span className="font-mono">{worker.mobile}</span>
+                                    </div>
                                     {worker.email && (
-                                      <Tooltip>
-                                        <TooltipTrigger asChild>
-                                          <div 
-                                            className="flex items-center gap-1 text-xs cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 truncate"
-                                            onClick={() => copyToClipboard(worker.email!, "Email")}
-                                          >
-                                            <Mail className="w-3 h-3 flex-shrink-0" />
-                                            <span className="truncate">{worker.email}</span>
-                                            <Copy className="w-3 h-3 opacity-50 flex-shrink-0" />
-                                          </div>
-                                        </TooltipTrigger>
-                                        <TooltipContent>
-                                          <p>Click to copy: {worker.email}</p>
-                                        </TooltipContent>
-                                      </Tooltip>
+                                      <div className="flex items-center gap-1 text-xs truncate">
+                                        <Mail className="w-3 h-3 flex-shrink-0" />
+                                        <span className="truncate">{worker.email}</span>
+                                      </div>
                                     )}
+                                    <div className="flex items-center gap-1 mt-2">
+                                      <Phone className="w-3 h-3 text-blue-600 cursor-pointer" onClick={() => handleCallWorker(worker)} />
+                                      <MessageSquare className="w-3 h-3 text-green-600 cursor-pointer" onClick={() => handleWhatsAppWorker(worker)} />
+                                      <Mail className="w-3 h-3 text-gray-600 cursor-pointer" onClick={() => copyToClipboard(worker.email || '', "Email")} />
+                                      <Send className="w-3 h-3 text-purple-600 cursor-pointer" onClick={() => handleSendMessage(worker)} />
+                                    </div>
+                                  </div>
+                                </TableCell>
+
+                                {/* Bank Details */}
+                                <TableCell>
+                                  <div className="space-y-1">
+                                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                                      {worker.bankName ? (
+                                        <>
+                                          <div className="font-medium text-gray-900 dark:text-white">
+                                            4399
+                                          </div>
+                                          <div className="text-xs">
+                                            IFSC: {worker.bankIFSC || "Not provided"}
+                                          </div>
+                                          <div className="text-xs">
+                                            MICR: {worker.bankMICR || "Not provided"}
+                                          </div>
+                                          <div className="text-xs font-medium">
+                                            {worker.bankName}
+                                          </div>
+                                          <div className="text-xs">
+                                            {worker.bankBranch || "Not provided"}
+                                          </div>
+                                          <div className="text-xs text-gray-500">
+                                            PIN: {worker.pincode || "Not provided"}
+                                          </div>
+                                        </>
+                                      ) : (
+                                        <span className="text-gray-400 italic">Not provided</span>
+                                      )}
+                                    </div>
                                   </div>
                                 </TableCell>
 
                                 {/* Actions */}
-                                <TableCell className="text-right">
+                                <TableCell>
                                   <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
                                       <Button variant="ghost" size="icon" className="h-8 w-8">

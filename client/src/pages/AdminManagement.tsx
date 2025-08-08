@@ -810,7 +810,7 @@ export default function AdminManagement() {
                           <TableRow>
                             <TableHead className="w-[190px]">
                               <div className="flex items-center gap-2">
-                                <span>Administrator</span>
+                                <span>User</span>
                                 <Select value={statusFilter} onValueChange={(value) => {
                                   setStatusFilter(value as any);
                                   setCurrentPage(1); // Reset to first page when filtering
@@ -841,19 +841,28 @@ export default function AdminManagement() {
                                 </TooltipContent>
                               </Tooltip>
                             </TableHead>
-                            <TableHead className="w-[120px]">Role</TableHead>
                             <TableHead className="w-[160px]">
-                              <Tooltip>
-                                <TooltipTrigger className="flex items-center gap-1 cursor-help">
-                                  <span>Contact</span>
-                                  <Copy className="w-3 h-3 text-gray-400" />
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  <p>Click to copy contact info</p>
-                                </TooltipContent>
-                              </Tooltip>
+                              <div className="flex items-center gap-1">
+                                <span>Management</span>
+                                <div className="flex gap-1">
+                                  <Shield className="w-3 h-3 text-gray-400" />
+                                  <Crown className="w-3 h-3 text-gray-400" />
+                                </div>
+                              </div>
                             </TableHead>
-                            <TableHead className="text-right">Actions</TableHead>
+                            <TableHead className="w-[160px]">
+                              <div className="flex items-center gap-1">
+                                <span>Contact</span>
+                                <div className="flex gap-1">
+                                  <Phone className="w-3 h-3 text-gray-400" />
+                                  <MessageSquare className="w-3 h-3 text-gray-400" />
+                                  <Mail className="w-3 h-3 text-gray-400" />
+                                  <Send className="w-3 h-3 text-gray-400" />
+                                </div>
+                              </div>
+                            </TableHead>
+                            <TableHead>Bank Details</TableHead>
+                            <TableHead></TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -862,7 +871,7 @@ export default function AdminManagement() {
                             
                             return (
                               <TableRow key={admin.id}>
-                                {/* Admin Info */}
+                                {/* User Info */}
                                 <TableCell>
                                   <Tooltip>
                                     <TooltipTrigger asChild>
@@ -944,91 +953,96 @@ export default function AdminManagement() {
 
                                 {/* Location */}
                                 <TableCell>
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <div 
-                                        className="cursor-pointer"
-                                        onClick={() => copyToClipboard(`${admin.district}, ${admin.state}`, "Location")}
-                                      >
-                                        <div className="text-sm font-medium text-gray-900 dark:text-white">
-                                          {admin.district || "Not specified"}
-                                        </div>
-                                        <div className="text-xs text-gray-500 dark:text-gray-400">
-                                          {admin.state || "Not specified"}
-                                        </div>
-                                      </div>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                      <p>Click to copy: {admin.district}, {admin.state}</p>
-                                    </TooltipContent>
-                                  </Tooltip>
+                                  <div className="text-sm font-medium text-gray-900 dark:text-white">
+                                    {admin.district || "Not specified"}
+                                  </div>
+                                  <div className="text-xs text-gray-500 dark:text-gray-400">
+                                    Address: Not provided
+                                  </div>
+                                  <div className="text-xs text-gray-500 dark:text-gray-400">
+                                    {admin.state || "Not specified"}
+                                  </div>
+                                  <div className="text-xs text-gray-500 dark:text-gray-400">
+                                    PIN: Not provided
+                                  </div>
                                 </TableCell>
 
-                                {/* Role */}
+                                {/* Management */}
                                 <TableCell>
-                                  <div className="text-center">
-                                    <Badge 
-                                      variant="outline"
-                                      className={admin.role === "super_admin" ? 
-                                        "bg-yellow-50 text-yellow-800 border-yellow-200" : 
-                                        "bg-blue-50 text-blue-800 border-blue-200"
-                                      }
-                                    >
+                                  <div className="space-y-1">
+                                    <div className="text-sm">
+                                      <span className="text-gray-600 dark:text-gray-400">Role: </span>
+                                      <span className="font-medium">
+                                        {admin.role === "super_admin" ? "Super Admin" : "Admin"}
+                                      </span>
+                                    </div>
+                                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                                      • Users managed: 0
+                                    </div>
+                                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                                      • Approvals: 0
+                                    </div>
+                                    <div className="text-sm">
+                                      <span className="text-gray-600 dark:text-gray-400">Permissions: </span>
+                                      <span className="font-medium">
+                                        {admin.role === "super_admin" ? "Full" : "Limited"}
+                                      </span>
+                                    </div>
+                                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                                      Actions taken: 0
+                                    </div>
+                                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                                      Reports generated: 0
+                                    </div>
+                                    <div className="flex items-center gap-1 mt-1">
                                       {admin.role === "super_admin" ? (
-                                        <>
+                                        <Badge variant="outline" className="bg-yellow-50 text-yellow-800 border-yellow-200">
                                           <Crown className="w-3 h-3 mr-1" />
                                           Super Admin
-                                        </>
+                                        </Badge>
                                       ) : (
-                                        <>
+                                        <Badge variant="outline" className="bg-blue-50 text-blue-800 border-blue-200">
                                           <Shield className="w-3 h-3 mr-1" />
                                           Admin
-                                        </>
+                                        </Badge>
                                       )}
-                                    </Badge>
+                                    </div>
                                   </div>
                                 </TableCell>
 
                                 {/* Contact */}
                                 <TableCell>
                                   <div className="space-y-1">
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <div 
-                                          className="flex items-center gap-1 text-sm cursor-pointer hover:text-blue-600 dark:hover:text-blue-400"
-                                          onClick={() => copyToClipboard(admin.mobile, "Phone number")}
-                                        >
-                                          <Phone className="w-3 h-3" />
-                                          <span className="font-mono">{admin.mobile}</span>
-                                          <Copy className="w-3 h-3 opacity-50" />
-                                        </div>
-                                      </TooltipTrigger>
-                                      <TooltipContent>
-                                        <p>Click to copy: {admin.mobile}</p>
-                                      </TooltipContent>
-                                    </Tooltip>
+                                    <div className="flex items-center gap-1 text-sm">
+                                      <Phone className="w-3 h-3" />
+                                      <span className="font-mono">{admin.mobile}</span>
+                                    </div>
                                     {admin.email && (
-                                      <Tooltip>
-                                        <TooltipTrigger asChild>
-                                          <div 
-                                            className="flex items-center gap-1 text-xs cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 truncate"
-                                            onClick={() => copyToClipboard(admin.email!, "Email")}
-                                          >
-                                            <Mail className="w-3 h-3 flex-shrink-0" />
-                                            <span className="truncate">{admin.email}</span>
-                                            <Copy className="w-3 h-3 opacity-50 flex-shrink-0" />
-                                          </div>
-                                        </TooltipTrigger>
-                                        <TooltipContent>
-                                          <p>Click to copy: {admin.email}</p>
-                                        </TooltipContent>
-                                      </Tooltip>
+                                      <div className="flex items-center gap-1 text-xs truncate">
+                                        <Mail className="w-3 h-3 flex-shrink-0" />
+                                        <span className="truncate">{admin.email}</span>
+                                      </div>
                                     )}
+                                    <div className="flex items-center gap-1 mt-2">
+                                      <Phone className="w-3 h-3 text-blue-600 cursor-pointer" onClick={() => handleCallAdmin(admin)} />
+                                      <MessageSquare className="w-3 h-3 text-green-600 cursor-pointer" onClick={() => handleWhatsAppAdmin(admin)} />
+                                      <Mail className="w-3 h-3 text-gray-600 cursor-pointer" onClick={() => copyToClipboard(admin.email || '', "Email")} />
+                                      <Send className="w-3 h-3 text-purple-600 cursor-pointer" onClick={() => handleSendMessage(admin)} />
+                                    </div>
+                                  </div>
+                                </TableCell>
+
+                                {/* Bank Details */}
+                                <TableCell>
+                                  <div className="space-y-1">
+                                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                                      <span className="text-gray-400 italic">Not provided</span>
+                                    </div>
                                   </div>
                                 </TableCell>
 
                                 {/* Actions */}
-                                <TableCell className="text-right">
+                                <TableCell>
                                   <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
                                       <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -1249,7 +1263,7 @@ export default function AdminManagement() {
                           <TableRow>
                             <TableHead className="w-[190px]">
                               <div className="flex items-center gap-2">
-                                <span>Administrator</span>
+                                <span>User</span>
                                 <Select value={statusFilter} onValueChange={(value) => {
                                   setStatusFilter(value as any);
                                   setDistrictCurrentPage(1);
@@ -1280,19 +1294,28 @@ export default function AdminManagement() {
                                 </TooltipContent>
                               </Tooltip>
                             </TableHead>
-                            <TableHead className="w-[120px]">Role</TableHead>
                             <TableHead className="w-[160px]">
-                              <Tooltip>
-                                <TooltipTrigger className="flex items-center gap-1 cursor-help">
-                                  <span>Contact</span>
-                                  <Copy className="w-3 h-3 text-gray-400" />
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  <p>Click to copy contact info</p>
-                                </TooltipContent>
-                              </Tooltip>
+                              <div className="flex items-center gap-1">
+                                <span>Management</span>
+                                <div className="flex gap-1">
+                                  <Shield className="w-3 h-3 text-gray-400" />
+                                  <Crown className="w-3 h-3 text-gray-400" />
+                                </div>
+                              </div>
                             </TableHead>
-                            <TableHead className="text-right">Actions</TableHead>
+                            <TableHead className="w-[160px]">
+                              <div className="flex items-center gap-1">
+                                <span>Contact</span>
+                                <div className="flex gap-1">
+                                  <Phone className="w-3 h-3 text-gray-400" />
+                                  <MessageSquare className="w-3 h-3 text-gray-400" />
+                                  <Mail className="w-3 h-3 text-gray-400" />
+                                  <Send className="w-3 h-3 text-gray-400" />
+                                </div>
+                              </div>
+                            </TableHead>
+                            <TableHead>Bank Details</TableHead>
+                            <TableHead></TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -1301,7 +1324,7 @@ export default function AdminManagement() {
                             
                             return (
                               <TableRow key={admin.id}>
-                                {/* Admin Info */}
+                                {/* User Info */}
                                 <TableCell>
                                   <Tooltip>
                                     <TooltipTrigger asChild>
@@ -1383,86 +1406,91 @@ export default function AdminManagement() {
 
                                 {/* Location */}
                                 <TableCell>
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <div 
-                                        className="cursor-pointer"
-                                        onClick={() => copyToClipboard(`${admin.district}, ${admin.state}`, "Location")}
-                                      >
-                                        <div className="text-sm font-medium text-gray-900 dark:text-white">
-                                          {admin.district || "Not specified"}
-                                        </div>
-                                        <div className="text-xs text-gray-500 dark:text-gray-400">
-                                          {admin.state || "Not specified"}
-                                        </div>
-                                      </div>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                      <p>Click to copy: {admin.district}, {admin.state}</p>
-                                    </TooltipContent>
-                                  </Tooltip>
+                                  <div className="text-sm font-medium text-gray-900 dark:text-white">
+                                    {admin.district || "Not specified"}
+                                  </div>
+                                  <div className="text-xs text-gray-500 dark:text-gray-400">
+                                    Address: Not provided
+                                  </div>
+                                  <div className="text-xs text-gray-500 dark:text-gray-400">
+                                    {admin.state || "Not specified"}
+                                  </div>
+                                  <div className="text-xs text-gray-500 dark:text-gray-400">
+                                    PIN: Not provided
+                                  </div>
                                 </TableCell>
 
-                                {/* Role */}
+                                {/* Management */}
                                 <TableCell>
-                                  <div className="text-center">
-                                    <Badge 
-                                      variant="outline"
-                                      className={admin.role === "super_admin" ? 
-                                        "bg-yellow-50 text-yellow-800 border-yellow-200" : 
-                                        "bg-blue-50 text-blue-800 border-blue-200"
-                                      }
-                                    >
+                                  <div className="space-y-1">
+                                    <div className="text-sm">
+                                      <span className="text-gray-600 dark:text-gray-400">Role: </span>
+                                      <span className="font-medium">
+                                        {admin.role === "super_admin" ? "Super Admin" : "Admin"}
+                                      </span>
+                                    </div>
+                                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                                      • Users managed: 0
+                                    </div>
+                                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                                      • Approvals: 0
+                                    </div>
+                                    <div className="text-sm">
+                                      <span className="text-gray-600 dark:text-gray-400">Permissions: </span>
+                                      <span className="font-medium">
+                                        {admin.role === "super_admin" ? "Full" : "Limited"}
+                                      </span>
+                                    </div>
+                                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                                      Actions taken: 0
+                                    </div>
+                                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                                      Reports generated: 0
+                                    </div>
+                                    <div className="flex items-center gap-1 mt-1">
                                       {admin.role === "super_admin" ? (
-                                        <>
+                                        <Badge variant="outline" className="bg-yellow-50 text-yellow-800 border-yellow-200">
                                           <Crown className="w-3 h-3 mr-1" />
                                           Super Admin
-                                        </>
+                                        </Badge>
                                       ) : (
-                                        <>
+                                        <Badge variant="outline" className="bg-blue-50 text-blue-800 border-blue-200">
                                           <Shield className="w-3 h-3 mr-1" />
                                           Admin
-                                        </>
+                                        </Badge>
                                       )}
-                                    </Badge>
+                                    </div>
                                   </div>
                                 </TableCell>
 
                                 {/* Contact */}
                                 <TableCell>
                                   <div className="space-y-1">
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <div 
-                                          className="flex items-center gap-1 text-sm cursor-pointer hover:text-blue-600 dark:hover:text-blue-400"
-                                          onClick={() => copyToClipboard(admin.mobile, "Phone number")}
-                                        >
-                                          <Phone className="w-3 h-3" />
-                                          <span className="font-mono">{admin.mobile}</span>
-                                          <Copy className="w-3 h-3 opacity-50" />
-                                        </div>
-                                      </TooltipTrigger>
-                                      <TooltipContent>
-                                        <p>Click to copy: {admin.mobile}</p>
-                                      </TooltipContent>
-                                    </Tooltip>
+                                    <div className="flex items-center gap-1 text-sm">
+                                      <Phone className="w-3 h-3" />
+                                      <span className="font-mono">{admin.mobile}</span>
+                                    </div>
                                     {admin.email && (
-                                      <Tooltip>
-                                        <TooltipTrigger asChild>
-                                          <div 
-                                            className="flex items-center gap-1 text-xs cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 truncate"
-                                            onClick={() => copyToClipboard(admin.email!, "Email")}
-                                          >
-                                            <Mail className="w-3 h-3 flex-shrink-0" />
-                                            <span className="truncate">{admin.email}</span>
-                                            <Copy className="w-3 h-3 opacity-50 flex-shrink-0" />
-                                          </div>
-                                        </TooltipTrigger>
-                                        <TooltipContent>
-                                          <p>Click to copy: {admin.email}</p>
-                                        </TooltipContent>
-                                      </Tooltip>
+                                      <div className="flex items-center gap-1 text-xs truncate">
+                                        <Mail className="w-3 h-3 flex-shrink-0" />
+                                        <span className="truncate">{admin.email}</span>
+                                      </div>
                                     )}
+                                    <div className="flex items-center gap-1 mt-2">
+                                      <Phone className="w-3 h-3 text-blue-600 cursor-pointer" onClick={() => handleCallAdmin(admin)} />
+                                      <MessageSquare className="w-3 h-3 text-green-600 cursor-pointer" onClick={() => handleWhatsAppAdmin(admin)} />
+                                      <Mail className="w-3 h-3 text-gray-600 cursor-pointer" onClick={() => copyToClipboard(admin.email || '', "Email")} />
+                                      <Send className="w-3 h-3 text-purple-600 cursor-pointer" onClick={() => handleSendMessage(admin)} />
+                                    </div>
+                                  </div>
+                                </TableCell>
+
+                                {/* Bank Details */}
+                                <TableCell>
+                                  <div className="space-y-1">
+                                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                                      <span className="text-gray-400 italic">Not provided</span>
+                                    </div>
                                   </div>
                                 </TableCell>
 

@@ -754,7 +754,7 @@ export default function BookingManagement() {
                           <TableRow>
                             <TableHead className="w-[190px]">
                               <div className="flex items-center gap-2">
-                                <span>Booking Details</span>
+                                <span>User</span>
                                 <Select value={statusFilter} onValueChange={(value) => {
                                   setStatusFilter(value as any);
                                   setCurrentPage(1); // Reset to first page when filtering
@@ -773,11 +773,29 @@ export default function BookingManagement() {
                                 </Select>
                               </div>
                             </TableHead>
-                            <TableHead className="w-[140px]">Service & Location</TableHead>
-                            <TableHead className="w-[120px]">Client</TableHead>
-                            <TableHead className="w-[120px]">Worker</TableHead>
-                            <TableHead className="w-[100px]">Amount</TableHead>
-                            <TableHead className="text-right">Actions</TableHead>
+                            <TableHead className="w-[140px]">Location</TableHead>
+                            <TableHead className="w-[160px]">
+                              <div className="flex items-center gap-1">
+                                <span>Bookings/Earnings</span>
+                                <div className="flex gap-1">
+                                  <FileText className="w-3 h-3 text-gray-400" />
+                                  <DollarSign className="w-3 h-3 text-gray-400" />
+                                </div>
+                              </div>
+                            </TableHead>
+                            <TableHead className="w-[160px]">
+                              <div className="flex items-center gap-1">
+                                <span>Contact</span>
+                                <div className="flex gap-1">
+                                  <Phone className="w-3 h-3 text-gray-400" />
+                                  <MessageSquare className="w-3 h-3 text-gray-400" />
+                                  <Mail className="w-3 h-3 text-gray-400" />
+                                  <Send className="w-3 h-3 text-gray-400" />
+                                </div>
+                              </div>
+                            </TableHead>
+                            <TableHead>Bank Details</TableHead>
+                            <TableHead></TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -786,158 +804,165 @@ export default function BookingManagement() {
                             
                             return (
                               <TableRow key={booking.id}>
-                                {/* Booking Details */}
+                                {/* User Info */}
                                 <TableCell>
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <div className="flex items-start gap-3 cursor-pointer">
-                                        <div className="h-10 w-10 flex-shrink-0 bg-orange-100 dark:bg-orange-900 rounded-lg flex items-center justify-center">
-                                          <FileText className="w-5 h-5 text-orange-600 dark:text-orange-400" />
+                                  <div className="flex items-start gap-3">
+                                    {booking.client ? (
+                                      <Avatar className="h-10 w-10 flex-shrink-0">
+                                        <AvatarImage 
+                                          src={`https://api.dicebear.com/7.x/initials/svg?seed=${booking.client.firstName}%20${booking.client.lastName}`} 
+                                          alt={`${booking.client.firstName} ${booking.client.lastName}`} 
+                                        />
+                                        <AvatarFallback className="bg-blue-100 text-blue-600 font-semibold">
+                                          {booking.client.firstName?.charAt(0).toUpperCase()}{booking.client.lastName?.charAt(0).toUpperCase()}
+                                        </AvatarFallback>
+                                      </Avatar>
+                                    ) : (
+                                      <div className="h-10 w-10 flex-shrink-0 bg-orange-100 dark:bg-orange-900 rounded-lg flex items-center justify-center">
+                                        <FileText className="w-5 h-5 text-orange-600 dark:text-orange-400" />
+                                      </div>
+                                    )}
+                                    <div className="min-w-0 flex-1">
+                                      <div className="flex items-center gap-2">
+                                        <div className="font-medium text-gray-900 dark:text-white">
+                                          {booking.client ? `${booking.client.firstName} ${booking.client.lastName}` : 'No Client'}
                                         </div>
-                                        <div className="min-w-0 flex-1">
-                                          <div className="font-medium text-gray-900 dark:text-white truncate">
-                                            #{booking.id.slice(-8)}
-                                          </div>
-                                          <div className="mt-1 space-y-1">
-                                            <Badge 
-                                              variant={bookingStatus.variant}
-                                              className={bookingStatus.className}
-                                            >
-                                              {bookingStatus.icon}
-                                              <span className="ml-1">{bookingStatus.label}</span>
+                                        <Badge variant="outline" className="text-xs">
+                                          Client
+                                        </Badge>
+                                      </div>
+                                      <div className="text-sm text-orange-800 dark:text-orange-400 font-mono font-bold truncate">
+                                        #{booking.id.slice(-8)}
+                                      </div>
+                                      <div className="mt-1 space-y-1">
+                                        <div className="flex items-center gap-2 flex-wrap">
+                                          <Badge 
+                                            variant={bookingStatus.variant}
+                                            className={bookingStatus.className}
+                                          >
+                                            {bookingStatus.icon}
+                                            <span className="ml-1">{bookingStatus.label}</span>
+                                          </Badge>
+                                          {booking.worker && (
+                                            <Badge variant="secondary" className="text-xs">
+                                              Worker: {booking.worker.firstName} {booking.worker.lastName}
                                             </Badge>
-                                            <div className="text-xs text-gray-500 dark:text-gray-400">
-                                              Created: {getBookingAge(booking.createdAt)}
-                                            </div>
-                                            {booking.scheduledAt && (
-                                              <div className="text-xs text-gray-500 dark:text-gray-400">
-                                                Scheduled: {formatIndianDateTime(booking.scheduledAt)}
-                                              </div>
-                                            )}
+                                          )}
+                                        </div>
+                                        <div className="text-xs text-gray-500 dark:text-gray-400">
+                                          Created: {getBookingAge(booking.createdAt)} ago
+                                        </div>
+                                        {booking.scheduledAt && (
+                                          <div className="text-xs text-gray-500 dark:text-gray-400">
+                                            Scheduled: {formatIndianDateTime(booking.scheduledAt)}
                                           </div>
-                                        </div>
-                                      </div>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                      <div className="text-left">
-                                        <p className="font-semibold">Booking #{booking.id.slice(-8)}</p>
-                                        <p className="text-sm">Status: {bookingStatus.label}</p>
-                                        <p className="text-sm">Created: {getBookingAge(booking.createdAt)}</p>
-                                      </div>
-                                    </TooltipContent>
-                                  </Tooltip>
-                                </TableCell>
-
-                                {/* Service & Location */}
-                                <TableCell>
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <div className="cursor-pointer">
-                                        <div className="text-sm font-medium text-gray-900 dark:text-white">
-                                          {booking.serviceType}
-                                        </div>
-                                        <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                          <MapPin className="w-3 h-3" />
-                                          <span className="truncate">{booking.location}</span>
-                                        </div>
-                                      </div>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                      <div className="text-left max-w-xs">
-                                        <p className="font-semibold">{booking.serviceType}</p>
-                                        <p className="text-sm">Location: {booking.location}</p>
-                                        {booking.description && (
-                                          <p className="text-sm mt-1">Description: {booking.description}</p>
                                         )}
                                       </div>
-                                    </TooltipContent>
-                                  </Tooltip>
+                                    </div>
+                                  </div>
                                 </TableCell>
 
-                                {/* Client */}
+                                {/* Location */}
                                 <TableCell>
-                                  {booking.client ? (
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <div className="flex items-center gap-2 cursor-pointer">
-                                          <Avatar className="h-8 w-8 flex-shrink-0">
-                                            <AvatarImage 
-                                              src={`https://api.dicebear.com/7.x/initials/svg?seed=${booking.client.firstName}%20${booking.client.lastName}`} 
-                                              alt={`${booking.client.firstName} ${booking.client.lastName}`} 
-                                            />
-                                            <AvatarFallback className="bg-blue-100 text-blue-600 text-xs">
-                                              {booking.client.firstName?.charAt(0).toUpperCase()}{booking.client.lastName?.charAt(0).toUpperCase()}
-                                            </AvatarFallback>
-                                          </Avatar>
-                                          <div className="min-w-0 flex-1">
-                                            <div className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                                              {booking.client.firstName} {booking.client.lastName}
-                                            </div>
-                                            <div className="text-xs text-gray-500 dark:text-gray-400">
-                                              {booking.client.mobile}
-                                            </div>
-                                          </div>
-                                        </div>
-                                      </TooltipTrigger>
-                                      <TooltipContent>
-                                        <div className="text-left">
-                                          <p className="font-semibold">{booking.client.firstName} {booking.client.lastName}</p>
-                                          <p className="text-sm">Phone: {booking.client.mobile}</p>
-                                          {booking.client.email && <p className="text-sm">Email: {booking.client.email}</p>}
-                                        </div>
-                                      </TooltipContent>
-                                    </Tooltip>
-                                  ) : (
-                                    <span className="text-gray-400 dark:text-gray-500 text-sm">No client data</span>
-                                  )}
+                                  <div className="text-sm font-medium text-gray-900 dark:text-white">
+                                    {booking.location || "Not specified"}
+                                  </div>
+                                  <div className="text-xs text-gray-500 dark:text-gray-400">
+                                    Address: {booking.location || "Not provided"}
+                                  </div>
+                                  <div className="text-xs text-gray-500 dark:text-gray-400">
+                                    State: Not specified
+                                  </div>
+                                  <div className="text-xs text-gray-500 dark:text-gray-400">
+                                    PIN: Not provided
+                                  </div>
                                 </TableCell>
 
-                                {/* Worker */}
+                                {/* Bookings/Earnings */}
                                 <TableCell>
-                                  {booking.worker ? (
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <div className="flex items-center gap-2 cursor-pointer">
-                                          <Avatar className="h-8 w-8 flex-shrink-0">
-                                            <AvatarImage 
-                                              src={`https://api.dicebear.com/7.x/initials/svg?seed=${booking.worker.firstName}%20${booking.worker.lastName}`} 
-                                              alt={`${booking.worker.firstName} ${booking.worker.lastName}`} 
-                                            />
-                                            <AvatarFallback className="bg-green-100 text-green-600 text-xs">
-                                              {booking.worker.firstName?.charAt(0).toUpperCase()}{booking.worker.lastName?.charAt(0).toUpperCase()}
-                                            </AvatarFallback>
-                                          </Avatar>
-                                          <div className="min-w-0 flex-1">
-                                            <div className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                                              {booking.worker.firstName} {booking.worker.lastName}
-                                            </div>
-                                            <div className="text-xs text-gray-500 dark:text-gray-400">
-                                              {booking.worker.mobile}
-                                            </div>
-                                          </div>
-                                        </div>
-                                      </TooltipTrigger>
-                                      <TooltipContent>
-                                        <div className="text-left">
-                                          <p className="font-semibold">{booking.worker.firstName} {booking.worker.lastName}</p>
-                                          <p className="text-sm">Phone: {booking.worker.mobile}</p>
-                                          {booking.worker.email && <p className="text-sm">Email: {booking.worker.email}</p>}
-                                        </div>
-                                      </TooltipContent>
-                                    </Tooltip>
-                                  ) : (
-                                    <span className="text-gray-400 dark:text-gray-500 text-sm">Not assigned</span>
-                                  )}
-                                </TableCell>
-
-                                {/* Amount */}
-                                <TableCell>
-                                  <div className="text-center">
-                                    <div className="text-sm font-medium text-gray-900 dark:text-white">
-                                      {booking.amount ? `₹${booking.amount}` : "TBD"}
+                                  <div className="space-y-1">
+                                    <div className="text-sm">
+                                      <span className="text-gray-600 dark:text-gray-400">Service: </span>
+                                      <span className="font-medium">{booking.serviceType}</span>
                                     </div>
                                     <div className="text-xs text-gray-500 dark:text-gray-400">
-                                      {booking.completedAt ? "Paid" : "Pending"}
+                                      • Status: {bookingStatus.label}
+                                    </div>
+                                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                                      • Duration: {getBookingAge(booking.createdAt)}
+                                    </div>
+                                    <div className="text-sm">
+                                      <span className="text-gray-600 dark:text-gray-400">Amount: </span>
+                                      <span className="font-medium">
+                                        {booking.amount ? `₹${booking.amount}` : "TBD"}
+                                      </span>
+                                    </div>
+                                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                                      Payment: {booking.completedAt ? "Completed" : "Pending"}
+                                    </div>
+                                    {booking.description && (
+                                      <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                                        Notes: {booking.description}
+                                      </div>
+                                    )}
+                                    <div className="flex items-center gap-1 mt-1">
+                                      <Badge variant="outline" className="bg-orange-50 text-orange-800 border-orange-200">
+                                        <FileText className="w-3 h-3 mr-1" />
+                                        Booking
+                                      </Badge>
+                                    </div>
+                                  </div>
+                                </TableCell>
+
+                                {/* Contact */}
+                                <TableCell>
+                                  <div className="space-y-1">
+                                    {booking.client ? (
+                                      <>
+                                        <div className="flex items-center gap-1 text-sm">
+                                          <Phone className="w-3 h-3" />
+                                          <span className="font-mono">{booking.client.mobile}</span>
+                                        </div>
+                                        {booking.client.email && (
+                                          <div className="flex items-center gap-1 text-xs truncate">
+                                            <Mail className="w-3 h-3 flex-shrink-0" />
+                                            <span className="truncate">{booking.client.email}</span>
+                                          </div>
+                                        )}
+                                        <div className="text-xs text-gray-500 dark:text-gray-400">
+                                          Client: {booking.client.firstName} {booking.client.lastName}
+                                        </div>
+                                        {booking.worker && (
+                                          <div className="text-xs text-gray-500 dark:text-gray-400">
+                                            Worker: {booking.worker.firstName} {booking.worker.lastName}
+                                          </div>
+                                        )}
+                                      </>
+                                    ) : (
+                                      <div className="text-xs text-gray-400 italic">No contact info</div>
+                                    )}
+                                    <div className="flex items-center gap-1 mt-2">
+                                      <Phone className="w-3 h-3 text-blue-600 cursor-pointer" />
+                                      <MessageSquare className="w-3 h-3 text-green-600 cursor-pointer" />
+                                      <Mail className="w-3 h-3 text-gray-600 cursor-pointer" />
+                                      <Send className="w-3 h-3 text-purple-600 cursor-pointer" />
+                                    </div>
+                                  </div>
+                                </TableCell>
+
+                                {/* Bank Details */}
+                                <TableCell>
+                                  <div className="space-y-1">
+                                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                                      <span className="text-gray-400 italic">Transaction details</span>
+                                    </div>
+                                    {booking.amount && (
+                                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                                        Amount: ₹{booking.amount}
+                                      </div>
+                                    )}
+                                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                                      Payment: {booking.completedAt ? "Complete" : "Pending"}
                                     </div>
                                   </div>
                                 </TableCell>
@@ -1173,7 +1198,7 @@ export default function BookingManagement() {
                           <TableRow>
                             <TableHead className="w-[190px]">
                               <div className="flex items-center gap-2">
-                                <span>Booking Details</span>
+                                <span>User</span>
                                 <Select value={statusFilter} onValueChange={(value) => {
                                   setStatusFilter(value as any);
                                   setDistrictCurrentPage(1);
@@ -1192,11 +1217,29 @@ export default function BookingManagement() {
                                 </Select>
                               </div>
                             </TableHead>
-                            <TableHead className="w-[140px]">Service & Location</TableHead>
-                            <TableHead className="w-[120px]">Client</TableHead>
-                            <TableHead className="w-[120px]">Worker</TableHead>
-                            <TableHead className="w-[100px]">Amount</TableHead>
-                            <TableHead className="text-right">Actions</TableHead>
+                            <TableHead className="w-[140px]">Location</TableHead>
+                            <TableHead className="w-[160px]">
+                              <div className="flex items-center gap-1">
+                                <span>Bookings/Earnings</span>
+                                <div className="flex gap-1">
+                                  <FileText className="w-3 h-3 text-gray-400" />
+                                  <DollarSign className="w-3 h-3 text-gray-400" />
+                                </div>
+                              </div>
+                            </TableHead>
+                            <TableHead className="w-[160px]">
+                              <div className="flex items-center gap-1">
+                                <span>Contact</span>
+                                <div className="flex gap-1">
+                                  <Phone className="w-3 h-3 text-gray-400" />
+                                  <MessageSquare className="w-3 h-3 text-gray-400" />
+                                  <Mail className="w-3 h-3 text-gray-400" />
+                                  <Send className="w-3 h-3 text-gray-400" />
+                                </div>
+                              </div>
+                            </TableHead>
+                            <TableHead>Bank Details</TableHead>
+                            <TableHead></TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -1205,158 +1248,165 @@ export default function BookingManagement() {
                             
                             return (
                               <TableRow key={booking.id}>
-                                {/* Booking Details */}
+                                {/* User Info */}
                                 <TableCell>
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <div className="flex items-start gap-3 cursor-pointer">
-                                        <div className="h-10 w-10 flex-shrink-0 bg-orange-100 dark:bg-orange-900 rounded-lg flex items-center justify-center">
-                                          <FileText className="w-5 h-5 text-orange-600 dark:text-orange-400" />
+                                  <div className="flex items-start gap-3">
+                                    {booking.client ? (
+                                      <Avatar className="h-10 w-10 flex-shrink-0">
+                                        <AvatarImage 
+                                          src={`https://api.dicebear.com/7.x/initials/svg?seed=${booking.client.firstName}%20${booking.client.lastName}`} 
+                                          alt={`${booking.client.firstName} ${booking.client.lastName}`} 
+                                        />
+                                        <AvatarFallback className="bg-blue-100 text-blue-600 font-semibold">
+                                          {booking.client.firstName?.charAt(0).toUpperCase()}{booking.client.lastName?.charAt(0).toUpperCase()}
+                                        </AvatarFallback>
+                                      </Avatar>
+                                    ) : (
+                                      <div className="h-10 w-10 flex-shrink-0 bg-orange-100 dark:bg-orange-900 rounded-lg flex items-center justify-center">
+                                        <FileText className="w-5 h-5 text-orange-600 dark:text-orange-400" />
+                                      </div>
+                                    )}
+                                    <div className="min-w-0 flex-1">
+                                      <div className="flex items-center gap-2">
+                                        <div className="font-medium text-gray-900 dark:text-white">
+                                          {booking.client ? `${booking.client.firstName} ${booking.client.lastName}` : 'No Client'}
                                         </div>
-                                        <div className="min-w-0 flex-1">
-                                          <div className="font-medium text-gray-900 dark:text-white truncate">
-                                            #{booking.id.slice(-8)}
-                                          </div>
-                                          <div className="mt-1 space-y-1">
-                                            <Badge 
-                                              variant={bookingStatus.variant}
-                                              className={bookingStatus.className}
-                                            >
-                                              {bookingStatus.icon}
-                                              <span className="ml-1">{bookingStatus.label}</span>
+                                        <Badge variant="outline" className="text-xs">
+                                          Client
+                                        </Badge>
+                                      </div>
+                                      <div className="text-sm text-orange-800 dark:text-orange-400 font-mono font-bold truncate">
+                                        #{booking.id.slice(-8)}
+                                      </div>
+                                      <div className="mt-1 space-y-1">
+                                        <div className="flex items-center gap-2 flex-wrap">
+                                          <Badge 
+                                            variant={bookingStatus.variant}
+                                            className={bookingStatus.className}
+                                          >
+                                            {bookingStatus.icon}
+                                            <span className="ml-1">{bookingStatus.label}</span>
+                                          </Badge>
+                                          {booking.worker && (
+                                            <Badge variant="secondary" className="text-xs">
+                                              Worker: {booking.worker.firstName} {booking.worker.lastName}
                                             </Badge>
-                                            <div className="text-xs text-gray-500 dark:text-gray-400">
-                                              Created: {getBookingAge(booking.createdAt)}
-                                            </div>
-                                            {booking.scheduledAt && (
-                                              <div className="text-xs text-gray-500 dark:text-gray-400">
-                                                Scheduled: {formatIndianDateTime(booking.scheduledAt)}
-                                              </div>
-                                            )}
+                                          )}
+                                        </div>
+                                        <div className="text-xs text-gray-500 dark:text-gray-400">
+                                          Created: {getBookingAge(booking.createdAt)} ago
+                                        </div>
+                                        {booking.scheduledAt && (
+                                          <div className="text-xs text-gray-500 dark:text-gray-400">
+                                            Scheduled: {formatIndianDateTime(booking.scheduledAt)}
                                           </div>
-                                        </div>
-                                      </div>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                      <div className="text-left">
-                                        <p className="font-semibold">Booking #{booking.id.slice(-8)}</p>
-                                        <p className="text-sm">Status: {bookingStatus.label}</p>
-                                        <p className="text-sm">Created: {getBookingAge(booking.createdAt)}</p>
-                                      </div>
-                                    </TooltipContent>
-                                  </Tooltip>
-                                </TableCell>
-
-                                {/* Service & Location */}
-                                <TableCell>
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <div className="cursor-pointer">
-                                        <div className="text-sm font-medium text-gray-900 dark:text-white">
-                                          {booking.serviceType}
-                                        </div>
-                                        <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                          <MapPin className="w-3 h-3" />
-                                          <span className="truncate">{booking.location}</span>
-                                        </div>
-                                      </div>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                      <div className="text-left max-w-xs">
-                                        <p className="font-semibold">{booking.serviceType}</p>
-                                        <p className="text-sm">Location: {booking.location}</p>
-                                        {booking.description && (
-                                          <p className="text-sm mt-1">Description: {booking.description}</p>
                                         )}
                                       </div>
-                                    </TooltipContent>
-                                  </Tooltip>
+                                    </div>
+                                  </div>
                                 </TableCell>
 
-                                {/* Client */}
+                                {/* Location */}
                                 <TableCell>
-                                  {booking.client ? (
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <div className="flex items-center gap-2 cursor-pointer">
-                                          <Avatar className="h-8 w-8 flex-shrink-0">
-                                            <AvatarImage 
-                                              src={`https://api.dicebear.com/7.x/initials/svg?seed=${booking.client.firstName}%20${booking.client.lastName}`} 
-                                              alt={`${booking.client.firstName} ${booking.client.lastName}`} 
-                                            />
-                                            <AvatarFallback className="bg-blue-100 text-blue-600 text-xs">
-                                              {booking.client.firstName?.charAt(0).toUpperCase()}{booking.client.lastName?.charAt(0).toUpperCase()}
-                                            </AvatarFallback>
-                                          </Avatar>
-                                          <div className="min-w-0 flex-1">
-                                            <div className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                                              {booking.client.firstName} {booking.client.lastName}
-                                            </div>
-                                            <div className="text-xs text-gray-500 dark:text-gray-400">
-                                              {booking.client.mobile}
-                                            </div>
-                                          </div>
-                                        </div>
-                                      </TooltipTrigger>
-                                      <TooltipContent>
-                                        <div className="text-left">
-                                          <p className="font-semibold">{booking.client.firstName} {booking.client.lastName}</p>
-                                          <p className="text-sm">Phone: {booking.client.mobile}</p>
-                                          {booking.client.email && <p className="text-sm">Email: {booking.client.email}</p>}
-                                        </div>
-                                      </TooltipContent>
-                                    </Tooltip>
-                                  ) : (
-                                    <span className="text-gray-400 dark:text-gray-500 text-sm">No client data</span>
-                                  )}
+                                  <div className="text-sm font-medium text-gray-900 dark:text-white">
+                                    {booking.location || "Not specified"}
+                                  </div>
+                                  <div className="text-xs text-gray-500 dark:text-gray-400">
+                                    Address: {booking.location || "Not provided"}
+                                  </div>
+                                  <div className="text-xs text-gray-500 dark:text-gray-400">
+                                    State: Not specified
+                                  </div>
+                                  <div className="text-xs text-gray-500 dark:text-gray-400">
+                                    PIN: Not provided
+                                  </div>
                                 </TableCell>
 
-                                {/* Worker */}
+                                {/* Bookings/Earnings */}
                                 <TableCell>
-                                  {booking.worker ? (
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <div className="flex items-center gap-2 cursor-pointer">
-                                          <Avatar className="h-8 w-8 flex-shrink-0">
-                                            <AvatarImage 
-                                              src={`https://api.dicebear.com/7.x/initials/svg?seed=${booking.worker.firstName}%20${booking.worker.lastName}`} 
-                                              alt={`${booking.worker.firstName} ${booking.worker.lastName}`} 
-                                            />
-                                            <AvatarFallback className="bg-green-100 text-green-600 text-xs">
-                                              {booking.worker.firstName?.charAt(0).toUpperCase()}{booking.worker.lastName?.charAt(0).toUpperCase()}
-                                            </AvatarFallback>
-                                          </Avatar>
-                                          <div className="min-w-0 flex-1">
-                                            <div className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                                              {booking.worker.firstName} {booking.worker.lastName}
-                                            </div>
-                                            <div className="text-xs text-gray-500 dark:text-gray-400">
-                                              {booking.worker.mobile}
-                                            </div>
-                                          </div>
-                                        </div>
-                                      </TooltipTrigger>
-                                      <TooltipContent>
-                                        <div className="text-left">
-                                          <p className="font-semibold">{booking.worker.firstName} {booking.worker.lastName}</p>
-                                          <p className="text-sm">Phone: {booking.worker.mobile}</p>
-                                          {booking.worker.email && <p className="text-sm">Email: {booking.worker.email}</p>}
-                                        </div>
-                                      </TooltipContent>
-                                    </Tooltip>
-                                  ) : (
-                                    <span className="text-gray-400 dark:text-gray-500 text-sm">Not assigned</span>
-                                  )}
-                                </TableCell>
-
-                                {/* Amount */}
-                                <TableCell>
-                                  <div className="text-center">
-                                    <div className="text-sm font-medium text-gray-900 dark:text-white">
-                                      {booking.amount ? `₹${booking.amount}` : "TBD"}
+                                  <div className="space-y-1">
+                                    <div className="text-sm">
+                                      <span className="text-gray-600 dark:text-gray-400">Service: </span>
+                                      <span className="font-medium">{booking.serviceType}</span>
                                     </div>
                                     <div className="text-xs text-gray-500 dark:text-gray-400">
-                                      {booking.completedAt ? "Paid" : "Pending"}
+                                      • Status: {bookingStatus.label}
+                                    </div>
+                                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                                      • Duration: {getBookingAge(booking.createdAt)}
+                                    </div>
+                                    <div className="text-sm">
+                                      <span className="text-gray-600 dark:text-gray-400">Amount: </span>
+                                      <span className="font-medium">
+                                        {booking.amount ? `₹${booking.amount}` : "TBD"}
+                                      </span>
+                                    </div>
+                                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                                      Payment: {booking.completedAt ? "Completed" : "Pending"}
+                                    </div>
+                                    {booking.description && (
+                                      <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                                        Notes: {booking.description}
+                                      </div>
+                                    )}
+                                    <div className="flex items-center gap-1 mt-1">
+                                      <Badge variant="outline" className="bg-orange-50 text-orange-800 border-orange-200">
+                                        <FileText className="w-3 h-3 mr-1" />
+                                        Booking
+                                      </Badge>
+                                    </div>
+                                  </div>
+                                </TableCell>
+
+                                {/* Contact */}
+                                <TableCell>
+                                  <div className="space-y-1">
+                                    {booking.client ? (
+                                      <>
+                                        <div className="flex items-center gap-1 text-sm">
+                                          <Phone className="w-3 h-3" />
+                                          <span className="font-mono">{booking.client.mobile}</span>
+                                        </div>
+                                        {booking.client.email && (
+                                          <div className="flex items-center gap-1 text-xs truncate">
+                                            <Mail className="w-3 h-3 flex-shrink-0" />
+                                            <span className="truncate">{booking.client.email}</span>
+                                          </div>
+                                        )}
+                                        <div className="text-xs text-gray-500 dark:text-gray-400">
+                                          Client: {booking.client.firstName} {booking.client.lastName}
+                                        </div>
+                                        {booking.worker && (
+                                          <div className="text-xs text-gray-500 dark:text-gray-400">
+                                            Worker: {booking.worker.firstName} {booking.worker.lastName}
+                                          </div>
+                                        )}
+                                      </>
+                                    ) : (
+                                      <div className="text-xs text-gray-400 italic">No contact info</div>
+                                    )}
+                                    <div className="flex items-center gap-1 mt-2">
+                                      <Phone className="w-3 h-3 text-blue-600 cursor-pointer" />
+                                      <MessageSquare className="w-3 h-3 text-green-600 cursor-pointer" />
+                                      <Mail className="w-3 h-3 text-gray-600 cursor-pointer" />
+                                      <Send className="w-3 h-3 text-purple-600 cursor-pointer" />
+                                    </div>
+                                  </div>
+                                </TableCell>
+
+                                {/* Bank Details */}
+                                <TableCell>
+                                  <div className="space-y-1">
+                                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                                      <span className="text-gray-400 italic">Transaction details</span>
+                                    </div>
+                                    {booking.amount && (
+                                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                                        Amount: ₹{booking.amount}
+                                      </div>
+                                    )}
+                                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                                      Payment: {booking.completedAt ? "Complete" : "Pending"}
                                     </div>
                                   </div>
                                 </TableCell>
