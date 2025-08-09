@@ -1084,7 +1084,7 @@ export default function AdminManagement() {
                                         </DropdownMenuSubTrigger>
                                         <DropdownMenuSubContent>
                                           <DropdownMenuItem onClick={() => handleWhatsAppAdmin(admin)}>
-                                            <MessageCircle className="w-4 h-4 mr-2 text-green-600" />
+                                            <FaWhatsapp className="w-4 h-4 mr-2 text-green-600" />
                                             <span className="text-green-600">WhatsApp</span>
                                           </DropdownMenuItem>
                                           <DropdownMenuItem onClick={() => handleSendSMS(admin)}>
@@ -1544,7 +1544,7 @@ export default function AdminManagement() {
                                         </DropdownMenuSubTrigger>
                                         <DropdownMenuSubContent>
                                           <DropdownMenuItem onClick={() => handleWhatsAppAdmin(admin)}>
-                                            <MessageCircle className="w-4 h-4 mr-2 text-green-600" />
+                                            <FaWhatsapp className="w-4 h-4 mr-2 text-green-600" />
                                             <span className="text-green-600">WhatsApp</span>
                                           </DropdownMenuItem>
                                           <DropdownMenuItem onClick={() => handleSendSMS(admin)}>
