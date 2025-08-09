@@ -5,6 +5,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { AnimatedStatusBadge, useStatusTransition } from "@/components/ui/animated-status-badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger } from "@/components/ui/dropdown-menu";
 import {
@@ -939,6 +940,7 @@ export default function WorkerManagement() {
                         <TableBody>
                           {workers.map((worker) => {
                             const activityStatus = getActivityStatus(worker.lastLoginAt, worker.createdAt);
+                            const previousApprovalStatus = useStatusTransition(worker.status || "unknown");
                             
                             return (
                               <TableRow key={worker.id}>
@@ -989,6 +991,12 @@ export default function WorkerManagement() {
                                               >
                                                 {worker.isVerified ? "Verified" : "Unverified"}
                                               </Badge>
+                                              <AnimatedStatusBadge
+                                                status={worker.status as "pending" | "approved" | "rejected" || "pending"}
+                                                previousStatus={previousApprovalStatus as "pending" | "approved" | "rejected" || "pending"}
+                                                size="sm"
+                                                showIcon={true}
+                                              />
                                             </div>
                                             <div className="text-xs text-gray-500 dark:text-gray-400">
                                               Member since: {getMemberSince(worker.createdAt)}
@@ -1425,6 +1433,7 @@ export default function WorkerManagement() {
                         <TableBody>
                           {districtWorkers.map((worker) => {
                             const activityStatus = getActivityStatus(worker.lastLoginAt, worker.createdAt);
+                            const previousApprovalStatus = useStatusTransition(worker.status || "unknown");
                             
                             return (
                               <TableRow key={worker.id}>
@@ -1475,6 +1484,12 @@ export default function WorkerManagement() {
                                               >
                                                 {worker.isVerified ? "Verified" : "Unverified"}
                                               </Badge>
+                                              <AnimatedStatusBadge
+                                                status={worker.status as "pending" | "approved" | "rejected" || "pending"}
+                                                previousStatus={previousApprovalStatus as "pending" | "approved" | "rejected" || "pending"}
+                                                size="sm"
+                                                showIcon={true}
+                                              />
                                             </div>
                                             <div className="text-xs text-gray-500 dark:text-gray-400">
                                               Member since: {getMemberSince(worker.createdAt)}
