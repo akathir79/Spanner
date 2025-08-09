@@ -253,7 +253,7 @@ export default function WorkerManagement() {
   });
 
   // Type the financialStatements as an array to fix TypeScript errors
-  const typedFinancialStatements = ([] as any[]) || [];
+  const typedFinancialStatements: any[] = [];
 
   // Memoize filtered workers to prevent recalculation on every render
   const allWorkers = useMemo(() => {
@@ -549,12 +549,9 @@ export default function WorkerManagement() {
     setSendingMessage(true);
     
     try {
-      await apiRequest("/api/admin/send-message", {
-        method: "POST",
-        body: JSON.stringify({
-          userId: userToMessage.id,
-          message: messageText.trim()
-        })
+      await apiRequest("/api/admin/send-message", "POST", {
+        userId: userToMessage.id,
+        message: messageText.trim()
       });
       
       toast({
