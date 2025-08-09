@@ -33,7 +33,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ArrowLeft, Phone, Mail, Calendar, MoreHorizontal, Eye, MessageSquare, CheckCircle, XCircle, Trash2, Edit, AlertCircle, Search, X, Menu, Loader2, MessageCircle, Smartphone, CreditCard, Send, ArrowRightLeft, History, DollarSign, Filter, Copy, Square, Shield, Crown } from "lucide-react";
-// import { FaWhatsapp } from "react-icons/fa"; // Replaced with MessageCircle for consistency
+import { FaWhatsapp } from "react-icons/fa";
+import { BiMessageSquareDetail } from "react-icons/bi";
 import { format } from "date-fns";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
@@ -876,10 +877,10 @@ export default function AdminManagement() {
                               <div className="flex items-center gap-1">
                                 <span>Contact</span>
                                 <div className="flex gap-1">
-                                  <Phone className="w-3 h-3 text-gray-400" />
-                                  <MessageSquare className="w-3 h-3 text-gray-400" />
-                                  <Mail className="w-3 h-3 text-gray-400" />
-                                  <Send className="w-3 h-3 text-gray-400" />
+                                  <FaWhatsapp className="w-4 h-4 text-green-500" />
+                                  <MessageSquare className="w-4 h-4 text-blue-500" />
+                                  <Mail className="w-4 h-4 text-red-500" />
+                                  <BiMessageSquareDetail className="w-4 h-4 text-purple-500" />
                                 </div>
                               </div>
                             </TableHead>
@@ -1046,10 +1047,10 @@ export default function AdminManagement() {
                                       </div>
                                     )}
                                     <div className="flex items-center gap-1 mt-2">
-                                      <Phone className="w-3 h-3 text-blue-600 cursor-pointer" onClick={() => handleCallAdmin(admin)} />
-                                      <MessageSquare className="w-3 h-3 text-green-600 cursor-pointer" onClick={() => handleWhatsAppAdmin(admin)} />
-                                      <Mail className="w-3 h-3 text-gray-600 cursor-pointer" onClick={() => copyToClipboard(admin.email || '', "Email")} />
-                                      <Send className="w-3 h-3 text-purple-600 cursor-pointer" onClick={() => handleSendMessage(admin)} />
+                                      <FaWhatsapp className="w-4 h-4 text-green-600 cursor-pointer" onClick={() => handleWhatsAppAdmin(admin)} />
+                                      <MessageSquare className="w-4 h-4 text-blue-600 cursor-pointer" onClick={() => handleCallAdmin(admin)} />
+                                      <Mail className="w-4 h-4 text-red-600 cursor-pointer" onClick={() => copyToClipboard(admin.email || '', "Email")} />
+                                      <BiMessageSquareDetail className="w-4 h-4 text-purple-600 cursor-pointer" onClick={() => handleSendMessage(admin)} />
                                     </div>
                                   </div>
                                 </TableCell>
@@ -1506,10 +1507,10 @@ export default function AdminManagement() {
                                       </div>
                                     )}
                                     <div className="flex items-center gap-1 mt-2">
-                                      <Phone className="w-3 h-3 text-blue-600 cursor-pointer" onClick={() => handleCallAdmin(admin)} />
-                                      <MessageSquare className="w-3 h-3 text-green-600 cursor-pointer" onClick={() => handleWhatsAppAdmin(admin)} />
-                                      <Mail className="w-3 h-3 text-gray-600 cursor-pointer" onClick={() => copyToClipboard(admin.email || '', "Email")} />
-                                      <Send className="w-3 h-3 text-purple-600 cursor-pointer" onClick={() => handleSendMessage(admin)} />
+                                      <FaWhatsapp className="w-4 h-4 text-green-600 cursor-pointer" onClick={() => handleWhatsAppAdmin(admin)} />
+                                      <MessageSquare className="w-4 h-4 text-blue-600 cursor-pointer" onClick={() => handleCallAdmin(admin)} />
+                                      <Mail className="w-4 h-4 text-red-600 cursor-pointer" onClick={() => copyToClipboard(admin.email || '', "Email")} />
+                                      <BiMessageSquareDetail className="w-4 h-4 text-purple-600 cursor-pointer" onClick={() => handleSendMessage(admin)} />
                                     </div>
                                   </div>
                                 </TableCell>
