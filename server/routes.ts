@@ -356,7 +356,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         aadhaarVerified: userData.aadhaarVerified || false,
         primaryService: userData.primaryService,
         experienceYears: userData.experienceYears,
-        hourlyRate: userData.hourlyRate,
+        hourlyRate: userData.hourlyRate.toString(),
         serviceDistricts: userData.serviceDistricts,
         serviceAreas: userData.serviceAreas || [],
         skills: userData.skills,

@@ -237,16 +237,17 @@ export class DatabaseStorage implements IStorage {
 
   async createUser(insertUser: InsertUser): Promise<User> {
     // Generate custom user ID if not provided
+    let userDataWithId = { ...insertUser };
     if (!insertUser.id && insertUser.state && insertUser.district && insertUser.role) {
       const customId = await generateCustomUserId({
         state: insertUser.state,
         district: insertUser.district,
         role: insertUser.role as 'client' | 'worker' | 'admin' | 'super_admin'
       });
-      insertUser.id = customId;
+      userDataWithId.id = customId;
     }
     
-    const [user] = await db.insert(users).values(insertUser).returning();
+    const [user] = await db.insert(users).values(userDataWithId).returning();
     return user;
   }
 
