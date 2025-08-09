@@ -41,6 +41,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import LocationTracker from "@/components/LocationTracker";
 import BankDetailsModal from "@/components/BankDetailsModal";
+import { format } from "date-fns";
 
 // Types
 type WorkerBankDetails = {
@@ -458,7 +459,9 @@ export default function WorkerDashboard() {
   };
 
   // Now that all hooks are called, we can do conditional checks
-  const isWorkerApproved = workerProfile?.workerProfile?.isApproved || false;
+  const isWorkerApproved = user?.status === "approved";
+  const isWorkerPending = user?.status === "pending";
+  const isWorkerRejected = user?.status === "rejected";
 
   // Show loading state while auth is loading
   if (authLoading) {
@@ -475,6 +478,162 @@ export default function WorkerDashboard() {
   // Redirect if user is null or wrong role
   if (!user || user.role !== "worker") {
     return null;
+  }
+
+  // Show approval pending state for unapproved workers
+  if (isWorkerPending || isWorkerRejected) {
+    return (
+      <div className="min-h-screen bg-muted/30 pt-20 pb-8">
+        <div className="container mx-auto px-4 max-w-4xl">
+          <div className="mb-8 text-center">
+            <h1 className="text-3xl font-bold mb-2">
+              Welcome, {user.firstName}!
+            </h1>
+            <p className="text-muted-foreground">
+              Your worker profile is under review
+            </p>
+          </div>
+
+          {/* Approval Status Card */}
+          <Card className="mb-8">
+            <CardContent className="p-8 text-center">
+              {isWorkerPending && (
+                <div className="space-y-4">
+                  <div className="p-4 bg-yellow-50 dark:bg-yellow-950 rounded-lg border border-yellow-200 dark:border-yellow-800">
+                    <div className="flex items-center justify-center space-x-2 mb-3">
+                      <Clock className="h-6 w-6 text-yellow-600" />
+                      <span className="font-medium text-yellow-800 dark:text-yellow-200 text-lg">
+                        Admin Will Approve
+                      </span>
+                    </div>
+                    <p className="text-yellow-700 dark:text-yellow-300">
+                      Your worker application is under review. Please wait for admin approval to access your full dashboard and start receiving service requests.
+                    </p>
+                  </div>
+                </div>
+              )}
+              
+              {isWorkerRejected && (
+                <div className="space-y-4">
+                  <div className="p-4 bg-red-50 dark:bg-red-950 rounded-lg border border-red-200 dark:border-red-800">
+                    <div className="flex items-center justify-center space-x-2 mb-3">
+                      <XCircle className="h-6 w-6 text-red-600" />
+                      <span className="font-medium text-red-800 dark:text-red-200 text-lg">
+                        Application Rejected
+                      </span>
+                    </div>
+                    <p className="text-red-700 dark:text-red-300">
+                      Your worker application has been rejected. Please contact admin for more details or to resubmit your application.
+                    </p>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Uneditable Profile Display */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <Users className="h-5 w-5" />
+                <span>Your Profile</span>
+                <Badge variant="secondary" className="ml-2">Read Only</Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
+                {/* Personal Information */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <div>
+                      <Label className="text-sm text-muted-foreground">Full Name</Label>
+                      <p className="font-medium p-2 bg-muted rounded border">
+                        {user.firstName} {user.lastName}
+                      </p>
+                    </div>
+                    <div>
+                      <Label className="text-sm text-muted-foreground">Mobile</Label>
+                      <p className="font-medium p-2 bg-muted rounded border">
+                        {user.mobile}
+                      </p>
+                    </div>
+                    {user.email && (
+                      <div>
+                        <Label className="text-sm text-muted-foreground">Email</Label>
+                        <p className="font-medium p-2 bg-muted rounded border">
+                          {user.email}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <Label className="text-sm text-muted-foreground">District</Label>
+                      <p className="font-medium p-2 bg-muted rounded border">
+                        {user.district || "Not specified"}
+                      </p>
+                    </div>
+                    <div>
+                      <Label className="text-sm text-muted-foreground">State</Label>
+                      <p className="font-medium p-2 bg-muted rounded border">
+                        {user.state || "Not specified"}
+                      </p>
+                    </div>
+                    <div>
+                      <Label className="text-sm text-muted-foreground">Registration Date</Label>
+                      <p className="font-medium p-2 bg-muted rounded border">
+                        {user.createdAt ? format(new Date(user.createdAt), "MMM dd, yyyy") : "Not available"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Worker Profile Information */}
+                {workerProfile && (
+                  <div className="mt-6 pt-6 border-t">
+                    <h3 className="font-semibold mb-4">Service Information</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-4">
+                        <div>
+                          <Label className="text-sm text-muted-foreground">Primary Service</Label>
+                          <p className="font-medium p-2 bg-muted rounded border">
+                            {workerProfile.primaryService || "Not specified"}
+                          </p>
+                        </div>
+                        <div>
+                          <Label className="text-sm text-muted-foreground">Experience Years</Label>
+                          <p className="font-medium p-2 bg-muted rounded border">
+                            {workerProfile.experienceYears || "0"} years
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-4">
+                        <div>
+                          <Label className="text-sm text-muted-foreground">Hourly Rate</Label>
+                          <p className="font-medium p-2 bg-muted rounded border">
+                            ₹{workerProfile.hourlyRate || "0"}/hour
+                          </p>
+                        </div>
+                        <div>
+                          <Label className="text-sm text-muted-foreground">Service Districts</Label>
+                          <p className="font-medium p-2 bg-muted rounded border">
+                            {Array.isArray(workerProfile.serviceDistricts) 
+                              ? workerProfile.serviceDistricts.join(", ") 
+                              : "Not specified"}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
   }
 
   // Calculate stats

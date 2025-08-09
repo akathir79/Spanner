@@ -48,11 +48,21 @@ interface User {
   mobile: string;
   role: string;
   isVerified: boolean;
+  status?: string;
   createdAt: string;
   updatedAt?: string;
   lastLoginAt?: string;
   district?: string;
   state?: string;
+  address?: string;
+  pincode?: string;
+  bankAccountNumber?: string;
+  bankIFSC?: string;
+  bankAccountHolderName?: string;
+  bankName?: string;
+  bankBranch?: string;
+  bankAccountType?: string;
+  bankMICR?: string;
 }
 
 interface District {
@@ -605,6 +615,56 @@ export default function WorkerManagement() {
     });
   };
 
+  // Worker approval mutation
+  const approveWorkerMutation = useMutation({
+    mutationFn: async (workerId: string) => {
+      return await apiRequest("POST", `/api/admin/approve-worker/${workerId}`, {});
+    },
+    onSuccess: (_, workerId) => {
+      toast({
+        title: "Worker Approved",
+        description: "Worker has been approved and can now access their dashboard.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Approval Failed",
+        description: error.message || "Failed to approve worker",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Worker rejection mutation
+  const rejectWorkerMutation = useMutation({
+    mutationFn: async (workerId: string) => {
+      return await apiRequest("DELETE", `/api/admin/reject-worker/${workerId}`, {});
+    },
+    onSuccess: (_, workerId) => {
+      toast({
+        title: "Worker Rejected",
+        description: "Worker application has been rejected and removed.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Rejection Failed",
+        description: error.message || "Failed to reject worker",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleApproveWorker = (worker: User) => {
+    approveWorkerMutation.mutate(worker.id);
+  };
+
+  const handleRejectWorker = (worker: User) => {
+    rejectWorkerMutation.mutate(worker.id);
+  };
+
   const copyToClipboard = (text: string, type: string) => {
     navigator.clipboard.writeText(text).then(() => {
       toast({
@@ -1056,6 +1116,31 @@ export default function WorkerManagement() {
                                         <Eye className="w-4 h-4 mr-2" />
                                         View Details
                                       </DropdownMenuItem>
+                                      
+                                      {/* Show approval actions for pending workers */}
+                                      {worker.status === "pending" && (
+                                        <>
+                                          <DropdownMenuItem 
+                                            onClick={() => handleApproveWorker(worker)}
+                                            disabled={approveWorkerMutation.isPending}
+                                          >
+                                            <CheckCircle className="w-4 h-4 mr-2 text-green-600" />
+                                            <span className="text-green-600">
+                                              {approveWorkerMutation.isPending ? "Approving..." : "Approve Worker"}
+                                            </span>
+                                          </DropdownMenuItem>
+                                          <DropdownMenuItem 
+                                            onClick={() => handleRejectWorker(worker)}
+                                            disabled={rejectWorkerMutation.isPending}
+                                          >
+                                            <XCircle className="w-4 h-4 mr-2 text-red-600" />
+                                            <span className="text-red-600">
+                                              {rejectWorkerMutation.isPending ? "Rejecting..." : "Reject Application"}
+                                            </span>
+                                          </DropdownMenuItem>
+                                        </>
+                                      )}
+                                      
                                       <DropdownMenuSub>
                                         <DropdownMenuSubTrigger>
                                           <MessageSquare className="w-4 h-4 mr-2" />
@@ -1082,14 +1167,21 @@ export default function WorkerManagement() {
                                           </DropdownMenuItem>
                                         </DropdownMenuSubContent>
                                       </DropdownMenuSub>
-                                      <DropdownMenuItem onClick={() => handleVerifyUser(worker)}>
-                                        <CheckCircle className="w-4 h-4 mr-2 text-green-600" />
-                                        <span className="text-green-600">Verify User</span>
-                                      </DropdownMenuItem>
-                                      <DropdownMenuItem onClick={() => handleSuspendUser(worker)}>
-                                        <XCircle className="w-4 h-4 mr-2 text-red-600" />
-                                        <span className="text-red-600">Suspend User</span>
-                                      </DropdownMenuItem>
+                                      
+                                      {/* Only show these actions for approved workers */}
+                                      {worker.status === "approved" && (
+                                        <>
+                                          <DropdownMenuItem onClick={() => handleVerifyUser(worker)}>
+                                            <CheckCircle className="w-4 h-4 mr-2 text-green-600" />
+                                            <span className="text-green-600">Verify User</span>
+                                          </DropdownMenuItem>
+                                          <DropdownMenuItem onClick={() => handleSuspendUser(worker)}>
+                                            <XCircle className="w-4 h-4 mr-2 text-red-600" />
+                                            <span className="text-red-600">Suspend User</span>
+                                          </DropdownMenuItem>
+                                        </>
+                                      )}
+                                      
                                       <DropdownMenuItem onClick={() => handleDeleteUser(worker)}>
                                         <Trash2 className="w-4 h-4 mr-2 text-red-600" />
                                         <span className="text-red-600">Delete User</span>
@@ -1507,6 +1599,31 @@ export default function WorkerManagement() {
                                         <Eye className="w-4 h-4 mr-2" />
                                         View Details
                                       </DropdownMenuItem>
+                                      
+                                      {/* Show approval actions for pending workers */}
+                                      {worker.status === "pending" && (
+                                        <>
+                                          <DropdownMenuItem 
+                                            onClick={() => handleApproveWorker(worker)}
+                                            disabled={approveWorkerMutation.isPending}
+                                          >
+                                            <CheckCircle className="w-4 h-4 mr-2 text-green-600" />
+                                            <span className="text-green-600">
+                                              {approveWorkerMutation.isPending ? "Approving..." : "Approve Worker"}
+                                            </span>
+                                          </DropdownMenuItem>
+                                          <DropdownMenuItem 
+                                            onClick={() => handleRejectWorker(worker)}
+                                            disabled={rejectWorkerMutation.isPending}
+                                          >
+                                            <XCircle className="w-4 h-4 mr-2 text-red-600" />
+                                            <span className="text-red-600">
+                                              {rejectWorkerMutation.isPending ? "Rejecting..." : "Reject Application"}
+                                            </span>
+                                          </DropdownMenuItem>
+                                        </>
+                                      )}
+                                      
                                       <DropdownMenuSub>
                                         <DropdownMenuSubTrigger>
                                           <MessageSquare className="w-4 h-4 mr-2" />
@@ -1533,14 +1650,21 @@ export default function WorkerManagement() {
                                           </DropdownMenuItem>
                                         </DropdownMenuSubContent>
                                       </DropdownMenuSub>
-                                      <DropdownMenuItem onClick={() => handleVerifyUser(worker)}>
-                                        <CheckCircle className="w-4 h-4 mr-2 text-green-600" />
-                                        <span className="text-green-600">Verify User</span>
-                                      </DropdownMenuItem>
-                                      <DropdownMenuItem onClick={() => handleSuspendUser(worker)}>
-                                        <XCircle className="w-4 h-4 mr-2 text-red-600" />
-                                        <span className="text-red-600">Suspend User</span>
-                                      </DropdownMenuItem>
+                                      
+                                      {/* Only show these actions for approved workers */}
+                                      {worker.status === "approved" && (
+                                        <>
+                                          <DropdownMenuItem onClick={() => handleVerifyUser(worker)}>
+                                            <CheckCircle className="w-4 h-4 mr-2 text-green-600" />
+                                            <span className="text-green-600">Verify User</span>
+                                          </DropdownMenuItem>
+                                          <DropdownMenuItem onClick={() => handleSuspendUser(worker)}>
+                                            <XCircle className="w-4 h-4 mr-2 text-red-600" />
+                                            <span className="text-red-600">Suspend User</span>
+                                          </DropdownMenuItem>
+                                        </>
+                                      )}
+                                      
                                       <DropdownMenuItem onClick={() => handleDeleteUser(worker)}>
                                         <Trash2 className="w-4 h-4 mr-2 text-red-600" />
                                         <span className="text-red-600">Delete User</span>
