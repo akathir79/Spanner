@@ -335,7 +335,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Create new user
       // Use the first service district as the primary district for ID generation
-      const primaryDistrict = userData.serviceDistricts?.[0] || "Unknown";
+      const primaryDistrict = userData.serviceDistricts?.[0] || "Salem"; // Default to Salem as it's a valid district
       
       const user = await storage.createUser({
         firstName: userData.firstName,
@@ -347,6 +347,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         district: primaryDistrict,
         profilePicture: userData.profilePicture,
         isVerified: false,
+        address: userData.address,
+        pincode: userData.pincode,
+        status: "pending", // Set default status for workers
       });
       
       // Create worker profile
@@ -631,7 +634,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "User already exists with this mobile number" });
       }
       
-      const user = await storage.createUser(userData);
+      const user = await storage.createUser({
+        ...userData,
+        state: userData.state || "Tamil Nadu",
+        district: serviceDistricts?.[0] || "Salem", // Use first service district
+        status: "pending"
+      });
       
       const workerProfile = await storage.createWorkerProfile({
         userId: user.id,
