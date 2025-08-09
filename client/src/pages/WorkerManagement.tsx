@@ -33,7 +33,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { ArrowLeft, Phone, Mail, Calendar, MoreHorizontal, Eye, MessageSquare, CheckCircle, XCircle, Trash2, Edit, AlertCircle, Search, X, Menu, Loader2, MessageCircle, Smartphone, CreditCard, Send, ArrowRightLeft, History, DollarSign, Filter, Copy, Square, Users } from "lucide-react";
+import { ArrowLeft, Phone, Mail, Calendar, MoreHorizontal, Eye, MessageSquare, CheckCircle, XCircle, Trash2, Edit, AlertCircle, Search, X, Menu, Loader2, MessageCircle, Smartphone, CreditCard, Send, ArrowRightLeft, History, DollarSign, Filter, Copy, Square, Users, Shield } from "lucide-react";
 // import { FaWhatsapp } from "react-icons/fa"; // Replaced with MessageCircle for consistency
 import { format } from "date-fns";
 import { useLocation } from "wouter";
@@ -243,6 +243,10 @@ export default function WorkerManagement() {
   const [isMessageDialogOpen, setIsMessageDialogOpen] = useState(false);
   const [messageText, setMessageText] = useState("");
   const [userToMessage, setUserToMessage] = useState<User | null>(null);
+  const [isVerificationDialogOpen, setIsVerificationDialogOpen] = useState(false);
+  const [verificationComment, setVerificationComment] = useState("");
+  const [workerToVerify, setWorkerToVerify] = useState<User | null>(null);
+  const [isVerifying, setIsVerifying] = useState(false);
   const [sendingMessage, setSendingMessage] = useState(false);
 
   // Animation refs
@@ -666,6 +670,49 @@ export default function WorkerManagement() {
       });
     },
   });
+
+  const handleVerifyWorker = (worker: User) => {
+    setWorkerToVerify(worker);
+    setVerificationComment("");
+    setIsVerificationDialogOpen(true);
+  };
+
+  const handleConfirmVerification = async (shouldApprove: boolean) => {
+    if (!workerToVerify || !verificationComment.trim()) {
+      toast({
+        title: "Error", 
+        description: "Please provide a verification comment",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsVerifying(true);
+    try {
+      const endpoint = shouldApprove ? "approve-worker" : "verify-worker";
+      const response = await apiRequest(`/api/admin/${endpoint}/${workerToVerify.id}`, "POST", { comment: verificationComment });
+
+      if (response) {
+        await queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+        toast({
+          title: shouldApprove ? "Worker Approved" : "Worker Verified",
+          description: shouldApprove ? "Worker has been verified and approved successfully" : "Worker has been verified successfully",
+        });
+        setIsVerificationDialogOpen(false);
+        setVerificationComment("");
+        setWorkerToVerify(null);
+      }
+    } catch (error) {
+      console.error("Error processing worker:", error);
+      toast({
+        title: "Error",
+        description: "Failed to process worker verification",
+        variant: "destructive",
+      });
+    } finally {
+      setIsVerifying(false);
+    }
+  };
 
   const handleApproveWorker = (worker: User) => {
     approveWorkerMutation.mutate(worker.id);
@@ -1858,6 +1905,95 @@ export default function WorkerManagement() {
                 disabled={!messageText.trim() || sendingMessage}
               >
                 {sendingMessage ? "Sending..." : "Send Message"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Worker Verification Dialog */}
+        <Dialog open={isVerificationDialogOpen} onOpenChange={setIsVerificationDialogOpen}>
+          <DialogContent className="sm:max-w-[450px]">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Shield className="w-5 h-5 text-blue-600" />
+                Verify Worker
+              </DialogTitle>
+              <DialogDescription>
+                {workerToVerify && (
+                  <>
+                    Please provide a verification comment for{" "}
+                    <span className="font-medium">{workerToVerify.firstName} {workerToVerify.lastName}</span>.
+                    This will help track verification methods and reasons.
+                  </>
+                )}
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="space-y-4 py-4">
+              <div>
+                <label htmlFor="verificationComment" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Verification Comment *
+                </label>
+                <textarea
+                  id="verificationComment"
+                  value={verificationComment}
+                  onChange={(e) => setVerificationComment(e.target.value)}
+                  placeholder="e.g., Verified documents manually, ID checked via video call, etc."
+                  className="mt-1 w-full p-3 border border-gray-200 dark:border-gray-700 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white"
+                  rows={3}
+                  disabled={isVerifying}
+                />
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  This comment will be saved and displayed when hovering over the worker's name.
+                </p>
+              </div>
+            </div>
+
+            <DialogFooter className="flex-col sm:flex-row gap-2">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setIsVerificationDialogOpen(false);
+                  setVerificationComment("");
+                  setWorkerToVerify(null);
+                }}
+                disabled={isVerifying}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={() => handleConfirmVerification(false)}
+                disabled={isVerifying || !verificationComment.trim()}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                {isVerifying ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                    Verifying...
+                  </>
+                ) : (
+                  <>
+                    <Shield className="w-4 h-4 mr-2" />
+                    Verify Only
+                  </>
+                )}
+              </Button>
+              <Button
+                onClick={() => handleConfirmVerification(true)}
+                disabled={isVerifying || !verificationComment.trim()}
+                className="bg-green-600 hover:bg-green-700"
+              >
+                {isVerifying ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                    Approving...
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle className="w-4 h-4 mr-2" />
+                    Verify & Approve
+                  </>
+                )}
               </Button>
             </DialogFooter>
           </DialogContent>

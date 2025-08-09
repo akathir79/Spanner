@@ -365,8 +365,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         skills: userData.skills,
         bio: userData.bio,
         bioDataDocument: userData.bioDataDocument,
-        isApproved: false,
-        isActive: true,
+        isAvailable: true,
       });
       
       return res.json({ 
@@ -1227,11 +1226,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/admin/verify-worker/:workerId", async (req, res) => {
+    try {
+      const { workerId } = req.params;
+      const { comment } = req.body;
+      
+      if (!comment || !comment.trim()) {
+        return res.status(400).json({ message: "Verification comment is required" });
+      }
+      
+      const updatedUser = await storage.updateUser(workerId, { 
+        status: "verified",
+        verificationComment: comment.trim(),
+        verifiedAt: new Date(),
+        verifiedBy: "ADMIN"
+      });
+      
+      if (!updatedUser) {
+        return res.status(404).json({ message: "Worker not found" });
+      }
+      
+      res.json({ message: "Worker verified successfully", user: updatedUser });
+    } catch (error) {
+      console.error("Error verifying worker:", error);
+      res.status(500).json({ message: "Failed to verify worker" });
+    }
+  });
+
   app.post("/api/admin/approve-worker/:workerId", async (req, res) => {
     try {
       const { workerId } = req.params;
-      const updatedWorker = await storage.approveWorker(workerId);
-      res.json(updatedWorker);
+      const { comment } = req.body;
+      
+      const updatedUser = await storage.updateUser(workerId, { 
+        status: "approved",
+        isVerified: true,
+        approvedAt: new Date(),
+        approvedBy: "ADMIN",
+        ...(comment && { verificationComment: comment.trim() })
+      });
+      
+      if (!updatedUser) {
+        return res.status(404).json({ message: "Worker not found" });
+      }
+      
+      res.json({ message: "Worker approved successfully", user: updatedUser });
     } catch (error) {
       console.error("Error approving worker:", error);
       res.status(500).json({ error: "Failed to approve worker" });

@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, Clock, XCircle, AlertCircle } from "lucide-react";
+import { CheckCircle, Clock, XCircle, AlertCircle, Shield } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface AnimatedStatusBadgeProps {
-  status: "pending" | "approved" | "rejected" | "unknown";
-  previousStatus?: "pending" | "approved" | "rejected" | "unknown";
+  status: "pending" | "verified" | "approved" | "rejected" | "unknown";
+  previousStatus?: "pending" | "verified" | "approved" | "rejected" | "unknown";
   className?: string;
   showIcon?: boolean;
   size?: "sm" | "md" | "lg";
@@ -54,6 +54,14 @@ export function AnimatedStatusBadge({
           icon: <Clock className={cn("flex-shrink-0", size === "sm" ? "w-3 h-3" : size === "lg" ? "w-4 h-4" : "w-3.5 h-3.5")} />,
           label: "Pending",
           pulseColor: "bg-yellow-400"
+        };
+      case "verified":
+        return {
+          variant: "secondary" as const,
+          className: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100 border-blue-200 dark:border-blue-700",
+          icon: <Shield className={cn("flex-shrink-0", size === "sm" ? "w-3 h-3" : size === "lg" ? "w-4 h-4" : "w-3.5 h-3.5")} />,
+          label: "Verified",
+          pulseColor: "bg-blue-400"
         };
       case "approved":
         return {
