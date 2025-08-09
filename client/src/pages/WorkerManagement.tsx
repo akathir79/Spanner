@@ -224,7 +224,7 @@ export default function WorkerManagement() {
   // Search and filter state
   const [searchQuery, setSearchQuery] = useState("");
   const [searchFilter, setSearchFilter] = useState<"all" | "id" | "name" | "email" | "mobile" | "location">("all");
-  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive" | "no_login" | "just_registered" | "verified" | "unverified">("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive" | "no_login" | "just_registered" | "verified" | "unverified" | "pending" | "approved" | "rejected">("all");
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -282,6 +282,12 @@ export default function WorkerManagement() {
             return worker.isVerified === true;
           case "unverified":
             return worker.isVerified === false;
+          case "pending":
+            return worker.status === "pending";
+          case "approved":
+            return worker.status === "approved";
+          case "rejected":
+            return worker.status === "rejected";
           default:
             return true;
         }
@@ -379,6 +385,12 @@ export default function WorkerManagement() {
             return worker.isVerified === true;
           case "unverified":
             return worker.isVerified === false;
+          case "pending":
+            return worker.status === "pending";
+          case "approved":
+            return worker.status === "approved";
+          case "rejected":
+            return worker.status === "rejected";
           default:
             return true;
         }
@@ -899,6 +911,9 @@ export default function WorkerManagement() {
                                   </SelectTrigger>
                                   <SelectContent>
                                     <SelectItem value="all">All Status</SelectItem>
+                                    <SelectItem value="pending">Pending Approval</SelectItem>
+                                    <SelectItem value="approved">Approved</SelectItem>
+                                    <SelectItem value="rejected">Rejected</SelectItem>
                                     <SelectItem value="active">Active</SelectItem>
                                     <SelectItem value="inactive">Inactive</SelectItem>
                                     <SelectItem value="no_login">No Login</SelectItem>
@@ -1371,6 +1386,9 @@ export default function WorkerManagement() {
                                   </SelectTrigger>
                                   <SelectContent>
                                     <SelectItem value="all">All Status</SelectItem>
+                                    <SelectItem value="pending">Pending Approval</SelectItem>
+                                    <SelectItem value="approved">Approved</SelectItem>
+                                    <SelectItem value="rejected">Rejected</SelectItem>
                                     <SelectItem value="active">Active</SelectItem>
                                     <SelectItem value="inactive">Inactive</SelectItem>
                                     <SelectItem value="no_login">No Login</SelectItem>
