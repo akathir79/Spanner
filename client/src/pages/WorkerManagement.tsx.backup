@@ -1184,16 +1184,16 @@ export default function WorkerManagement() {
                                         View Details
                                       </DropdownMenuItem>
                                       
-                                      {/* Show verification actions for pending workers */}
+                                      {/* Show approval actions for pending workers */}
                                       {worker.status === "pending" && (
                                         <>
                                           <DropdownMenuItem 
-                                            onClick={() => handleVerifyWorker(worker)}
-                                            disabled={isVerifying}
+                                            onClick={() => handleApproveWorker(worker)}
+                                            disabled={approveWorkerMutation.isPending}
                                           >
-                                            <Shield className="w-4 h-4 mr-2 text-blue-600" />
-                                            <span className="text-blue-600">
-                                              {isVerifying ? "Verifying..." : "Verify Worker"}
+                                            <CheckCircle className="w-4 h-4 mr-2 text-green-600" />
+                                            <span className="text-green-600">
+                                              {approveWorkerMutation.isPending ? "Approving..." : "Approve Worker"}
                                             </span>
                                           </DropdownMenuItem>
                                           <DropdownMenuItem 
@@ -1206,19 +1206,6 @@ export default function WorkerManagement() {
                                             </span>
                                           </DropdownMenuItem>
                                         </>
-                                      )}
-
-                                      {/* Show approval action for verified workers */}
-                                      {worker.status === "verified" && (
-                                        <DropdownMenuItem 
-                                          onClick={() => handleApproveWorker(worker)}
-                                          disabled={approveWorkerMutation.isPending}
-                                        >
-                                          <CheckCircle className="w-4 h-4 mr-2 text-green-600" />
-                                          <span className="text-green-600">
-                                            {approveWorkerMutation.isPending ? "Approving..." : "Approve Worker"}
-                                          </span>
-                                        </DropdownMenuItem>
                                       )}
                                       
                                       <DropdownMenuSub>
@@ -1690,16 +1677,16 @@ export default function WorkerManagement() {
                                         View Details
                                       </DropdownMenuItem>
                                       
-                                      {/* Show verification actions for pending workers */}
+                                      {/* Show approval actions for pending workers */}
                                       {worker.status === "pending" && (
                                         <>
                                           <DropdownMenuItem 
-                                            onClick={() => handleVerifyWorker(worker)}
-                                            disabled={isVerifying}
+                                            onClick={() => handleApproveWorker(worker)}
+                                            disabled={approveWorkerMutation.isPending}
                                           >
-                                            <Shield className="w-4 h-4 mr-2 text-blue-600" />
-                                            <span className="text-blue-600">
-                                              {isVerifying ? "Verifying..." : "Verify Worker"}
+                                            <CheckCircle className="w-4 h-4 mr-2 text-green-600" />
+                                            <span className="text-green-600">
+                                              {approveWorkerMutation.isPending ? "Approving..." : "Approve Worker"}
                                             </span>
                                           </DropdownMenuItem>
                                           <DropdownMenuItem 
@@ -1712,19 +1699,6 @@ export default function WorkerManagement() {
                                             </span>
                                           </DropdownMenuItem>
                                         </>
-                                      )}
-
-                                      {/* Show approval action for verified workers */}
-                                      {worker.status === "verified" && (
-                                        <DropdownMenuItem 
-                                          onClick={() => handleApproveWorker(worker)}
-                                          disabled={approveWorkerMutation.isPending}
-                                        >
-                                          <CheckCircle className="w-4 h-4 mr-2 text-green-600" />
-                                          <span className="text-green-600">
-                                            {approveWorkerMutation.isPending ? "Approving..." : "Approve Worker"}
-                                          </span>
-                                        </DropdownMenuItem>
                                       )}
                                       
                                       <DropdownMenuSub>
