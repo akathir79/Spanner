@@ -112,7 +112,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signupClient = async (data: any) => {
     try {
-      const response = await fetch("/api/auth/signup-client", {
+      const response = await fetch("/api/auth/signup/client", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
@@ -133,7 +133,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signupWorker = async (data: any) => {
     try {
-      const response = await fetch("/api/auth/signup-worker", {
+      const response = await fetch("/api/auth/signup/worker", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
