@@ -1028,13 +1028,15 @@ export default function WorkerManagement() {
                             </TableHead>
                             <TableHead>Location</TableHead>
                             <TableHead>Bookings/Earnings</TableHead>
-                            <TableHead>
-                              Contact
-                              <div className="inline-flex items-center gap-1 ml-1">
-                                <Phone className="w-3 h-3 text-gray-400" />
-                                <MessageSquare className="w-3 h-3 text-gray-400" />
-                                <Mail className="w-3 h-3 text-gray-400" />
-                                <Send className="w-3 h-3 text-gray-400" />
+                            <TableHead className="w-[160px]">
+                              <div className="flex items-center gap-1">
+                                <span>Contact</span>
+                                <div className="flex gap-1">
+                                  <FaWhatsapp className="w-3 h-3 text-gray-400" />
+                                  <MessageSquare className="w-3 h-3 text-gray-400" />
+                                  <Mail className="w-3 h-3 text-gray-400" />
+                                  <BiMessageSquareDetail className="w-3 h-3 text-gray-400" />
+                                </div>
                               </div>
                             </TableHead>
                             <TableHead>Bank Details</TableHead>
@@ -1546,15 +1548,15 @@ export default function WorkerManagement() {
                             </TableHead>
                             <TableHead className="w-[120px]">Earnings</TableHead>
                             <TableHead className="w-[160px]">
-                              <Tooltip>
-                                <TooltipTrigger className="flex items-center gap-1 cursor-help">
-                                  <span>Contact</span>
-                                  <Copy className="w-3 h-3 text-gray-400" />
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  <p>Click to copy contact info</p>
-                                </TooltipContent>
-                              </Tooltip>
+                              <div className="flex items-center gap-1">
+                                <span>Contact</span>
+                                <div className="flex gap-1">
+                                  <FaWhatsapp className="w-3 h-3 text-gray-400" />
+                                  <MessageSquare className="w-3 h-3 text-gray-400" />
+                                  <Mail className="w-3 h-3 text-gray-400" />
+                                  <BiMessageSquareDetail className="w-3 h-3 text-gray-400" />
+                                </div>
+                              </div>
                             </TableHead>
                             <TableHead className="text-right">Actions</TableHead>
                           </TableRow>
