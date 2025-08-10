@@ -1115,169 +1115,78 @@ const VoiceJobPostingForm = ({ onClose }: { onClose?: () => void }) => {
     stopAudioRecording();
     
     if (voiceTranscript) {
-      const lang = detectLanguage(voiceTranscript);
-      setDetectedLanguage(lang);
-      processVoiceInput(voiceTranscript);
+      // Process the recorded audio with Bhashini API
+      processVoiceInput();
     }
   };
 
-  // Enhanced AI-powered voice processing with follow-up intelligence
-  const processVoiceInput = async (transcript: string) => {
+  // Process voice input using Bhashini API
+  const processVoiceInput = async () => {
+    if (!currentAudioBlob) {
+      toast({
+        title: "No Audio Recording",
+        description: "Please record some audio first.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsProcessing(true);
     
-    // Detect language and translate if needed
-    const detectedLang = detectLanguage(transcript);
-    setDetectedLanguage(detectedLang);
-    
-    let englishText = transcript;
-    if (detectedLang !== 'english' && detectedLang !== 'mixed') {
-      englishText = await translateToEnglish(transcript, detectedLang);
-      setEnglishTranslation(englishText);
-    }
-    
-    // Smart extraction using regex and keywords from English text
-    const text = englishText.toLowerCase();
-    
-    // Extract service category with multilingual keywords
-    const serviceCategories = [
-      { 
-        keywords: ['plumbing', 'plumber', 'pipe', 'leak', 'tap', 'bathroom', 'குழாய்', 'नल', 'കുഴൽ'], 
-        category: 'Plumbing' 
-      },
-      { 
-        keywords: ['electrical', 'electrician', 'wire', 'light', 'fan', 'switch', 'வயர்', 'बिजली', 'വയർ'], 
-        category: 'Electrical' 
-      },
-      { 
-        keywords: ['painting', 'paint', 'wall', 'color', 'brush', 'பெயிண்ட்', 'पेंट', 'പെയിന്റ്'], 
-        category: 'Painting' 
-      },
-      { 
-        keywords: ['cleaning', 'clean', 'sweep', 'mop', 'wash', 'सफाई', 'വൃത്തിയാക്കൽ'], 
-        category: 'Cleaning' 
-      },
-      { 
-        keywords: ['carpenter', 'wood', 'furniture', 'door', 'window', 'மரவேலை', 'लकड़ी', 'മരപ്പണി'], 
-        category: 'Carpentry' 
-      },
-      { 
-        keywords: ['repair', 'fix', 'broken', 'service', 'maintenance', 'சரி', 'ठीक', 'ശരിയാക്കുക'], 
-        category: 'Appliance Repair' 
-      }
-    ];
-    
-    let detectedCategory = '';
-    for (const service of serviceCategories) {
-      if (service.keywords.some(keyword => 
-        text.includes(keyword) || transcript.toLowerCase().includes(keyword)
-      )) {
-        detectedCategory = service.category;
-        break;
-      }
-    }
-    
-    // Enhanced budget extraction with multilingual support
-    const budgetRegex = /(\d+)\s*(?:to|से|வரை|മുതൽ|-)\s*(\d+)|\b(\d+)\s*(?:rupees?|रुपये|ரூபாய்|രൂപ)|\₹\s*(\d+)/gi;
-    const budgetMatches = [...(transcript + ' ' + englishText).matchAll(budgetRegex)];
-    let budgetMin = '';
-    let budgetMax = '';
-    
-    if (budgetMatches.length > 0) {
-      const match = budgetMatches[0];
-      if (match[1] && match[2]) {
-        budgetMin = match[1];
-        budgetMax = match[2];
-      } else if (match[3]) {
-        budgetMax = match[3];
-        budgetMin = '0';
-      } else if (match[4]) {
-        budgetMax = match[4];
-        budgetMin = '0';
-      }
-    }
-    
-    // Enhanced location extraction
-    const locationKeywords = [
-      'salem', 'chennai', 'coimbatore', 'madurai', 'trichy', 'tiruchirappalli',
-      'area', 'district', 'সালেম', 'चेन्नै', 'സേലം', 'சேலம்'
-    ];
-    let detectedLocation = '';
-    for (const loc of locationKeywords) {
-      if (text.includes(loc) || transcript.toLowerCase().includes(loc)) {
-        const contextStart = Math.max(0, (transcript.toLowerCase().indexOf(loc) || text.indexOf(loc)) - 15);
-        const contextEnd = Math.min(transcript.length, contextStart + loc.length + 25);
-        detectedLocation = transcript.substring(contextStart, contextEnd).trim();
-        break;
-      }
-    }
-    
-    // Generate clean English title and description
-    const cleanEnglishText = englishText.replace(/service request:/gi, '').trim();
-    const sentences = cleanEnglishText.split(/[.!?]/);
-    let title = sentences[0].substring(0, 50).trim();
-    
-    // If title is still not in English format, create a professional one
-    if (!title || title.length < 5) {
-      title = detectedCategory ? 
-        `${detectedCategory} Service Required` : 
-        'Service Request';
-    }
-    
-    // Ensure description is in English
-    let description = cleanEnglishText;
-    if (!description || description.length < 10) {
-      description = detectedCategory ? 
-        `I need ${detectedCategory.toLowerCase()} service` : 
-        'Service required - details provided via voice';
-    }
-    
-    // Update form data with extracted information
-    const newFormData = {
-      title,
-      description,
-      serviceCategory: detectedCategory,
-      serviceAddress: detectedLocation,
-      state: "Tamil Nadu",
-      districtId: "Salem", // Default
-      budgetMin,
-      budgetMax,
-      deadline: "",
-      requirements: []
-    };
-    
-    setFormData(newFormData);
-    setIsProcessing(false);
-    
-    // Check for missing fields and ask follow-up questions
-    const missing = checkMissingFields(newFormData);
-    setMissingFields(missing);
-    
-    if (missing.length > 0) {
-      // Auto-complete missing fields with sensible defaults
-      if (!newFormData.serviceCategory) {
-        newFormData.serviceCategory = 'General Service';
-      }
-      if (!newFormData.serviceAddress) {
-        newFormData.serviceAddress = 'Salem, Tamil Nadu';
-      }
-      if (!newFormData.budgetMin && !newFormData.budgetMax) {
-        newFormData.budgetMin = '500';
-        newFormData.budgetMax = '2000';
-      }
-      
-      setFormData(newFormData);
-      toast({
-        title: "Voice Processed Successfully!",
-        description: `Detected ${detectedLanguageName} language. Job details extracted and ready to post.`,
+    try {
+      // Create FormData to send audio file
+      const formData = new FormData();
+      const audioFile = new File([currentAudioBlob], 'voice_recording.wav', { type: 'audio/wav' });
+      formData.append('audio', audioFile);
+
+      const response = await fetch('/api/voice/process', {
+        method: 'POST',
+        body: formData
       });
-    } else {
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Voice processing failed');
+      }
+
+      if (result.success) {
+        // Update detected language info
+        setDetectedLanguage(result.detectedLanguage);
+        setDetectedLanguageName(result.detectedLanguageName);
+        
+        // Set the translated text for display
+        setEnglishTranslation(result.translatedText);
+        
+        // Auto-fill form with extracted data
+        const extractedData = result.extractedData;
+        setFormData(prev => ({
+          ...prev,
+          title: extractedData.title || '',
+          description: extractedData.description || '',
+          serviceCategory: extractedData.serviceCategory || '',
+          serviceAddress: extractedData.serviceAddress || '',
+          budgetMin: extractedData.budgetMin || '',
+          budgetMax: extractedData.budgetMax || ''
+        }));
+
+        toast({
+          title: "Voice Processed Successfully!",
+          description: `Detected ${result.detectedLanguageName}. Job details extracted and ready to post.`,
+        });
+
+        setCurrentStep('completed');
+      }
+    } catch (error) {
+      console.error('Voice processing error:', error);
       toast({
-        title: "Perfect! Job Details Complete",
-        description: `Detected ${detectedLanguageName} language. All required information extracted successfully.`,
+        title: "Voice Processing Failed",
+        description: error instanceof Error ? error.message : "Please check Bhashini API configuration and try again.",
+        variant: "destructive"
       });
+    } finally {
+      setIsProcessing(false);
     }
-    
-    setCurrentStep('completed');
   };
 
   // Submit job mutation

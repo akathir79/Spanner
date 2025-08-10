@@ -6,6 +6,7 @@ import { z } from "zod";
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
+import { createBhashiniAPI } from './bhashiniAPI';
 import { 
   insertUserSchema, 
   insertWorkerProfileSchema, 
@@ -2618,6 +2619,118 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: 'Failed to fetch districts' });
     }
   });
+
+  // Bhashini Voice Processing API endpoint
+  app.post("/api/voice/process", audioUpload.single('audio'), async (req, res) => {
+    try {
+      const bhashiniAPI = createBhashiniAPI();
+      if (!bhashiniAPI) {
+        return res.status(500).json({ 
+          error: "Bhashini API not configured. Please set BHASHINI_USER_ID and BHASHINI_ULCA_API_KEY environment variables." 
+        });
+      }
+
+      if (!req.file) {
+        return res.status(400).json({ error: "No audio file provided" });
+      }
+
+      // Convert audio file to base64
+      const audioBuffer = fs.readFileSync(req.file.path);
+      const audioBase64 = audioBuffer.toString('base64');
+
+      // Process with Bhashini API
+      const result = await bhashiniAPI.speechToTextAndTranslate(audioBase64);
+
+      // Extract job details from translated English text using intelligent parsing
+      const extractedData = await extractJobDetailsFromText(result.translatedText);
+
+      // Clean up uploaded file
+      fs.unlinkSync(req.file.path);
+
+      res.json({
+        success: true,
+        detectedLanguage: result.detectedLanguage,
+        detectedLanguageName: bhashiniAPI.getLanguageName(result.detectedLanguage),
+        originalTranscript: result.transcript,
+        translatedText: result.translatedText,
+        extractedData: extractedData,
+        confidence: result.confidence || 0.9
+      });
+
+    } catch (error) {
+      console.error("Voice processing error:", error);
+      
+      // Clean up file if it exists
+      if (req.file && fs.existsSync(req.file.path)) {
+        fs.unlinkSync(req.file.path);
+      }
+      
+      res.status(500).json({ 
+        error: "Failed to process voice input", 
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Helper function to extract job details from English text
+  async function extractJobDetailsFromText(text: string): Promise<any> {
+    const lowerText = text.toLowerCase();
+    
+    // Service category detection
+    const servicePatterns = [
+      { keywords: ['plumb', 'pipe', 'leak', 'tap', 'bathroom', 'toilet', 'water'], category: 'Plumbing' },
+      { keywords: ['electric', 'wire', 'light', 'fan', 'switch', 'power', 'voltage'], category: 'Electrical Work' },
+      { keywords: ['paint', 'wall', 'color', 'brush', 'interior', 'exterior'], category: 'Painting' },
+      { keywords: ['clean', 'sweep', 'mop', 'wash', 'housekeep'], category: 'Cleaning Services' },
+      { keywords: ['carpenter', 'wood', 'furniture', 'door', 'window', 'cabinet'], category: 'Carpentry' },
+      { keywords: ['repair', 'fix', 'broken', 'maintenance', 'service'], category: 'Appliance Repair' },
+      { keywords: ['garden', 'plant', 'lawn', 'landscape'], category: 'Gardening' },
+      { keywords: ['ac', 'air condition', 'cooling', 'heating'], category: 'AC Repair' }
+    ];
+
+    let detectedCategory = 'General Service';
+    for (const pattern of servicePatterns) {
+      if (pattern.keywords.some(keyword => lowerText.includes(keyword))) {
+        detectedCategory = pattern.category;
+        break;
+      }
+    }
+
+    // Budget extraction
+    const budgetRegex = /(?:budget|cost|price|charge|pay|rupees?|₹)\s*(?:is|are|of)?\s*(?:around|about|approximately)?\s*₹?(\d+)(?:\s*(?:to|-)?\s*₹?(\d+))?/gi;
+    const budgetMatches = Array.from(text.matchAll(budgetRegex));
+    let budgetMin = '500';
+    let budgetMax = '2000';
+
+    if (budgetMatches.length > 0) {
+      const match = budgetMatches[0];
+      if (match[1]) {
+        budgetMin = match[1];
+        budgetMax = match[2] || (parseInt(match[1]) * 2).toString();
+      }
+    }
+
+    // Location extraction
+    let serviceAddress = 'Salem, Tamil Nadu';
+    const locationRegex = /(?:at|in|from|near|location|address|area)\s+([^.!?]*?)(?:\.|!|\?|$)/gi;
+    const locationMatches = Array.from(text.matchAll(locationRegex));
+    if (locationMatches.length > 0) {
+      serviceAddress = locationMatches[0][1].trim();
+    }
+
+    // Generate title and description
+    const title = `${detectedCategory} Required`;
+    const description = text.charAt(0).toUpperCase() + text.slice(1);
+
+    return {
+      title,
+      description,
+      serviceCategory: detectedCategory,
+      serviceAddress,
+      budgetMin,
+      budgetMax
+    };
+  }
 
   const httpServer = createServer(app);
   return httpServer;
