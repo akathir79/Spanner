@@ -732,7 +732,7 @@ const BankDetailsCard = ({ user, onUpdate }: { user: any, onUpdate: () => void }
 };
 
 // Job posting form component
-const JobPostingForm = () => {
+const JobPostingForm = ({ onClose }: { onClose?: () => void }) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -776,6 +776,10 @@ const JobPostingForm = () => {
         description: "Job posted successfully! Workers can now bid on your job.",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/job-postings/client", user?.id] });
+      // Auto-close the form dialog
+      if (onClose) {
+        onClose();
+      }
       // Reset form
       setFormData({
         title: "",
@@ -820,7 +824,7 @@ const JobPostingForm = () => {
       districtId: formData.districtId,
       budgetMin: formData.budgetMin ? parseFloat(formData.budgetMin) : null,
       budgetMax: formData.budgetMax ? parseFloat(formData.budgetMax) : null,
-      deadline: formData.deadline ? new Date(formData.deadline) : null,
+      deadline: formData.deadline || null,
       requirements: formData.requirements,
     };
 
@@ -1400,6 +1404,7 @@ export default function Dashboard() {
   const [districtOpen, setDistrictOpen] = useState(false);
   const [isLocationLoading, setIsLocationLoading] = useState(false);
   const [selectedJobPosting, setSelectedJobPosting] = useState<any>(null);
+  const [isJobFormOpen, setIsJobFormOpen] = useState(false);
 
   // Fetch user's bookings
   const { data: bookings = [], isLoading: bookingsLoading } = useQuery({
@@ -1751,7 +1756,7 @@ export default function Dashboard() {
 
         {/* Post a New Job Button */}
         <div className="mb-6">
-          <Dialog>
+          <Dialog open={isJobFormOpen} onOpenChange={setIsJobFormOpen}>
             <DialogTrigger asChild>
               <Button size="lg" className="w-full sm:w-auto">
                 <Plus className="h-5 w-5 mr-2" />
@@ -1765,7 +1770,7 @@ export default function Dashboard() {
                   Get competitive bids from qualified workers across Tamil Nadu
                 </p>
               </DialogHeader>
-              <JobPostingForm />
+              <JobPostingForm onClose={() => setIsJobFormOpen(false)} />
             </DialogContent>
           </Dialog>
         </div>

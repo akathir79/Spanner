@@ -1669,6 +1669,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { budgetMin, budgetMax, ...rest } = req.body;
       const jobData = {
         ...rest,
+        district: rest.districtId, // Map districtId to district field
         budgetMin: budgetMin !== undefined && budgetMin !== null ? budgetMin.toString() : null,
         budgetMax: budgetMax !== undefined && budgetMax !== null ? budgetMax.toString() : null,
       };
