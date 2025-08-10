@@ -1195,21 +1195,21 @@ export default function WorkerManagement() {
                               <Tooltip>
                                 <TooltipTrigger asChild>
                                   <div className="text-sm space-y-1 cursor-pointer">
-                                    {worker.address ? (
+                                    {(worker as any).address ? (
                                       <div>
                                         <div className="text-gray-700 dark:text-gray-300 text-sm font-bold">
                                           {worker.district}, {worker.state}
                                         </div>
                                         <div className="font-medium text-gray-600 dark:text-gray-400 text-xs mt-1">Address:</div>
                                         <div className="text-gray-900 dark:text-white text-xs">
-                                          {worker.address}
+                                          {(worker as any).address}
                                         </div>
                                         <div className="text-gray-700 dark:text-gray-300 text-xs">
                                           {worker.district}, {worker.state}
                                         </div>
-                                        {worker.pincode && (
+                                        {(worker as any).pincode && (
                                           <div className="text-gray-600 dark:text-gray-400 text-xs">
-                                            PIN: {worker.pincode}
+                                            PIN: {(worker as any).pincode}
                                           </div>
                                         )}
                                         <div className="flex items-center gap-1 mt-1">
@@ -1219,7 +1219,7 @@ export default function WorkerManagement() {
                                             className="h-6 w-6 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
                                             onClick={(e) => {
                                               e.stopPropagation();
-                                              const fullAddress = `${worker.firstName} ${worker.lastName}\n${worker.address}, ${worker.district}, ${worker.state}${worker.pincode ? `, PIN: ${worker.pincode}` : ''}`;
+                                              const fullAddress = `${worker.firstName} ${worker.lastName}\n${(worker as any).address}, ${worker.district}, ${worker.state}${(worker as any).pincode ? `, PIN: ${(worker as any).pincode}` : ''}`;
                                               navigator.clipboard.writeText(fullAddress);
                                             }}
                                             title="Copy Address with Name"
@@ -1244,13 +1244,13 @@ export default function WorkerManagement() {
                                 <TooltipContent className="max-w-sm">
                                   <div className="space-y-2">
                                     <p className="font-medium">Location Details:</p>
-                                    {worker.address ? (
+                                    {(worker as any).address ? (
                                       <div className="space-y-1">
-                                        <div className="text-sm"><strong>Full Address:</strong> {worker.address}</div>
+                                        <div className="text-sm"><strong>Full Address:</strong> {(worker as any).address}</div>
                                         <div className="text-sm"><strong>District:</strong> {worker.district}</div>
                                         <div className="text-sm"><strong>State:</strong> {worker.state}</div>
-                                        {worker.pincode && (
-                                          <div className="text-sm"><strong>PIN Code:</strong> {worker.pincode}</div>
+                                        {(worker as any).pincode && (
+                                          <div className="text-sm"><strong>PIN Code:</strong> {(worker as any).pincode}</div>
                                         )}
                                         <div className="flex items-center gap-1 mt-2">
                                           <Button
