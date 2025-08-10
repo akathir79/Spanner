@@ -629,7 +629,7 @@ export function VoiceAssistant({
         <Button
           type="button"
           variant="outline"
-          className={`text-gray-100 bg-gradient-to-r from-gray-800 to-slate-900 hover:from-gray-700 hover:to-slate-800 border-gray-600 hover:border-gray-500 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 animate-breathe ${className}`}
+          className={`text-gray-100 bg-gradient-to-r from-gray-800 to-slate-900 hover:from-gray-700 hover:to-slate-800 border-gray-600 hover:border-gray-500 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 animate-breathe animate-zoom-rotate-oscillate ${className}`}
           onClick={startConversation}
           title="🎤 Voice Assistant - Interactive conversation in English"
         >

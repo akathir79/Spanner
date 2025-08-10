@@ -643,6 +643,24 @@
     }
   }
 
+  @keyframes zoomRotateOscillate {
+    0% {
+      transform: scale(1) rotate(0deg) translateX(0);
+    }
+    25% {
+      transform: scale(1.1) rotate(5deg) translateX(2px);
+    }
+    50% {
+      transform: scale(1.05) rotate(-3deg) translateX(-1px);
+    }
+    75% {
+      transform: scale(1.08) rotate(4deg) translateX(1px);
+    }
+    100% {
+      transform: scale(1) rotate(0deg) translateX(0);
+    }
+  }
+
   .animate-pulse-custom {
     animation: pulse 2s ease-in-out infinite;
   }
@@ -657,6 +675,10 @@
 
   .animate-glow {
     animation: glow 2s ease-in-out infinite;
+  }
+
+  .animate-zoom-rotate-oscillate {
+    animation: zoomRotateOscillate 4s ease-in-out infinite;
   }
 
   /* Print utilities */
