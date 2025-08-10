@@ -1195,7 +1195,6 @@ export default function WorkerManagement() {
                               <Tooltip>
                                 <TooltipTrigger asChild>
                                   <div className="text-sm space-y-1 cursor-pointer">
-                                    {console.log('DEBUG Worker:', worker.firstName, 'Address:', (worker as any).address, 'Pincode:', (worker as any).pincode)}
                                     {(worker as any).address ? (
                                       <div>
                                         <div className="text-gray-700 dark:text-gray-300 text-sm font-bold">

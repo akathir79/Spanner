@@ -659,10 +659,9 @@ export class DatabaseStorage implements IStorage {
           primaryService: workerProfile.primaryService,
           skills: workerProfile.skills,
           experienceYears: workerProfile.experienceYears,
-          hourlyRate: workerProfile.hourlyRate,
-          address: workerProfile.address,
-          pincode: workerProfile.pincode
+          hourlyRate: workerProfile.hourlyRate
         })
+        // Note: address and pincode come from user table, not worker profile
       };
       
       return mapped;

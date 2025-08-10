@@ -1,0 +1,27 @@
+Warning: Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.%s TAM-TIR-0003-W 
+tbody
+_c5@https://7763942d-d566-409d-a93a-6fb5061497a4-00-3g7nylntfobx9.worf.replit.dev/src/components/ui/table.tsx:55:9
+table
+div
+_c@https://7763942d-d566-409d-a93a-6fb5061497a4-00-3g7nylntfobx9.worf.replit.dev/src/components/ui/table.tsx:20:8
+div
+div
+div
+div
+div
+div
+Provider@https://7763942d-d566-409d-a93a-6fb5061497a4-00-3g7nylntfobx9.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=f69659a9:38:47
+TooltipProvider@https://7763942d-d566-409d-a93a-6fb5061497a4-00-3g7nylntfobx9.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=f69659a9:69:7
+WorkerManagement@https://7763942d-d566-409d-a93a-6fb5061497a4-00-3g7nylntfobx9.worf.replit.dev/src/pages/WorkerManagement.tsx:174:27
+Route@https://7763942d-d566-409d-a93a-6fb5061497a4-00-3g7nylntfobx9.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=f69659a9:323:13
+Switch@https://7763942d-d566-409d-a93a-6fb5061497a4-00-3g7nylntfobx9.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=f69659a9:379:14
+main
+div
+Router
+Provider@https://7763942d-d566-409d-a93a-6fb5061497a4-00-3g7nylntfobx9.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=f69659a9:38:47
+TooltipProvider@https://7763942d-d566-409d-a93a-6fb5061497a4-00-3g7nylntfobx9.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=f69659a9:69:7
+AuthProvider@https://7763942d-d566-409d-a93a-6fb5061497a4-00-3g7nylntfobx9.worf.replit.dev/src/hooks/useAuth.tsx:21:29
+LanguageProvider@https://7763942d-d566-409d-a93a-6fb5061497a4-00-3g7nylntfobx9.worf.replit.dev/src/components/LanguageProvider.tsx:38:33
+ThemeProvider@https://7763942d-d566-409d-a93a-6fb5061497a4-00-3g7nylntfobx9.worf.replit.dev/src/components/ThemeProvider.tsx:20:30
+QueryClientProvider@https://7763942d-d566-409d-a93a-6fb5061497a4-00-3g7nylntfobx9.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=f69659a9:2804:27
+App
