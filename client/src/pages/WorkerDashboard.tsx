@@ -723,13 +723,13 @@ export default function WorkerDashboard() {
                         <div>
                           <Label className="text-sm text-muted-foreground">Primary Service</Label>
                           <p className="font-medium p-2 bg-muted rounded border">
-                            {workerProfile.primaryService || "Not specified"}
+                            {workerProfile.workerProfile?.primaryService || "Not specified"}
                           </p>
                         </div>
                         <div>
                           <Label className="text-sm text-muted-foreground">Experience Years</Label>
                           <p className="font-medium p-2 bg-muted rounded border">
-                            {workerProfile.experienceYears || "0"} years
+                            {workerProfile.workerProfile?.experienceYears || "0"} years
                           </p>
                         </div>
                       </div>
@@ -738,14 +738,14 @@ export default function WorkerDashboard() {
                         <div>
                           <Label className="text-sm text-muted-foreground">Hourly Rate</Label>
                           <p className="font-medium p-2 bg-muted rounded border">
-                            ₹{workerProfile.hourlyRate || "0"}/hour
+                            ₹{workerProfile.workerProfile?.hourlyRate || "0"}/hour
                           </p>
                         </div>
                         <div>
                           <Label className="text-sm text-muted-foreground">Service Districts</Label>
                           <p className="font-medium p-2 bg-muted rounded border">
-                            {Array.isArray(workerProfile.serviceDistricts) 
-                              ? workerProfile.serviceDistricts.join(", ") 
+                            {Array.isArray(workerProfile.workerProfile?.serviceDistricts) 
+                              ? workerProfile.workerProfile.serviceDistricts.join(", ") 
                               : "Not specified"}
                           </p>
                         </div>
@@ -768,8 +768,8 @@ export default function WorkerDashboard() {
     completedBookings: bookings?.filter((b: any) => b.status === "completed").length || 0,
     totalEarnings: bookings?.filter((b: any) => b.status === "completed")
       .reduce((sum: number, b: any) => sum + (parseFloat(b.totalAmount) || 0), 0) || 0,
-    rating: workerProfile?.rating || 0,
-    totalJobs: workerProfile?.totalJobs || 0,
+    rating: workerProfile?.workerProfile?.rating || 0,
+    totalJobs: workerProfile?.workerProfile?.totalJobs || 0,
   };
 
   return (
@@ -783,17 +783,17 @@ export default function WorkerDashboard() {
             <p className="text-muted-foreground">
               Manage your services and track your earnings from your worker dashboard.
             </p>
-            {workerProfile?.primaryService && (
+            {workerProfile?.workerProfile?.primaryService && (
               <div className="flex items-center space-x-2">
                 <span className="text-sm font-medium text-muted-foreground">Services Offered:</span>
                 <Badge variant="secondary" className="capitalize">
-                  {workerProfile.primaryService}
+                  {workerProfile.workerProfile.primaryService}
                 </Badge>
-                {workerProfile.additionalServices && workerProfile.additionalServices.length > 0 && (
+                {workerProfile.workerProfile.skills && workerProfile.workerProfile.skills.length > 0 && (
                   <>
-                    {workerProfile.additionalServices.map((service: string, index: number) => (
+                    {workerProfile.workerProfile.skills.map((skill: string, index: number) => (
                       <Badge key={index} variant="outline" className="capitalize">
-                        {service}
+                        {skill}
                       </Badge>
                     ))}
                   </>
