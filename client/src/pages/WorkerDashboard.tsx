@@ -779,9 +779,28 @@ export default function WorkerDashboard() {
           <h1 className="text-3xl font-bold mb-2">
             Welcome back, {user.firstName}! ({user.id})
           </h1>
-          <p className="text-muted-foreground">
-            Manage your services and track your earnings from your worker dashboard.
-          </p>
+          <div className="space-y-2">
+            <p className="text-muted-foreground">
+              Manage your services and track your earnings from your worker dashboard.
+            </p>
+            {workerProfile?.primaryService && (
+              <div className="flex items-center space-x-2">
+                <span className="text-sm font-medium text-muted-foreground">Services Offered:</span>
+                <Badge variant="secondary" className="capitalize">
+                  {workerProfile.primaryService}
+                </Badge>
+                {workerProfile.additionalServices && workerProfile.additionalServices.length > 0 && (
+                  <>
+                    {workerProfile.additionalServices.map((service: string, index: number) => (
+                      <Badge key={index} variant="outline" className="capitalize">
+                        {service}
+                      </Badge>
+                    ))}
+                  </>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Dashboard Stats */}
