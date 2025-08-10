@@ -1655,30 +1655,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
           if (worker && worker.role === 'worker') {
             const workerProfile = await storage.getWorkerProfile(workerId as string);
             if (workerProfile) {
-              console.log("DEBUG - Worker Profile:", {
-                id: workerProfile.id,
-                primaryService: workerProfile.primaryService,
-                serviceDistricts: workerProfile.serviceDistricts
-              });
-              console.log("DEBUG - Jobs before filtering:", jobs.map(job => ({
-                id: job.id,
-                state: job.state,
-                district: job.district,
-                serviceCategory: job.serviceCategory,
-                status: job.status
-              })));
-              
               // Filter by worker's state, districts, and primary service
               jobs = jobs.filter(job => {
                 const matchesState = job.state === worker.state;
                 const matchesDistrict = (workerProfile.serviceDistricts as string[]).includes(job.district);
-                const matchesService = job.serviceCategory.toLowerCase() === workerProfile.primaryService.toLowerCase();
+                // Match service with more flexible matching (painter matches Painting, plumber matches Plumbing, etc.)
+                const jobService = job.serviceCategory.toLowerCase();
+                const workerService = workerProfile.primaryService.toLowerCase();
+                const matchesService = jobService.includes(workerService) || workerService.includes(jobService) || 
+                                     (jobService === 'painting' && workerService === 'painter') ||
+                                     (jobService === 'plumbing' && workerService === 'plumber') ||
+                                     (jobService === 'electrical' && workerService === 'electrician');
                 
-                console.log(`DEBUG - Job ${job.id}: State(${job.state}=${worker.state}=${matchesState}), District(${job.district} in ${JSON.stringify(workerProfile.serviceDistricts)}=${matchesDistrict}), Service(${job.serviceCategory.toLowerCase()}=${workerProfile.primaryService.toLowerCase()}=${matchesService})`);
                 return matchesState && matchesDistrict && matchesService;
               });
-              
-              console.log("DEBUG - Jobs after filtering:", jobs.length);
             }
           }
         } else {
