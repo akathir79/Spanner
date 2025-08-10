@@ -63,7 +63,8 @@ import {
   Minimize,
   Move,
   Zap,
-  BarChart
+  BarChart,
+  Paperclip
 } from "lucide-react";
 import { useLocation } from "wouter";
 import LocationViewer from "@/components/LocationViewer";
@@ -2776,7 +2777,7 @@ export default function Dashboard() {
                           >
                             <CardContent className="p-6 space-y-4">
                               {/* Top Header with ID, Status Badge and Action Buttons */}
-                              <div className="flex items-center justify-between mb-4">
+                              <div className="flex items-center justify-between mb-3">
                                 <div className="text-sm font-mono font-medium text-green-400 bg-green-900/30 px-3 py-1 rounded-md inline-block border border-green-500/30">
                                   ID: {job.id}
                                 </div>
@@ -2816,6 +2817,117 @@ export default function Dashboard() {
                                     <X className="h-4 w-4" />
                                   </Button>
                                 </div>
+                              </div>
+
+                              {/* Compact Service Address & Media Attachments */}
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-3">
+                                {/* Service Address */}
+                                <Collapsible open={isExpanded} onOpenChange={() => toggleCardExpanded(job.id)}>
+                                  <CollapsibleTrigger asChild>
+                                    <Button variant="ghost" className="w-full justify-between p-2 h-auto text-slate-300 hover:text-blue-300 bg-slate-800/50 border border-slate-600/30 rounded-md">
+                                      <div className="flex items-center gap-2">
+                                        <MapPin className="h-3 w-3" />
+                                        <span className="text-xs font-medium">Service Address</span>
+                                      </div>
+                                      {isExpanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                                    </Button>
+                                  </CollapsibleTrigger>
+                                  <CollapsibleContent className="mt-1">
+                                    <div className="text-xs text-slate-300 bg-slate-900/50 border border-slate-600/30 p-2 rounded whitespace-pre-line">
+                                      {job.serviceAddress || 'Service address not specified'}
+                                    </div>
+                                  </CollapsibleContent>
+                                </Collapsible>
+
+                                {/* Media Attachments */}
+                                <Collapsible>
+                                  <CollapsibleTrigger asChild>
+                                    <Button variant="ghost" className="w-full justify-between p-2 h-auto text-slate-300 hover:text-blue-300 bg-slate-800/50 border border-slate-600/30 rounded-md">
+                                      <div className="flex items-center gap-2">
+                                        <Paperclip className="h-3 w-3" />
+                                        <span className="text-xs font-medium">Media</span>
+                                      </div>
+                                      <ChevronDown className="h-3 w-3" />
+                                    </Button>
+                                  </CollapsibleTrigger>
+                                  <CollapsibleContent className="mt-1">
+                                    <div className="flex gap-1">
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="h-7 px-2 bg-red-900/20 hover:bg-red-800/30 text-red-300 border-red-500/30 text-xs"
+                                        onClick={isRecording ? stopRecording : () => startRecording(job.id)}
+                                        disabled={isRecording || !!jobMediaFiles[job.id]?.audio}
+                                      >
+                                        <Mic className="h-2.5 w-2.5 mr-1" />
+                                        Audio
+                                      </Button>
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="h-7 px-2 bg-purple-900/20 hover:bg-purple-800/30 text-purple-300 border-purple-500/30 text-xs"
+                                        onClick={() => {
+                                          const input = document.createElement('input');
+                                          input.type = 'file';
+                                          input.accept = 'image/*';
+                                          input.onchange = (e) => handleFileUpload(e as any, 'image', job.id);
+                                          input.click();
+                                        }}
+                                      >
+                                        <Camera className="h-2.5 w-2.5 mr-1" />
+                                        Photo
+                                      </Button>
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="h-7 px-2 bg-blue-900/20 hover:bg-blue-800/30 text-blue-300 border-blue-500/30 text-xs"
+                                        onClick={() => {
+                                          const input = document.createElement('input');
+                                          input.type = 'file';
+                                          input.accept = 'video/*';
+                                          input.onchange = (e) => handleFileUpload(e as any, 'video', job.id);
+                                          input.click();
+                                        }}
+                                      >
+                                        <Video className="h-2.5 w-2.5 mr-1" />
+                                        Video
+                                      </Button>
+                                    </div>
+                                    
+                                    {/* Display uploaded media */}
+                                    {jobMediaFiles[job.id] && (
+                                      <div className="space-y-1 mt-2">
+                                        {/* Audio */}
+                                        {jobMediaFiles[job.id].audio && (
+                                          <div className="flex items-center gap-2 p-2 bg-slate-900/30 border border-slate-600/30 rounded text-xs">
+                                            <Volume2 className="h-3 w-3" />
+                                            <audio controls className="flex-1 h-6">
+                                              <source src={jobMediaFiles[job.id].audio} type="audio/webm" />
+                                            </audio>
+                                          </div>
+                                        )}
+                                        {/* Images */}
+                                        {jobMediaFiles[job.id].images && jobMediaFiles[job.id].images.length > 0 && (
+                                          <div className="grid grid-cols-2 gap-1">
+                                            {jobMediaFiles[job.id].images.slice(0, 2).map((img: string, idx: number) => (
+                                              <img key={idx} src={img} className="w-full h-16 object-cover rounded border border-slate-600/30" />
+                                            ))}
+                                          </div>
+                                        )}
+                                        {/* Videos */}
+                                        {jobMediaFiles[job.id].videos && jobMediaFiles[job.id].videos.length > 0 && (
+                                          <div className="space-y-1">
+                                            {jobMediaFiles[job.id].videos.slice(0, 1).map((vid: string, idx: number) => (
+                                              <video key={idx} controls className="w-full h-20 rounded border border-slate-600/30">
+                                                <source src={vid} />
+                                              </video>
+                                            ))}
+                                          </div>
+                                        )}
+                                      </div>
+                                    )}
+                                  </CollapsibleContent>
+                                </Collapsible>
                               </div>
 
                               {/* Header with Title */}
@@ -2886,144 +2998,7 @@ export default function Dashboard() {
                                 </div>
                               </div>
 
-                              {/* Expandable Service Address Section */}
-                              <Collapsible open={isExpanded} onOpenChange={() => toggleCardExpanded(job.id)}>
-                                <CollapsibleTrigger asChild>
-                                  <Button variant="ghost" className="w-full justify-between p-0 h-auto text-slate-200 hover:text-blue-300">
-                                    <span className="text-sm font-medium">Service Address</span>
-                                    {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                                  </Button>
-                                </CollapsibleTrigger>
-                                <CollapsibleContent className="space-y-2">
-                                  <div className="text-sm text-slate-300 bg-slate-900/50 border border-slate-600/30 p-3 rounded whitespace-pre-line">
-                                    {job.serviceAddress || 'Service address not specified'}
-                                  </div>
-                                </CollapsibleContent>
-                              </Collapsible>
 
-                              {/* Expandable Media Attachments Section */}
-                              <Collapsible>
-                                <CollapsibleTrigger asChild>
-                                  <Button variant="ghost" className="w-full justify-between p-0 h-auto border-t border-slate-600 pt-4 text-slate-200 hover:text-blue-300">
-                                    <span className="text-sm font-medium">Media Attachments</span>
-                                    <ChevronDown className="h-4 w-4" />
-                                  </Button>
-                                </CollapsibleTrigger>
-                                <CollapsibleContent className="space-y-3">
-                                  <div className="flex gap-2">
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      className="h-9 px-3 bg-gradient-to-r from-red-50 to-red-100 hover:from-red-100 hover:to-red-200 text-red-600 border-red-200 hover:border-red-300 transition-all duration-200"
-                                      onClick={isRecording ? stopRecording : () => startRecording(job.id)}
-                                      disabled={isRecording || !!jobMediaFiles[job.id]?.audio}
-                                    >
-                                      <div className="bg-red-500 rounded-full p-1 mr-2">
-                                        {isRecording ? <MicOff className="h-3 w-3 text-white" /> : <Mic className="h-3 w-3 text-white" />}
-                                      </div>
-                                      <span className="text-xs font-medium">Audio</span>
-                                    </Button>
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      className="h-9 px-3 bg-gradient-to-r from-purple-50 to-purple-100 hover:from-purple-100 hover:to-purple-200 text-purple-600 border-purple-200 hover:border-purple-300 transition-all duration-200"
-                                      onClick={() => {
-                                        const input = document.createElement('input');
-                                        input.type = 'file';
-                                        input.accept = 'image/*';
-                                        input.onchange = (e) => handleFileUpload(e as any, 'image', job.id);
-                                        input.click();
-                                      }}
-                                    >
-                                      <div className="bg-purple-500 rounded-full p-1 mr-2">
-                                        <Camera className="h-3 w-3 text-white" />
-                                      </div>
-                                      <span className="text-xs font-medium">Photo</span>
-                                    </Button>
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      className="h-9 px-3 bg-gradient-to-r from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200 text-blue-600 border-blue-200 hover:border-blue-300 transition-all duration-200"
-                                      onClick={() => {
-                                        const input = document.createElement('input');
-                                        input.type = 'file';
-                                        input.accept = 'video/*';
-                                        input.onchange = (e) => handleFileUpload(e as any, 'video', job.id);
-                                        input.click();
-                                      }}
-                                    >
-                                      <div className="bg-blue-500 rounded-full p-1 mr-2">
-                                        <Video className="h-3 w-3 text-white" />
-                                      </div>
-                                      <span className="text-xs font-medium">Video</span>
-                                    </Button>
-                                  </div>
-                                
-                                  {/* Display uploaded media */}
-                                {jobMediaFiles[job.id] && (
-                                  <div className="space-y-2">
-                                    {/* Audio */}
-                                    {jobMediaFiles[job.id].audio && (
-                                      <div className="flex items-center gap-2 p-2 bg-muted/30 rounded">
-                                        <Volume2 className="h-4 w-4" />
-                                        <audio controls className="flex-1 h-8">
-                                          <source src={jobMediaFiles[job.id].audio} type="audio/webm" />
-                                        </audio>
-                                        <Button
-                                          variant="ghost"
-                                          size="sm"
-                                          className="h-6 w-6 p-0 text-destructive"
-                                          onClick={() => deleteMedia(job.id, 'audio')}
-                                        >
-                                          <X className="h-3 w-3" />
-                                        </Button>
-                                      </div>
-                                    )}
-                                    
-                                    {/* Images */}
-                                    {jobMediaFiles[job.id].images?.map((image, index) => (
-                                      <div key={index} className="flex items-center gap-2 p-2 bg-muted/30 rounded">
-                                        <Camera className="h-4 w-4" />
-                                        <img src={image} alt={`Image ${index + 1}`} className="h-12 w-12 object-cover rounded" />
-                                        <span className="flex-1 text-sm">Image {index + 1}</span>
-                                        <Button
-                                          variant="ghost"
-                                          size="sm"
-                                          className="h-6 w-6 p-0 text-destructive"
-                                          onClick={() => deleteMedia(job.id, 'image', index)}
-                                        >
-                                          <X className="h-3 w-3" />
-                                        </Button>
-                                      </div>
-                                    ))}
-                                    
-                                    {/* Videos */}
-                                    {jobMediaFiles[job.id].videos?.map((video, index) => (
-                                      <div key={index} className="flex items-center gap-2 p-2 bg-muted/30 rounded">
-                                        <Video className="h-4 w-4" />
-                                        <video controls className="h-12 w-20 object-cover rounded">
-                                          <source src={video} type="video/mp4" />
-                                        </video>
-                                        <span className="flex-1 text-sm">Video {index + 1}</span>
-                                        <Button
-                                          variant="ghost"
-                                          size="sm"
-                                          className="h-6 w-6 p-0 text-destructive"
-                                          onClick={() => deleteMedia(job.id, 'video', index)}
-                                        >
-                                          <X className="h-3 w-3" />
-                                        </Button>
-                                      </div>
-                                    ))}
-                                  </div>
-                                )}
-                                
-                                  {/* Size constraints info */}
-                                  <div className="text-xs text-muted-foreground mt-2">
-                                    Max file sizes: Audio 10MB • Images 5MB • Videos 50MB
-                                  </div>
-                                </CollapsibleContent>
-                              </Collapsible>
                               
                             </CardContent>
                           </Card>
