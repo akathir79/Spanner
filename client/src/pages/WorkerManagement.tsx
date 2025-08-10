@@ -882,6 +882,7 @@ export default function WorkerManagement() {
                             </div>
                           </TableHead>
                           <TableHead className="w-[160px]">Location</TableHead>
+                          <TableHead className="w-[140px]">Service Type</TableHead>
                           <TableHead className="w-[190px]">Bookings/Earnings</TableHead>
                           <TableHead className="w-[180px]">
                             <div className="flex items-center gap-2">
@@ -1176,6 +1177,61 @@ export default function WorkerManagement() {
                                           `Located in ${worker.district}, ${worker.state}` : 
                                           'No location information provided'
                                         }
+                                      </div>
+                                    )}
+                                  </div>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TableCell>
+                            <TableCell>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <div className="text-sm space-y-1 cursor-pointer">
+                                    {(worker as any).primaryService ? (
+                                      <div>
+                                        <div className="font-medium text-gray-900 dark:text-white">
+                                          {(worker as any).primaryService}
+                                        </div>
+                                        {(worker as any).skills && (worker as any).skills.length > 0 && (
+                                          <div className="text-xs text-gray-500 dark:text-gray-400">
+                                            Skills: {(worker as any).skills.slice(0, 2).join(', ')}
+                                            {(worker as any).skills.length > 2 && ` +${(worker as any).skills.length - 2} more`}
+                                          </div>
+                                        )}
+                                        {(worker as any).experienceYears && (
+                                          <div className="text-xs text-gray-600 dark:text-gray-400">
+                                            Experience: {(worker as any).experienceYears} years
+                                          </div>
+                                        )}
+                                      </div>
+                                    ) : (
+                                      <span className="text-gray-400 dark:text-gray-500 italic text-xs">
+                                        Not specified
+                                      </span>
+                                    )}
+                                  </div>
+                                </TooltipTrigger>
+                                <TooltipContent className="max-w-sm">
+                                  <div className="space-y-2">
+                                    <p className="font-medium">Service Information:</p>
+                                    {(worker as any).primaryService ? (
+                                      <div className="space-y-1">
+                                        <div className="text-sm"><strong>Primary Service:</strong> {(worker as any).primaryService}</div>
+                                        {(worker as any).skills && (worker as any).skills.length > 0 && (
+                                          <div className="text-sm">
+                                            <strong>Skills:</strong> {(worker as any).skills.join(', ')}
+                                          </div>
+                                        )}
+                                        {(worker as any).experienceYears && (
+                                          <div className="text-sm"><strong>Experience:</strong> {(worker as any).experienceYears} years</div>
+                                        )}
+                                        {(worker as any).hourlyRate && (
+                                          <div className="text-sm"><strong>Hourly Rate:</strong> ₹{(worker as any).hourlyRate}</div>
+                                        )}
+                                      </div>
+                                    ) : (
+                                      <div className="text-sm text-gray-500">
+                                        No service information provided
                                       </div>
                                     )}
                                   </div>
@@ -1988,6 +2044,7 @@ export default function WorkerManagement() {
                             </div>
                           </TableHead>
                           <TableHead className="w-[160px]">Location</TableHead>
+                          <TableHead className="w-[140px]">Service Type</TableHead>
                           <TableHead className="w-[190px]">Bookings/Earnings</TableHead>
                           <TableHead className="w-[180px]">
                             <div className="flex items-center gap-2">
@@ -2280,6 +2337,61 @@ export default function WorkerManagement() {
                                           </Button>
                                         </div>
                                       </div>
+                                    </div>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TableCell>
+                              <TableCell>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <div className="text-sm space-y-1 cursor-pointer">
+                                      {(worker as any).primaryService ? (
+                                        <div>
+                                          <div className="font-medium text-gray-900 dark:text-white">
+                                            {(worker as any).primaryService}
+                                          </div>
+                                          {(worker as any).skills && (worker as any).skills.length > 0 && (
+                                            <div className="text-xs text-gray-500 dark:text-gray-400">
+                                              Skills: {(worker as any).skills.slice(0, 2).join(', ')}
+                                              {(worker as any).skills.length > 2 && ` +${(worker as any).skills.length - 2} more`}
+                                            </div>
+                                          )}
+                                          {(worker as any).experienceYears && (
+                                            <div className="text-xs text-gray-600 dark:text-gray-400">
+                                              Experience: {(worker as any).experienceYears} years
+                                            </div>
+                                          )}
+                                        </div>
+                                      ) : (
+                                        <span className="text-gray-400 dark:text-gray-500 italic text-xs">
+                                          Not specified
+                                        </span>
+                                      )}
+                                    </div>
+                                  </TooltipTrigger>
+                                  <TooltipContent className="max-w-sm">
+                                    <div className="space-y-2">
+                                      <p className="font-medium">Service Information:</p>
+                                      {(worker as any).primaryService ? (
+                                        <div className="space-y-1">
+                                          <div className="text-sm"><strong>Primary Service:</strong> {(worker as any).primaryService}</div>
+                                          {(worker as any).skills && (worker as any).skills.length > 0 && (
+                                            <div className="text-sm">
+                                              <strong>Skills:</strong> {(worker as any).skills.join(', ')}
+                                            </div>
+                                          )}
+                                          {(worker as any).experienceYears && (
+                                            <div className="text-sm"><strong>Experience:</strong> {(worker as any).experienceYears} years</div>
+                                          )}
+                                          {(worker as any).hourlyRate && (
+                                            <div className="text-sm"><strong>Hourly Rate:</strong> ₹{(worker as any).hourlyRate}</div>
+                                          )}
+                                        </div>
+                                      ) : (
+                                        <div className="text-sm text-gray-500">
+                                          No service information provided
+                                        </div>
+                                      )}
                                     </div>
                                   </TooltipContent>
                                 </Tooltip>
