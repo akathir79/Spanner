@@ -762,7 +762,340 @@ const BankDetailsCard = ({ user, onUpdate }: { user: any, onUpdate: () => void }
   );
 };
 
-// Job posting form component
+// Voice-Assisted Job Posting Form Component (Outside Dashboard)
+const VoiceJobPostingForm = ({ onClose }: { onClose?: () => void }) => {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [isListening, setIsListening] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [currentStep, setCurrentStep] = useState(1);
+  const [voiceInput, setVoiceInput] = useState('');
+  const [recognition, setRecognition] = useState<any>(null);
+  
+  const [formData, setFormData] = useState({
+    title: "",
+    description: "",
+    serviceCategory: "",
+    serviceAddress: "",
+    state: "Tamil Nadu",
+    districtId: "",
+    budgetMin: "",
+    budgetMax: "",
+    deadline: "",
+    requirements: [] as string[]
+  });
+
+  // Voice Assistant Steps
+  const steps = [
+    { title: "Job Title", prompt: "What type of work do you need? For example: 'Plumbing repair' or 'House painting'", field: "title" },
+    { title: "Service Category", prompt: "What category does this job belong to? Like Plumbing, Electrical, Painting, or Cleaning?", field: "serviceCategory" },
+    { title: "Description", prompt: "Please describe the work in detail. What exactly needs to be done?", field: "description" },
+    { title: "Location", prompt: "Where is this job located? Please provide your area and district.", field: "serviceAddress" },
+    { title: "Budget", prompt: "What's your budget range? You can say something like 'between 500 and 1000 rupees'", field: "budget" },
+    { title: "Requirements", prompt: "Any special requirements? Like 'bring own tools' or 'weekend availability'. Say 'none' if no requirements.", field: "requirements" }
+  ];
+
+  // Initialize Speech Recognition
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 'webkitSpeechRecognition' in window) {
+      const speechRecognition = new (window as any).webkitSpeechRecognition();
+      speechRecognition.continuous = false;
+      speechRecognition.interimResults = false;
+      speechRecognition.lang = 'en-IN';
+      
+      speechRecognition.onstart = () => {
+        setIsListening(true);
+      };
+      
+      speechRecognition.onresult = (event: any) => {
+        const transcript = event.results[0][0].transcript;
+        setVoiceInput(transcript);
+        processVoiceInput(transcript);
+      };
+      
+      speechRecognition.onerror = (event: any) => {
+        toast({
+          title: "Voice Recognition Error",
+          description: "Please try again or type your response.",
+          variant: "destructive"
+        });
+        setIsListening(false);
+      };
+      
+      speechRecognition.onend = () => {
+        setIsListening(false);
+      };
+      
+      setRecognition(speechRecognition);
+    }
+  }, []);
+
+  // Text-to-Speech function
+  const speak = (text: string) => {
+    if ('speechSynthesis' in window) {
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'en-IN';
+      utterance.rate = 0.9;
+      utterance.pitch = 1;
+      
+      utterance.onstart = () => setIsSpeaking(true);
+      utterance.onend = () => setIsSpeaking(false);
+      
+      speechSynthesis.speak(utterance);
+    }
+  };
+
+  // Start listening
+  const startListening = () => {
+    if (recognition) {
+      recognition.start();
+    } else {
+      toast({
+        title: "Voice Recognition Not Supported",
+        description: "Please type your response in the text field.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Process voice input
+  const processVoiceInput = (input: string) => {
+    const step = steps[currentStep - 1];
+    
+    if (step.field === 'serviceCategory') {
+      // Try to match service category
+      const categories = ['Plumbing', 'Electrical', 'Painting', 'Cleaning', 'Carpentry', 'Appliance Repair', 'Home Security', 'Gardening'];
+      const matched = categories.find(cat => input.toLowerCase().includes(cat.toLowerCase()));
+      setFormData(prev => ({ ...prev, serviceCategory: matched || input }));
+    } else if (step.field === 'budget') {
+      // Extract budget numbers
+      const numbers = input.match(/\d+/g);
+      if (numbers && numbers.length >= 2) {
+        setFormData(prev => ({ ...prev, budgetMin: numbers[0], budgetMax: numbers[1] }));
+      } else if (numbers && numbers.length === 1) {
+        setFormData(prev => ({ ...prev, budgetMin: '0', budgetMax: numbers[0] }));
+      }
+    } else if (step.field === 'requirements') {
+      if (input.toLowerCase().includes('none') || input.toLowerCase().includes('no requirement')) {
+        // Skip requirements
+      } else {
+        setFormData(prev => ({ ...prev, requirements: [...prev.requirements, input] }));
+      }
+    } else {
+      setFormData(prev => ({ ...prev, [step.field]: input }));
+    }
+  };
+
+  // Move to next step
+  const nextStep = () => {
+    if (currentStep < steps.length) {
+      setCurrentStep(currentStep + 1);
+      setVoiceInput('');
+      // Auto-speak next prompt after 1 second
+      setTimeout(() => {
+        speak(steps[currentStep].prompt);
+      }, 1000);
+    }
+  };
+
+  // Previous step
+  const prevStep = () => {
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1);
+      setVoiceInput('');
+    }
+  };
+
+  // Start voice assistant
+  const startVoiceAssistant = () => {
+    setCurrentStep(1);
+    speak(`Welcome to Voice-Assisted Job Posting! Let's start with step 1. ${steps[0].prompt}`);
+  };
+
+  // Submit job mutation
+  const submitJobMutation = useMutation({
+    mutationFn: async (jobData: any) => {
+      const response = await apiRequest('/api/job-postings', {
+        method: 'POST',
+        body: JSON.stringify(jobData)
+      });
+      if (!response.ok) throw new Error('Failed to create job');
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Success", description: "Job posted successfully!" });
+      queryClient.invalidateQueries({ queryKey: ['/api/job-postings'] });
+      onClose?.();
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to post job. Please try again.", variant: "destructive" });
+    }
+  });
+
+  const handleSubmit = () => {
+    if (!formData.title || !formData.description || !formData.serviceCategory) {
+      toast({
+        title: "Incomplete Information", 
+        description: "Please complete at least the title, description, and service category.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const jobData = {
+      clientId: user?.id,
+      ...formData,
+      districtId: formData.districtId || 'Salem', // Default to Salem
+      budgetMin: formData.budgetMin ? parseInt(formData.budgetMin) : undefined,
+      budgetMax: formData.budgetMax ? parseInt(formData.budgetMax) : undefined
+    };
+
+    submitJobMutation.mutate(jobData);
+  };
+
+  const currentStepData = steps[currentStep - 1];
+
+  return (
+    <div className="space-y-6 p-6 bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50">
+      {/* Voice Assistant Header */}
+      <div className="text-center space-y-4">
+        <div className="flex items-center justify-center gap-4">
+          <Button 
+            onClick={startVoiceAssistant}
+            className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white"
+            disabled={isSpeaking}
+          >
+            <Volume2 className="h-4 w-4 mr-2" />
+            Start Voice Assistant
+          </Button>
+          
+          {currentStep <= steps.length && (
+            <div className="text-sm text-muted-foreground bg-white/80 px-3 py-1 rounded-full">
+              Step {currentStep} of {steps.length}
+            </div>
+          )}
+        </div>
+        
+        {isSpeaking && (
+          <div className="flex items-center justify-center gap-2 text-blue-600">
+            <Volume2 className="h-4 w-4 animate-pulse" />
+            <span className="text-sm">AI Assistant is speaking...</span>
+          </div>
+        )}
+      </div>
+
+      {/* Current Step */}
+      {currentStep <= steps.length && (
+        <Card className="border-2 border-purple-200 bg-white/80">
+          <CardContent className="p-6 space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-gradient-to-r from-purple-500 to-blue-500 rounded-lg text-white">
+                <Lightbulb className="h-4 w-4" />
+              </div>
+              <h3 className="font-semibold text-lg">{currentStepData.title}</h3>
+            </div>
+            
+            <p className="text-muted-foreground bg-gradient-to-r from-purple-50 to-blue-50 p-3 rounded-lg border border-purple-200">
+              {currentStepData.prompt}
+            </p>
+
+            {/* Voice Input Section */}
+            <div className="space-y-3">
+              <div className="flex gap-3">
+                <Button
+                  onClick={startListening}
+                  disabled={isListening || isSpeaking}
+                  className="bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white"
+                >
+                  {isListening ? (
+                    <>
+                      <div className="h-4 w-4 animate-pulse bg-red-400 rounded-full mr-2" />
+                      Listening...
+                    </>
+                  ) : (
+                    <>
+                      <Mic className="h-4 w-4 mr-2" />
+                      Start Recording
+                    </>
+                  )}
+                </Button>
+                
+                <Button
+                  onClick={() => speak(currentStepData.prompt)}
+                  disabled={isSpeaking}
+                  variant="outline"
+                  className="border-purple-300"
+                >
+                  <Volume2 className="h-4 w-4 mr-2" />
+                  Repeat Question
+                </Button>
+              </div>
+
+              <Input
+                value={voiceInput}
+                onChange={(e) => setVoiceInput(e.target.value)}
+                placeholder="Your voice input will appear here, or type manually..."
+                className="border-2 border-purple-200 focus:border-purple-400"
+              />
+
+              <div className="flex gap-2">
+                <Button
+                  onClick={prevStep}
+                  disabled={currentStep === 1}
+                  variant="outline"
+                  size="sm"
+                >
+                  Previous
+                </Button>
+                <Button
+                  onClick={nextStep}
+                  disabled={currentStep === steps.length || !voiceInput.trim()}
+                  size="sm"
+                  className="bg-gradient-to-r from-purple-500 to-blue-500 text-white"
+                >
+                  Next Step
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Form Preview */}
+      <Card className="bg-white/80 border border-purple-200">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Eye className="h-5 w-5 text-purple-600" />
+            Job Preview
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div><strong>Title:</strong> {formData.title || 'Not provided'}</div>
+          <div><strong>Category:</strong> {formData.serviceCategory || 'Not provided'}</div>
+          <div><strong>Description:</strong> {formData.description || 'Not provided'}</div>
+          <div><strong>Location:</strong> {formData.serviceAddress || 'Not provided'}</div>
+          <div><strong>Budget:</strong> {formData.budgetMin && formData.budgetMax ? `₹${formData.budgetMin} - ₹${formData.budgetMax}` : 'Not provided'}</div>
+          <div><strong>Requirements:</strong> {formData.requirements.length > 0 ? formData.requirements.join(', ') : 'None'}</div>
+        </CardContent>
+      </Card>
+
+      {/* Submit Button */}
+      <div className="flex gap-3 justify-end">
+        <Button variant="outline" onClick={onClose}>Cancel</Button>
+        <Button 
+          onClick={handleSubmit} 
+          disabled={submitJobMutation.isPending || !formData.title || !formData.description}
+          className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white"
+        >
+          {submitJobMutation.isPending ? 'Posting...' : 'Post Job'}
+        </Button>
+      </div>
+    </div>
+  );
+};
+
+// Job posting form component  
 const JobPostingForm = ({ onClose }: { onClose?: () => void }) => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -1559,6 +1892,7 @@ export default function Dashboard() {
   const [isLocationLoading, setIsLocationLoading] = useState(false);
   const [selectedJobPosting, setSelectedJobPosting] = useState<any>(null);
   const [isJobFormOpen, setIsJobFormOpen] = useState(false);
+  const [isVoiceJobFormOpen, setIsVoiceJobFormOpen] = useState(false);
   // Enhanced job card states
   const [editingJob, setEditingJob] = useState<any>(null);
   const [editingJobData, setEditingJobData] = useState<any>({});
@@ -2144,8 +2478,8 @@ export default function Dashboard() {
           </p>
         </div>
 
-        {/* Post a New Job Button */}
-        <div className="mb-6">
+        {/* Post a New Job Buttons */}
+        <div className="mb-6 flex flex-col sm:flex-row gap-3">
           <Dialog open={isJobFormOpen} onOpenChange={setIsJobFormOpen}>
             <DialogTrigger asChild>
               <Button size="lg" className="w-full sm:w-auto">
@@ -2161,6 +2495,34 @@ export default function Dashboard() {
                 </p>
               </DialogHeader>
               <JobPostingForm onClose={() => setIsJobFormOpen(false)} />
+            </DialogContent>
+          </Dialog>
+          
+          {/* Voice-Assisted Quick Job Posting */}
+          <Dialog open={isVoiceJobFormOpen} onOpenChange={setIsVoiceJobFormOpen}>
+            <DialogTrigger asChild>
+              <Button 
+                size="lg" 
+                variant="outline" 
+                className="w-full sm:w-auto bg-gradient-to-r from-purple-500 to-blue-500 text-white border-0 hover:from-purple-600 hover:to-blue-600"
+              >
+                <Mic className="h-5 w-5 mr-2" />
+                Quick Voice Post
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <div className="p-2 bg-gradient-to-r from-purple-500 to-blue-500 rounded-lg">
+                    <Mic className="h-5 w-5 text-white" />
+                  </div>
+                  Voice-Assisted Job Posting
+                </DialogTitle>
+                <p className="text-muted-foreground">
+                  Speak naturally to create your job posting with AI assistance
+                </p>
+              </DialogHeader>
+              <VoiceJobPostingForm onClose={() => setIsVoiceJobFormOpen(false)} />
             </DialogContent>
           </Dialog>
         </div>
