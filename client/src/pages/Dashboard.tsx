@@ -37,7 +37,8 @@ import {
   Users,
   DollarSign,
   CreditCard,
-  Camera
+  Camera,
+  Home
 } from "lucide-react";
 import { useLocation } from "wouter";
 import LocationViewer from "@/components/LocationViewer";
@@ -741,6 +742,7 @@ const JobPostingForm = ({ onClose }: { onClose?: () => void }) => {
     title: "",
     description: "",
     serviceCategory: "",
+    serviceAddress: "",
     state: "",
     districtId: "",
     budgetMin: "",
@@ -785,6 +787,7 @@ const JobPostingForm = ({ onClose }: { onClose?: () => void }) => {
         title: "",
         description: "",
         serviceCategory: "",
+        serviceAddress: "",
         state: "",
         districtId: "",
         budgetMin: "",
@@ -806,22 +809,27 @@ const JobPostingForm = ({ onClose }: { onClose?: () => void }) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!user?.id || !formData.title || !formData.description || !formData.serviceCategory || !formData.state || !formData.districtId) {
+    if (!user?.id || !formData.title || !formData.description || !formData.serviceCategory || !formData.serviceAddress) {
       toast({
         title: "Validation Error",
-        description: "Please fill in all required fields including state and district.",
+        description: "Please fill in all required fields including service address.",
         variant: "destructive",
       });
       return;
     }
 
+    // Extract state and district from address for database compatibility
+    const extractedState = formData.state || (formData.serviceAddress?.includes('Tamil Nadu') ? 'Tamil Nadu' : user?.state || 'Tamil Nadu');
+    const extractedDistrict = formData.districtId || user?.district || 'Salem';
+    
     const jobData = {
       clientId: user.id,
       title: formData.title,
       description: formData.description,
       serviceCategory: formData.serviceCategory,
-      state: formData.state,
-      districtId: formData.districtId,
+      serviceAddress: formData.serviceAddress,
+      state: extractedState,
+      districtId: extractedDistrict,
       budgetMin: formData.budgetMin ? parseFloat(formData.budgetMin) : null,
       budgetMax: formData.budgetMax ? parseFloat(formData.budgetMax) : null,
       deadline: formData.deadline || null,
@@ -876,19 +884,22 @@ const JobPostingForm = ({ onClose }: { onClose?: () => void }) => {
           const nearbyDistrict = await findNearestDistrict(latitude, longitude, allDistricts);
           
           if (nearbyDistrict) {
+            // Use reverse geocoding to get full address
+            const address = `Current Location\n${nearbyDistrict.name}, ${nearbyDistrict.state}\nPIN: Auto-detected`;
             setFormData(prev => ({ 
               ...prev, 
+              serviceAddress: address,
               state: nearbyDistrict.state,
               districtId: nearbyDistrict.id 
             }));
             toast({
               title: "Location detected",
-              description: `Set to ${nearbyDistrict.name}, ${nearbyDistrict.state}`,
+              description: `Address set to ${nearbyDistrict.name}, ${nearbyDistrict.state}. You can edit if needed.`,
             });
           } else {
             toast({
               title: "Location not found",
-              description: "Please select state and district manually.",
+              description: "Please enter the service address manually.",
               variant: "destructive",
             });
           }
@@ -1085,122 +1096,57 @@ const JobPostingForm = ({ onClose }: { onClose?: () => void }) => {
 
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <Label>State *</Label>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="h-6 px-2 text-xs"
-              onClick={handleLocationFinder}
-              disabled={isLocationLoading}
-            >
-              <MapPinIcon className="h-3 w-3 mr-1" />
-              {isLocationLoading ? "Finding..." : "Use Location"}
-            </Button>
+            <Label>Service Address *</Label>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-6 px-2 text-xs"
+                onClick={handleLocationFinder}
+                disabled={isLocationLoading}
+              >
+                <MapPinIcon className="h-3 w-3 mr-1" />
+                {isLocationLoading ? "Finding..." : "Use Current Location"}
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-6 px-2 text-xs"
+                onClick={() => setFormData(prev => ({ 
+                  ...prev, 
+                  serviceAddress: user?.address ? `${user.address}\n${user.district}, ${user.state || 'Tamil Nadu'}\nPIN: ${user.pincode || ''}`.trim() : '',
+                  state: user?.state || 'Tamil Nadu',
+                  districtId: user?.district || ''
+                }))}
+              >
+                <Home className="h-3 w-3 mr-1" />
+                Use Profile Address
+              </Button>
+            </div>
           </div>
           <div className="relative">
-            <Popover open={stateOpen} onOpenChange={setStateOpen}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  role="combobox"
-                  aria-expanded={stateOpen}
-                  className="w-full justify-between pr-8"
-                >
-                  {formData.state || "Select State"}
-                  <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-full p-0">
-                <Command>
-                  <CommandInput placeholder="Search states..." />
-                  <CommandList>
-                    <CommandEmpty>No state found.</CommandEmpty>
-                    <CommandGroup>
-                      {statesDistrictsData.states && Object.keys(statesDistrictsData.states).map((stateName: string) => (
-                        <CommandItem
-                          key={stateName}
-                          value={stateName}
-                          onSelect={() => {
-                            setFormData(prev => ({ 
-                              ...prev, 
-                              state: stateName, 
-                              districtId: "" // Clear district when state changes
-                            }));
-                            setStateOpen(false);
-                          }}
-                        >
-                          {stateName}
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
-                  </CommandList>
-                </Command>
-              </PopoverContent>
-            </Popover>
-            {formData.state && (
+            <Textarea
+              placeholder="Enter complete service address..."
+              value={formData.serviceAddress || ''}
+              onChange={(e) => setFormData(prev => ({ ...prev, serviceAddress: e.target.value }))}
+              className="min-h-[80px] resize-none"
+            />
+            {formData.serviceAddress && (
               <Button
                 variant="ghost"
                 size="sm"
-                className="absolute right-8 top-1/2 -translate-y-1/2 h-6 w-6 p-0 hover:bg-muted"
-                onClick={() => setFormData(prev => ({ ...prev, state: "", districtId: "" }))}
+                className="absolute right-2 top-2 h-6 w-6 p-0 hover:bg-muted"
+                onClick={() => setFormData(prev => ({ ...prev, serviceAddress: "" }))}
               >
                 <X className="h-3 w-3" />
               </Button>
             )}
           </div>
-        </div>
-
-        <div className="space-y-2">
-          <Label>District *</Label>
-          <div className="relative">
-            <Popover open={districtOpen} onOpenChange={setDistrictOpen}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  role="combobox"
-                  aria-expanded={districtOpen}
-                  className="w-full justify-between pr-8"
-                >
-                  {formData.districtId || "Select district"}
-                  <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-full p-0">
-                <Command>
-                  <CommandInput placeholder="Search districts..." />
-                  <CommandList>
-                    <CommandEmpty>{formData.state ? "No district found." : "Please select a state first."}</CommandEmpty>
-                    <CommandGroup>
-                      {formData.state && statesDistrictsData.states && statesDistrictsData.states[formData.state as keyof typeof statesDistrictsData.states] && 
-                        (statesDistrictsData.states[formData.state as keyof typeof statesDistrictsData.states] as any).districts.map((district: string) => (
-                          <CommandItem
-                            key={district}
-                            value={district}
-                            onSelect={() => {
-                              setFormData(prev => ({ ...prev, districtId: district }));
-                              setDistrictOpen(false);
-                            }}
-                          >
-                            {district}
-                          </CommandItem>
-                        ))}
-                    </CommandGroup>
-                  </CommandList>
-                </Command>
-              </PopoverContent>
-            </Popover>
-            {formData.districtId && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="absolute right-8 top-1/2 -translate-y-1/2 h-6 w-6 p-0 hover:bg-muted"
-                onClick={() => setFormData(prev => ({ ...prev, districtId: "" }))}
-              >
-                <X className="h-3 w-3" />
-              </Button>
-            )}
-          </div>
+          <p className="text-xs text-muted-foreground">
+            Example: House No/Building, Street, Area, City, State, PIN Code
+          </p>
         </div>
       </div>
 

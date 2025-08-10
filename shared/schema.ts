@@ -119,6 +119,7 @@ export const jobPostings = pgTable("job_postings", {
   title: text("title").notNull(),
   description: text("description").notNull(),
   serviceCategory: text("service_category").notNull(),
+  serviceAddress: text("service_address").notNull(), // Complete service address
   state: text("state").notNull(), // State name stored as text
   district: text("district").notNull(), // District name stored as text
   budgetMin: decimal("budget_min", { precision: 10, scale: 2 }),
