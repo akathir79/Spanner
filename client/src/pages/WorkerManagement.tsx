@@ -1320,7 +1320,7 @@ export default function WorkerManagement() {
                                       {/* Resume action for suspended workers */}
                                       {worker.status === "suspended" && (
                                         <DropdownMenuItem 
-                                          onClick={() => handleSuspendUser(worker)}
+                                          onClick={() => handleResumeUser(worker)}
                                           disabled={resumeWorkerMutation.isPending}
                                         >
                                           <CheckCircle className="w-4 h-4 mr-2 text-green-600" />

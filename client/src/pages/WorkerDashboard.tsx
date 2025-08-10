@@ -384,6 +384,11 @@ export default function WorkerDashboard() {
   const [, setLocation] = useLocation();
   const [showRejoinModal, setShowRejoinModal] = useState(false);
   const [rejoinReason, setRejoinReason] = useState("");
+  
+  // Force re-render when showRejoinModal changes
+  useEffect(() => {
+    console.log("useEffect - showRejoinModal changed to:", showRejoinModal);
+  }, [showRejoinModal]);
 
   // Fetch worker's bookings (always call hooks)
   const { data: bookings = [], isLoading: bookingsLoading } = useQuery({
