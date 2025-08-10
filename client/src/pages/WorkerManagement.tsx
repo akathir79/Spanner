@@ -160,11 +160,11 @@ function getActivityStatus(lastLoginAt?: string, createdAt?: string) {
 }
 
 // Helper function to get user status category for filtering
-function getUserStatusCategory(client: User): string {
-  if (!worker.lastLoginAt) {
+function getUserStatusCategory(user: User): string {
+  if (!user.lastLoginAt) {
     // Check if user was created recently (within 24 hours)
-    if (worker.createdAt) {
-      const created = new Date(worker.createdAt);
+    if (user.createdAt) {
+      const created = new Date(user.createdAt);
       const now = new Date();
       const hoursSinceCreation = (now.getTime() - created.getTime()) / (1000 * 60 * 60);
       
@@ -175,7 +175,7 @@ function getUserStatusCategory(client: User): string {
     return "no_login";
   }
 
-  const lastLogin = new Date(worker.lastLoginAt);
+  const lastLogin = new Date(user.lastLoginAt);
   const now = new Date();
   const daysSinceLogin = Math.floor((now.getTime() - lastLogin.getTime()) / (1000 * 60 * 60 * 24));
 
