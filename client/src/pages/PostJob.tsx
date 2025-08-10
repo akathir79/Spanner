@@ -13,7 +13,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useLanguage } from "@/components/LanguageProvider";
 import { Calendar, MapPin, DollarSign, Clock, Users, Plus, Trash2 } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import type { District, ServiceCategory, JobPosting, Bid } from "@shared/schema";
+import type { ServiceCategory, JobPosting, Bid } from "@shared/schema";
 import { normalizeServiceName } from "@shared/serviceUtils";
 
 const PostJob = () => {
@@ -36,10 +36,20 @@ const PostJob = () => {
   const [newRequirement, setNewRequirement] = useState("");
   const [deletingJobId, setDeletingJobId] = useState<string | null>(null);
 
-  // Fetch districts and service categories
-  const { data: districts = [] } = useQuery<District[]>({
+  // Fetch districts and service categories  
+  const { data: districtsData } = useQuery({
     queryKey: ["/api/districts"],
   });
+
+  // Transform districts data into array format
+  const districts = districtsData ? 
+    Object.entries(districtsData).flatMap(([state, stateData]: [string, any]) => 
+      stateData.districts.map((districtName: string, index: number) => ({
+        id: `${state}-${index}`,
+        name: districtName,
+        state: state
+      }))
+    ) : [];
 
   const { data: rawServices = [] } = useQuery<ServiceCategory[]>({
     queryKey: ["/api/services"],

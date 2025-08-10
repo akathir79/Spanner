@@ -23,6 +23,7 @@ import PlatformSettings from "@/pages/PlatformSettings";
 import DistrictManager from "@/pages/DistrictManager";
 import Payment from "@/pages/Payment";
 import ServiceHistory from "@/pages/ServiceHistory";
+import PostJob from "@/pages/PostJob";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -50,6 +51,7 @@ function Router() {
           <Route path="/district-manager" component={DistrictManager} />
           <Route path="/payment/:bookingId" component={Payment} />
           <Route path="/service-history" component={ServiceHistory} />
+          <Route path="/post-job" component={PostJob} />
           <Route component={NotFound} />
         </Switch>
       </main>
