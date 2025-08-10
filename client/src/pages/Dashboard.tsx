@@ -1436,7 +1436,8 @@ export default function Dashboard() {
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
   const [recordedChunks, setRecordedChunks] = useState<Blob[]>([]);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [jobMediaFiles, setJobMediaFiles] = useState<{ [jobId: string]: { audio?: string; images: string[]; videos: string[] } }>({});
+
 
   // Fetch user's bookings
   const { data: bookings = [], isLoading: bookingsLoading } = useQuery({
@@ -1796,19 +1797,23 @@ export default function Dashboard() {
   };
 
   // Media recording functions
-  const startRecording = async () => {
+  const startRecording = async (jobId: string) => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const recorder = new MediaRecorder(stream);
+      const chunks: Blob[] = [];
       
       recorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
-          setRecordedChunks(prev => [...prev, event.data]);
+          chunks.push(event.data);
         }
       };
 
       recorder.onstop = () => {
         stream.getTracks().forEach(track => track.stop());
+        const audioBlob = new Blob(chunks, { type: 'audio/webm' });
+        handleAudioUpload(audioBlob, jobId);
+        setRecordedChunks([]);
       };
 
       recorder.start();
@@ -1830,15 +1835,122 @@ export default function Dashboard() {
     }
   };
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>, type: 'image' | 'video') => {
+  // Media upload functions with size constraints
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>, type: 'image' | 'video', jobId: string) => {
     const file = event.target.files?.[0];
-    if (file) {
-      // Handle file upload logic here
+    if (!file) return;
+
+    // Size constraints
+    const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB for images
+    const MAX_VIDEO_SIZE = 50 * 1024 * 1024; // 50MB for videos
+    
+    const maxSize = type === 'image' ? MAX_IMAGE_SIZE : MAX_VIDEO_SIZE;
+    const maxSizeText = type === 'image' ? '5MB' : '50MB';
+
+    if (file.size > maxSize) {
       toast({
-        title: `${type} Selected`,
-        description: `${file.name} is ready to upload`,
+        title: "File Too Large",
+        description: `${type} files must be under ${maxSizeText}`,
+        variant: "destructive",
       });
+      return;
     }
+
+    // Convert to base64 for storage
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const base64 = e.target?.result as string;
+      
+      setJobMediaFiles(prev => {
+        const current = prev[jobId] || { images: [], videos: [] };
+        if (type === 'image') {
+          return {
+            ...prev,
+            [jobId]: {
+              ...current,
+              images: [...current.images, base64]
+            }
+          };
+        } else {
+          return {
+            ...prev,
+            [jobId]: {
+              ...current,
+              videos: [...current.videos, base64]
+            }
+          };
+        }
+      });
+
+      toast({
+        title: `${type.charAt(0).toUpperCase() + type.slice(1)} Added`,
+        description: `${file.name} has been uploaded successfully`,
+      });
+    };
+    reader.readAsDataURL(file);
+    
+    // Clear input
+    event.target.value = '';
+  };
+
+  const handleAudioUpload = (audioBlob: Blob, jobId: string) => {
+    // Size constraint for audio
+    const MAX_AUDIO_SIZE = 10 * 1024 * 1024; // 10MB for audio
+    
+    if (audioBlob.size > MAX_AUDIO_SIZE) {
+      toast({
+        title: "Recording Too Large",
+        description: "Audio recordings must be under 10MB",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const base64 = e.target?.result as string;
+      
+      setJobMediaFiles(prev => ({
+        ...prev,
+        [jobId]: {
+          ...prev[jobId],
+          audio: base64,
+          images: prev[jobId]?.images || [],
+          videos: prev[jobId]?.videos || []
+        }
+      }));
+
+      toast({
+        title: "Audio Recorded",
+        description: "Voice recording has been saved successfully",
+      });
+    };
+    reader.readAsDataURL(audioBlob);
+  };
+
+  const deleteMedia = (jobId: string, type: 'audio' | 'image' | 'video', index?: number) => {
+    setJobMediaFiles(prev => {
+      const current = prev[jobId];
+      if (!current) return prev;
+
+      if (type === 'audio') {
+        const { audio, ...rest } = current;
+        return { ...prev, [jobId]: rest };
+      } else if (type === 'image' && typeof index === 'number') {
+        const newImages = current.images.filter((_, i) => i !== index);
+        return { ...prev, [jobId]: { ...current, images: newImages } };
+      } else if (type === 'video' && typeof index === 'number') {
+        const newVideos = current.videos.filter((_, i) => i !== index);
+        return { ...prev, [jobId]: { ...current, videos: newVideos } };
+      }
+      
+      return prev;
+    });
+
+    toast({
+      title: "Media Removed",
+      description: `${type.charAt(0).toUpperCase() + type.slice(1)} has been deleted`,
+    });
   };
 
   // Authentication redirect logic in useEffect to avoid render warnings
@@ -2434,10 +2546,8 @@ export default function Dashboard() {
                                   </Button>
                                 </CollapsibleTrigger>
                                 <CollapsibleContent className="space-y-2">
-                                  <div className="text-sm text-muted-foreground bg-muted/50 p-3 rounded">
-                                    <div className="font-medium">{job.serviceAddress?.area || 'Area not specified'}</div>
-                                    <div>{job.serviceAddress?.district || job.district}, {job.serviceAddress?.state || 'Tamil Nadu'}</div>
-                                    <div>PIN: {job.serviceAddress?.pinCode || 'Not specified'}</div>
+                                  <div className="text-sm text-muted-foreground bg-muted/50 p-3 rounded whitespace-pre-line">
+                                    {job.serviceAddress || 'Service address not specified'}
                                   </div>
                                 </CollapsibleContent>
                               </Collapsible>
@@ -2451,7 +2561,8 @@ export default function Dashboard() {
                                       variant="outline"
                                       size="sm"
                                       className="h-8"
-                                      onClick={isRecording ? stopRecording : startRecording}
+                                      onClick={isRecording ? stopRecording : () => startRecording(job.id)}
+                                      disabled={isRecording || !!jobMediaFiles[job.id]?.audio}
                                     >
                                       {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
                                     </Button>
@@ -2459,7 +2570,13 @@ export default function Dashboard() {
                                       variant="outline"
                                       size="sm"
                                       className="h-8"
-                                      onClick={() => fileInputRef.current?.click()}
+                                      onClick={() => {
+                                        const input = document.createElement('input');
+                                        input.type = 'file';
+                                        input.accept = 'image/*';
+                                        input.onchange = (e) => handleFileUpload(e as any, 'image', job.id);
+                                        input.click();
+                                      }}
                                     >
                                       <Camera className="h-4 w-4" />
                                     </Button>
@@ -2467,18 +2584,82 @@ export default function Dashboard() {
                                       variant="outline"
                                       size="sm"
                                       className="h-8"
-                                      onClick={() => fileInputRef.current?.click()}
+                                      onClick={() => {
+                                        const input = document.createElement('input');
+                                        input.type = 'file';
+                                        input.accept = 'video/*';
+                                        input.onchange = (e) => handleFileUpload(e as any, 'video', job.id);
+                                        input.click();
+                                      }}
                                     >
                                       <Video className="h-4 w-4" />
                                     </Button>
                                   </div>
                                 </div>
-                                {recordedChunks.length > 0 && (
-                                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                    <Volume2 className="h-4 w-4" />
-                                    <span>Voice recording ready</span>
+                                
+                                {/* Display uploaded media */}
+                                {jobMediaFiles[job.id] && (
+                                  <div className="space-y-2">
+                                    {/* Audio */}
+                                    {jobMediaFiles[job.id].audio && (
+                                      <div className="flex items-center gap-2 p-2 bg-muted/30 rounded">
+                                        <Volume2 className="h-4 w-4" />
+                                        <audio controls className="flex-1 h-8">
+                                          <source src={jobMediaFiles[job.id].audio} type="audio/webm" />
+                                        </audio>
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          className="h-6 w-6 p-0 text-destructive"
+                                          onClick={() => deleteMedia(job.id, 'audio')}
+                                        >
+                                          <X className="h-3 w-3" />
+                                        </Button>
+                                      </div>
+                                    )}
+                                    
+                                    {/* Images */}
+                                    {jobMediaFiles[job.id].images?.map((image, index) => (
+                                      <div key={index} className="flex items-center gap-2 p-2 bg-muted/30 rounded">
+                                        <Camera className="h-4 w-4" />
+                                        <img src={image} alt={`Image ${index + 1}`} className="h-12 w-12 object-cover rounded" />
+                                        <span className="flex-1 text-sm">Image {index + 1}</span>
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          className="h-6 w-6 p-0 text-destructive"
+                                          onClick={() => deleteMedia(job.id, 'image', index)}
+                                        >
+                                          <X className="h-3 w-3" />
+                                        </Button>
+                                      </div>
+                                    ))}
+                                    
+                                    {/* Videos */}
+                                    {jobMediaFiles[job.id].videos?.map((video, index) => (
+                                      <div key={index} className="flex items-center gap-2 p-2 bg-muted/30 rounded">
+                                        <Video className="h-4 w-4" />
+                                        <video controls className="h-12 w-20 object-cover rounded">
+                                          <source src={video} type="video/mp4" />
+                                        </video>
+                                        <span className="flex-1 text-sm">Video {index + 1}</span>
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          className="h-6 w-6 p-0 text-destructive"
+                                          onClick={() => deleteMedia(job.id, 'video', index)}
+                                        >
+                                          <X className="h-3 w-3" />
+                                        </Button>
+                                      </div>
+                                    ))}
                                   </div>
                                 )}
+                                
+                                {/* Size constraints info */}
+                                <div className="text-xs text-muted-foreground mt-2">
+                                  Max file sizes: Audio 10MB • Images 5MB • Videos 50MB
+                                </div>
                               </div>
                               
                               {/* Requirements */}
@@ -2503,13 +2684,7 @@ export default function Dashboard() {
                     </div>
                   )}
                   {/* Hidden file input for media uploads */}
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*,video/*"
-                    style={{ display: 'none' }}
-                    onChange={(e) => handleFileUpload(e, 'image')}
-                  />
+
                 </CardContent>
               </Card>
 
@@ -2694,10 +2869,8 @@ export default function Dashboard() {
               {/* Current Service Address (Read-only) */}
               <div className="space-y-2">
                 <Label>Service Address</Label>
-                <div className="p-3 bg-muted/50 rounded border space-y-1">
-                  <div className="font-medium">{editingJob.serviceAddress?.area || 'Area not specified'}</div>
-                  <div>{editingJob.serviceAddress?.district || editingJob.district}, {editingJob.serviceAddress?.state || 'Tamil Nadu'}</div>
-                  <div>PIN: {editingJob.serviceAddress?.pinCode || 'Not specified'}</div>
+                <div className="p-3 bg-muted/50 rounded border whitespace-pre-line">
+                  {editingJob.serviceAddress || 'Service address not specified'}
                 </div>
               </div>
 
