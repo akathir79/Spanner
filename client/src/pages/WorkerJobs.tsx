@@ -27,10 +27,12 @@ const WorkerJobs = () => {
   const [selectedJob, setSelectedJob] = useState<JobPosting | null>(null);
   const [isBidModalOpen, setIsBidModalOpen] = useState(false);
 
-  // Fetch available job postings
+  // Fetch available job postings filtered by worker's location and service
   const { data: jobPostings = [], isLoading } = useQuery<JobPosting[]>({
-    queryKey: ["/api/job-postings"],
+    queryKey: ["/api/job-postings", user?.id],
+    queryFn: () => fetch(`/api/job-postings?workerId=${user?.id}`).then(res => res.json()),
     select: (data: any) => data.filter((job: any) => job.status === "open"),
+    enabled: !!user?.id,
   });
 
   // Fetch worker's bids

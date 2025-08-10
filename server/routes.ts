@@ -1644,7 +1644,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Job postings routes
   app.get("/api/job-postings", async (req, res) => {
     try {
-      const jobs = await storage.getAllJobPostings();
+      const { state, district, serviceCategory, workerId } = req.query;
+      let jobs = await storage.getAllJobPostings();
+      
+      // If worker-specific filters are provided, apply location and service filtering
+      if (workerId || (state && district && serviceCategory)) {
+        // Get worker details if workerId is provided
+        if (workerId) {
+          const worker = await storage.getUser(workerId as string);
+          if (worker && worker.role === 'worker') {
+            const workerProfile = await storage.getWorkerProfile(workerId as string);
+            if (workerProfile) {
+              // Filter by worker's state, districts, and primary service
+              jobs = jobs.filter(job => {
+                const matchesState = job.state === worker.state;
+                const matchesDistrict = (workerProfile.serviceDistricts as string[]).includes(job.district);
+                const matchesService = job.serviceCategory === workerProfile.primaryService;
+                return matchesState && matchesDistrict && matchesService;
+              });
+            }
+          }
+        } else {
+          // Manual filtering with provided parameters
+          jobs = jobs.filter(job => {
+            const matchesState = !state || job.state === state;
+            const matchesDistrict = !district || job.district === district;
+            const matchesService = !serviceCategory || job.serviceCategory === serviceCategory;
+            return matchesState && matchesDistrict && matchesService;
+          });
+        }
+      }
+      
       res.json(jobs);
     } catch (error) {
       console.error("Error fetching job postings:", error);
