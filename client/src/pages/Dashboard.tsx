@@ -741,6 +741,7 @@ const JobPostingForm = () => {
     title: "",
     description: "",
     serviceCategory: "",
+    state: "",
     districtId: "",
     budgetMin: "",
     budgetMax: "",
@@ -749,6 +750,7 @@ const JobPostingForm = () => {
   });
   const [newRequirement, setNewRequirement] = useState("");
   const [serviceOpen, setServiceOpen] = useState(false);
+  const [stateOpen, setStateOpen] = useState(false);
   const [districtOpen, setDistrictOpen] = useState(false);
   const [isLocationLoading, setIsLocationLoading] = useState(false);
 
@@ -779,6 +781,7 @@ const JobPostingForm = () => {
         title: "",
         description: "",
         serviceCategory: "",
+        state: "",
         districtId: "",
         budgetMin: "",
         budgetMax: "",
@@ -799,10 +802,10 @@ const JobPostingForm = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!user?.id || !formData.title || !formData.description || !formData.serviceCategory || !formData.districtId) {
+    if (!user?.id || !formData.title || !formData.description || !formData.serviceCategory || !formData.state || !formData.districtId) {
       toast({
         title: "Validation Error",
-        description: "Please fill in all required fields.",
+        description: "Please fill in all required fields including state and district.",
         variant: "destructive",
       });
       return;
@@ -813,6 +816,7 @@ const JobPostingForm = () => {
       title: formData.title,
       description: formData.description,
       serviceCategory: formData.serviceCategory,
+      state: formData.state,
       districtId: formData.districtId,
       budgetMin: formData.budgetMin ? parseFloat(formData.budgetMin) : null,
       budgetMax: formData.budgetMax ? parseFloat(formData.budgetMax) : null,
@@ -858,21 +862,29 @@ const JobPostingForm = () => {
           
           // Use real-time district detection
           // Convert statesDistrictsData to districts format for location functions
-          const allDistricts = statesDistrictsData.states ? Object.values(statesDistrictsData.states).flatMap((stateData: any) => 
-            stateData.districts.map((district: string) => ({ id: district, name: district }))
+          const allDistricts = statesDistrictsData.states ? Object.values(statesDistrictsData.states).flatMap((stateData: any, stateIndex: number) => 
+            stateData.districts.map((district: string) => ({ 
+              id: district, 
+              name: district,
+              state: Object.keys(statesDistrictsData.states)[stateIndex]
+            }))
           ) : [];
           const nearbyDistrict = await findNearestDistrict(latitude, longitude, allDistricts);
           
           if (nearbyDistrict) {
-            setFormData(prev => ({ ...prev, districtId: nearbyDistrict.id }));
+            setFormData(prev => ({ 
+              ...prev, 
+              state: nearbyDistrict.state,
+              districtId: nearbyDistrict.id 
+            }));
             toast({
               title: "Location detected",
-              description: `Set district to ${nearbyDistrict.name}`,
+              description: `Set to ${nearbyDistrict.name}, ${nearbyDistrict.state}`,
             });
           } else {
             toast({
-              title: "Location outside Tamil Nadu",
-              description: "Please select a district manually.",
+              title: "Location not found",
+              description: "Please select state and district manually.",
               variant: "destructive",
             });
           }
@@ -1067,6 +1079,60 @@ const JobPostingForm = () => {
         </div>
 
         <div className="space-y-2">
+          <Label>State *</Label>
+          <Popover open={stateOpen} onOpenChange={setStateOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                role="combobox"
+                aria-expanded={stateOpen}
+                className="w-full justify-between"
+              >
+                {formData.state || "Select State"}
+                <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-full p-0">
+              <Command>
+                <CommandInput placeholder="Search states..." />
+                <CommandList>
+                  <CommandEmpty>No state found.</CommandEmpty>
+                  <CommandGroup>
+                    {statesDistrictsData.states && Object.keys(statesDistrictsData.states).map((stateName: string) => (
+                      <CommandItem
+                        key={stateName}
+                        value={stateName}
+                        onSelect={() => {
+                          setFormData(prev => ({ 
+                            ...prev, 
+                            state: stateName, 
+                            districtId: "" // Clear district when state changes
+                          }));
+                          setStateOpen(false);
+                        }}
+                      >
+                        {stateName}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
+          {formData.state && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="mt-1 h-6 px-2 text-xs"
+              onClick={() => setFormData(prev => ({ ...prev, state: "", districtId: "" }))}
+            >
+              <X className="h-3 w-3 mr-1" />
+              Clear
+            </Button>
+          )}
+        </div>
+
+        <div className="space-y-2">
           <div className="flex items-center justify-between">
             <Label>District *</Label>
             <Button
@@ -1089,16 +1155,7 @@ const JobPostingForm = () => {
                 aria-expanded={districtOpen}
                 className="w-full justify-between"
               >
-                {formData.districtId
-                  ? (() => {
-                      // Find district from statesDistrictsData
-                      const allDistricts = statesDistrictsData.states ? Object.values(statesDistrictsData.states).flatMap((stateData: any) => 
-                        stateData.districts.map((district: string) => ({ id: district, name: district }))
-                      ) : [];
-                      const selectedDistrict = allDistricts.find((district: any) => district.id === formData.districtId);
-                      return selectedDistrict ? selectedDistrict.name : "Select district";
-                    })()
-                  : "Select district"}
+                {formData.districtId || "Select district"}
                 <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
               </Button>
             </PopoverTrigger>
@@ -1106,23 +1163,21 @@ const JobPostingForm = () => {
               <Command>
                 <CommandInput placeholder="Search districts..." />
                 <CommandList>
-                  <CommandEmpty>No district found.</CommandEmpty>
+                  <CommandEmpty>{formData.state ? "No district found." : "Please select a state first."}</CommandEmpty>
                   <CommandGroup>
-                    {statesDistrictsData.states && Object.keys(statesDistrictsData.states).length > 0 && 
-                      Object.values(statesDistrictsData.states).flatMap((stateData: any) => 
-                        stateData.districts.map((district: string) => ({ id: district, name: district }))
-                      ).map((district: any) => (
+                    {formData.state && statesDistrictsData.states && statesDistrictsData.states[formData.state as keyof typeof statesDistrictsData.states] && 
+                      (statesDistrictsData.states[formData.state as keyof typeof statesDistrictsData.states] as any).districts.map((district: string) => (
                         <CommandItem
-                          key={district.id}
-                          value={district.name}
-                        onSelect={() => {
-                          setFormData(prev => ({ ...prev, districtId: district.id }));
-                          setDistrictOpen(false);
-                        }}
-                      >
-                        {district.name}
-                      </CommandItem>
-                    ))}
+                          key={district}
+                          value={district}
+                          onSelect={() => {
+                            setFormData(prev => ({ ...prev, districtId: district }));
+                            setDistrictOpen(false);
+                          }}
+                        >
+                          {district}
+                        </CommandItem>
+                      ))}
                   </CommandGroup>
                 </CommandList>
               </Command>
