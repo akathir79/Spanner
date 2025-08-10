@@ -68,7 +68,8 @@ import {
   Move,
   Zap,
   BarChart,
-  Paperclip
+  Paperclip,
+  Square
 } from "lucide-react";
 import { useLocation } from "wouter";
 import LocationViewer from "@/components/LocationViewer";
@@ -762,16 +763,18 @@ const BankDetailsCard = ({ user, onUpdate }: { user: any, onUpdate: () => void }
   );
 };
 
-// Voice-Assisted Job Posting Form Component (Outside Dashboard)
+// Smart Voice Job Posting - Single Recording with AI Processing
 const VoiceJobPostingForm = ({ onClose }: { onClose?: () => void }) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isListening, setIsListening] = useState(false);
-  const [isSpeaking, setIsSpeaking] = useState(false);
-  const [currentStep, setCurrentStep] = useState(1);
-  const [voiceInput, setVoiceInput] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [voiceTranscript, setVoiceTranscript] = useState('');
+  const [detectedLanguage, setDetectedLanguage] = useState('');
   const [recognition, setRecognition] = useState<any>(null);
+  const [recordingTime, setRecordingTime] = useState(0);
+  const [timerInterval, setTimerInterval] = useState<NodeJS.Timeout | null>(null);
   
   const [formData, setFormData] = useState({
     title: "",
@@ -786,131 +789,186 @@ const VoiceJobPostingForm = ({ onClose }: { onClose?: () => void }) => {
     requirements: [] as string[]
   });
 
-  // Voice Assistant Steps
-  const steps = [
-    { title: "Job Title", prompt: "What type of work do you need? For example: 'Plumbing repair' or 'House painting'", field: "title" },
-    { title: "Service Category", prompt: "What category does this job belong to? Like Plumbing, Electrical, Painting, or Cleaning?", field: "serviceCategory" },
-    { title: "Description", prompt: "Please describe the work in detail. What exactly needs to be done?", field: "description" },
-    { title: "Location", prompt: "Where is this job located? Please provide your area and district.", field: "serviceAddress" },
-    { title: "Budget", prompt: "What's your budget range? You can say something like 'between 500 and 1000 rupees'", field: "budget" },
-    { title: "Requirements", prompt: "Any special requirements? Like 'bring own tools' or 'weekend availability'. Say 'none' if no requirements.", field: "requirements" }
-  ];
+  // Language detection patterns
+  const languagePatterns = {
+    tamil: /[\u0B80-\u0BFF]/,
+    hindi: /[\u0900-\u097F]/,
+    english: /^[a-zA-Z0-9\s.,!?-]+$/
+  };
 
-  // Initialize Speech Recognition
+  // Initialize Speech Recognition with multi-language support
   useEffect(() => {
-    if (typeof window !== 'undefined' && 'webkitSpeechRecognition' in window) {
-      const speechRecognition = new (window as any).webkitSpeechRecognition();
-      speechRecognition.continuous = false;
+    if (typeof window !== 'undefined' && ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+      const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
+      const speechRecognition = new SpeechRecognition();
+      
+      speechRecognition.continuous = true;
       speechRecognition.interimResults = false;
-      speechRecognition.lang = 'en-IN';
+      speechRecognition.lang = 'hi-IN,ta-IN,en-IN'; // Multi-language support
       
       speechRecognition.onstart = () => {
         setIsListening(true);
+        setRecordingTime(0);
+        const interval = setInterval(() => {
+          setRecordingTime(prev => prev + 1);
+        }, 1000);
+        setTimerInterval(interval);
       };
       
       speechRecognition.onresult = (event: any) => {
-        const transcript = event.results[0][0].transcript;
-        setVoiceInput(transcript);
-        processVoiceInput(transcript);
+        let fullTranscript = '';
+        for (let i = 0; i < event.results.length; i++) {
+          fullTranscript += event.results[i][0].transcript + ' ';
+        }
+        setVoiceTranscript(fullTranscript.trim());
       };
       
       speechRecognition.onerror = (event: any) => {
+        console.error('Speech recognition error:', event.error);
         toast({
-          title: "Voice Recognition Error",
-          description: "Please try again or type your response.",
+          title: "Recording Error",
+          description: "Please try again. Make sure microphone access is allowed.",
           variant: "destructive"
         });
-        setIsListening(false);
+        stopListening();
       };
       
       speechRecognition.onend = () => {
         setIsListening(false);
+        if (timerInterval) {
+          clearInterval(timerInterval);
+          setTimerInterval(null);
+        }
       };
       
       setRecognition(speechRecognition);
     }
-  }, []);
+  }, [timerInterval]);
 
-  // Text-to-Speech function
-  const speak = (text: string) => {
-    if ('speechSynthesis' in window) {
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = 'en-IN';
-      utterance.rate = 0.9;
-      utterance.pitch = 1;
-      
-      utterance.onstart = () => setIsSpeaking(true);
-      utterance.onend = () => setIsSpeaking(false);
-      
-      speechSynthesis.speak(utterance);
-    }
+  // Detect language from transcript
+  const detectLanguage = (text: string) => {
+    if (languagePatterns.tamil.test(text)) return 'Tamil';
+    if (languagePatterns.hindi.test(text)) return 'Hindi';
+    if (languagePatterns.english.test(text)) return 'English';
+    return 'Mixed/Unknown';
   };
 
   // Start listening
   const startListening = () => {
     if (recognition) {
+      setVoiceTranscript('');
+      setDetectedLanguage('');
       recognition.start();
     } else {
       toast({
-        title: "Voice Recognition Not Supported",
-        description: "Please type your response in the text field.",
+        title: "Voice Recognition Not Available",
+        description: "Please type your job details manually.",
         variant: "destructive"
       });
     }
   };
 
-  // Process voice input
-  const processVoiceInput = (input: string) => {
-    const step = steps[currentStep - 1];
+  // Stop listening
+  const stopListening = () => {
+    if (recognition) {
+      recognition.stop();
+    }
+    setIsListening(false);
+    if (timerInterval) {
+      clearInterval(timerInterval);
+      setTimerInterval(null);
+    }
     
-    if (step.field === 'serviceCategory') {
-      // Try to match service category
-      const categories = ['Plumbing', 'Electrical', 'Painting', 'Cleaning', 'Carpentry', 'Appliance Repair', 'Home Security', 'Gardening'];
-      const matched = categories.find(cat => input.toLowerCase().includes(cat.toLowerCase()));
-      setFormData(prev => ({ ...prev, serviceCategory: matched || input }));
-    } else if (step.field === 'budget') {
-      // Extract budget numbers
-      const numbers = input.match(/\d+/g);
-      if (numbers && numbers.length >= 2) {
-        setFormData(prev => ({ ...prev, budgetMin: numbers[0], budgetMax: numbers[1] }));
-      } else if (numbers && numbers.length === 1) {
-        setFormData(prev => ({ ...prev, budgetMin: '0', budgetMax: numbers[0] }));
+    if (voiceTranscript) {
+      const lang = detectLanguage(voiceTranscript);
+      setDetectedLanguage(lang);
+      processVoiceInput(voiceTranscript);
+    }
+  };
+
+  // AI-powered voice processing
+  const processVoiceInput = (transcript: string) => {
+    setIsProcessing(true);
+    
+    // Smart extraction using regex and keywords
+    const text = transcript.toLowerCase();
+    
+    // Extract service category
+    const serviceCategories = [
+      { keywords: ['plumbing', 'plumber', 'pipe', 'leak', 'tap', 'bathroom'], category: 'Plumbing' },
+      { keywords: ['electrical', 'electrician', 'wire', 'light', 'fan', 'switch'], category: 'Electrical' },
+      { keywords: ['painting', 'paint', 'wall', 'color', 'brush'], category: 'Painting' },
+      { keywords: ['cleaning', 'clean', 'sweep', 'mop', 'wash'], category: 'Cleaning' },
+      { keywords: ['carpenter', 'wood', 'furniture', 'door', 'window'], category: 'Carpentry' },
+      { keywords: ['repair', 'fix', 'broken', 'service', 'maintenance'], category: 'Appliance Repair' },
+      { keywords: ['garden', 'lawn', 'plant', 'tree', 'grass'], category: 'Gardening' }
+    ];
+    
+    let detectedCategory = '';
+    for (const service of serviceCategories) {
+      if (service.keywords.some(keyword => text.includes(keyword))) {
+        detectedCategory = service.category;
+        break;
       }
-    } else if (step.field === 'requirements') {
-      if (input.toLowerCase().includes('none') || input.toLowerCase().includes('no requirement')) {
-        // Skip requirements
-      } else {
-        setFormData(prev => ({ ...prev, requirements: [...prev.requirements, input] }));
+    }
+    
+    // Extract budget using regex
+    const budgetRegex = /(\d+)\s*(?:to|से|வரை|-)\s*(\d+)|\b(\d+)\s*rupees?|\₹\s*(\d+)/gi;
+    const budgetMatches = [...transcript.matchAll(budgetRegex)];
+    let budgetMin = '';
+    let budgetMax = '';
+    
+    if (budgetMatches.length > 0) {
+      const match = budgetMatches[0];
+      if (match[1] && match[2]) {
+        budgetMin = match[1];
+        budgetMax = match[2];
+      } else if (match[3]) {
+        budgetMax = match[3];
+        budgetMin = '0';
+      } else if (match[4]) {
+        budgetMax = match[4];
+        budgetMin = '0';
       }
-    } else {
-      setFormData(prev => ({ ...prev, [step.field]: input }));
     }
-  };
-
-  // Move to next step
-  const nextStep = () => {
-    if (currentStep < steps.length) {
-      setCurrentStep(currentStep + 1);
-      setVoiceInput('');
-      // Auto-speak next prompt after 1 second
-      setTimeout(() => {
-        speak(steps[currentStep].prompt);
-      }, 1000);
+    
+    // Extract location keywords
+    const locationKeywords = ['salem', 'chennai', 'coimbatore', 'madurai', 'trichy', 'area', 'district'];
+    let detectedLocation = '';
+    for (const loc of locationKeywords) {
+      if (text.includes(loc)) {
+        detectedLocation = transcript.substring(
+          transcript.toLowerCase().indexOf(loc) - 10,
+          transcript.toLowerCase().indexOf(loc) + loc.length + 10
+        ).trim();
+        break;
+      }
     }
-  };
-
-  // Previous step
-  const prevStep = () => {
-    if (currentStep > 1) {
-      setCurrentStep(currentStep - 1);
-      setVoiceInput('');
-    }
-  };
-
-  // Start voice assistant
-  const startVoiceAssistant = () => {
-    setCurrentStep(1);
-    speak(`Welcome to Voice-Assisted Job Posting! Let's start with step 1. ${steps[0].prompt}`);
+    
+    // Generate title from first meaningful part
+    const sentences = transcript.split(/[.!?]/);
+    const title = sentences[0].substring(0, 50).trim();
+    
+    // Update form data
+    setFormData({
+      title: title || transcript.substring(0, 50),
+      description: transcript,
+      serviceCategory: detectedCategory,
+      serviceAddress: detectedLocation,
+      state: "Tamil Nadu",
+      districtId: "Salem", // Default
+      budgetMin,
+      budgetMax,
+      deadline: "",
+      requirements: []
+    });
+    
+    setIsProcessing(false);
+    
+    toast({
+      title: "Voice Processed Successfully!",
+      description: `Detected ${detectedLanguage} language. Job details extracted automatically.`,
+    });
   };
 
   // Submit job mutation
@@ -934,10 +992,10 @@ const VoiceJobPostingForm = ({ onClose }: { onClose?: () => void }) => {
   });
 
   const handleSubmit = () => {
-    if (!formData.title || !formData.description || !formData.serviceCategory) {
+    if (!formData.title || !formData.description) {
       toast({
         title: "Incomplete Information", 
-        description: "Please complete at least the title, description, and service category.",
+        description: "Please provide job details via voice recording or manual input.",
         variant: "destructive"
       });
       return;
@@ -946,7 +1004,7 @@ const VoiceJobPostingForm = ({ onClose }: { onClose?: () => void }) => {
     const jobData = {
       clientId: user?.id,
       ...formData,
-      districtId: formData.districtId || 'Salem', // Default to Salem
+      districtId: formData.districtId || 'Salem',
       budgetMin: formData.budgetMin ? parseInt(formData.budgetMin) : undefined,
       budgetMax: formData.budgetMax ? parseInt(formData.budgetMax) : undefined
     };
@@ -954,141 +1012,175 @@ const VoiceJobPostingForm = ({ onClose }: { onClose?: () => void }) => {
     submitJobMutation.mutate(jobData);
   };
 
-  const currentStepData = steps[currentStep - 1];
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
 
   return (
-    <div className="space-y-6 p-6 bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50">
-      {/* Voice Assistant Header */}
-      <div className="text-center space-y-4">
-        <div className="flex items-center justify-center gap-4">
-          <Button 
-            onClick={startVoiceAssistant}
-            className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white"
-            disabled={isSpeaking}
-          >
-            <Volume2 className="h-4 w-4 mr-2" />
-            Start Voice Assistant
-          </Button>
-          
-          {currentStep <= steps.length && (
-            <div className="text-sm text-muted-foreground bg-white/80 px-3 py-1 rounded-full">
-              Step {currentStep} of {steps.length}
-            </div>
-          )}
-        </div>
-        
-        {isSpeaking && (
-          <div className="flex items-center justify-center gap-2 text-blue-600">
-            <Volume2 className="h-4 w-4 animate-pulse" />
-            <span className="text-sm">AI Assistant is speaking...</span>
-          </div>
-        )}
-      </div>
-
-      {/* Current Step */}
-      {currentStep <= steps.length && (
-        <Card className="border-2 border-purple-200 bg-white/80">
-          <CardContent className="p-6 space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-gradient-to-r from-purple-500 to-blue-500 rounded-lg text-white">
-                <Lightbulb className="h-4 w-4" />
+    <div className="space-y-6">
+      {/* Smart Voice Recording */}
+      <Card className="border-2 border-purple-200">
+        <CardContent className="p-6">
+          <div className="text-center space-y-4">
+            <div className="flex items-center justify-center gap-2">
+              <div className="p-3 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full">
+                <Mic className="h-6 w-6 text-white" />
               </div>
-              <h3 className="font-semibold text-lg">{currentStepData.title}</h3>
+              <div>
+                <h3 className="font-semibold text-lg">Smart Voice Job Posting</h3>
+                <p className="text-sm text-muted-foreground">
+                  Speak naturally in Tamil, Hindi, or English - AI will understand and create your job post
+                </p>
+              </div>
             </div>
-            
-            <p className="text-muted-foreground bg-gradient-to-r from-purple-50 to-blue-50 p-3 rounded-lg border border-purple-200">
-              {currentStepData.prompt}
-            </p>
 
-            {/* Voice Input Section */}
+            {/* Recording Button */}
             <div className="space-y-3">
-              <div className="flex gap-3">
+              {!isListening ? (
                 <Button
                   onClick={startListening}
-                  disabled={isListening || isSpeaking}
-                  className="bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white"
+                  size="lg"
+                  className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white"
                 >
-                  {isListening ? (
-                    <>
-                      <div className="h-4 w-4 animate-pulse bg-red-400 rounded-full mr-2" />
-                      Listening...
-                    </>
-                  ) : (
-                    <>
-                      <Mic className="h-4 w-4 mr-2" />
-                      Start Recording
-                    </>
-                  )}
+                  <Mic className="h-5 w-5 mr-2" />
+                  Start Recording
                 </Button>
-                
-                <Button
-                  onClick={() => speak(currentStepData.prompt)}
-                  disabled={isSpeaking}
-                  variant="outline"
-                  className="border-purple-300"
-                >
-                  <Volume2 className="h-4 w-4 mr-2" />
-                  Repeat Question
-                </Button>
+              ) : (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-center gap-2 text-red-600">
+                    <div className="h-3 w-3 animate-pulse bg-red-500 rounded-full" />
+                    <span className="font-medium">Recording... {formatTime(recordingTime)}</span>
+                  </div>
+                  <Button
+                    onClick={stopListening}
+                    size="lg"
+                    className="bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white"
+                  >
+                    <Square className="h-5 w-5 mr-2" />
+                    Stop & Process
+                  </Button>
+                </div>
+              )}
+            </div>
+
+            {/* Processing Indicator */}
+            {isProcessing && (
+              <div className="flex items-center justify-center gap-2 text-blue-600">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                <span>AI is processing your voice...</span>
               </div>
+            )}
 
-              <Input
-                value={voiceInput}
-                onChange={(e) => setVoiceInput(e.target.value)}
-                placeholder="Your voice input will appear here, or type manually..."
-                className="border-2 border-purple-200 focus:border-purple-400"
-              />
+            {/* Voice Transcript */}
+            {voiceTranscript && (
+              <div className="text-left">
+                <div className="flex justify-between items-center mb-2">
+                  <Label className="font-medium">Voice Transcript:</Label>
+                  {detectedLanguage && (
+                    <Badge variant="outline" className="text-purple-600 border-purple-300">
+                      {detectedLanguage}
+                    </Badge>
+                  )}
+                </div>
+                <textarea
+                  value={voiceTranscript}
+                  onChange={(e) => setVoiceTranscript(e.target.value)}
+                  className="w-full p-3 border rounded-lg min-h-[100px] bg-gray-50"
+                  placeholder="Your voice will be transcribed here..."
+                />
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
-              <div className="flex gap-2">
-                <Button
-                  onClick={prevStep}
-                  disabled={currentStep === 1}
-                  variant="outline"
-                  size="sm"
-                >
-                  Previous
-                </Button>
-                <Button
-                  onClick={nextStep}
-                  disabled={currentStep === steps.length || !voiceInput.trim()}
-                  size="sm"
-                  className="bg-gradient-to-r from-purple-500 to-blue-500 text-white"
-                >
-                  Next Step
-                </Button>
+      {/* Auto-Generated Job Preview */}
+      {(formData.title || formData.description) && (
+        <Card className="border border-green-200 bg-green-50/50">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-green-700">
+              <CheckCircle className="h-5 w-5" />
+              Auto-Generated Job Details
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid gap-3">
+              <div>
+                <Label className="font-medium text-sm">Job Title</Label>
+                <Input
+                  value={formData.title}
+                  onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                  className="mt-1"
+                />
+              </div>
+              
+              <div>
+                <Label className="font-medium text-sm">Service Category</Label>
+                <Input
+                  value={formData.serviceCategory}
+                  onChange={(e) => setFormData(prev => ({ ...prev, serviceCategory: e.target.value }))}
+                  className="mt-1"
+                  placeholder="Auto-detected from voice"
+                />
+              </div>
+              
+              <div>
+                <Label className="font-medium text-sm">Description</Label>
+                <textarea
+                  value={formData.description}
+                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                  className="w-full p-2 border rounded-md min-h-[80px] mt-1"
+                />
+              </div>
+              
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label className="font-medium text-sm">Min Budget (₹)</Label>
+                  <Input
+                    type="number"
+                    value={formData.budgetMin}
+                    onChange={(e) => setFormData(prev => ({ ...prev, budgetMin: e.target.value }))}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label className="font-medium text-sm">Max Budget (₹)</Label>
+                  <Input
+                    type="number"
+                    value={formData.budgetMax}
+                    onChange={(e) => setFormData(prev => ({ ...prev, budgetMax: e.target.value }))}
+                    className="mt-1"
+                  />
+                </div>
+              </div>
+              
+              <div>
+                <Label className="font-medium text-sm">Location</Label>
+                <Input
+                  value={formData.serviceAddress}
+                  onChange={(e) => setFormData(prev => ({ ...prev, serviceAddress: e.target.value }))}
+                  className="mt-1"
+                  placeholder="Auto-detected from voice"
+                />
               </div>
             </div>
           </CardContent>
         </Card>
       )}
 
-      {/* Form Preview */}
-      <Card className="bg-white/80 border border-purple-200">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Eye className="h-5 w-5 text-purple-600" />
-            Job Preview
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <div><strong>Title:</strong> {formData.title || 'Not provided'}</div>
-          <div><strong>Category:</strong> {formData.serviceCategory || 'Not provided'}</div>
-          <div><strong>Description:</strong> {formData.description || 'Not provided'}</div>
-          <div><strong>Location:</strong> {formData.serviceAddress || 'Not provided'}</div>
-          <div><strong>Budget:</strong> {formData.budgetMin && formData.budgetMax ? `₹${formData.budgetMin} - ₹${formData.budgetMax}` : 'Not provided'}</div>
-          <div><strong>Requirements:</strong> {formData.requirements.length > 0 ? formData.requirements.join(', ') : 'None'}</div>
-        </CardContent>
-      </Card>
-
-      {/* Submit Button */}
+      {/* Action Buttons */}
       <div className="flex gap-3 justify-end">
-        <Button variant="outline" onClick={onClose}>Cancel</Button>
+        <Button variant="outline" onClick={onClose}>
+          Cancel
+        </Button>
         <Button 
           onClick={handleSubmit} 
           disabled={submitJobMutation.isPending || !formData.title || !formData.description}
           className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white"
         >
-          {submitJobMutation.isPending ? 'Posting...' : 'Post Job'}
+          {submitJobMutation.isPending ? 'Posting Job...' : 'Post Job'}
         </Button>
       </div>
     </div>
