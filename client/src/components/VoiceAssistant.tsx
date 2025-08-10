@@ -622,18 +622,18 @@ export function VoiceAssistant({
     <>
       <div className="relative">
         {/* Floating hint text with glow animation */}
-        <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 text-sm text-purple-600 font-medium animate-glow whitespace-nowrap pointer-events-none">
+        <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 text-sm text-gray-300 font-medium animate-glow whitespace-nowrap pointer-events-none">
           🎤 Voice Assistant
         </div>
         
         <Button
           type="button"
           variant="outline"
-          className={`text-purple-600 bg-gradient-to-r from-purple-50 to-blue-50 hover:from-purple-100 hover:to-blue-100 border-purple-300 hover:border-purple-400 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 animate-breathe ${className}`}
+          className={`text-gray-100 bg-gradient-to-r from-gray-800 to-slate-900 hover:from-gray-700 hover:to-slate-800 border-gray-600 hover:border-gray-500 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 animate-breathe ${className}`}
           onClick={startConversation}
           title="🎤 Voice Assistant - Interactive conversation in English"
         >
-          <Volume2 className="h-5 w-5 animate-pulse-custom" />
+          <Volume2 className="h-5 w-5 animate-pulse-custom text-gray-200" />
         </Button>
       </div>
 
