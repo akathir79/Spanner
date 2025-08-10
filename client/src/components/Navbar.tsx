@@ -97,9 +97,14 @@ export function Navbar() {
                             {user.firstName?.[0]?.toUpperCase()}{user.lastName?.[0]?.toUpperCase()}
                           </AvatarFallback>
                         </Avatar>
-                        <span className="text-sm font-medium">
-                          {user.firstName} {user.lastName}
-                        </span>
+                        <div className="flex flex-col items-start">
+                          <span className="text-sm font-medium">
+                            {user.firstName} {user.lastName}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            {user.id}
+                          </span>
+                        </div>
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-48">

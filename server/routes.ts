@@ -1647,34 +1647,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { state, district, serviceCategory, workerId } = req.query;
       let jobs = await storage.getAllJobPostings();
       
-      console.log("Original jobs count:", jobs.length);
-      console.log("Query params:", { state, district, serviceCategory, workerId });
-      
       // If worker-specific filters are provided, apply location and service filtering
       if (workerId || (state && district && serviceCategory)) {
         // Get worker details if workerId is provided
         if (workerId) {
           const worker = await storage.getUser(workerId as string);
-          console.log("Worker found:", worker ? `${worker.id} - ${worker.state}` : "none");
-          
           if (worker && worker.role === 'worker') {
             const workerProfile = await storage.getWorkerProfile(workerId as string);
-            console.log("Worker profile found:", workerProfile ? `Primary: ${workerProfile.primaryService}, Districts: ${JSON.stringify(workerProfile.serviceDistricts)}` : "none");
-            
             if (workerProfile) {
-              console.log("Before filtering - jobs:", jobs.map(job => `${job.id}: ${job.state}-${job.district}-${job.serviceCategory}`));
-              
               // Filter by worker's state, districts, and primary service
               jobs = jobs.filter(job => {
                 const matchesState = job.state === worker.state;
                 const matchesDistrict = (workerProfile.serviceDistricts as string[]).includes(job.district);
-                const matchesService = job.serviceCategory === workerProfile.primaryService;
-                
-                console.log(`Job ${job.id}: State(${matchesState}), District(${matchesDistrict}), Service(${matchesService})`);
+                const matchesService = job.serviceCategory.toLowerCase() === workerProfile.primaryService.toLowerCase();
                 return matchesState && matchesDistrict && matchesService;
               });
-              
-              console.log("After filtering - jobs:", jobs.length);
             }
           }
         } else {
