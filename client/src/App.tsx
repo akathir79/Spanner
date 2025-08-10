@@ -14,7 +14,7 @@ import Dashboard from "@/pages/Dashboard";
 import WorkerDashboard from "@/pages/WorkerDashboard";
 import AdminDashboard from "@/pages/AdminDashboard";
 import ClientManagement from "@/pages/ClientManagement";
-import WorkerManagementFixed from "@/pages/WorkerManagementFixed";
+import WorkerManagement from "@/pages/WorkerManagement";
 import AdminManagement from "@/pages/AdminManagement";
 import BookingManagement from "@/pages/BookingManagement";
 import PendingVerificationsManagement from "@/pages/PendingVerificationsManagement";
@@ -37,10 +37,10 @@ function Router() {
           <Route path="/admin-dashboard" component={AdminDashboard} />
           <Route path="/admin" component={AdminDashboard} />
           <Route path="/admin/clients" component={ClientManagement} />
-          <Route path="/admin/workers" component={WorkerManagementFixed} />
+          <Route path="/admin/workers" component={WorkerManagement} />
           <Route path="/admin/admins" component={AdminManagement} />
           <Route path="/client-management" component={ClientManagement} />
-          <Route path="/worker-management" component={WorkerManagementFixed} />
+          <Route path="/worker-management" component={WorkerManagement} />
           <Route path="/admin-management" component={AdminManagement} />
           <Route path="/booking-management" component={BookingManagement} />
           <Route path="/admin/bookings" component={BookingManagement} />
