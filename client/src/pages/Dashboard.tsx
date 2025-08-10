@@ -2236,7 +2236,7 @@ export default function Dashboard() {
                             <div className="flex-1">
                               <h3 className="font-semibold">{job.title}</h3>
                               <p className="text-sm text-muted-foreground">
-                                {job.serviceCategory} • {job.district?.name}
+                                {job.serviceCategory} • {job.district}
                               </p>
                             </div>
                             <div className="flex items-center gap-2">
@@ -2270,7 +2270,7 @@ export default function Dashboard() {
                           
                           <div className="flex items-center justify-between text-xs text-muted-foreground">
                             <span>
-                              Budget: ₹{job.budgetMin} - ₹{job.budgetMax}
+                              Budget: {job.budgetMin && job.budgetMax ? `₹${job.budgetMin} - ₹${job.budgetMax}` : 'Negotiable'}
                             </span>
                             <span>
                               Posted {new Date(job.createdAt).toLocaleDateString()}

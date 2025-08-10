@@ -772,9 +772,7 @@ export class DatabaseStorage implements IStorage {
       .where(eq(jobPostings.clientId, clientId))
       .orderBy(desc(jobPostings.createdAt));
     
-    return result.map(row => ({
-      ...row.job_postings
-    }));
+    return result;
   }
 
   async createJobPosting(jobPosting: InsertJobPosting): Promise<JobPosting> {
