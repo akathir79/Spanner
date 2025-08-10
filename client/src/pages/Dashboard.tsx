@@ -36,7 +36,6 @@ import {
   X,
   MapPin as MapPinIcon,
   Users,
-
   CreditCard,
   Camera,
   Home,
@@ -53,7 +52,12 @@ import {
   MicOff,
   Upload,
   FileText,
+  Briefcase,
   Settings,
+  Info,
+  Lightbulb,
+  IndianRupee,
+  TrendingUp,
   Grid,
   List,
   Palette,
@@ -1114,34 +1118,43 @@ const JobPostingForm = ({ onClose }: { onClose?: () => void }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-6 p-6 bg-gradient-to-br from-background via-background to-muted/20">
       {/* Header Section */}
-      <div className="space-y-1 pb-2 border-b border-border/40">
-        <h3 className="text-lg font-semibold text-foreground">Job Details</h3>
-        <p className="text-sm text-muted-foreground">Provide clear details to attract the right workers</p>
+      <div className="space-y-2 pb-4 border-b border-gradient-to-r from-blue-200 via-purple-200 to-blue-200 bg-gradient-to-r from-blue-50/50 via-purple-50/30 to-blue-50/50 -mx-6 px-6 -mt-6 pt-6 rounded-t-lg">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-blue-100 rounded-lg">
+            <Briefcase className="h-5 w-5 text-blue-600" />
+          </div>
+          <div>
+            <h3 className="text-xl font-bold text-foreground">Job Details</h3>
+            <p className="text-sm text-muted-foreground">Provide clear details to attract the right workers</p>
+          </div>
+        </div>
       </div>
 
       {/* Job Title Section */}
-      <div className="space-y-3">
-        <Label htmlFor="title" className="text-sm font-medium text-foreground flex items-center gap-1">
+      <div className="space-y-3 p-4 bg-white/60 rounded-lg border border-blue-100/50 shadow-sm">
+        <Label htmlFor="title" className="text-sm font-semibold text-foreground flex items-center gap-2">
+          <FileText className="h-4 w-4 text-blue-600" />
           <span>Job Title</span>
-          <span className="text-red-500">*</span>
+          <span className="text-red-500 text-lg">*</span>
         </Label>
         <Input
           id="title"
           value={formData.title}
           onChange={(e) => setFormData({ ...formData, title: e.target.value })}
           placeholder="e.g., Fix kitchen plumbing leak"
-          className="h-11 text-base"
+          className="h-12 text-base border-2 border-blue-200/50 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 bg-white/80 transition-all"
           required
         />
       </div>
 
       {/* Service Selection Section */}
-      <div className="space-y-3">
-        <Label className="text-sm font-medium text-foreground flex items-center gap-1">
+      <div className="space-y-3 p-4 bg-white/60 rounded-lg border border-green-100/50 shadow-sm">
+        <Label className="text-sm font-semibold text-foreground flex items-center gap-2">
+          <Settings className="h-4 w-4 text-green-600" />
           <span>Service Type</span>
-          <span className="text-red-500">*</span>
+          <span className="text-red-500 text-lg">*</span>
         </Label>
         <div className="relative">
           <Popover open={serviceOpen} onOpenChange={setServiceOpen}>
@@ -1150,17 +1163,17 @@ const JobPostingForm = ({ onClose }: { onClose?: () => void }) => {
                 variant="outline"
                 role="combobox"
                 aria-expanded={serviceOpen}
-                className="w-full justify-between pr-8 h-11 text-base bg-background border-border/50 hover:border-border"
+                className="w-full justify-between pr-8 h-12 text-base bg-white/80 border-2 border-green-200/50 hover:border-green-400 focus:border-green-400 focus:ring-2 focus:ring-green-100 transition-all"
               >
                 {formData.serviceCategory
                   ? (services as any)?.find((service: any) => service.name === formData.serviceCategory)?.name
                   : "Select service"}
-                <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                <ChevronDown className="ml-2 h-5 w-5 shrink-0 opacity-60" />
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-full p-0 border-border/50">
+            <PopoverContent className="w-full p-0 border-2 border-green-200/50 shadow-lg">
               <Command>
-                <CommandInput placeholder="Search services..." className="h-9" />
+                <CommandInput placeholder="Search services..." className="h-10 text-base" />
                 <CommandList className="max-h-64">
                   <CommandEmpty>No service found.</CommandEmpty>
                   <CommandGroup>
@@ -1172,7 +1185,7 @@ const JobPostingForm = ({ onClose }: { onClose?: () => void }) => {
                           setFormData(prev => ({ ...prev, serviceCategory: service.name }));
                           setServiceOpen(false);
                         }}
-                        className="flex items-center px-3 py-2 hover:bg-muted/50"
+                        className="flex items-center px-4 py-3 hover:bg-green-50 text-base font-medium"
                       >
                         {service.name}
                       </CommandItem>
@@ -1187,7 +1200,7 @@ const JobPostingForm = ({ onClose }: { onClose?: () => void }) => {
               type="button"
               variant="ghost"
               size="sm"
-              className="absolute right-8 top-1/2 -translate-y-1/2 h-6 w-6 p-0 hover:bg-muted/80"
+              className="absolute right-10 top-1/2 -translate-y-1/2 h-6 w-6 p-0 hover:bg-red-100 text-red-500"
               onClick={() => setFormData(prev => ({ ...prev, serviceCategory: "" }))}
             >
               <X className="h-3 w-3" />
@@ -1197,18 +1210,19 @@ const JobPostingForm = ({ onClose }: { onClose?: () => void }) => {
       </div>
 
       {/* Service Address Section */}
-      <div className="space-y-3">
+      <div className="space-y-3 p-4 bg-white/60 rounded-lg border border-purple-100/50 shadow-sm">
         <div className="flex items-center justify-between">
-          <Label className="text-sm font-medium text-foreground flex items-center gap-1">
+          <Label className="text-sm font-semibold text-foreground flex items-center gap-2">
+            <MapPin className="h-4 w-4 text-purple-600" />
             <span>Service Address</span>
-            <span className="text-red-500">*</span>
+            <span className="text-red-500 text-lg">*</span>
           </Label>
           <div className="flex gap-2">
             <Button
               type="button"
               variant="ghost"
               size="sm"
-              className="h-7 px-2 text-xs bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200"
+              className="h-8 px-3 text-xs font-medium bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 hover:from-blue-100 hover:to-blue-200 border border-blue-300 rounded-full shadow-sm transition-all"
               onClick={handleLocationFinder}
               disabled={isLocationLoading}
             >
@@ -1219,7 +1233,7 @@ const JobPostingForm = ({ onClose }: { onClose?: () => void }) => {
               type="button"
               variant="ghost"
               size="sm"
-              className="h-7 px-2 text-xs bg-green-50 text-green-700 hover:bg-green-100 border border-green-200"
+              className="h-8 px-3 text-xs font-medium bg-gradient-to-r from-green-50 to-green-100 text-green-700 hover:from-green-100 hover:to-green-200 border border-green-300 rounded-full shadow-sm transition-all"
               onClick={() => setFormData(prev => ({ 
                 ...prev, 
                 serviceAddress: user?.address ? `${user.address}\n${user.district}, ${user.state || 'Tamil Nadu'}\nPIN: ${user.pincode || ''}`.trim() : '',
@@ -1237,30 +1251,36 @@ const JobPostingForm = ({ onClose }: { onClose?: () => void }) => {
             placeholder="Enter complete service address..."
             value={formData.serviceAddress || ''}
             onChange={(e) => setFormData(prev => ({ ...prev, serviceAddress: e.target.value }))}
-            className="min-h-[100px] resize-none text-base bg-background border-border/50"
+            className="min-h-[110px] resize-none text-base bg-white/80 border-2 border-purple-200/50 focus:border-purple-400 focus:ring-2 focus:ring-purple-100 transition-all rounded-lg"
           />
           {formData.serviceAddress && (
             <Button
               type="button"
               variant="ghost"
               size="sm"
-              className="absolute right-2 top-2 h-6 w-6 p-0 hover:bg-muted/80"
+              className="absolute right-2 top-2 h-7 w-7 p-0 hover:bg-red-100 text-red-500 rounded-full"
               onClick={() => setFormData(prev => ({ ...prev, serviceAddress: "" }))}
             >
               <X className="h-3 w-3" />
             </Button>
           )}
         </div>
-        <p className="text-xs text-muted-foreground bg-muted/30 px-3 py-2 rounded-md border border-border/30">
-          <span className="font-medium">Example:</span> House No/Building, Street, Area, City, State, PIN Code
-        </p>
+        <div className="bg-gradient-to-r from-purple-50 to-blue-50 px-4 py-3 rounded-lg border border-purple-200/30">
+          <p className="text-xs text-purple-700 font-medium">
+            <span className="inline-flex items-center gap-1">
+              <Info className="h-3 w-3" />
+              Example:
+            </span> House No/Building, Street, Area, City, State, PIN Code
+          </p>
+        </div>
       </div>
 
       {/* Job Description Section */}
-      <div className="space-y-3">
-        <Label htmlFor="description" className="text-sm font-medium text-foreground flex items-center gap-1">
+      <div className="space-y-3 p-4 bg-white/60 rounded-lg border border-amber-100/50 shadow-sm">
+        <Label htmlFor="description" className="text-sm font-semibold text-foreground flex items-center gap-2">
+          <Edit3 className="h-4 w-4 text-amber-600" />
           <span>Job Description</span>
-          <span className="text-red-500">*</span>
+          <span className="text-red-500 text-lg">*</span>
         </Label>
         <Textarea
           id="description"
@@ -1268,51 +1288,69 @@ const JobPostingForm = ({ onClose }: { onClose?: () => void }) => {
           onChange={(e) => setFormData({ ...formData, description: e.target.value })}
           placeholder="Describe the work needed..."
           rows={4}
-          className="text-base resize-none bg-background border-border/50"
+          className="text-base resize-none bg-white/80 border-2 border-amber-200/50 focus:border-amber-400 focus:ring-2 focus:ring-amber-100 transition-all rounded-lg"
           required
         />
-        <p className="text-xs text-muted-foreground">Be specific about your requirements to attract the right workers</p>
+        <div className="bg-gradient-to-r from-amber-50 to-orange-50 px-4 py-2 rounded-lg border border-amber-200/30">
+          <p className="text-xs text-amber-700 font-medium flex items-center gap-1">
+            <Lightbulb className="h-3 w-3" />
+            Be specific about your requirements to attract the right workers
+          </p>
+        </div>
       </div>
 
       {/* Budget Range Section */}
-      <div className="space-y-3">
-        <div className="flex items-center gap-2">
-          <span className="text-lg">₹</span>
-          <Label className="text-sm font-medium text-foreground">Budget Range</Label>
-          <span className="text-xs text-muted-foreground">(Leave empty if negotiable)</span>
+      <div className="space-y-3 p-4 bg-white/60 rounded-lg border border-emerald-100/50 shadow-sm">
+        <div className="flex items-center gap-3">
+          <div className="p-1.5 bg-emerald-100 rounded-lg">
+            <IndianRupee className="h-4 w-4 text-emerald-600" />
+          </div>
+          <div className="flex-1">
+            <Label className="text-sm font-semibold text-foreground">Budget Range</Label>
+            <p className="text-xs text-muted-foreground">(Leave empty if negotiable)</p>
+          </div>
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="budgetMin" className="text-sm text-muted-foreground">Minimum Budget (₹)</Label>
+            <Label htmlFor="budgetMin" className="text-sm font-medium text-emerald-700 flex items-center gap-1">
+              <TrendingUp className="h-3 w-3" />
+              Minimum (₹)
+            </Label>
             <Input
               id="budgetMin"
               type="number"
               value={formData.budgetMin}
               onChange={(e) => setFormData({ ...formData, budgetMin: e.target.value })}
               placeholder="799"
-              className="h-11 text-base bg-background border-border/50"
+              className="h-12 text-base bg-white/80 border-2 border-emerald-200/50 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 transition-all"
               min="0"
               step="1"
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="budgetMax" className="text-sm text-muted-foreground">Maximum Budget (₹)</Label>
+            <Label htmlFor="budgetMax" className="text-sm font-medium text-emerald-700 flex items-center gap-1">
+              <TrendingUp className="h-3 w-3" />
+              Maximum (₹)
+            </Label>
             <Input
               id="budgetMax"
               type="number"
               value={formData.budgetMax}
               onChange={(e) => setFormData({ ...formData, budgetMax: e.target.value })}
               placeholder="999"
-              className="h-11 text-base bg-background border-border/50"
+              className="h-12 text-base bg-white/80 border-2 border-emerald-200/50 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 transition-all"
               min="0"
               step="1"
             />
           </div>
         </div>
         {formData.budgetMin && formData.budgetMax && (
-          <div className="flex items-center gap-2 p-3 bg-emerald-50 border border-emerald-200 rounded-md">
-            <span className="text-sm font-medium text-emerald-800">Budget Range:</span>
-            <span className="text-sm font-semibold text-emerald-700">₹{formData.budgetMin} - ₹{formData.budgetMax}</span>
+          <div className="bg-gradient-to-r from-emerald-50 to-green-50 p-4 rounded-lg border-2 border-emerald-200 shadow-sm">
+            <div className="flex items-center gap-2">
+              <CheckCircle className="h-4 w-4 text-emerald-600" />
+              <span className="text-sm font-semibold text-emerald-800">Budget Range:</span>
+              <span className="text-lg font-bold text-emerald-700">₹{formData.budgetMin} - ₹{formData.budgetMax}</span>
+            </div>
           </div>
         )}
       </div>
