@@ -193,10 +193,10 @@ export default function WorkerManagement() {
   const queryClient = useQueryClient();
   const [selectedState, setSelectedState] = useState<string | null>(null);
   const [selectedDistrict, setSelectedDistrict] = useState<string | null>(null);
-  const [view, setView] = useState<"total" | "states" | "districts" | "clients">("states");
+  const [view, setView] = useState<"total" | "states" | "districts" | "workers">("states");
   
   // Ref for rolling animation
-  const totalClientButtonRef = useRef<HTMLButtonElement>(null);
+  const totalWorkerButtonRef = useRef<HTMLButtonElement>(null);
   
   // Search and pagination states
   const [searchQuery, setSearchQuery] = useState("");
@@ -216,7 +216,7 @@ export default function WorkerManagement() {
   const [districtTotalPages, setDistrictTotalPages] = useState(1);
   
   // Modal states
-  const [selectedClient, setSelectedClient] = useState<User | null>(null);
+  const [selectedWorker, setSelectedWorker] = useState<User | null>(null);
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
   const [showMessageDialog, setShowMessageDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -239,8 +239,8 @@ export default function WorkerManagement() {
 
   // Fetch transfer history for selected client
   const { data: transferHistory = [], isLoading: transferHistoryLoading } = useQuery({
-    queryKey: ["/api/transfer-history", selectedClient?.id],
-    enabled: !!selectedClient?.id && showTransferHistoryDialog,
+    queryKey: ["/api/transfer-history", selectedWorker?.id],
+    enabled: !!selectedWorker?.id && showTransferHistoryDialog,
   });
   
   // Type the transferHistory as an array to fix TypeScript errors
@@ -248,8 +248,8 @@ export default function WorkerManagement() {
 
   // Fetch financial statements for selected client (last 2 years)
   const { data: financialStatements = [], isLoading: financialStatementsLoading } = useQuery({
-    queryKey: ["/api/financial-statements", selectedClient?.id],
-    enabled: !!selectedClient?.id && showFinancialStatementsDialog,
+    queryKey: ["/api/financial-statements", selectedWorker?.id],
+    enabled: !!selectedWorker?.id && showFinancialStatementsDialog,
   });
   
   // Type the financialStatements as an array to fix TypeScript errors
@@ -342,7 +342,7 @@ export default function WorkerManagement() {
 
   // Roll-in animation effect on component load
   useEffect(() => {
-    const button = totalClientButtonRef.current;
+    const button = totalWorkerButtonRef.current;
     if (button) {
       button.classList.add('animate-roll-in');
       // Remove animation class after animation completes
@@ -362,7 +362,7 @@ export default function WorkerManagement() {
     : [];
 
   // Filtered district workers (without pagination)
-  const filteredDistrictClients = useMemo(() => {
+  const filteredDistrictWorkers = useMemo(() => {
     if (!selectedDistrict) return [];
     
     let districtWorkers = allWorkers.filter((client: User) => worker.district === selectedDistrict);
@@ -422,19 +422,19 @@ export default function WorkerManagement() {
   }, [allWorkers, selectedDistrict, searchQuery, searchFilter, statusFilter]);
 
   // Paginated district workers for current view
-  const clientsForDistrict = useMemo(() => {
+  const workersForDistrict = useMemo(() => {
     const startIndex = (districtCurrentPage - 1) * districtPageSize;
     const endIndex = startIndex + districtPageSize;
-    const paginated = filteredDistrictClients.slice(startIndex, endIndex);
+    const paginated = filteredDistrictWorkers.slice(startIndex, endIndex);
     
     // Update total pages
-    const calculatedTotalPages = Math.ceil(filteredDistrictClients.length / districtPageSize);
+    const calculatedTotalPages = Math.ceil(filteredDistrictWorkers.length / districtPageSize);
     if (calculatedTotalPages !== districtTotalPages) {
       setDistrictTotalPages(calculatedTotalPages);
     }
     
     return paginated;
-  }, [filteredDistrictClients, districtCurrentPage, districtPageSize, districtTotalPages]);
+  }, [filteredDistrictWorkers, districtCurrentPage, districtPageSize, districtTotalPages]);
 
   // Get client count for each state from database (using allWorkers, not filtered)
   const getClientCountForState = (stateName: string) => {
@@ -495,7 +495,7 @@ export default function WorkerManagement() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
       setShowDeleteDialog(false);
-      setSelectedClient(null);
+      setSelectedWorker(null);
       toast({
         title: "Success",
         description: "User deleted successfully",
@@ -517,7 +517,7 @@ export default function WorkerManagement() {
     onSuccess: () => {
       setShowMessageDialog(false);
       setMessageText("");
-      setSelectedClient(null);
+      setSelectedWorker(null);
       toast({
         title: "Success",
         description: "Message sent successfully",
@@ -537,7 +537,7 @@ export default function WorkerManagement() {
       return await apiRequest("DELETE", `/api/transfer-history/${transferId}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/transfer-history", selectedClient?.id] });
+      queryClient.invalidateQueries({ queryKey: ["/api/transfer-history", selectedWorker?.id] });
       toast({
         title: "Success",
         description: "Transfer history deleted successfully",
@@ -554,17 +554,17 @@ export default function WorkerManagement() {
 
   // Action handlers
   const handleViewDetails = (client: User) => {
-    setSelectedClient(worker);
+    setSelectedWorker(worker);
     setShowDetailsDialog(true);
   };
 
   const handleSendMessage = (client: User) => {
-    setSelectedClient(worker);
+    setSelectedWorker(worker);
     setShowMessageDialog(true);
   };
 
   const handleSendDirectMessage = (client: User) => {
-    setSelectedClient(worker);
+    setSelectedWorker(worker);
     setShowMessageDialog(true);
   };
 
@@ -592,32 +592,32 @@ export default function WorkerManagement() {
   };
 
   const handleDeleteUser = (client: User) => {
-    setSelectedClient(worker);
+    setSelectedWorker(worker);
     setShowDeleteDialog(true);
   };
 
   const confirmDeleteUser = () => {
-    if (selectedClient) {
-      deleteUserMutation.mutate(selectedClient.id);
+    if (selectedWorker) {
+      deleteUserMutation.mutate(selectedWorker.id);
     }
   };
 
   const confirmSendMessage = () => {
-    if (selectedClient && messageText.trim()) {
+    if (selectedWorker && messageText.trim()) {
       sendMessageMutation.mutate({
-        userId: selectedClient.id,
+        userId: selectedWorker.id,
         message: messageText.trim(),
       });
     }
   };
 
   const handleViewTransferHistory = (client: User) => {
-    setSelectedClient(worker);
+    setSelectedWorker(worker);
     setShowTransferHistoryDialog(true);
   };
 
   const handleViewFinancialStatements = (client: User) => {
-    setSelectedClient(worker);
+    setSelectedWorker(worker);
     setShowFinancialStatementsDialog(true);
   };
 
@@ -650,7 +650,7 @@ export default function WorkerManagement() {
     setLoadingState(district);
     setTimeout(() => {
       setSelectedDistrict(district);
-      setView("clients");
+      setView("workers");
       setLoadingState(null);
       setDistrictCurrentPage(1); // Reset district pagination
       setSearchQuery(""); // Clear search
@@ -659,7 +659,7 @@ export default function WorkerManagement() {
   };
 
   const handleBackClick = () => {
-    if (view === "clients") {
+    if (view === "workers") {
       setView("districts");
       setSelectedDistrict(null);
     } else if (view === "districts") {
@@ -712,7 +712,7 @@ export default function WorkerManagement() {
           <div className="p-4 border-b border-gray-200 dark:border-gray-700">
             {/* Total Client List Header */}
             <button
-              ref={totalClientButtonRef}
+              ref={totalWorkerButtonRef}
               onClick={(e) => {
                 const button = e.currentTarget;
                 button.classList.add('animate-roll-click');
@@ -974,7 +974,7 @@ export default function WorkerManagement() {
                                   <div className="flex items-start gap-3 cursor-pointer">
                                     <Avatar className="h-10 w-10 flex-shrink-0">
                                       <AvatarImage 
-                                        src={(client as any).profilePicture} 
+                                        src={(worker as any).profilePicture} 
                                         alt={`${worker.firstName} ${worker.lastName}`} 
                                       />
                                       <AvatarFallback className="bg-blue-100 text-blue-600 font-semibold">
@@ -990,7 +990,7 @@ export default function WorkerManagement() {
                                       </div>
                                       <div className="flex items-center gap-2 flex-wrap">
                                         <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900 dark:text-blue-100 text-xs px-2 py-1">
-                                          Client
+                                          Worker
                                         </Badge>
                                         <Badge 
                                           variant={
@@ -1903,7 +1903,7 @@ export default function WorkerManagement() {
                       Clients in {selectedDistrict}
                     </h2>
                     <p className="text-gray-600 dark:text-gray-400">
-                      {selectedState} • {filteredDistrictClients.length} total workers • Showing {((districtCurrentPage - 1) * districtPageSize) + 1}-{Math.min(districtCurrentPage * districtPageSize, filteredDistrictClients.length)} of {filteredDistrictClients.length} {searchQuery && `filtered results`}
+                      {selectedState} • {filteredDistrictWorkers.length} total workers • Showing {((districtCurrentPage - 1) * districtPageSize) + 1}-{Math.min(districtCurrentPage * districtPageSize, filteredDistrictWorkers.length)} of {filteredDistrictWorkers.length} {searchQuery && `filtered results`}
                     </p>
                   </div>
                   
@@ -1956,7 +1956,7 @@ export default function WorkerManagement() {
               </div>
               
               <div className="flex-1 overflow-y-auto p-6">
-                {clientsForDistrict.length === 0 ? (
+                {workersForDistrict.length === 0 ? (
                   <div className="text-center py-12">
                     <div className="text-gray-400 mb-4">
                       <svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2070,7 +2070,7 @@ export default function WorkerManagement() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {clientsForDistrict.map((worker) => {
+                        {workersForDistrict.map((worker) => {
                           const activityStatus = getActivityStatus(worker.lastLoginAt, worker.createdAt);
                           return (
                             <TableRow key={worker.id}>
@@ -2850,7 +2850,7 @@ export default function WorkerManagement() {
                 )}
                 
                 {/* Pagination Controls for District View */}
-                {filteredDistrictClients.length > 0 && (
+                {filteredDistrictWorkers.length > 0 && (
                   <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
                     <div className="flex items-center gap-4">
                       <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
@@ -2937,16 +2937,16 @@ export default function WorkerManagement() {
       </div>
 
       {/* User Details Modal */}
-      {selectedClient && (
+      {selectedWorker && (
         <ViewDetailsModal
           isOpen={showDetailsDialog}
           onClose={() => setShowDetailsDialog(false)}
           title="Client Details"
           subtitle="Complete registration information"
-          data={selectedClient}
+          data={selectedWorker}
           avatar={{
             src: undefined, // profilePicture field not available in User interface
-            fallback: `${selectedClient.firstName?.charAt(0)}${selectedClient.lastName?.charAt(0)}`
+            fallback: `${selectedWorker.firstName?.charAt(0)}${selectedWorker.lastName?.charAt(0)}`
           }}
           fields={[
             // Personal Information
@@ -2986,9 +2986,9 @@ export default function WorkerManagement() {
             // Status Information
             { key: "isVerified", label: "Verification Status", type: "badge", section: "status" },
             { key: "isActive", label: "Account Status", type: "display", section: "status" },
-            { key: "createdAt", label: "Member Since", type: "display", section: "status", value: formatIndianDateTime(selectedClient.createdAt) },
-            { key: "updatedAt", label: "Last Updated", type: "display", section: "status", value: selectedClient.updatedAt ? formatIndianDateTime(selectedClient.updatedAt) : "Not available" },
-            { key: "lastLoginAt", label: "Last Login", type: "display", section: "status", value: selectedClient.lastLoginAt ? formatIndianDateTime(selectedClient.lastLoginAt) : "No Login" },
+            { key: "createdAt", label: "Member Since", type: "display", section: "status", value: formatIndianDateTime(selectedWorker.createdAt) },
+            { key: "updatedAt", label: "Last Updated", type: "display", section: "status", value: selectedWorker.updatedAt ? formatIndianDateTime(selectedWorker.updatedAt) : "Not available" },
+            { key: "lastLoginAt", label: "Last Login", type: "display", section: "status", value: selectedWorker.lastLoginAt ? formatIndianDateTime(selectedWorker.lastLoginAt) : "No Login" },
           ]}
           actions={[
             {
@@ -2996,7 +2996,7 @@ export default function WorkerManagement() {
               icon: MessageSquare,
               onClick: () => {
                 setShowDetailsDialog(false);
-                handleSendMessage(selectedClient);
+                handleSendMessage(selectedWorker);
               }
             },
             {
@@ -3004,7 +3004,7 @@ export default function WorkerManagement() {
               icon: CheckCircle,
               onClick: () => {
                 setShowDetailsDialog(false);
-                handleVerifyUser(selectedClient);
+                handleVerifyUser(selectedWorker);
               }
             },
             {
@@ -3013,7 +3013,7 @@ export default function WorkerManagement() {
               icon: XCircle,
               onClick: () => {
                 setShowDetailsDialog(false);
-                handleSuspendUser(selectedClient);
+                handleSuspendUser(selectedWorker);
               }
             },
             {
@@ -3022,11 +3022,11 @@ export default function WorkerManagement() {
               icon: Trash2,
               onClick: () => {
                 setShowDetailsDialog(false);
-                handleDeleteUser(selectedClient);
+                handleDeleteUser(selectedWorker);
               }
             }
           ]}
-          updateApiEndpoint={`/api/admin/users/${selectedClient.id}`}
+          updateApiEndpoint={`/api/admin/users/${selectedWorker.id}`}
           queryKeyToInvalidate={["/api/admin/users"]}
         />
       )}
@@ -3037,7 +3037,7 @@ export default function WorkerManagement() {
           <DialogHeader>
             <DialogTitle>Send Message</DialogTitle>
             <DialogDescription>
-              Send a message to {selectedClient?.firstName} {selectedClient?.lastName}
+              Send a message to {selectedWorker?.firstName} {selectedWorker?.lastName}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
@@ -3071,14 +3071,14 @@ export default function WorkerManagement() {
               Are you sure you want to permanently delete this user? This action cannot be undone and will remove:
             </AlertDialogDescription>
           </AlertDialogHeader>
-          {selectedClient && (
+          {selectedWorker && (
             <div className="space-y-4">
               <div>
                 <h4 className="font-medium text-gray-700">User Information:</h4>
                 <ul className="mt-1 text-sm text-gray-600 list-disc list-inside">
-                  <li>{selectedClient.firstName} {selectedClient.lastName}</li>
-                  <li>{selectedClient.mobile}</li>
-                  {selectedClient.email && <li>{selectedClient.email}</li>}
+                  <li>{selectedWorker.firstName} {selectedWorker.lastName}</li>
+                  <li>{selectedWorker.mobile}</li>
+                  {selectedWorker.email && <li>{selectedWorker.email}</li>}
                 </ul>
               </div>
               <div>
@@ -3110,7 +3110,7 @@ export default function WorkerManagement() {
         <DialogContent className="max-w-4xl max-h-[80vh]">
           <DialogHeader>
             <DialogTitle>
-              Transfer History - {selectedClient?.firstName} {selectedClient?.lastName}
+              Transfer History - {selectedWorker?.firstName} {selectedWorker?.lastName}
             </DialogTitle>
             <DialogDescription>
               View all money transfer records for this client
@@ -3184,7 +3184,7 @@ export default function WorkerManagement() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <span className="text-xl font-bold text-green-600">₹</span>
-              Financial Statements - {selectedClient?.firstName} {selectedClient?.lastName}
+              Financial Statements - {selectedWorker?.firstName} {selectedWorker?.lastName}
             </DialogTitle>
             <DialogDescription>
               View balance and spending data for the last 2 years from current year
