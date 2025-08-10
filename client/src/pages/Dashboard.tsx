@@ -832,7 +832,7 @@ const JobPostingForm = ({ onClose }: { onClose?: () => void }) => {
       districtId: extractedDistrict,
       budgetMin: formData.budgetMin ? parseFloat(formData.budgetMin) : null,
       budgetMax: formData.budgetMax ? parseFloat(formData.budgetMax) : null,
-      deadline: formData.deadline || null,
+      deadline: formData.deadline ? new Date(formData.deadline) : null,
       requirements: formData.requirements,
     };
 
