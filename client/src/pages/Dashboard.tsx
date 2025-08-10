@@ -816,18 +816,32 @@ const VoiceJobPostingForm = ({ onClose, autoStart = false }: { onClose?: () => v
           utterance.rate = 0.9;
           utterance.pitch = 1;
           
-          utterance.onstart = () => setIsSpeaking(true);
+          utterance.onstart = () => {
+            console.log('Speech synthesis started');
+            setIsSpeaking(true);
+          };
           utterance.onend = () => {
+            console.log('Speech synthesis ended');
             setIsSpeaking(false);
             // Start recording only after speech completes
             setTimeout(() => {
+              console.log('Starting recording after speech');
               startListening();
             }, 1000);
+          };
+          utterance.onerror = (event) => {
+            console.error('Speech synthesis error:', event);
+            setIsSpeaking(false);
+            // Still start recording if speech fails
+            setTimeout(() => {
+              startListening();
+            }, 500);
           };
           
           speechSynthesis.speak(utterance);
         } else {
           // If no speech synthesis, start recording immediately
+          console.log('No speech synthesis available, starting recording');
           setTimeout(() => {
             startListening();
           }, 1000);
@@ -1208,6 +1222,14 @@ const VoiceJobPostingForm = ({ onClose, autoStart = false }: { onClose?: () => v
 
   // Start listening with audio recording
   const startListening = async () => {
+    console.log('startListening called, isSpeaking:', isSpeaking, 'isListening:', isListening);
+    
+    // Don't start if already listening or if assistant is speaking
+    if (isListening || isSpeaking) {
+      console.log('Blocked recording: already listening or speaking');
+      return;
+    }
+    
     // Check microphone permissions first
     try {
       const permissionStatus = await navigator.permissions.query({ name: 'microphone' as PermissionName });
@@ -1223,6 +1245,7 @@ const VoiceJobPostingForm = ({ onClose, autoStart = false }: { onClose?: () => v
       // Permissions API might not be supported, continue with recording attempt
     }
 
+    console.log('Setting isListening to true');
     setIsListening(true);
     setVoiceTranscript('');
     setRecordingTime(0);
@@ -1233,9 +1256,12 @@ const VoiceJobPostingForm = ({ onClose, autoStart = false }: { onClose?: () => v
     const recorder = await startAudioRecording();
     
     if (!recorder) {
+      console.log('Failed to start recorder, setting isListening to false');
       setIsListening(false);
       return;
     }
+    
+    console.log('Audio recorder started successfully');
     
     // Start timer
     const interval = setInterval(() => {
@@ -1252,6 +1278,8 @@ const VoiceJobPostingForm = ({ onClose, autoStart = false }: { onClose?: () => v
 
   // Stop listening and audio recording
   const stopListening = () => {
+    console.log('stopListening called, isListening:', isListening);
+    
     if (recognition) {
       recognition.stop();
     }
@@ -1277,6 +1305,7 @@ const VoiceJobPostingForm = ({ onClose, autoStart = false }: { onClose?: () => v
           if (audioBlob && audioBlob.size > 0) {
             processVoiceInput();
           } else {
+            setIsProcessing(false);
             toast({
               title: "No Audio Recorded",
               description: "Please try recording again and speak clearly.",
@@ -1347,11 +1376,26 @@ const VoiceJobPostingForm = ({ onClose, autoStart = false }: { onClose?: () => v
       }
     } catch (error) {
       console.error('Voice processing error:', error);
+      
+      // Handle specific timeout errors
+      let errorMessage = "Speech recognition service is temporarily unavailable. Please try again.";
+      if (error instanceof Error) {
+        if (error.message.includes('ETIMEDOUT') || error.message.includes('timeout')) {
+          errorMessage = "Connection timeout. Please check your internet connection and try again.";
+        } else if (error.message.includes('Failed to process voice')) {
+          errorMessage = "Voice processing failed. Please speak clearly and try again.";
+        }
+      }
+      
       toast({
         title: "Voice Processing Failed",
-        description: error instanceof Error ? error.message : "Speech recognition service is temporarily unavailable. Please try again.",
+        description: errorMessage,
         variant: "destructive"
       });
+      
+      // Reset states on error
+      setIsListening(false);
+      setIsSpeaking(false);
     } finally {
       setIsProcessing(false);
     }
@@ -1524,9 +1568,10 @@ const VoiceJobPostingForm = ({ onClose, autoStart = false }: { onClose?: () => v
                 onClick={startListening}
                 size="lg"
                 className="bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white px-8 py-4 rounded-full"
+                disabled={isSpeaking || isProcessing}
               >
                 <Mic className="h-5 w-5 mr-2" />
-                Start Recording
+                {isSpeaking ? "Assistant Speaking..." : isProcessing ? "Processing..." : "Start Recording"}
               </Button>
             ) : (
               <div className="text-center space-y-6">
