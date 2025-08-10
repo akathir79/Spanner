@@ -2481,9 +2481,14 @@ export default function Dashboard() {
                                     <h3 className="font-semibold text-lg text-gray-900 cursor-pointer hover:text-blue-600 transition-colors" onClick={() => setSelectedJobPosting(job)}>
                                       {job.title}
                                     </h3>
-                                    <p className="text-sm text-indigo-600 font-medium mt-1">
-                                      {job.serviceCategory} • {job.district}
-                                    </p>
+                                    <div className="flex items-center gap-2 mt-1">
+                                      <p className="text-sm text-indigo-600 font-medium">
+                                        {job.serviceCategory} • {job.district}
+                                      </p>
+                                      <div className="bg-gray-100 px-2 py-1 rounded text-xs font-mono text-gray-600">
+                                        ID: {job.id}
+                                      </div>
+                                    </div>
                                   </div>
                                 </div>
                                 <div className="flex items-center gap-2">
@@ -2573,23 +2578,26 @@ export default function Dashboard() {
                               </Collapsible>
 
                               {/* Media Attachments Section */}
-                              <div className="border-t pt-3">
-                                <div className="flex items-center justify-between mb-2">
-                                  <span className="text-sm font-medium">Media Attachments</span>
-                                  <div className="flex gap-1">
+                              <div className="border-t border-gray-100 pt-4">
+                                <div className="flex items-center justify-between mb-3">
+                                  <span className="text-sm font-medium text-gray-900">Media Attachments</span>
+                                  <div className="flex gap-2">
                                     <Button
                                       variant="outline"
                                       size="sm"
-                                      className="h-8"
+                                      className="h-9 px-3 bg-gradient-to-r from-red-50 to-red-100 hover:from-red-100 hover:to-red-200 text-red-600 border-red-200 hover:border-red-300 transition-all duration-200"
                                       onClick={isRecording ? stopRecording : () => startRecording(job.id)}
                                       disabled={isRecording || !!jobMediaFiles[job.id]?.audio}
                                     >
-                                      {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+                                      <div className="bg-red-500 rounded-full p-1 mr-2">
+                                        {isRecording ? <MicOff className="h-3 w-3 text-white" /> : <Mic className="h-3 w-3 text-white" />}
+                                      </div>
+                                      <span className="text-xs font-medium">Audio</span>
                                     </Button>
                                     <Button
                                       variant="outline"
                                       size="sm"
-                                      className="h-8"
+                                      className="h-9 px-3 bg-gradient-to-r from-purple-50 to-purple-100 hover:from-purple-100 hover:to-purple-200 text-purple-600 border-purple-200 hover:border-purple-300 transition-all duration-200"
                                       onClick={() => {
                                         const input = document.createElement('input');
                                         input.type = 'file';
@@ -2598,12 +2606,15 @@ export default function Dashboard() {
                                         input.click();
                                       }}
                                     >
-                                      <Camera className="h-4 w-4" />
+                                      <div className="bg-purple-500 rounded-full p-1 mr-2">
+                                        <Camera className="h-3 w-3 text-white" />
+                                      </div>
+                                      <span className="text-xs font-medium">Photo</span>
                                     </Button>
                                     <Button
                                       variant="outline"
                                       size="sm"
-                                      className="h-8"
+                                      className="h-9 px-3 bg-gradient-to-r from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200 text-blue-600 border-blue-200 hover:border-blue-300 transition-all duration-200"
                                       onClick={() => {
                                         const input = document.createElement('input');
                                         input.type = 'file';
@@ -2612,7 +2623,10 @@ export default function Dashboard() {
                                         input.click();
                                       }}
                                     >
-                                      <Video className="h-4 w-4" />
+                                      <div className="bg-blue-500 rounded-full p-1 mr-2">
+                                        <Video className="h-3 w-3 text-white" />
+                                      </div>
+                                      <span className="text-xs font-medium">Video</span>
                                     </Button>
                                   </div>
                                 </div>

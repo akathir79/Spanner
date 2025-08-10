@@ -86,6 +86,21 @@ function addMinutes(date: Date, minutes: number): Date {
   return new Date(date.getTime() + minutes * 60000);
 }
 
+// Generate professional job ID with date-based format
+function generateJobId(): string {
+  const now = new Date();
+  const year = now.getFullYear().toString().slice(-2);
+  const month = (now.getMonth() + 1).toString().padStart(2, '0');
+  const day = now.getDate().toString().padStart(2, '0');
+  const hour = now.getHours().toString().padStart(2, '0');
+  const minute = now.getMinutes().toString().padStart(2, '0');
+  
+  // Generate 3-digit random suffix for uniqueness
+  const randomSuffix = Math.floor(Math.random() * 900 + 100);
+  
+  return `JOB-${year}${month}${day}-${hour}${minute}-${randomSuffix}`;
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   
   // District API endpoint - serves authentic Indian district data from local JSON file
@@ -1710,10 +1725,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log("Received job posting data:", req.body);
       
+      // Generate professional job ID
+      const jobId = generateJobId();
+      
       // Convert budget numbers to strings for database compatibility
       const { budgetMin, budgetMax, deadline, districtId, ...rest } = req.body;
       const jobData = {
         ...rest,
+        id: jobId, // Use the generated professional job ID as the primary key
         district: districtId, // Map districtId to district field
         budgetMin: budgetMin !== undefined && budgetMin !== null ? budgetMin.toString() : null,
         budgetMax: budgetMax !== undefined && budgetMax !== null ? budgetMax.toString() : null,
@@ -1721,6 +1740,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       };
       
       console.log("Processed job data for database:", jobData);
+      console.log("Generated Job ID:", jobId);
       
       const job = await storage.createJobPosting(jobData);
       res.status(201).json(job);
