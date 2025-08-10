@@ -692,13 +692,24 @@ export class DatabaseStorage implements IStorage {
     
     return results.map(result => {
       const user = result.users;
+      const bankDetails = result.worker_bank_details;
+      
       const mapped = {
         ...user,
         workerProfile: result.worker_profiles || undefined,
-        workerBankDetails: result.worker_bank_details || undefined
+        workerBankDetails: bankDetails || undefined,
+        // Flatten bank details directly onto user object for easier access
+        ...(bankDetails && {
+          bankAccountNumber: bankDetails.accountNumber,
+          bankIFSC: bankDetails.ifscCode,
+          bankMICR: bankDetails.micrCode,
+          bankName: bankDetails.bankName,
+          bankBranch: bankDetails.branchName,
+          bankAddress: bankDetails.bankAddress,
+          bankAccountType: bankDetails.accountType,
+          bankAccountHolderName: bankDetails.accountHolderName
+        })
       };
-      
-
       
       return mapped;
     });
