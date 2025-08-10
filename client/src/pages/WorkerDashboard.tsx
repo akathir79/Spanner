@@ -1206,10 +1206,10 @@ export default function WorkerDashboard() {
         console.log("Dialog open state changed:", open);
         setShowRejoinModal(open);
       }}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md" aria-describedby="rejoin-dialog-description">
           <DialogHeader>
             <DialogTitle>Request to Rejoin</DialogTitle>
-            <DialogDescription>
+            <DialogDescription id="rejoin-dialog-description">
               Please provide a reason for your rejoin request. This will be reviewed by our admin team.
             </DialogDescription>
           </DialogHeader>
