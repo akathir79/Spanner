@@ -1312,7 +1312,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         isSuspended: false,
         suspendedAt: null,
         suspendedBy: null,
-        suspensionReason: null
+        suspensionReason: null,
+        hasRejoinRequest: false, // Clear rejoin request flag
+        rejoinRequestedAt: null,
+        rejoinRequestReason: null
       });
       
       if (!updatedUser) {
@@ -1323,6 +1326,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error resuming worker:", error);
       res.status(500).json({ error: "Failed to resume worker" });
+    }
+  });
+
+  // Worker rejoin request
+  app.post("/api/worker/rejoin-request/:workerId", async (req, res) => {
+    try {
+      const { workerId } = req.params;
+      const { reason } = req.body;
+      
+      const updatedUser = await storage.updateUser(workerId, { 
+        hasRejoinRequest: true,
+        rejoinRequestedAt: new Date(),
+        rejoinRequestReason: reason || "No reason provided"
+      });
+      
+      if (!updatedUser) {
+        return res.status(404).json({ message: "Worker not found" });
+      }
+      
+      res.json({ message: "Rejoin request submitted successfully", user: updatedUser });
+    } catch (error) {
+      console.error("Error submitting rejoin request:", error);
+      res.status(500).json({ error: "Failed to submit rejoin request" });
     }
   });
 

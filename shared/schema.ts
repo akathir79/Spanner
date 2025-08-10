@@ -45,6 +45,9 @@ export const users = pgTable("users", {
   suspendedAt: timestamp("suspended_at"), // When user was suspended
   suspendedBy: varchar("suspended_by"), // Admin ID who suspended the user
   suspensionReason: text("suspension_reason"), // Reason for suspension
+  rejoinRequestedAt: timestamp("rejoin_requested_at"), // When worker requested to rejoin
+  rejoinRequestReason: text("rejoin_request_reason"), // Worker's reason for rejoin request
+  hasRejoinRequest: boolean("has_rejoin_request").default(false), // Track if worker has active rejoin request
   status: text("status").default("pending"), // pending, verified, approved, rejected, suspended (for worker approval workflow)
   verificationComment: text("verification_comment"), // Admin comment when verifying worker
   verifiedAt: timestamp("verified_at"), // When worker was verified

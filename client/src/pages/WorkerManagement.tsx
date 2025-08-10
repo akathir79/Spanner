@@ -33,7 +33,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { ArrowLeft, Phone, Mail, Calendar, MoreHorizontal, Eye, MessageSquare, CheckCircle, XCircle, Trash2, Edit, AlertCircle, Search, X, Menu, Loader2, MessageCircle, Smartphone, CreditCard, Send, ArrowRightLeft, History, DollarSign, Filter, Copy, Square, Users, Shield } from "lucide-react";
+import { ArrowLeft, Phone, Mail, Calendar, MoreHorizontal, Eye, MessageSquare, CheckCircle, XCircle, Trash2, Edit, AlertCircle, Search, X, Menu, Loader2, MessageCircle, Smartphone, CreditCard, Send, ArrowRightLeft, History, DollarSign, Filter, Copy, Square, Users, Shield, Ban, RotateCcw } from "lucide-react";
 // import { FaWhatsapp } from "react-icons/fa"; // Replaced with MessageCircle for consistency
 import { format } from "date-fns";
 import { useLocation } from "wouter";
@@ -64,6 +64,13 @@ interface User {
   bankBranch?: string;
   bankAccountType?: string;
   bankMICR?: string;
+  isSuspended?: boolean;
+  suspendedAt?: string;
+  suspendedBy?: string;
+  suspensionReason?: string;
+  hasRejoinRequest?: boolean;
+  rejoinRequestedAt?: string;
+  rejoinRequestReason?: string;
 }
 
 interface District {
@@ -248,6 +255,8 @@ export default function WorkerManagement() {
   const [workerToVerify, setWorkerToVerify] = useState<User | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
   const [sendingMessage, setSendingMessage] = useState(false);
+  const [showRejoinModal, setShowRejoinModal] = useState(false);
+  const [rejoinRequestWorker, setRejoinRequestWorker] = useState<User | null>(null);
 
   // Animation refs
   const totalWorkerButtonRef = useRef<HTMLButtonElement>(null);
@@ -664,11 +673,16 @@ export default function WorkerManagement() {
   });
 
   const handleSuspendUser = (worker: User) => {
-    if (worker.status === "suspended") {
-      resumeWorkerMutation.mutate(worker.id);
-    } else {
-      suspendWorkerMutation.mutate(worker.id);
-    }
+    suspendWorkerMutation.mutate(worker.id);
+  };
+
+  const handleResumeUser = (worker: User) => {
+    resumeWorkerMutation.mutate(worker.id);
+  };
+
+  const handleViewRejoinRequest = (worker: User) => {
+    setRejoinRequestWorker(worker);
+    setShowRejoinModal(true);
   };
 
   // Worker approval mutation
@@ -2086,6 +2100,83 @@ export default function WorkerManagement() {
                     Verify & Approve
                   </>
                 )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Rejoin Request Review Modal */}
+        <Dialog open={showRejoinModal} onOpenChange={setShowRejoinModal}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Review Rejoin Request</DialogTitle>
+              <DialogDescription>
+                {rejoinRequestWorker && (
+                  <>
+                    Review the rejoin request from{" "}
+                    <span className="font-medium">{rejoinRequestWorker.firstName} {rejoinRequestWorker.lastName}</span>
+                  </>
+                )}
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="space-y-4 py-4">
+              <div>
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Worker Information
+                </label>
+                <div className="mt-1 p-3 bg-gray-50 dark:bg-gray-800 rounded-md">
+                  <p className="text-sm"><strong>ID:</strong> {rejoinRequestWorker?.id}</p>
+                  <p className="text-sm"><strong>Mobile:</strong> {rejoinRequestWorker?.mobile}</p>
+                  <p className="text-sm"><strong>Suspended:</strong> {rejoinRequestWorker?.suspendedAt ? new Date(rejoinRequestWorker.suspendedAt).toLocaleDateString() : 'N/A'}</p>
+                </div>
+              </div>
+              
+              <div>
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Rejoin Request Reason
+                </label>
+                <div className="mt-1 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-md border border-blue-200 dark:border-blue-800">
+                  <p className="text-sm text-blue-800 dark:text-blue-200">
+                    {rejoinRequestWorker?.rejoinRequestReason || "No reason provided"}
+                  </p>
+                </div>
+              </div>
+              
+              <div>
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Original Suspension Reason
+                </label>
+                <div className="mt-1 p-3 bg-orange-50 dark:bg-orange-900/20 rounded-md border border-orange-200 dark:border-orange-800">
+                  <p className="text-sm text-orange-800 dark:text-orange-200">
+                    {rejoinRequestWorker?.suspensionReason || "No reason provided"}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <DialogFooter className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowRejoinModal(false);
+                  setRejoinRequestWorker(null);
+                }}
+              >
+                Close
+              </Button>
+              <Button
+                onClick={() => {
+                  if (rejoinRequestWorker) {
+                    handleResumeUser(rejoinRequestWorker);
+                    setShowRejoinModal(false);
+                    setRejoinRequestWorker(null);
+                  }
+                }}
+                disabled={resumeWorkerMutation.isPending}
+                className="bg-green-600 hover:bg-green-700"
+              >
+                {resumeWorkerMutation.isPending ? "Approving..." : "Approve & Resume"}
               </Button>
             </DialogFooter>
           </DialogContent>

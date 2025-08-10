@@ -380,6 +380,8 @@ export default function WorkerDashboard() {
   // Removed useLanguage as it's not needed for this component
   const { toast } = useToast();
   const [, setLocation] = useLocation();
+  const [showRejoinModal, setShowRejoinModal] = useState(false);
+  const [rejoinReason, setRejoinReason] = useState("");
 
   // Fetch worker's bookings (always call hooks)
   const { data: bookings = [], isLoading: bookingsLoading } = useQuery({
@@ -417,6 +419,30 @@ export default function WorkerDashboard() {
     },
   });
 
+  // Rejoin request mutation
+  const rejoinRequestMutation = useMutation({
+    mutationFn: async (reason: string) => {
+      return await apiRequest("POST", `/api/worker/rejoin-request/${user?.id}`, { reason });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Rejoin Request Submitted",
+        description: "Your request to rejoin has been submitted to admin for review.",
+      });
+      setShowRejoinModal(false);
+      setRejoinReason("");
+      // Refresh user data to show updated status
+      queryClient.invalidateQueries({ queryKey: ["/api/user/refresh"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Request Failed",
+        description: error.message || "Failed to submit rejoin request",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Authentication redirect logic in useEffect (MUST BE CALLED BEFORE ANY RETURNS)
   useEffect(() => {
     if (!authLoading) {
@@ -433,6 +459,18 @@ export default function WorkerDashboard() {
   }, [user, authLoading, setLocation]);
 
   // Helper functions
+  const handleRejoinRequest = () => {
+    if (!rejoinReason.trim()) {
+      toast({
+        title: "Reason Required",
+        description: "Please provide a reason for your rejoin request.",
+        variant: "destructive",
+      });
+      return;
+    }
+    rejoinRequestMutation.mutate(rejoinReason.trim());
+  };
+
   const handleStatusUpdate = (bookingId: string, status: string) => {
     updateBookingMutation.mutate({ bookingId, status });
   };
@@ -520,9 +558,29 @@ export default function WorkerDashboard() {
                     <li>• Contact support if you believe this is an error</li>
                   </ul>
                 </div>
-                <p className="text-sm text-orange-600 dark:text-orange-400">
-                  For questions about your suspension, please contact our support team.
-                </p>
+                <div className="flex flex-col gap-3">
+                  <p className="text-sm text-orange-600 dark:text-orange-400">
+                    For questions about your suspension, please contact our support team.
+                  </p>
+                  
+                  {user?.hasRejoinRequest ? (
+                    <div className="bg-blue-100 dark:bg-blue-900 p-3 rounded-lg">
+                      <p className="text-sm text-blue-800 dark:text-blue-200 font-medium">
+                        Rejoin Request Submitted
+                      </p>
+                      <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
+                        Your request to rejoin has been submitted and is under admin review.
+                      </p>
+                    </div>
+                  ) : (
+                    <Button 
+                      onClick={() => setShowRejoinModal(true)}
+                      className="w-fit bg-blue-600 hover:bg-blue-700 text-white"
+                    >
+                      Request to Rejoin
+                    </Button>
+                  )}
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -1134,6 +1192,56 @@ export default function WorkerDashboard() {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Rejoin Request Modal */}
+      {showRejoinModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md mx-4">
+            <h3 className="text-lg font-semibold mb-4">Request to Rejoin</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              Please provide a reason for your rejoin request. This will be reviewed by our admin team.
+            </p>
+            
+            <div className="space-y-4">
+              <div>
+                <label htmlFor="rejoinReason" className="block text-sm font-medium mb-2">
+                  Reason for rejoin request *
+                </label>
+                <textarea
+                  id="rejoinReason"
+                  value={rejoinReason}
+                  onChange={(e) => setRejoinReason(e.target.value)}
+                  placeholder="Please explain why you believe your account should be reactivated..."
+                  className="w-full p-3 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white resize-none"
+                  rows={4}
+                  disabled={rejoinRequestMutation.isPending}
+                />
+              </div>
+              
+              <div className="flex gap-3 pt-2">
+                <Button
+                  onClick={handleRejoinRequest}
+                  disabled={rejoinRequestMutation.isPending || !rejoinReason.trim()}
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  {rejoinRequestMutation.isPending ? "Submitting..." : "Submit Request"}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowRejoinModal(false);
+                    setRejoinReason("");
+                  }}
+                  disabled={rejoinRequestMutation.isPending}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
