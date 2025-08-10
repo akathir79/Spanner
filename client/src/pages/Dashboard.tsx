@@ -1032,113 +1032,60 @@ const JobPostingForm = ({ onClose }: { onClose?: () => void }) => {
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label>Service Type *</Label>
-          <Popover open={serviceOpen} onOpenChange={setServiceOpen}>
-            <PopoverTrigger asChild>
+          <div className="relative">
+            <Popover open={serviceOpen} onOpenChange={setServiceOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={serviceOpen}
+                  className="w-full justify-between pr-8"
+                >
+                  {formData.serviceCategory
+                    ? (services as any)?.find((service: any) => service.name === formData.serviceCategory)?.name
+                    : "Select service"}
+                  <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-full p-0">
+                <Command>
+                  <CommandInput placeholder="Search services..." />
+                  <CommandList>
+                    <CommandEmpty>No service found.</CommandEmpty>
+                    <CommandGroup>
+                      {(services as any)?.map((service: any) => (
+                        <CommandItem
+                          key={service.id}
+                          value={service.name}
+                          onSelect={() => {
+                            setFormData(prev => ({ ...prev, serviceCategory: service.name }));
+                            setServiceOpen(false);
+                          }}
+                        >
+                          {service.name}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
+            {formData.serviceCategory && (
               <Button
-                variant="outline"
-                role="combobox"
-                aria-expanded={serviceOpen}
-                className="w-full justify-between"
+                variant="ghost"
+                size="sm"
+                className="absolute right-8 top-1/2 -translate-y-1/2 h-6 w-6 p-0 hover:bg-muted"
+                onClick={() => setFormData(prev => ({ ...prev, serviceCategory: "" }))}
               >
-                {formData.serviceCategory
-                  ? (services as any)?.find((service: any) => service.name === formData.serviceCategory)?.name
-                  : "Select service"}
-                <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                <X className="h-3 w-3" />
               </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-full p-0">
-              <Command>
-                <CommandInput placeholder="Search services..." />
-                <CommandList>
-                  <CommandEmpty>No service found.</CommandEmpty>
-                  <CommandGroup>
-                    {(services as any)?.map((service: any) => (
-                      <CommandItem
-                        key={service.id}
-                        value={service.name}
-                        onSelect={() => {
-                          setFormData(prev => ({ ...prev, serviceCategory: service.name }));
-                          setServiceOpen(false);
-                        }}
-                      >
-                        {service.name}
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
-                </CommandList>
-              </Command>
-            </PopoverContent>
-          </Popover>
-          {formData.serviceCategory && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="mt-1 h-6 px-2 text-xs"
-              onClick={() => setFormData(prev => ({ ...prev, serviceCategory: "" }))}
-            >
-              <X className="h-3 w-3 mr-1" />
-              Clear
-            </Button>
-          )}
-        </div>
-
-        <div className="space-y-2">
-          <Label>State *</Label>
-          <Popover open={stateOpen} onOpenChange={setStateOpen}>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                role="combobox"
-                aria-expanded={stateOpen}
-                className="w-full justify-between"
-              >
-                {formData.state || "Select State"}
-                <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-full p-0">
-              <Command>
-                <CommandInput placeholder="Search states..." />
-                <CommandList>
-                  <CommandEmpty>No state found.</CommandEmpty>
-                  <CommandGroup>
-                    {statesDistrictsData.states && Object.keys(statesDistrictsData.states).map((stateName: string) => (
-                      <CommandItem
-                        key={stateName}
-                        value={stateName}
-                        onSelect={() => {
-                          setFormData(prev => ({ 
-                            ...prev, 
-                            state: stateName, 
-                            districtId: "" // Clear district when state changes
-                          }));
-                          setStateOpen(false);
-                        }}
-                      >
-                        {stateName}
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
-                </CommandList>
-              </Command>
-            </PopoverContent>
-          </Popover>
-          {formData.state && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="mt-1 h-6 px-2 text-xs"
-              onClick={() => setFormData(prev => ({ ...prev, state: "", districtId: "" }))}
-            >
-              <X className="h-3 w-3 mr-1" />
-              Clear
-            </Button>
-          )}
+            )}
+          </div>
         </div>
 
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <Label>District *</Label>
+            <Label>State *</Label>
             <Button
               type="button"
               variant="ghost"
@@ -1151,53 +1098,109 @@ const JobPostingForm = ({ onClose }: { onClose?: () => void }) => {
               {isLocationLoading ? "Finding..." : "Use Location"}
             </Button>
           </div>
-          <Popover open={districtOpen} onOpenChange={setDistrictOpen}>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                role="combobox"
-                aria-expanded={districtOpen}
-                className="w-full justify-between"
-              >
-                {formData.districtId || "Select district"}
-                <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-full p-0">
-              <Command>
-                <CommandInput placeholder="Search districts..." />
-                <CommandList>
-                  <CommandEmpty>{formData.state ? "No district found." : "Please select a state first."}</CommandEmpty>
-                  <CommandGroup>
-                    {formData.state && statesDistrictsData.states && statesDistrictsData.states[formData.state as keyof typeof statesDistrictsData.states] && 
-                      (statesDistrictsData.states[formData.state as keyof typeof statesDistrictsData.states] as any).districts.map((district: string) => (
+          <div className="relative">
+            <Popover open={stateOpen} onOpenChange={setStateOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={stateOpen}
+                  className="w-full justify-between pr-8"
+                >
+                  {formData.state || "Select State"}
+                  <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-full p-0">
+                <Command>
+                  <CommandInput placeholder="Search states..." />
+                  <CommandList>
+                    <CommandEmpty>No state found.</CommandEmpty>
+                    <CommandGroup>
+                      {statesDistrictsData.states && Object.keys(statesDistrictsData.states).map((stateName: string) => (
                         <CommandItem
-                          key={district}
-                          value={district}
+                          key={stateName}
+                          value={stateName}
                           onSelect={() => {
-                            setFormData(prev => ({ ...prev, districtId: district }));
-                            setDistrictOpen(false);
+                            setFormData(prev => ({ 
+                              ...prev, 
+                              state: stateName, 
+                              districtId: "" // Clear district when state changes
+                            }));
+                            setStateOpen(false);
                           }}
                         >
-                          {district}
+                          {stateName}
                         </CommandItem>
                       ))}
-                  </CommandGroup>
-                </CommandList>
-              </Command>
-            </PopoverContent>
-          </Popover>
-          {formData.districtId && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="mt-1 h-6 px-2 text-xs"
-              onClick={() => setFormData(prev => ({ ...prev, districtId: "" }))}
-            >
-              <X className="h-3 w-3 mr-1" />
-              Clear
-            </Button>
-          )}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
+            {formData.state && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="absolute right-8 top-1/2 -translate-y-1/2 h-6 w-6 p-0 hover:bg-muted"
+                onClick={() => setFormData(prev => ({ ...prev, state: "", districtId: "" }))}
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            )}
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label>District *</Label>
+          <div className="relative">
+            <Popover open={districtOpen} onOpenChange={setDistrictOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={districtOpen}
+                  className="w-full justify-between pr-8"
+                >
+                  {formData.districtId || "Select district"}
+                  <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-full p-0">
+                <Command>
+                  <CommandInput placeholder="Search districts..." />
+                  <CommandList>
+                    <CommandEmpty>{formData.state ? "No district found." : "Please select a state first."}</CommandEmpty>
+                    <CommandGroup>
+                      {formData.state && statesDistrictsData.states && statesDistrictsData.states[formData.state as keyof typeof statesDistrictsData.states] && 
+                        (statesDistrictsData.states[formData.state as keyof typeof statesDistrictsData.states] as any).districts.map((district: string) => (
+                          <CommandItem
+                            key={district}
+                            value={district}
+                            onSelect={() => {
+                              setFormData(prev => ({ ...prev, districtId: district }));
+                              setDistrictOpen(false);
+                            }}
+                          >
+                            {district}
+                          </CommandItem>
+                        ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
+            {formData.districtId && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="absolute right-8 top-1/2 -translate-y-1/2 h-6 w-6 p-0 hover:bg-muted"
+                onClick={() => setFormData(prev => ({ ...prev, districtId: "" }))}
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            )}
+          </div>
         </div>
       </div>
 
