@@ -127,10 +127,7 @@ export function AnimatedStatusBadge({
           <span className="font-medium">{config.label}</span>
         </div>
 
-        {/* Shine effect for approved status */}
-        {displayStatus === "approved" && isAnimating && (
-          <div className="absolute inset-0 -top-1 -bottom-1 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shine transform -skew-x-12" />
-        )}
+
       </Badge>
 
       {/* Status change indicator dot */}
@@ -144,13 +141,7 @@ export function AnimatedStatusBadge({
   );
 }
 
-// CSS keyframes for shine effect (add to global CSS if not using Tailwind's extend)
-const shineKeyframes = `
-@keyframes shine {
-  0% { transform: translateX(-100%) skewX(-12deg); }
-  100% { transform: translateX(200%) skewX(-12deg); }
-}
-`;
+
 
 // Hook to track status changes
 export function useStatusTransition(currentStatus: string) {
