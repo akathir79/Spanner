@@ -36,7 +36,7 @@ import {
   X,
   MapPin as MapPinIcon,
   Users,
-  DollarSign,
+
   CreditCard,
   Camera,
   Home,
@@ -2471,25 +2471,22 @@ export default function Dashboard() {
                             }`}
                           >
                             <CardContent className="p-6 space-y-4">
+                              {/* Job ID at top */}
+                              <div className="mb-3">
+                                <div className="text-sm font-mono font-medium text-green-700 bg-green-50 px-3 py-1 rounded-md inline-block border border-green-200">
+                                  ID: {job.id}
+                                </div>
+                              </div>
+
                               {/* Header with Title and Actions */}
                               <div className="flex items-start justify-between">
-                                <div className="flex items-start gap-3 flex-1">
-                                  <div className="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg p-2 flex items-center justify-center">
-                                    <Users className="h-5 w-5 text-white" />
-                                  </div>
-                                  <div className="flex-1">
-                                    <h3 className="font-semibold text-lg text-gray-900 cursor-pointer hover:text-blue-600 transition-colors" onClick={() => setSelectedJobPosting(job)}>
-                                      {job.title}
-                                    </h3>
-                                    <div className="flex items-center gap-2 mt-1">
-                                      <p className="text-sm text-indigo-600 font-medium">
-                                        {job.serviceCategory} • {job.district}
-                                      </p>
-                                      <div className="bg-gray-100 px-2 py-1 rounded text-xs font-mono text-gray-600">
-                                        ID: {job.id}
-                                      </div>
-                                    </div>
-                                  </div>
+                                <div className="flex-1">
+                                  <h3 className="font-semibold text-lg text-gray-900 cursor-pointer hover:text-blue-600 transition-colors" onClick={() => setSelectedJobPosting(job)}>
+                                    {job.title}
+                                  </h3>
+                                  <p className="text-sm text-indigo-600 font-medium mt-1">
+                                    {job.serviceCategory} • {job.district}
+                                  </p>
                                 </div>
                                 <div className="flex items-center gap-2">
                                   <Badge 
@@ -2517,7 +2514,11 @@ export default function Dashboard() {
                                     variant="ghost"
                                     size="sm"
                                     className="h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
-                                    onClick={() => deleteJobMutation.mutate(job.id)}
+                                    onClick={() => {
+                                      if (window.confirm(`Are you sure you want to delete the job posting "${job.title}"? This action cannot be undone.`)) {
+                                        deleteJobMutation.mutate(job.id);
+                                      }
+                                    }}
                                     disabled={deleteJobMutation.isPending}
                                   >
                                     <X className="h-4 w-4" />
@@ -2538,9 +2539,9 @@ export default function Dashboard() {
                                   <div className={`flex items-center gap-2 px-3 py-2 rounded-lg ${
                                     job.budgetMin && job.budgetMax ? 'text-emerald-700 bg-emerald-50' : 'text-gray-600 bg-gray-100'
                                   }`}>
-                                    <DollarSign className={`h-4 w-4 ${
+                                    <span className={`text-base font-semibold ${
                                       job.budgetMin && job.budgetMax ? 'text-emerald-600' : 'text-gray-500'
-                                    }`} />
+                                    }`}>₹</span>
                                     <span className="text-sm font-medium">
                                       {job.budgetMin && job.budgetMax ? `₹${job.budgetMin} - ₹${job.budgetMax}` : 'Negotiable'}
                                     </span>
@@ -2749,7 +2750,9 @@ export default function Dashboard() {
                     </div>
                   ) : !jobBids || jobBids.length === 0 ? (
                     <div className="text-center py-12">
-                      <DollarSign className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                      <div className="h-12 w-12 mx-auto mb-4 flex items-center justify-center text-2xl font-bold text-muted-foreground">
+                        ₹
+                      </div>
                       <h3 className="text-lg font-semibold mb-2">No bids yet</h3>
                       <p className="text-muted-foreground">
                         Workers will submit bids for this job soon. Check back later!
