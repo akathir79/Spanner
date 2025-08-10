@@ -11,7 +11,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useLanguage } from "@/components/LanguageProvider";
-import { Calendar, MapPin, DollarSign, Clock, Users, Plus } from "lucide-react";
+import { Calendar, MapPin, DollarSign, Clock, Users, Plus, Trash2 } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import type { District, ServiceCategory, JobPosting, Bid } from "@shared/schema";
 import { normalizeServiceName } from "@shared/serviceUtils";
 
@@ -33,6 +34,7 @@ const PostJob = () => {
   });
 
   const [newRequirement, setNewRequirement] = useState("");
+  const [deletingJobId, setDeletingJobId] = useState<string | null>(null);
 
   // Fetch districts and service categories
   const { data: districts = [] } = useQuery<District[]>({
@@ -96,6 +98,36 @@ const PostJob = () => {
       });
     },
   });
+
+  // Delete job posting mutation
+  const deleteJobMutation = useMutation({
+    mutationFn: (jobId: string) => {
+      return fetch(`/api/job-postings/${jobId}`, {
+        method: "DELETE",
+      }).then(res => res.json());
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Job posting deleted successfully.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/job-postings/client", user?.id] });
+      setDeletingJobId(null);
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to delete job posting. Please try again.",
+        variant: "destructive",
+      });
+      setDeletingJobId(null);
+    },
+  });
+
+  const handleDeleteJob = (jobId: string) => {
+    setDeletingJobId(jobId);
+    deleteJobMutation.mutate(jobId);
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -360,9 +392,40 @@ const PostJob = () => {
                       <span className="text-sm text-muted-foreground">
                         Posted {new Date(job.createdAt).toLocaleDateString()}
                       </span>
-                      <Button variant="outline" size="sm">
-                        View Bids
-                      </Button>
+                      <div className="flex items-center gap-2">
+                        <Button variant="outline" size="sm">
+                          View Bids
+                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                              disabled={deletingJobId === job.id}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete Job Posting</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Are you sure you want to delete this job posting? This action cannot be undone and will remove all associated bids.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction 
+                                onClick={() => handleDeleteJob(job.id)}
+                                className="bg-destructive hover:bg-destructive/90"
+                              >
+                                Delete
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
                     </div>
                   </div>
                 ))
