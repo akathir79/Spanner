@@ -2135,85 +2135,78 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/40 pt-20 pb-8">
       <div className="container mx-auto px-4">
-        <div className="mb-8 relative">
+        <div className="mb-6 relative">
           <div className="bg-white/80 backdrop-blur-sm border border-white/20 rounded-2xl p-6 shadow-xl">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-blue-600 via-purple-600 to-blue-800 bg-clip-text text-transparent">
-                  Welcome back, {user.firstName}! 
-                </h1>
-                <div className="flex items-center gap-3 mb-3">
-                  <span className="text-sm font-mono font-semibold text-white bg-gradient-to-r from-blue-500 to-purple-600 px-3 py-1.5 rounded-full shadow-md">
-                    {user.id}
-                  </span>
-                  <span className="text-sm text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-200 font-medium">
-                    Member since {new Date(user.createdAt).toLocaleDateString()}
-                  </span>
-                </div>
-                <p className="text-slate-600 text-lg">
-                  Manage your bookings and find trusted workers for your service needs.
-                </p>
+            <div>
+              <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-blue-600 via-purple-600 to-blue-800 bg-clip-text text-transparent">
+                Welcome back, {user.firstName}! 
+              </h1>
+              <div className="flex items-center gap-3 mb-3">
+                <span className="text-sm font-mono font-semibold text-white bg-gradient-to-r from-blue-500 to-purple-600 px-3 py-1.5 rounded-full shadow-md">
+                  {user.id}
+                </span>
+                <span className="text-sm text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-200 font-medium">
+                  Member since {new Date(user.createdAt).toLocaleDateString()}
+                </span>
               </div>
-              <div className="hidden md:flex items-center justify-center w-24 h-24 bg-gradient-to-r from-blue-100 to-purple-100 rounded-full border-4 border-white shadow-lg">
-                <User className="h-10 w-10 text-blue-600" />
-              </div>
+              <p className="text-slate-600 text-lg mb-4">
+                Manage your bookings and find trusted workers for your service needs.
+              </p>
+              
+              {/* Post a New Job Button - Moved inside welcome card */}
+              <Dialog open={isJobFormOpen} onOpenChange={setIsJobFormOpen}>
+                <DialogTrigger asChild>
+                  <Button 
+                    size="lg" 
+                    className="w-full sm:w-auto h-12 px-6 bg-gradient-to-r from-blue-600 via-purple-600 to-blue-700 hover:from-blue-700 hover:via-purple-700 hover:to-blue-800 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border-0"
+                  >
+                    <Plus className="h-5 w-5 mr-2" />
+                    Post a New Job
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>Post a New Job</DialogTitle>
+                    <p className="text-muted-foreground">
+                      Get competitive bids from qualified workers across Tamil Nadu
+                    </p>
+                  </DialogHeader>
+                  <JobPostingForm onClose={() => setIsJobFormOpen(false)} />
+                </DialogContent>
+              </Dialog>
             </div>
           </div>
         </div>
 
-        {/* Post a New Job Button */}
-        <div className="mb-8">
-          <Dialog open={isJobFormOpen} onOpenChange={setIsJobFormOpen}>
-            <DialogTrigger asChild>
-              <Button 
-                size="lg" 
-                className="w-full sm:w-auto h-14 px-8 bg-gradient-to-r from-blue-600 via-purple-600 to-blue-700 hover:from-blue-700 hover:via-purple-700 hover:to-blue-800 text-white font-semibold text-lg rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border-0"
-              >
-                <Plus className="h-6 w-6 mr-3" />
-                Post a New Job
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>Post a New Job</DialogTitle>
-                <p className="text-muted-foreground">
-                  Get competitive bids from qualified workers across Tamil Nadu
-                </p>
-              </DialogHeader>
-              <JobPostingForm onClose={() => setIsJobFormOpen(false)} />
-            </DialogContent>
-          </Dialog>
-        </div>
-
         <Tabs defaultValue="bookings" className="space-y-8">
-          <TabsList className="grid w-full grid-cols-5 bg-white/80 backdrop-blur-sm border border-white/30 rounded-xl p-2 shadow-lg">
+          <TabsList className="grid w-full grid-cols-5 bg-gradient-to-r from-slate-100/90 via-white/90 to-slate-100/90 backdrop-blur-md border-2 border-white/40 rounded-2xl p-3 shadow-2xl">
             <TabsTrigger 
               value="bookings" 
-              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-purple-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg font-medium transition-all duration-300"
+              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-purple-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:scale-105 rounded-xl font-semibold text-sm py-3 transition-all duration-300 hover:scale-102"
             >
               My Bookings
             </TabsTrigger>
             <TabsTrigger 
               value="search"
-              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-pink-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg font-medium transition-all duration-300"
+              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-pink-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:scale-105 rounded-xl font-semibold text-sm py-3 transition-all duration-300 hover:scale-102"
             >
               Find Workers
             </TabsTrigger>
             <TabsTrigger 
               value="jobs"
-              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500 data-[state=active]:to-teal-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg font-medium transition-all duration-300"
+              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500 data-[state=active]:to-teal-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:scale-105 rounded-xl font-semibold text-sm py-3 transition-all duration-300 hover:scale-102"
             >
               My Jobs
             </TabsTrigger>
             <TabsTrigger 
               value="bids"
-              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-red-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg font-medium transition-all duration-300"
+              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-red-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:scale-105 rounded-xl font-semibold text-sm py-3 transition-all duration-300 hover:scale-102"
             >
               Bids
             </TabsTrigger>
             <TabsTrigger 
               value="profile"
-              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500 data-[state=active]:to-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg font-medium transition-all duration-300"
+              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500 data-[state=active]:to-blue-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:scale-105 rounded-xl font-semibold text-sm py-3 transition-all duration-300 hover:scale-102"
             >
               Profile
             </TabsTrigger>
@@ -2894,21 +2887,25 @@ export default function Dashboard() {
 
           {/* Bids Tab */}
           <TabsContent value="bids" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <span className="text-lg font-bold">₹</span>
-                  {selectedJobPosting ? `Bids for "${selectedJobPosting.title}"` : 'Select a Job to View Bids'}
+            <Card className="bg-white/80 backdrop-blur-sm border border-white/30 rounded-xl shadow-lg">
+              <CardHeader className="bg-gradient-to-r from-orange-50 to-red-50 rounded-t-xl border-b border-orange-100/30">
+                <CardTitle className="flex items-center space-x-3">
+                  <div className="p-2 bg-orange-100 rounded-lg">
+                    <CreditCard className="h-5 w-5 text-orange-600" />
+                  </div>
+                  <span className="text-xl font-bold text-slate-800">
+                    {selectedJobPosting ? `Bids for "${selectedJobPosting.title}"` : 'Select a Job to View Bids'}
+                  </span>
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 {!selectedJobPosting ? (
-                  <div className="text-center py-12">
-                    <div className="h-12 w-12 mx-auto mb-4 flex items-center justify-center text-3xl font-bold text-muted-foreground">
-                      ₹
+                  <div className="text-center py-16">
+                    <div className="bg-gradient-to-r from-orange-100 to-red-100 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6">
+                      <CreditCard className="h-12 w-12 text-orange-600" />
                     </div>
-                    <h3 className="text-lg font-semibold mb-2">Select a Job Posting</h3>
-                    <p className="text-muted-foreground">
+                    <h3 className="text-2xl font-bold mb-3 text-slate-800">Select a Job Posting</h3>
+                    <p className="text-slate-600 mb-6 text-lg max-w-md mx-auto">
                       Click on any job posting from the "My Jobs" tab to view worker bids.
                     </p>
                   </div>
@@ -2921,12 +2918,12 @@ export default function Dashboard() {
                     ))}
                   </div>
                 ) : !jobBids || jobBids.length === 0 ? (
-                  <div className="text-center py-12">
-                    <div className="h-12 w-12 mx-auto mb-4 flex items-center justify-center text-2xl font-bold text-muted-foreground">
-                      ₹
+                  <div className="text-center py-16">
+                    <div className="bg-gradient-to-r from-orange-100 to-red-100 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6">
+                      <CreditCard className="h-12 w-12 text-orange-600" />
                     </div>
-                    <h3 className="text-lg font-semibold mb-2">No bids yet</h3>
-                    <p className="text-muted-foreground">
+                    <h3 className="text-2xl font-bold mb-3 text-slate-800">No bids yet</h3>
+                    <p className="text-slate-600 mb-6 text-lg max-w-md mx-auto">
                       Workers will submit bids for this job soon. Check back later!
                     </p>
                   </div>
