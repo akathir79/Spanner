@@ -2448,11 +2448,13 @@ export default function Dashboard() {
                       ))}
                     </div>
                   ) : !jobPostings || jobPostings.length === 0 ? (
-                    <div className="text-center py-8">
-                      <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                      <h3 className="text-lg font-semibold mb-2">No job postings yet</h3>
-                      <p className="text-muted-foreground mb-4">
-                        Use the "Post a New Job" button above to get started.
+                    <div className="text-center py-12">
+                      <div className="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-full w-20 h-20 mx-auto flex items-center justify-center mb-6">
+                        <Users className="h-10 w-10 text-blue-600" />
+                      </div>
+                      <h3 className="text-xl font-semibold mb-3 text-gray-900">No job postings yet</h3>
+                      <p className="text-gray-600 max-w-md mx-auto">
+                        Use the "Post a New Job" button above to connect with skilled workers.
                       </p>
                     </div>
                   ) : (
@@ -2464,35 +2466,44 @@ export default function Dashboard() {
                         return (
                           <Card 
                             key={job.id} 
-                            className={`transition-all hover:shadow-md ${
-                              selectedJobPosting?.id === job.id ? 'border-primary ring-2 ring-primary/20' : ''
+                            className={`bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 hover:border-blue-200 ${
+                              selectedJobPosting?.id === job.id ? 'border-blue-500 ring-2 ring-blue-100' : ''
                             }`}
                           >
-                            <CardContent className="p-4 space-y-3">
+                            <CardContent className="p-6 space-y-4">
                               {/* Header with Title and Actions */}
                               <div className="flex items-start justify-between">
-                                <div className="flex-1">
-                                  <h3 className="font-semibold cursor-pointer" onClick={() => setSelectedJobPosting(job)}>
-                                    {job.title}
-                                  </h3>
-                                  <p className="text-sm text-muted-foreground mt-1">
-                                    {job.serviceCategory} • {job.district}
-                                  </p>
+                                <div className="flex items-start gap-3 flex-1">
+                                  <div className="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg p-2 flex items-center justify-center">
+                                    <Users className="h-5 w-5 text-white" />
+                                  </div>
+                                  <div className="flex-1">
+                                    <h3 className="font-semibold text-lg text-gray-900 cursor-pointer hover:text-blue-600 transition-colors" onClick={() => setSelectedJobPosting(job)}>
+                                      {job.title}
+                                    </h3>
+                                    <p className="text-sm text-indigo-600 font-medium mt-1">
+                                      {job.serviceCategory} • {job.district}
+                                    </p>
+                                  </div>
                                 </div>
                                 <div className="flex items-center gap-2">
                                   <Badge 
-                                    className={job.status === "open" ? "bg-green-100 text-green-800" : 
-                                              job.status === "closed" ? "bg-gray-100 text-gray-800" : 
-                                              job.status === "in_progress" ? "bg-blue-100 text-blue-800" :
-                                              job.status === "completed" ? "bg-green-100 text-green-800" :
-                                              "bg-gray-100 text-gray-800"}
+                                    className={`px-3 py-1.5 text-sm font-medium ${
+                                      job.status === "open" ? "bg-emerald-100 text-emerald-700 border border-emerald-200" : 
+                                      job.status === "closed" ? "bg-gray-100 text-gray-700 border border-gray-200" : 
+                                      job.status === "in_progress" ? "bg-blue-100 text-blue-700 border border-blue-200" :
+                                      job.status === "completed" ? "bg-green-100 text-green-700 border border-green-200" :
+                                      "bg-gray-100 text-gray-700 border border-gray-200"
+                                    }`}
                                   >
-                                    {job.status}
+                                    {job.status === "open" ? "Open" :
+                                     job.status === "in_progress" ? "In Progress" :
+                                     job.status === "completed" ? "Completed" : job.status}
                                   </Badge>
                                   <Button
                                     variant="ghost"
                                     size="sm"
-                                    className="h-8 w-8 p-0"
+                                    className="h-8 w-8 p-0 hover:bg-blue-50 hover:text-blue-600"
                                     onClick={() => handleEditJob(job)}
                                   >
                                     <Edit3 className="h-4 w-4" />
@@ -2500,7 +2511,7 @@ export default function Dashboard() {
                                   <Button
                                     variant="ghost"
                                     size="sm"
-                                    className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                                    className="h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
                                     onClick={() => deleteJobMutation.mutate(job.id)}
                                     disabled={deleteJobMutation.isPending}
                                   >
@@ -2510,31 +2521,40 @@ export default function Dashboard() {
                               </div>
                               
                               {/* Description */}
-                              <p className="text-sm text-muted-foreground">
-                                {job.description}
-                              </p>
+                              <div className="bg-gray-50 rounded-lg p-4">
+                                <p className="text-gray-700 leading-relaxed">
+                                  {job.description}
+                                </p>
+                              </div>
                               
                               {/* Budget Section */}
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                  <span className="text-xs text-muted-foreground">Budget:</span>
-                                  <span className="text-sm font-medium">
-                                    {job.budgetMin && job.budgetMax ? `₹${job.budgetMin} - ₹${job.budgetMax}` : 'Negotiable'}
-                                  </span>
+                              <div className="flex items-center justify-between flex-wrap gap-3">
+                                <div className="flex items-center gap-3">
+                                  <div className={`flex items-center gap-2 px-3 py-2 rounded-lg ${
+                                    job.budgetMin && job.budgetMax ? 'text-emerald-700 bg-emerald-50' : 'text-gray-600 bg-gray-100'
+                                  }`}>
+                                    <DollarSign className={`h-4 w-4 ${
+                                      job.budgetMin && job.budgetMax ? 'text-emerald-600' : 'text-gray-500'
+                                    }`} />
+                                    <span className="text-sm font-medium">
+                                      {job.budgetMin && job.budgetMax ? `₹${job.budgetMin} - ₹${job.budgetMax}` : 'Negotiable'}
+                                    </span>
+                                  </div>
                                   {noBids && job.status === "open" && (
                                     <Button
                                       variant="outline"
                                       size="sm"
-                                      className="h-6 text-xs"
+                                      className="h-8 text-xs bg-orange-50 hover:bg-orange-100 text-orange-700 border-orange-200"
                                       onClick={() => handleEditJob(job)}
                                     >
                                       Increase Budget
                                     </Button>
                                   )}
                                 </div>
-                                <span className="text-xs text-muted-foreground">
-                                  Posted {new Date(job.createdAt).toLocaleDateString()}
-                                </span>
+                                <div className="flex items-center gap-2 text-sm text-gray-500">
+                                  <Clock className="h-4 w-4" />
+                                  <span>Posted {new Date(job.createdAt).toLocaleDateString()}</span>
+                                </div>
                               </div>
 
                               {/* Expandable Service Address Section */}
