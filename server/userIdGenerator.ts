@@ -22,9 +22,9 @@ const createAbbreviation = (name: string): string => {
 const stateAbbreviations: Record<string, string> = {};
 const districtAbbreviations: Record<string, string> = {};
 
-statesDistrictsData.states.forEach(stateData => {
-  const stateAbbr = createAbbreviation(stateData.state);
-  stateAbbreviations[stateData.state] = stateAbbr;
+Object.entries(statesDistrictsData.states).forEach(([stateName, stateData]) => {
+  const stateAbbr = createAbbreviation(stateName);
+  stateAbbreviations[stateName] = stateAbbr;
   
   stateData.districts.forEach(district => {
     const districtAbbr = createAbbreviation(district);
