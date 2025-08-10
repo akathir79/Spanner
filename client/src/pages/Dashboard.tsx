@@ -1040,7 +1040,7 @@ const JobPostingForm = ({ onClose }: { onClose?: () => void }) => {
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="space-y-4">
         <div className="space-y-2">
           <Label>Service Type *</Label>
           <div className="relative">
@@ -1131,7 +1131,7 @@ const JobPostingForm = ({ onClose }: { onClose?: () => void }) => {
               placeholder="Enter complete service address..."
               value={formData.serviceAddress || ''}
               onChange={(e) => setFormData(prev => ({ ...prev, serviceAddress: e.target.value }))}
-              className="min-h-[80px] resize-none"
+              className="min-h-[100px] resize-none"
             />
             {formData.serviceAddress && (
               <Button
