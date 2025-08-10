@@ -52,7 +52,18 @@ import {
   Mic,
   MicOff,
   Upload,
-  FileText
+  FileText,
+  Settings,
+  Grid,
+  List,
+  Palette,
+  RotateCcw,
+  Layout,
+  Maximize,
+  Minimize,
+  Move,
+  Zap,
+  BarChart
 } from "lucide-react";
 import { useLocation } from "wouter";
 import LocationViewer from "@/components/LocationViewer";
@@ -1437,6 +1448,94 @@ export default function Dashboard() {
   const [recordedChunks, setRecordedChunks] = useState<Blob[]>([]);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [jobMediaFiles, setJobMediaFiles] = useState<{ [jobId: string]: { audio?: string; images: string[]; videos: string[] } }>({});
+  
+  // Dashboard customization state
+  const [dashboardLayout, setDashboardLayout] = useState(() => {
+    const saved = localStorage.getItem(`dashboard-layout-${user?.id}`);
+    return saved ? JSON.parse(saved) : {
+      theme: 'default',
+      layout: 'grid', // grid, list, compact
+      widgets: {
+        jobPostings: { enabled: true, position: 0, size: 'large' },
+        recentBookings: { enabled: true, position: 1, size: 'medium' },
+        quickActions: { enabled: true, position: 2, size: 'small' },
+        statistics: { enabled: true, position: 3, size: 'medium' },
+        findWorkers: { enabled: true, position: 4, size: 'large' },
+        profile: { enabled: true, position: 5, size: 'medium' }
+      },
+      preferences: {
+        showWelcomeMessage: true,
+        compactMode: false,
+        showNotifications: true,
+        autoRefresh: false
+      }
+    };
+  });
+  
+  const [isCustomizeMode, setIsCustomizeMode] = useState(false);
+  const [showLayoutSettings, setShowLayoutSettings] = useState(false);
+
+  // Save dashboard layout to localStorage
+  const saveDashboardLayout = useCallback((layout: any) => {
+    if (user?.id) {
+      localStorage.setItem(`dashboard-layout-${user.id}`, JSON.stringify(layout));
+      setDashboardLayout(layout);
+    }
+  }, [user?.id]);
+
+  // Update widget settings
+  const updateWidgetSettings = (widgetKey: string, settings: any) => {
+    const newLayout = {
+      ...dashboardLayout,
+      widgets: {
+        ...dashboardLayout.widgets,
+        [widgetKey]: { ...dashboardLayout.widgets[widgetKey], ...settings }
+      }
+    };
+    saveDashboardLayout(newLayout);
+  };
+
+  // Update theme
+  const updateTheme = (theme: string) => {
+    const newLayout = { ...dashboardLayout, theme };
+    saveDashboardLayout(newLayout);
+  };
+
+  // Update layout mode
+  const updateLayoutMode = (layout: string) => {
+    const newLayout = { ...dashboardLayout, layout };
+    saveDashboardLayout(newLayout);
+  };
+
+  // Reset to default layout
+  const resetToDefaultLayout = () => {
+    const defaultLayout = {
+      theme: 'default',
+      layout: 'grid',
+      widgets: {
+        jobPostings: { enabled: true, position: 0, size: 'large' },
+        recentBookings: { enabled: true, position: 1, size: 'medium' },
+        quickActions: { enabled: true, position: 2, size: 'small' },
+        statistics: { enabled: true, position: 3, size: 'medium' },
+        findWorkers: { enabled: true, position: 4, size: 'large' },
+        profile: { enabled: true, position: 5, size: 'medium' }
+      },
+      preferences: {
+        showWelcomeMessage: true,
+        compactMode: false,
+        showNotifications: true,
+        autoRefresh: false
+      }
+    };
+    saveDashboardLayout(defaultLayout);
+  };
+
+  // Get enabled widgets sorted by position
+  const getEnabledWidgets = () => {
+    return Object.entries(dashboardLayout.widgets)
+      .filter(([, widget]: [string, any]) => widget.enabled)
+      .sort((a: any, b: any) => a[1].position - b[1].position);
+  };
 
 
   // Fetch user's bookings
@@ -1984,16 +2083,194 @@ export default function Dashboard() {
     return null;
   }
 
+  // Layout Settings Component
+  const LayoutSettingsPanel = () => (
+    <Dialog open={showLayoutSettings} onOpenChange={setShowLayoutSettings}>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Settings className="h-5 w-5" />
+            Customize Dashboard Layout
+          </DialogTitle>
+        </DialogHeader>
+        <div className="space-y-6">
+          {/* Theme Selection */}
+          <div>
+            <Label className="text-base font-semibold mb-3 block">Theme</Label>
+            <div className="grid grid-cols-3 gap-3">
+              {['default', 'compact', 'professional'].map((theme) => (
+                <Button
+                  key={theme}
+                  variant={dashboardLayout.theme === theme ? "default" : "outline"}
+                  className="h-20 flex flex-col items-center gap-2"
+                  onClick={() => updateTheme(theme)}
+                >
+                  <Palette className="h-6 w-6" />
+                  <span className="capitalize">{theme}</span>
+                </Button>
+              ))}
+            </div>
+          </div>
+
+          {/* Layout Mode */}
+          <div>
+            <Label className="text-base font-semibold mb-3 block">Layout Mode</Label>
+            <div className="grid grid-cols-3 gap-3">
+              {[
+                { key: 'grid', icon: Grid, label: 'Grid View' },
+                { key: 'list', icon: List, label: 'List View' },
+                { key: 'compact', icon: Minimize, label: 'Compact' }
+              ].map(({ key, icon: Icon, label }) => (
+                <Button
+                  key={key}
+                  variant={dashboardLayout.layout === key ? "default" : "outline"}
+                  className="h-20 flex flex-col items-center gap-2"
+                  onClick={() => updateLayoutMode(key)}
+                >
+                  <Icon className="h-6 w-6" />
+                  <span className="text-sm">{label}</span>
+                </Button>
+              ))}
+            </div>
+          </div>
+
+          {/* Widget Configuration */}
+          <div>
+            <Label className="text-base font-semibold mb-3 block">Widgets</Label>
+            <div className="space-y-3">
+              {Object.entries(dashboardLayout.widgets).map(([key, widget]: [string, any]) => (
+                <div key={key} className="flex items-center justify-between p-3 border rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      checked={widget.enabled}
+                      onChange={(e) => updateWidgetSettings(key, { enabled: e.target.checked })}
+                      className="rounded"
+                    />
+                    <span className="font-medium capitalize">
+                      {key.replace(/([A-Z])/g, ' $1').trim()}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Select
+                      value={widget.size}
+                      onValueChange={(size) => updateWidgetSettings(key, { size })}
+                    >
+                      <SelectTrigger className="w-24">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="small">Small</SelectItem>
+                        <SelectItem value="medium">Medium</SelectItem>
+                        <SelectItem value="large">Large</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Preferences */}
+          <div>
+            <Label className="text-base font-semibold mb-3 block">Preferences</Label>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="showWelcome">Show welcome message</Label>
+                <input
+                  id="showWelcome"
+                  type="checkbox"
+                  checked={dashboardLayout.preferences?.showWelcomeMessage}
+                  onChange={(e) => saveDashboardLayout({
+                    ...dashboardLayout,
+                    preferences: { ...dashboardLayout.preferences, showWelcomeMessage: e.target.checked }
+                  })}
+                  className="rounded"
+                />
+              </div>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="compactMode">Compact mode</Label>
+                <input
+                  id="compactMode"
+                  type="checkbox"
+                  checked={dashboardLayout.preferences?.compactMode}
+                  onChange={(e) => saveDashboardLayout({
+                    ...dashboardLayout,
+                    preferences: { ...dashboardLayout.preferences, compactMode: e.target.checked }
+                  })}
+                  className="rounded"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex justify-between pt-4 border-t">
+            <Button
+              variant="outline"
+              onClick={resetToDefaultLayout}
+              className="flex items-center gap-2"
+            >
+              <RotateCcw className="h-4 w-4" />
+              Reset to Default
+            </Button>
+            <Button onClick={() => setShowLayoutSettings(false)}>
+              Save Changes
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+
   return (
-    <div className="min-h-screen bg-muted/30 pt-20 pb-8">
+    <div className={`min-h-screen ${
+      dashboardLayout.theme === 'professional' 
+        ? 'bg-gray-50 dark:bg-gray-900' 
+        : dashboardLayout.theme === 'compact'
+        ? 'bg-white dark:bg-gray-800'
+        : 'bg-muted/30'
+    } pt-20 pb-8 ${isCustomizeMode ? 'ring-2 ring-blue-500 ring-offset-4' : ''}`}>
+      <LayoutSettingsPanel />
+      {/* Customization Mode Indicator */}
+      {isCustomizeMode && (
+        <div className="fixed top-24 left-1/2 transform -translate-x-1/2 bg-blue-600 text-white px-4 py-2 rounded-md shadow-lg z-50 flex items-center gap-2">
+          <Move className="h-4 w-4" />
+          Customize Mode Active - Click Layout button to modify settings
+        </div>
+      )}
       <div className="container mx-auto px-4">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">
-            Welcome back, {user.firstName}! <span className="text-lg font-medium text-primary">({user.id})</span>
-          </h1>
-          <p className="text-muted-foreground">
-            Manage your bookings and find trusted workers for your service needs.
-          </p>
+        <div className="mb-8 flex justify-between items-start">
+          <div>
+            {dashboardLayout.preferences?.showWelcomeMessage && (
+              <h1 className="text-3xl font-bold mb-2">
+                Welcome back, {user.firstName}! <span className="text-lg font-medium text-primary">({user.id})</span>
+              </h1>
+            )}
+            <p className="text-muted-foreground">
+              Manage your bookings and find trusted workers for your service needs.
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant={isCustomizeMode ? "default" : "outline"}
+              size="sm"
+              onClick={() => setIsCustomizeMode(!isCustomizeMode)}
+              className="flex items-center gap-2"
+            >
+              <Layout className="h-4 w-4" />
+              {isCustomizeMode ? "Exit Customize" : "Customize"}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowLayoutSettings(true)}
+              className="flex items-center gap-2"
+            >
+              <Settings className="h-4 w-4" />
+              Layout
+            </Button>
+          </div>
         </div>
 
         {/* Post a New Job Button */}
@@ -2017,8 +2294,12 @@ export default function Dashboard() {
           </Dialog>
         </div>
 
-        <Tabs defaultValue="bookings" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 bg-muted">
+        <Tabs defaultValue="bookings" className={`space-y-6 ${dashboardLayout.preferences?.compactMode ? 'space-y-3' : 'space-y-6'}`}>
+          <TabsList className={`grid w-full ${
+            dashboardLayout.layout === 'compact' ? 'grid-cols-3' : 
+            dashboardLayout.layout === 'list' ? 'grid-cols-2' : 
+            'grid-cols-4'
+          } bg-muted`}>
             <TabsTrigger 
               value="bookings" 
               className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
@@ -2047,13 +2328,31 @@ export default function Dashboard() {
 
           {/* My Bookings Tab */}
           <TabsContent value="bookings" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Calendar className="h-5 w-5" />
-                  <span>My Service Bookings</span>
-                </CardTitle>
-              </CardHeader>
+            {/* Widget Container with Customization Support */}
+            <div className={`${
+              dashboardLayout.layout === 'list' ? 'space-y-4' :
+              dashboardLayout.layout === 'compact' ? 'grid grid-cols-1 gap-4' :
+              'grid grid-cols-1 lg:grid-cols-2 gap-6'
+            }`}>
+              {/* Bookings Widget */}
+              <Card className={`${
+                isCustomizeMode ? 'border-2 border-dashed border-blue-400 hover:border-blue-600' : ''
+              } ${dashboardLayout.widgets.recentBookings?.size === 'small' ? 'col-span-1' : 
+                   dashboardLayout.widgets.recentBookings?.size === 'large' ? 'lg:col-span-2' : ''}`}>
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <Calendar className="h-5 w-5" />
+                      <span>My Service Bookings</span>
+                    </div>
+                    {isCustomizeMode && (
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Move className="h-4 w-4" />
+                        <span className="text-xs">Widget: Bookings</span>
+                      </div>
+                    )}
+                  </CardTitle>
+                </CardHeader>
               <CardContent>
                 {bookingsLoading ? (
                   <div className="space-y-4">
@@ -2146,6 +2445,7 @@ export default function Dashboard() {
                 )}
               </CardContent>
             </Card>
+            </div>
           </TabsContent>
 
           {/* Find Workers Tab */}
@@ -2834,6 +3134,97 @@ export default function Dashboard() {
                   )}
                 </CardContent>
               </Card>
+              
+              {/* Quick Actions Widget - Only show if enabled */}
+              {dashboardLayout.widgets.quickActions?.enabled && (
+                <Card className={`${
+                  isCustomizeMode ? 'border-2 border-dashed border-blue-400 hover:border-blue-600' : ''
+                } ${dashboardLayout.widgets.quickActions?.size === 'small' ? 'col-span-1' : 
+                     dashboardLayout.widgets.quickActions?.size === 'large' ? 'lg:col-span-2' : ''}`}>
+                  <CardHeader>
+                    <CardTitle className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <Zap className="h-5 w-5" />
+                        <span>Quick Actions</span>
+                      </div>
+                      {isCustomizeMode && (
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Move className="h-4 w-4" />
+                          <span className="text-xs">Widget: Quick Actions</span>
+                        </div>
+                      )}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-2 gap-3">
+                      <Button 
+                        variant="outline" 
+                        className="h-20 flex flex-col items-center gap-2"
+                        onClick={() => setIsJobFormOpen(true)}
+                      >
+                        <Plus className="h-6 w-6" />
+                        <span className="text-sm">Post Job</span>
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        className="h-20 flex flex-col items-center gap-2"
+                        onClick={() => {
+                          const searchTab = document.querySelector('[value="search"]') as HTMLElement;
+                          if (searchTab) searchTab.click();
+                        }}
+                      >
+                        <Search className="h-6 w-6" />
+                        <span className="text-sm">Find Workers</span>
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+              
+              {/* Dashboard Statistics Widget */}
+              {dashboardLayout.widgets.statistics?.enabled && bookings && (
+                <Card className={`${
+                  isCustomizeMode ? 'border-2 border-dashed border-blue-400 hover:border-blue-600' : ''
+                } ${dashboardLayout.widgets.statistics?.size === 'small' ? 'col-span-1' : 
+                     dashboardLayout.widgets.statistics?.size === 'large' ? 'lg:col-span-2' : ''}`}>
+                  <CardHeader>
+                    <CardTitle className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <BarChart className="h-5 w-5" />
+                        <span>Dashboard Stats</span>
+                      </div>
+                      {isCustomizeMode && (
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Move className="h-4 w-4" />
+                          <span className="text-xs">Widget: Statistics</span>
+                        </div>
+                      )}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-3 gap-4 text-center">
+                      <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                        <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                          {bookings.length}
+                        </div>
+                        <div className="text-sm text-muted-foreground">Total Bookings</div>
+                      </div>
+                      <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                        <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+                          {bookings.filter((b: any) => b.status === 'completed').length}
+                        </div>
+                        <div className="text-sm text-muted-foreground">Completed</div>
+                      </div>
+                      <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
+                        <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
+                          {bookings.filter((b: any) => ['pending', 'accepted', 'in_progress'].includes(b.status)).length}
+                        </div>
+                        <div className="text-sm text-muted-foreground">Active</div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </div>
           </TabsContent>
 
