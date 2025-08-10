@@ -13,6 +13,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useLanguage } from "@/components/LanguageProvider";
 import { Calendar, MapPin, DollarSign, Clock, Users, Plus } from "lucide-react";
 import type { District, ServiceCategory, JobPosting, Bid } from "@shared/schema";
+import { normalizeServiceName } from "@shared/serviceUtils";
 
 const PostJob = () => {
   const { user } = useAuth();
@@ -56,12 +57,18 @@ const PostJob = () => {
 
   // Create job posting mutation
   const createJobMutation = useMutation({
-    mutationFn: (data: any) => 
-      fetch("/api/job-postings", {
+    mutationFn: (data: any) => {
+      // Normalize service category before sending
+      const normalizedData = {
+        ...data,
+        serviceCategory: normalizeServiceName(data.serviceCategory)
+      };
+      return fetch("/api/job-postings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      }).then(res => res.json()),
+        body: JSON.stringify(normalizedData),
+      }).then(res => res.json());
+    },
     onSuccess: () => {
       toast({
         title: "Success",

@@ -352,12 +352,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         status: "pending", // Set default status for workers
       });
       
-      // Create worker profile
+      // Create worker profile with normalized service names
+      const { normalizeServiceName } = await import('../shared/serviceUtils.js');
       await storage.createWorkerProfile({
         userId: user.id,
         aadhaarNumber: userData.aadhaarNumber,
         aadhaarVerified: userData.aadhaarVerified || false,
-        primaryService: userData.primaryService,
+        primaryService: normalizeServiceName(userData.primaryService || ''),
         experienceYears: userData.experienceYears,
         hourlyRate: userData.hourlyRate.toString(),
         serviceDistricts: userData.serviceDistricts,
@@ -1655,17 +1656,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
           if (worker && worker.role === 'worker') {
             const workerProfile = await storage.getWorkerProfile(workerId as string);
             if (workerProfile) {
+              // Import service utility once before filtering
+              const { areServicesEquivalent } = await import('../shared/serviceUtils.js');
+              
               // Filter by worker's state, districts, and primary service
               jobs = jobs.filter(job => {
                 const matchesState = job.state === worker.state;
                 const matchesDistrict = (workerProfile.serviceDistricts as string[]).includes(job.district);
-                // Match service with more flexible matching (painter matches Painting, plumber matches Plumbing, etc.)
-                const jobService = job.serviceCategory.toLowerCase();
-                const workerService = workerProfile.primaryService.toLowerCase();
-                const matchesService = jobService.includes(workerService) || workerService.includes(jobService) || 
-                                     (jobService === 'painting' && workerService === 'painter') ||
-                                     (jobService === 'plumbing' && workerService === 'plumber') ||
-                                     (jobService === 'electrical' && workerService === 'electrician');
+                // Use the service utility for consistent matching
+                const matchesService = areServicesEquivalent(job.serviceCategory, workerProfile.primaryService);
                 
                 return matchesState && matchesDistrict && matchesService;
               });
