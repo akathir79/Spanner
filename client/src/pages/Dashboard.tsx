@@ -2643,8 +2643,7 @@ export default function Dashboard() {
                                   <div className={`flex items-center gap-1.5 px-2 py-1 rounded border text-xs ${
                                     job.budgetMin && job.budgetMax && Number(job.budgetMin) > 0 && Number(job.budgetMax) > 0 ? 'text-emerald-400 bg-emerald-900/20 border-emerald-500/30' : 'text-slate-400 bg-slate-700/30 border-slate-500/30'
                                   }`}>
-                                    <span className="font-semibold">₹</span>
-                                    <span className="font-medium">
+                                    <span className="font-bold text-white">
                                       {job.budgetMin && job.budgetMax && Number(job.budgetMin) > 0 && Number(job.budgetMax) > 0 ? `₹${job.budgetMin} - ₹${job.budgetMax}` : 'Negotiable'}
                                     </span>
                                   </div>
