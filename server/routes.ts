@@ -105,10 +105,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const data = JSON.parse(fs.readFileSync(dataPath, 'utf8'));
       
-      // Find the state in the authentic government data
-      const stateData = data.states.find((state: any) => 
-        state.state.toLowerCase() === stateName.toLowerCase()
-      );
+      // Handle JSON structure - data.states is an object with state names as keys
+      let stateData;
+      if (data.states) {
+        // Check if the state exists in the states object
+        const stateKey = Object.keys(data.states).find(key => 
+          key.toLowerCase() === stateName.toLowerCase()
+        );
+        if (stateKey) {
+          stateData = { districts: data.states[stateKey].districts };
+        }
+      }
       
       if (stateData && stateData.districts) {
         const districts = stateData.districts.map((districtName: string) => ({

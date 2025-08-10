@@ -14,7 +14,7 @@ interface State {
 }
 
 interface StatesDistrictsData {
-  states: State[];
+  states: { [stateName: string]: { districts: string[]; serviceTypes?: string[] } };
 }
 
 // Default service types to initialize when states don't have any
@@ -54,9 +54,9 @@ export class StatesDistrictsManager {
       // Initialize serviceTypes for states that don't have them
       let updated = false;
       if (this.data) {
-        for (const state of this.data.states) {
-          if (!state.serviceTypes) {
-            state.serviceTypes = [...DEFAULT_SERVICE_TYPES];
+        for (const [stateName, stateData] of Object.entries(this.data.states)) {
+          if (!stateData.serviceTypes) {
+            stateData.serviceTypes = [...DEFAULT_SERVICE_TYPES];
             updated = true;
           }
         }
@@ -97,18 +97,18 @@ export class StatesDistrictsManager {
 
     let updated = false;
     
-    for (const state of this.data.states) {
-      if (!state.serviceTypes) {
-        state.serviceTypes = [...DEFAULT_SERVICE_TYPES];
+    for (const [stateName, stateData] of Object.entries(this.data.states)) {
+      if (!stateData.serviceTypes) {
+        stateData.serviceTypes = [...DEFAULT_SERVICE_TYPES];
       }
       
       // Check if service type already exists (case-insensitive)
-      const exists = state.serviceTypes.some(
+      const exists = stateData.serviceTypes.some(
         existing => existing.toLowerCase() === serviceType.toLowerCase()
       );
       
       if (!exists) {
-        state.serviceTypes.push(serviceType);
+        stateData.serviceTypes.push(serviceType);
         updated = true;
       }
     }
@@ -128,22 +128,22 @@ export class StatesDistrictsManager {
       throw new Error('Failed to load states data');
     }
 
-    const state = this.data.states.find(s => s.state === stateName);
-    if (!state) {
+    const stateData = this.data.states[stateName];
+    if (!stateData) {
       throw new Error(`State "${stateName}" not found`);
     }
 
-    if (!state.serviceTypes) {
-      state.serviceTypes = [...DEFAULT_SERVICE_TYPES];
+    if (!stateData.serviceTypes) {
+      stateData.serviceTypes = [...DEFAULT_SERVICE_TYPES];
     }
 
     // Check if service type already exists (case-insensitive)
-    const exists = state.serviceTypes.some(
+    const exists = stateData.serviceTypes.some(
       existing => existing.toLowerCase() === serviceType.toLowerCase()
     );
 
     if (!exists) {
-      state.serviceTypes.push(serviceType);
+      stateData.serviceTypes.push(serviceType);
       await this.saveData();
       console.log(`Added service type "${serviceType}" to state "${stateName}"`);
     } else {
@@ -158,8 +158,8 @@ export class StatesDistrictsManager {
       return DEFAULT_SERVICE_TYPES;
     }
 
-    const state = this.data.states.find(s => s.state === stateName);
-    return state?.serviceTypes || DEFAULT_SERVICE_TYPES;
+    const stateData = this.data.states[stateName];
+    return stateData?.serviceTypes || DEFAULT_SERVICE_TYPES;
   }
 
   async getAllServiceTypes(): Promise<string[]> {
@@ -172,9 +172,9 @@ export class StatesDistrictsManager {
     // Get unique service types across all states
     const allServiceTypes = new Set<string>();
     
-    for (const state of this.data.states) {
-      if (state.serviceTypes) {
-        state.serviceTypes.forEach(serviceType => {
+    for (const [stateName, stateData] of Object.entries(this.data.states)) {
+      if (stateData.serviceTypes) {
+        stateData.serviceTypes.forEach(serviceType => {
           allServiceTypes.add(serviceType);
         });
       }

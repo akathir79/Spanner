@@ -211,7 +211,7 @@ export function VoiceAssistant({
     const input = userInput.toLowerCase().trim();
     console.log('🔍 findState called with:', input);
     
-    const allStates = statesDistrictsData.states.map(s => s.state);
+    const allStates = Object.keys(statesDistrictsData.states);
     
     // First try exact match
     for (const state of allStates) {
@@ -243,13 +243,13 @@ export function VoiceAssistant({
     
     if (selectedState) {
       // Search only in the selected state
-      const stateData = statesDistrictsData.states.find(s => s.state === selectedState);
-      if (stateData) {
+      const stateData = statesDistrictsData.states[selectedState as keyof typeof statesDistrictsData.states];
+      if (stateData && stateData.districts) {
         districtsToSearch = stateData.districts;
       }
     } else {
       // Search across all districts
-      districtsToSearch = statesDistrictsData.states.flatMap(s => s.districts);
+      districtsToSearch = Object.values(statesDistrictsData.states).flatMap(state => state.districts);
     }
     
     // First try exact match
@@ -620,15 +620,22 @@ export function VoiceAssistant({
 
   return (
     <>
-      <Button
-        type="button"
-        variant="outline"
-        className={`text-purple-600 bg-purple-50 hover:bg-purple-100 border-purple-300 hover:border-purple-400 shadow-sm transition-all duration-200 ${className}`}
-        onClick={startConversation}
-        title="🎤 Voice Assistant - Interactive conversation in English"
-      >
-        <Volume2 className="h-5 w-5" />
-      </Button>
+      <div className="relative">
+        {/* Floating hint text with glow animation */}
+        <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 text-sm text-purple-600 font-medium animate-glow whitespace-nowrap pointer-events-none">
+          🎤 Voice Assistant
+        </div>
+        
+        <Button
+          type="button"
+          variant="outline"
+          className={`text-purple-600 bg-gradient-to-r from-purple-50 to-blue-50 hover:from-purple-100 hover:to-blue-100 border-purple-300 hover:border-purple-400 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 animate-breathe ${className}`}
+          onClick={startConversation}
+          title="🎤 Voice Assistant - Interactive conversation in English"
+        >
+          <Volume2 className="h-5 w-5 animate-pulse-custom" />
+        </Button>
+      </div>
 
       <Dialog open={isOpen} onOpenChange={closeConversation}>
         <DialogContent className="max-w-md" aria-describedby="voice-assistant-description">
