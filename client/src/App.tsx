@@ -10,7 +10,7 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import Home from "@/pages/Home";
 
-import SimpleDashboard from "@/pages/SimpleDashboard";
+import Dashboard from "@/pages/Dashboard";
 import WorkerDashboard from "@/pages/WorkerDashboard";
 import AdminDashboard from "@/pages/AdminDashboard";
 import ClientManagement from "@/pages/ClientManagement";
@@ -32,7 +32,7 @@ function Router() {
       <main className="flex-1">
         <Switch>
           <Route path="/" component={Home} />
-          <Route path="/dashboard" component={SimpleDashboard} />
+          <Route path="/dashboard" component={Dashboard} />
           <Route path="/worker-dashboard" component={WorkerDashboard} />
           <Route path="/admin-dashboard" component={AdminDashboard} />
           <Route path="/admin" component={AdminDashboard} />
