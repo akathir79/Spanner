@@ -768,7 +768,7 @@ export default function WorkerDashboard() {
     completedBookings: bookings?.filter((b: any) => b.status === "completed").length || 0,
     totalEarnings: bookings?.filter((b: any) => b.status === "completed")
       .reduce((sum: number, b: any) => sum + (parseFloat(b.totalAmount) || 0), 0) || 0,
-    rating: workerProfile?.workerProfile?.rating || 0,
+    rating: parseFloat(workerProfile?.workerProfile?.rating) || 0,
     totalJobs: workerProfile?.workerProfile?.totalJobs || 0,
   };
 
