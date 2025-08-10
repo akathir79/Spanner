@@ -681,6 +681,57 @@
     animation: zoomRotateOscillate 4s ease-in-out infinite;
   }
 
+  @keyframes colorfulBubble1 {
+    0%, 100% {
+      transform: translateY(0) scale(0.8);
+      background: rgba(59, 130, 246, 0.3);
+      opacity: 0.6;
+    }
+    50% {
+      transform: translateY(-20px) scale(1.2);
+      background: rgba(147, 51, 234, 0.4);
+      opacity: 0.8;
+    }
+  }
+
+  @keyframes colorfulBubble2 {
+    0%, 100% {
+      transform: translateY(0) scale(0.6);
+      background: rgba(236, 72, 153, 0.3);
+      opacity: 0.5;
+    }
+    50% {
+      transform: translateY(-25px) scale(1.0);
+      background: rgba(34, 197, 94, 0.4);
+      opacity: 0.7;
+    }
+  }
+
+  @keyframes colorfulBubble3 {
+    0%, 100% {
+      transform: translateY(0) scale(0.7);
+      background: rgba(251, 146, 60, 0.3);
+      opacity: 0.4;
+    }
+    50% {
+      transform: translateY(-15px) scale(1.1);
+      background: rgba(168, 85, 247, 0.4);
+      opacity: 0.6;
+    }
+  }
+
+  .animate-bubble-1 {
+    animation: colorfulBubble1 3s ease-in-out infinite;
+  }
+
+  .animate-bubble-2 {
+    animation: colorfulBubble2 3.5s ease-in-out infinite 0.5s;
+  }
+
+  .animate-bubble-3 {
+    animation: colorfulBubble3 2.8s ease-in-out infinite 1s;
+  }
+
   /* Print utilities */
   @media print {
     .print-hidden {

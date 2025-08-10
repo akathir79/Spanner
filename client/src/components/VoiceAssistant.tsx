@@ -621,6 +621,16 @@ export function VoiceAssistant({
   return (
     <>
       <div className="relative">
+        {/* Colorful Bubbling Effects */}
+        <div className="absolute -inset-8 pointer-events-none">
+          <div className="absolute top-2 left-2 w-3 h-3 rounded-full animate-bubble-1"></div>
+          <div className="absolute top-1 right-3 w-2 h-2 rounded-full animate-bubble-2"></div>
+          <div className="absolute bottom-1 left-1 w-2.5 h-2.5 rounded-full animate-bubble-3"></div>
+          <div className="absolute top-3 right-1 w-1.5 h-1.5 rounded-full animate-bubble-1" style={{animationDelay: '1.5s'}}></div>
+          <div className="absolute bottom-2 right-2 w-2 h-2 rounded-full animate-bubble-2" style={{animationDelay: '0.8s'}}></div>
+          <div className="absolute top-0 left-4 w-1 h-1 rounded-full animate-bubble-3" style={{animationDelay: '2s'}}></div>
+        </div>
+
         {/* Floating hint text with glow animation */}
         <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 text-sm text-gray-300 font-medium animate-glow whitespace-nowrap pointer-events-none">
           🎤 Voice Assistant
@@ -629,7 +639,7 @@ export function VoiceAssistant({
         <Button
           type="button"
           variant="outline"
-          className={`text-gray-100 bg-gradient-to-r from-gray-800 to-slate-900 hover:from-gray-700 hover:to-slate-800 border-gray-600 hover:border-gray-500 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 animate-breathe animate-zoom-rotate-oscillate ${className}`}
+          className={`relative z-10 text-gray-100 bg-gradient-to-r from-gray-800 to-slate-900 hover:from-gray-700 hover:to-slate-800 border-gray-600 hover:border-gray-500 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 animate-breathe animate-zoom-rotate-oscillate ${className}`}
           onClick={startConversation}
           title="🎤 Voice Assistant - Interactive conversation in English"
         >
