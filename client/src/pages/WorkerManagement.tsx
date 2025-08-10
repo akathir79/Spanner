@@ -1185,11 +1185,11 @@ export default function WorkerManagement() {
                                         <span className="truncate">{worker.email}</span>
                                       </div>
                                     )}
-                                    <div className="flex items-center gap-1 mt-2">
-                                      <Phone className="w-3 h-3 text-blue-600 cursor-pointer" onClick={() => handleCallWorker(worker)} />
-                                      <MessageSquare className="w-3 h-3 text-green-600 cursor-pointer" onClick={() => handleWhatsAppWorker(worker)} />
-                                      <Mail className="w-3 h-3 text-gray-600 cursor-pointer" onClick={() => copyToClipboard(worker.email || '', "Email")} />
-                                      <Send className="w-3 h-3 text-purple-600 cursor-pointer" onClick={() => handleSendMessage(worker)} />
+                                    <div className="flex items-center gap-2 mt-2">
+                                      <Phone className="w-4 h-4 text-blue-600 hover:text-blue-700 cursor-pointer" onClick={() => handleCallWorker(worker)} />
+                                      <MessageSquare className="w-4 h-4 text-green-600 hover:text-green-700 cursor-pointer" onClick={() => handleWhatsAppWorker(worker)} />
+                                      <Mail className="w-4 h-4 text-red-600 hover:text-red-700 cursor-pointer" onClick={() => copyToClipboard(worker.email || '', "Email")} />
+                                      <Send className="w-4 h-4 text-purple-600 hover:text-purple-700 cursor-pointer" onClick={() => handleSendMessage(worker)} />
                                     </div>
                                   </div>
                                 </TableCell>
@@ -1703,11 +1703,11 @@ export default function WorkerManagement() {
                                         <span className="truncate">{worker.email}</span>
                                       </div>
                                     )}
-                                    <div className="flex items-center gap-1 mt-2">
-                                      <Phone className="w-3 h-3 text-blue-600 cursor-pointer" onClick={() => handleCallWorker(worker)} />
-                                      <MessageSquare className="w-3 h-3 text-green-600 cursor-pointer" onClick={() => handleWhatsAppWorker(worker)} />
-                                      <Mail className="w-3 h-3 text-gray-600 cursor-pointer" onClick={() => copyToClipboard(worker.email || '', "Email")} />
-                                      <Send className="w-3 h-3 text-purple-600 cursor-pointer" onClick={() => handleSendMessage(worker)} />
+                                    <div className="flex items-center gap-2 mt-2">
+                                      <Phone className="w-4 h-4 text-blue-600 hover:text-blue-700 cursor-pointer" onClick={() => handleCallWorker(worker)} />
+                                      <MessageSquare className="w-4 h-4 text-green-600 hover:text-green-700 cursor-pointer" onClick={() => handleWhatsAppWorker(worker)} />
+                                      <Mail className="w-4 h-4 text-red-600 hover:text-red-700 cursor-pointer" onClick={() => copyToClipboard(worker.email || '', "Email")} />
+                                      <Send className="w-4 h-4 text-purple-600 hover:text-purple-700 cursor-pointer" onClick={() => handleSendMessage(worker)} />
                                     </div>
                                   </div>
                                 </TableCell>
