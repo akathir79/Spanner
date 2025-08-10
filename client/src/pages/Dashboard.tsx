@@ -765,7 +765,7 @@ const BankDetailsCard = ({ user, onUpdate }: { user: any, onUpdate: () => void }
 };
 
 // Smart Voice Job Posting - Multi-Language with Follow-up Questions
-const VoiceJobPostingForm = ({ onClose }: { onClose?: () => void }) => {
+const VoiceJobPostingForm = ({ onClose, autoStart = false }: { onClose?: () => void; autoStart?: boolean }) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -798,6 +798,19 @@ const VoiceJobPostingForm = ({ onClose }: { onClose?: () => void }) => {
     deadline: "",
     requirements: [] as string[]
   });
+
+  // Auto-start recording when component mounts if autoStart is true
+  useEffect(() => {
+    if (autoStart && currentStep === 'initial') {
+      // Welcome message and auto-start recording
+      setTimeout(() => {
+        speak("Welcome! I'm here to help you post your job. Please tell me about the work you need done - what service, where, and your budget.", 'english');
+        setTimeout(() => {
+          startListening();
+        }, 4000); // Wait for welcome message to finish
+      }, 500);
+    }
+  }, [autoStart]);
 
   // Enhanced language detection with comprehensive Indian language support
   const languagePatterns = {
@@ -1177,10 +1190,11 @@ const VoiceJobPostingForm = ({ onClose }: { onClose?: () => void }) => {
     // Stop audio recording
     stopAudioRecording();
     
-    if (voiceTranscript) {
-      // Process the recorded audio with Bhashini API
+    // Always process audio after recording (even without speech recognition transcript)
+    // The Vakyansh API will handle the actual speech-to-text
+    setTimeout(() => {
       processVoiceInput();
-    }
+    }, 1000); // Small delay to ensure audio recording is complete
   };
 
   // Process voice input using Vakyansh API
@@ -3035,7 +3049,10 @@ export default function Dashboard() {
                   Speak naturally to create your job posting with AI assistance
                 </p>
               </DialogHeader>
-              <VoiceJobPostingForm onClose={() => setIsVoiceJobFormOpen(false)} />
+              <VoiceJobPostingForm 
+                onClose={() => setIsVoiceJobFormOpen(false)} 
+                autoStart={true}
+              />
             </DialogContent>
           </Dialog>
         </div>
