@@ -632,7 +632,7 @@ export default function WorkerManagement() {
   // Worker approval mutation
   const approveWorkerMutation = useMutation({
     mutationFn: async (workerId: string) => {
-      return await apiRequest(`/api/admin/approve-worker/${workerId}`, "POST", {});
+      return await apiRequest("POST", `/api/admin/approve-worker/${workerId}`, {});
     },
     onSuccess: (_, workerId) => {
       toast({
@@ -653,7 +653,7 @@ export default function WorkerManagement() {
   // Worker rejection mutation
   const rejectWorkerMutation = useMutation({
     mutationFn: async (workerId: string) => {
-      return await apiRequest(`/api/admin/reject-worker/${workerId}`, "DELETE", {});
+      return await apiRequest("DELETE", `/api/admin/reject-worker/${workerId}`, {});
     },
     onSuccess: (_, workerId) => {
       toast({
@@ -690,7 +690,7 @@ export default function WorkerManagement() {
     setIsVerifying(true);
     try {
       const endpoint = shouldApprove ? "approve-worker" : "verify-worker";
-      const response = await apiRequest(`/api/admin/${endpoint}/${workerToVerify.id}`, "POST", { comment: verificationComment });
+      const response = await apiRequest("POST", `/api/admin/${endpoint}/${workerToVerify.id}`, { comment: verificationComment });
 
       if (response) {
         await queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
