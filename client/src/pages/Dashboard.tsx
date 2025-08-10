@@ -779,6 +779,10 @@ const VoiceJobPostingForm = ({ onClose, autoStart = false }: { onClose?: () => v
   const [recognition, setRecognition] = useState<any>(null);
   const [recordingTime, setRecordingTime] = useState(0);
   const [timerInterval, setTimerInterval] = useState<NodeJS.Timeout | null>(null);
+  const [audioLevels, setAudioLevels] = useState<number[]>([]);
+  const [currentAudioLevel, setCurrentAudioLevel] = useState(0);
+  const [audioContext, setAudioContext] = useState<AudioContext | null>(null);
+  const [analyser, setAnalyser] = useState<AnalyserNode | null>(null);
   const [currentStep, setCurrentStep] = useState('initial'); // 'initial', 'follow-up', 'language-choice', 'completed'
   const [missingFields, setMissingFields] = useState<string[]>([]);
   const [followUpQuestion, setFollowUpQuestion] = useState('');
@@ -1103,6 +1107,9 @@ const VoiceJobPostingForm = ({ onClose, autoStart = false }: { onClose?: () => v
       recorder.start(1000); // Collect data every second
       setMediaRecorder(recorder);
       
+      // Setup audio analysis for visualizer
+      setupAudioAnalysis(stream);
+      
       return recorder;
     } catch (error) {
       console.error('Error starting audio recording:', error);
@@ -1128,11 +1135,58 @@ const VoiceJobPostingForm = ({ onClose, autoStart = false }: { onClose?: () => v
     }
   };
 
+  // Setup audio analysis for real-time visualizer
+  const setupAudioAnalysis = (stream: MediaStream) => {
+    try {
+      const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const source = audioCtx.createMediaStreamSource(stream);
+      const analyserNode = audioCtx.createAnalyser();
+      
+      analyserNode.fftSize = 256;
+      source.connect(analyserNode);
+      
+      setAudioContext(audioCtx);
+      setAnalyser(analyserNode);
+      
+      // Start audio level monitoring
+      const bufferLength = analyserNode.frequencyBinCount;
+      const dataArray = new Uint8Array(bufferLength);
+      
+      const updateAudioLevel = () => {
+        if (analyserNode && isListening) {
+          analyserNode.getByteFrequencyData(dataArray);
+          
+          // Calculate average audio level
+          let sum = 0;
+          for (let i = 0; i < bufferLength; i++) {
+            sum += dataArray[i];
+          }
+          const average = sum / bufferLength;
+          
+          setCurrentAudioLevel(average);
+          requestAnimationFrame(updateAudioLevel);
+        }
+      };
+      
+      updateAudioLevel();
+    } catch (error) {
+      console.error('Error setting up audio analysis:', error);
+    }
+  };
+
   const stopAudioRecording = () => {
     if (mediaRecorder && mediaRecorder.state !== 'inactive') {
       mediaRecorder.stop();
       mediaRecorder.stream.getTracks().forEach(track => track.stop());
     }
+    
+    // Clean up audio analysis
+    if (audioContext && audioContext.state !== 'closed') {
+      audioContext.close();
+      setAudioContext(null);
+    }
+    setAnalyser(null);
+    setCurrentAudioLevel(0);
   };
 
   // Check for missing fields and generate follow-up questions
@@ -1316,7 +1370,16 @@ const VoiceJobPostingForm = ({ onClose, autoStart = false }: { onClose?: () => v
     onSuccess: () => {
       toast({ title: "Success", description: "Job posted successfully!" });
       queryClient.invalidateQueries({ queryKey: ['/api/job-postings'] });
-      onClose?.();
+      // Clean up audio context before closing
+    if (audioContext && audioContext.state !== 'closed') {
+      audioContext.close();
+    }
+    setAudioContext(null);
+    setAnalyser(null);
+    setCurrentAudioLevel(0);
+    setAudioLevels([]);
+    
+    onClose?.();
     },
     onError: () => {
       toast({ title: "Error", description: "Failed to post job. Please try again.", variant: "destructive" });
@@ -1466,29 +1529,106 @@ const VoiceJobPostingForm = ({ onClose, autoStart = false }: { onClose?: () => v
                 Start Recording
               </Button>
             ) : (
-              <div className="text-center space-y-4">
+              <div className="text-center space-y-6">
+                {/* Interactive Recording Visualizer */}
+                <div className="bg-gradient-to-br from-red-50 to-pink-50 p-6 rounded-xl border-2 border-red-200">
+                  {/* Recording Timer */}
+                  <div className="flex items-center justify-center gap-3 mb-4">
+                    <div className="relative">
+                      <div className="w-4 h-4 bg-red-500 rounded-full animate-pulse"></div>
+                      <div className="absolute inset-0 w-4 h-4 bg-red-500 rounded-full animate-ping"></div>
+                    </div>
+                    <span className="text-2xl font-bold text-red-700 font-mono">
+                      {formatTime(recordingTime)}
+                    </span>
+                    <div className="text-sm text-red-600 bg-red-100 px-2 py-1 rounded-full">
+                      RECORDING
+                    </div>
+                  </div>
+
+                  {/* Animated Waveform Visualizer */}
+                  <div className="flex items-center justify-center gap-1 h-16 mb-4">
+                    {Array.from({ length: 20 }, (_, i) => (
+                      <div
+                        key={i}
+                        className="bg-gradient-to-t from-red-600 to-red-400 rounded-full transition-all duration-150"
+                        style={{
+                          width: '4px',
+                          height: `${Math.max(8, (Math.sin((recordingTime * 0.5) + i * 0.5) * 20) + currentAudioLevel * 0.5 + Math.random() * 10)}px`,
+                          animationDelay: `${i * 50}ms`
+                        }}
+                      />
+                    ))}
+                  </div>
+
+                  {/* Audio Level Indicator */}
+                  <div className="mb-4">
+                    <div className="flex items-center gap-2 justify-center mb-2">
+                      <Volume2 className="h-4 w-4 text-red-600" />
+                      <span className="text-sm text-red-700 font-medium">Audio Level</span>
+                    </div>
+                    <div className="w-full bg-red-100 rounded-full h-2">
+                      <div 
+                        className="bg-gradient-to-r from-red-500 to-red-600 h-2 rounded-full transition-all duration-150" 
+                        style={{ width: `${Math.min(100, currentAudioLevel)}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Recording Instructions */}
+                  <div className="text-center mb-4">
+                    <p className="text-sm text-red-700 mb-2 font-medium">
+                      🎤 Speak clearly about your job requirements
+                    </p>
+                    <p className="text-xs text-red-600">
+                      Mention: Service type • Location • Budget • Timeline
+                    </p>
+                  </div>
+                </div>
+
+                {/* Stop Recording Button */}
                 <Button
                   onClick={stopListening}
                   size="lg"
                   variant="destructive"
-                  className="px-8 py-4 rounded-full"
+                  className="px-8 py-4 rounded-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800"
                 >
                   <Square className="h-5 w-5 mr-2" />
-                  Stop Recording ({formatTime(recordingTime)})
+                  Stop Recording
                 </Button>
-                <div className="flex items-center justify-center gap-2">
-                  <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
-                  <span className="text-sm text-red-600">Recording in progress...</span>
-                </div>
               </div>
             )}
           </div>
 
           {isProcessing && (
-            <div className="text-center space-y-2">
-              <div className="inline-flex items-center gap-2">
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500"></div>
-                <span className="text-blue-600">Processing your voice...</span>
+            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-6 rounded-xl border-2 border-blue-200">
+              {/* Processing Animation */}
+              <div className="text-center space-y-4">
+                <div className="flex items-center justify-center gap-3">
+                  <div className="animate-spin rounded-full h-6 w-6 border-4 border-blue-500 border-t-transparent"></div>
+                  <span className="text-lg font-semibold text-blue-700">Processing your voice...</span>
+                </div>
+                
+                {/* Processing Steps Visualization */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="w-2 h-2 bg-blue-600 rounded-full animate-pulse"></div>
+                    <span className="text-sm text-blue-600">Analyzing speech patterns</span>
+                  </div>
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="w-2 h-2 bg-blue-600 rounded-full animate-pulse" style={{ animationDelay: '0.5s' }}></div>
+                    <span className="text-sm text-blue-600">Detecting language</span>
+                  </div>
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="w-2 h-2 bg-blue-600 rounded-full animate-pulse" style={{ animationDelay: '1s' }}></div>
+                    <span className="text-sm text-blue-600">Extracting job details</span>
+                  </div>
+                </div>
+
+                {/* Processing Progress Bar */}
+                <div className="w-full bg-blue-100 rounded-full h-2">
+                  <div className="bg-gradient-to-r from-blue-500 to-blue-600 h-2 rounded-full animate-pulse" style={{ width: '60%' }} />
+                </div>
               </div>
             </div>
           )}
