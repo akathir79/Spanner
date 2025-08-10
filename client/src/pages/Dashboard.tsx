@@ -42,6 +42,7 @@ import {
 import { useLocation } from "wouter";
 import LocationViewer from "@/components/LocationViewer";
 import ClientBankDetailsForm from "@/components/ClientBankDetailsForm";
+import statesDistrictsData from "@shared/states-districts.json";
 // Services and districts are now fetched dynamically from database
 
 // Bank Info interface for IFSC API
@@ -856,7 +857,11 @@ const JobPostingForm = () => {
           const { latitude, longitude } = position.coords;
           
           // Use real-time district detection
-          const nearbyDistrict = await findNearestDistrict(latitude, longitude, districts as any);
+          // Convert statesDistrictsData to districts format for location functions
+          const allDistricts = statesDistrictsData.states ? Object.values(statesDistrictsData.states).flatMap((stateData: any) => 
+            stateData.districts.map((district: string) => ({ id: district, name: district }))
+          ) : [];
+          const nearbyDistrict = await findNearestDistrict(latitude, longitude, allDistricts);
           
           if (nearbyDistrict) {
             setFormData(prev => ({ ...prev, districtId: nearbyDistrict.id }));
@@ -1086,8 +1091,12 @@ const JobPostingForm = () => {
               >
                 {formData.districtId
                   ? (() => {
-                      const selectedDistrict = (districts as any)?.find((district: any) => district.id === formData.districtId);
-                      return selectedDistrict ? `${selectedDistrict.name}${selectedDistrict.tamilName ? ` (${selectedDistrict.tamilName})` : ''}` : "Select district";
+                      // Find district from statesDistrictsData
+                      const allDistricts = statesDistrictsData.states ? Object.values(statesDistrictsData.states).flatMap((stateData: any) => 
+                        stateData.districts.map((district: string) => ({ id: district, name: district }))
+                      ) : [];
+                      const selectedDistrict = allDistricts.find((district: any) => district.id === formData.districtId);
+                      return selectedDistrict ? selectedDistrict.name : "Select district";
                     })()
                   : "Select district"}
                 <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -1099,16 +1108,19 @@ const JobPostingForm = () => {
                 <CommandList>
                   <CommandEmpty>No district found.</CommandEmpty>
                   <CommandGroup>
-                    {(districts as any)?.map((district: any) => (
-                      <CommandItem
-                        key={district.id}
-                        value={district.name}
+                    {statesDistrictsData.states && Object.keys(statesDistrictsData.states).length > 0 && 
+                      Object.values(statesDistrictsData.states).flatMap((stateData: any) => 
+                        stateData.districts.map((district: string) => ({ id: district, name: district }))
+                      ).map((district: any) => (
+                        <CommandItem
+                          key={district.id}
+                          value={district.name}
                         onSelect={() => {
                           setFormData(prev => ({ ...prev, districtId: district.id }));
                           setDistrictOpen(false);
                         }}
                       >
-                        {district.name} ({district.tamilName})
+                        {district.name}
                       </CommandItem>
                     ))}
                   </CommandGroup>
@@ -1512,7 +1524,10 @@ export default function Dashboard() {
                                    locationData.town ||
                                    locationData.village;
             
-            const matchingDistrict = (districts as any)?.find((district: any) => {
+            const allDistricts = statesDistrictsData.states ? Object.values(statesDistrictsData.states).flatMap((stateData: any) => 
+              stateData.districts.map((district: string) => ({ id: district, name: district }))
+            ) : [];
+            const matchingDistrict = allDistricts.find((district: any) => {
               const districtName = district.name.toLowerCase();
               const detectedName = detectedLocation?.toLowerCase() || '';
               return districtName.includes(detectedName) || 
@@ -1527,7 +1542,7 @@ export default function Dashboard() {
                 description: `Your district has been set to ${matchingDistrict.name}`,
               });
             } else {
-              const chennaiDistrict = (districts as any)?.find((district: any) => 
+              const chennaiDistrict = allDistricts.find((district: any) => 
                 district.name.toLowerCase() === "chennai"
               );
               if (chennaiDistrict) {
@@ -1924,8 +1939,12 @@ export default function Dashboard() {
                           >
                             {searchFilters.district
                               ? (() => {
-                                  const selectedDistrict = (districts as any)?.find((district: any) => district.id === searchFilters.district);
-                                  return selectedDistrict ? `${selectedDistrict.name}${selectedDistrict.tamilName ? ` (${selectedDistrict.tamilName})` : ''}` : "Select District";
+                                  // Find district from statesDistrictsData
+                                  const allDistricts = statesDistrictsData.states ? Object.values(statesDistrictsData.states).flatMap((stateData: any) => 
+                                    stateData.districts.map((district: string) => ({ id: district, name: district }))
+                                  ) : [];
+                                  const selectedDistrict = allDistricts.find((district: any) => district.id === searchFilters.district);
+                                  return selectedDistrict ? selectedDistrict.name : "Select District";
                                 })()
                               : "Select District"}
                             <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -1937,16 +1956,19 @@ export default function Dashboard() {
                             <CommandList>
                               <CommandEmpty>No district found.</CommandEmpty>
                               <CommandGroup>
-                                {(districts as any)?.map((district: any) => (
-                                  <CommandItem
-                                    key={district.id}
-                                    value={district.name}
+                                {statesDistrictsData.states && Object.keys(statesDistrictsData.states).length > 0 && 
+                                  Object.values(statesDistrictsData.states).flatMap((stateData: any) => 
+                                    stateData.districts.map((district: string) => ({ id: district, name: district }))
+                                  ).map((district: any) => (
+                                    <CommandItem
+                                      key={district.id}
+                                      value={district.name}
                                     onSelect={() => {
                                       setSearchFilters(prev => ({ ...prev, district: district.id }));
                                       setDistrictOpen(false);
                                     }}
                                   >
-                                    {district.name} ({district.tamilName})
+                                    {district.name}
                                   </CommandItem>
                                 ))}
                               </CommandGroup>
