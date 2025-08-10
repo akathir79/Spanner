@@ -1201,57 +1201,61 @@ export default function WorkerDashboard() {
         </Tabs>
       </div>
 
-      {/* Rejoin Request Modal */}
-      <Dialog open={showRejoinModal} onOpenChange={(open) => {
-        console.log("Dialog open state changed:", open);
-        setShowRejoinModal(open);
-      }}>
-        <DialogContent className="max-w-md" aria-describedby="rejoin-dialog-description">
-          <DialogHeader>
-            <DialogTitle>Request to Rejoin</DialogTitle>
-            <DialogDescription id="rejoin-dialog-description">
-              Please provide a reason for your rejoin request. This will be reviewed by our admin team.
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-4 py-4">
-            <div>
-              <Label htmlFor="rejoinReason" className="text-sm font-medium">
-                Reason for rejoin request *
-              </Label>
-              <Textarea
-                id="rejoinReason"
-                value={rejoinReason}
-                onChange={(e) => setRejoinReason(e.target.value)}
-                placeholder="Please explain why you believe your account should be reactivated..."
-                className="mt-2"
-                rows={4}
+      {/* Rejoin Request Modal - Using fixed overlay approach */}
+      {showRejoinModal && (
+        <div className="fixed inset-0 z-50 bg-black/80 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0">
+          <div className="fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-lg">
+            <div className="flex flex-col space-y-1.5 text-center sm:text-left">
+              <h3 className="text-lg font-semibold leading-none tracking-tight">Request to Rejoin</h3>
+              <p className="text-sm text-muted-foreground">
+                Please provide a reason for your rejoin request. This will be reviewed by our admin team.
+              </p>
+            </div>
+            
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="rejoinReason" className="text-sm font-medium">
+                  Reason for rejoin request *
+                </Label>
+                <Textarea
+                  id="rejoinReason"
+                  value={rejoinReason}
+                  onChange={(e) => setRejoinReason(e.target.value)}
+                  placeholder="Please explain why you believe your account should be reactivated..."
+                  rows={4}
+                  disabled={rejoinRequestMutation.isPending}
+                  className="resize-none"
+                />
+              </div>
+            </div>
+            
+            <div className="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  console.log("Cancel button clicked");
+                  setShowRejoinModal(false);
+                  setRejoinReason("");
+                }}
                 disabled={rejoinRequestMutation.isPending}
-              />
+                className="mt-2 sm:mt-0"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={() => {
+                  console.log("Submit button clicked with reason:", rejoinReason);
+                  handleRejoinRequest();
+                }}
+                disabled={rejoinRequestMutation.isPending || !rejoinReason.trim()}
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                {rejoinRequestMutation.isPending ? "Submitting..." : "Submit Request"}
+              </Button>
             </div>
           </div>
-          
-          <DialogFooter className="flex gap-2">
-            <Button
-              variant="outline"
-              onClick={() => {
-                setShowRejoinModal(false);
-                setRejoinReason("");
-              }}
-              disabled={rejoinRequestMutation.isPending}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleRejoinRequest}
-              disabled={rejoinRequestMutation.isPending || !rejoinReason.trim()}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
-            >
-              {rejoinRequestMutation.isPending ? "Submitting..." : "Submit Request"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        </div>
+      )}
     </div>
   );
 }
