@@ -2316,7 +2316,13 @@ export default function Dashboard() {
               value="jobs"
               className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
             >
-              My Jobs/Bids
+              My Jobs
+            </TabsTrigger>
+            <TabsTrigger 
+              value="bids"
+              className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            >
+              Bids
             </TabsTrigger>
             <TabsTrigger 
               value="profile"
@@ -2727,18 +2733,16 @@ export default function Dashboard() {
             </div>
           </TabsContent>
 
-          {/* My Jobs/Bids Tab */}
+          {/* My Jobs Tab */}
           <TabsContent value="jobs" className="space-y-6">
-            <div className="grid gap-6 lg:grid-cols-2">
-              {/* Left Side - My Job Postings */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Users className="h-5 w-5" />
-                    My Job Postings
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  My Job Postings
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
                   {jobPostingsLoading ? (
                     <div className="space-y-4">
                       {[...Array(3)].map((_, i) => (
@@ -2817,7 +2821,11 @@ export default function Dashboard() {
                               {/* Header with Title */}
                               <div className="flex items-start justify-between">
                                 <div className="flex-1">
-                                  <h3 className="font-semibold text-xl text-white cursor-pointer hover:text-blue-300 transition-colors" onClick={() => setSelectedJobPosting(job)}>
+                                  <h3 className="font-semibold text-xl text-white cursor-pointer hover:text-blue-300 transition-colors" onClick={() => {
+                                    setSelectedJobPosting(job);
+                                    // Switch to bids tab when job is clicked
+                                    setActiveTab("bids");
+                                  }}>
                                     {job.title}
                                   </h3>
                                   <p className="text-sm text-blue-300 font-medium mt-1">
@@ -3026,120 +3034,112 @@ export default function Dashboard() {
                   {/* Hidden file input for media uploads */}
 
                 </CardContent>
-              </Card>
+            </Card>
+          </TabsContent>
 
-              {/* Right Side - Job Bids */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <span className="text-lg font-bold">₹</span>
-                    {selectedJobPosting ? `Bids for "${selectedJobPosting.title}"` : 'Select a Job to View Bids'}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {!selectedJobPosting ? (
-                    <div className="text-center py-12">
-                      <div className="h-12 w-12 mx-auto mb-4 flex items-center justify-center text-3xl font-bold text-muted-foreground">
-                        ₹
+          {/* Bids Tab */}
+          <TabsContent value="bids" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <span className="text-lg font-bold">₹</span>
+                  {selectedJobPosting ? `Bids for "${selectedJobPosting.title}"` : 'Select a Job to View Bids'}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {!selectedJobPosting ? (
+                  <div className="text-center py-12">
+                    <div className="h-12 w-12 mx-auto mb-4 flex items-center justify-center text-3xl font-bold text-muted-foreground">
+                      ₹
+                    </div>
+                    <h3 className="text-lg font-semibold mb-2">Select a Job Posting</h3>
+                    <p className="text-muted-foreground">
+                      Click on any job posting from the "My Jobs" tab to view worker bids.
+                    </p>
+                  </div>
+                ) : bidsLoading ? (
+                  <div className="space-y-4">
+                    {[...Array(3)].map((_, i) => (
+                      <div key={i} className="animate-pulse">
+                        <div className="h-20 bg-muted rounded-lg"></div>
                       </div>
-                      <h3 className="text-lg font-semibold mb-2">Select a Job Posting</h3>
-                      <p className="text-muted-foreground">
-                        Click on any job posting from the left to view worker bids.
-                      </p>
+                    ))}
+                  </div>
+                ) : !jobBids || jobBids.length === 0 ? (
+                  <div className="text-center py-12">
+                    <div className="h-12 w-12 mx-auto mb-4 flex items-center justify-center text-2xl font-bold text-muted-foreground">
+                      ₹
                     </div>
-                  ) : bidsLoading ? (
-                    <div className="space-y-4">
-                      {[...Array(3)].map((_, i) => (
-                        <div key={i} className="animate-pulse">
-                          <div className="h-20 bg-muted rounded-lg"></div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : !jobBids || jobBids.length === 0 ? (
-                    <div className="text-center py-12">
-                      <div className="h-12 w-12 mx-auto mb-4 flex items-center justify-center text-2xl font-bold text-muted-foreground">
-                        ₹
-                      </div>
-                      <h3 className="text-lg font-semibold mb-2">No bids yet</h3>
-                      <p className="text-muted-foreground">
-                        Workers will submit bids for this job soon. Check back later!
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="space-y-4 max-h-[600px] overflow-y-auto">
-                      {jobBids.map((bid: any) => (
-                        <div key={bid.id} className="border rounded-lg p-4 space-y-3">
-                          <div className="flex items-start justify-between">
-                            <div className="flex-1">
-                              <h4 className="font-semibold">
-                                {bid.worker?.firstName} {bid.worker?.lastName}
-                              </h4>
-                              <p className="text-sm text-muted-foreground">
-                                {bid.worker?.workerProfile?.primaryService}
-                              </p>
-                            </div>
-                            <div className="text-right">
-                              <p className="font-semibold text-green-600">₹{bid.proposedAmount}</p>
-                              <p className="text-xs text-muted-foreground">
-                                {bid.estimatedDuration}
-                              </p>
-                            </div>
+                    <h3 className="text-lg font-semibold mb-2">No bids yet</h3>
+                    <p className="text-muted-foreground">
+                      Workers will submit bids for this job soon. Check back later!
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-4 max-h-[600px] overflow-y-auto">
+                    {jobBids.map((bid: any) => (
+                      <div key={bid.id} className="border rounded-lg p-4 space-y-3">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <h4 className="font-semibold">
+                              {bid.worker?.firstName} {bid.worker?.lastName}
+                            </h4>
+                            <p className="text-sm text-muted-foreground">
+                              {bid.worker?.workerProfile?.primaryService}
+                            </p>
                           </div>
-                          
-                          <p className="text-sm text-muted-foreground">
-                            {bid.proposal}
-                          </p>
-                          
-                          <div className="flex items-center justify-between text-xs text-muted-foreground">
-                            <span>
-                              Submitted {new Date(bid.createdAt).toLocaleDateString()}
-                            </span>
-                            <Badge 
-                              className={bid.status === "pending" ? "bg-yellow-100 text-yellow-800" :
-                                        bid.status === "accepted" ? "bg-green-100 text-green-800" :
-                                        "bg-gray-100 text-gray-800"}
+                          <div className="text-right">
+                            <div className="text-lg font-bold text-green-600">
+                              ₹{bid.bidAmount}
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                              {new Date(bid.createdAt).toLocaleDateString()}
+                            </p>
+                          </div>
+                        </div>
+                        {bid.message && (
+                          <div className="bg-muted p-3 rounded-lg">
+                            <p className="text-sm">{bid.message}</p>
+                          </div>
+                        )}
+                        <div className="flex items-center justify-between pt-2 border-t">
+                          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                            <span>★ {bid.worker?.workerProfile?.rating || 'N/A'}</span>
+                            <span>Experience: {bid.worker?.workerProfile?.experienceYears || 0} years</span>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                // View worker profile logic
+                                console.log('View worker profile:', bid.worker);
+                              }}
                             >
-                              {bid.status}
-                            </Badge>
+                              View Profile
+                            </Button>
+                            <Button
+                              size="sm"
+                              onClick={() => {
+                                // Accept bid logic
+                                console.log('Accept bid:', bid.id);
+                              }}
+                            >
+                              Accept Bid
+                            </Button>
                           </div>
-                          
-                          {bid.status === "pending" && (
-                            <div className="flex gap-2 mt-3">
-                              <Button 
-                                size="sm" 
-                                className="flex-1"
-                                onClick={() => acceptBidMutation.mutate(bid.id)}
-                                disabled={acceptBidMutation.isPending}
-                              >
-                                {acceptBidMutation.isPending ? "Accepting..." : "Accept Bid"}
-                              </Button>
-                              <Button 
-                                size="sm" 
-                                variant="destructive" 
-                                className="flex-1"
-                                onClick={() => rejectBidMutation.mutate(bid.id)}
-                                disabled={rejectBidMutation.isPending}
-                              >
-                                {rejectBidMutation.isPending ? "Rejecting..." : "Reject Bid"}
-                              </Button>
-                            </div>
-                          )}
-                          
-                          {bid.status === "accepted" && (
-                            <div className="mt-3">
-                              <Button size="sm" variant="outline" className="w-full">
-                                <Phone className="h-4 w-4 mr-2" />
-                                Contact Worker: {bid.worker?.mobile}
-                              </Button>
-                            </div>
-                          )}
                         </div>
-                      ))}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-              
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Profile Tab */}
+          <TabsContent value="profile" className="space-y-6">
+            <div className="grid gap-6 lg:grid-cols-2">
               {/* Quick Actions Widget - Only show if enabled */}
               {dashboardLayout.widgets.quickActions?.enabled && (
                 <Card className={`${
@@ -3230,8 +3230,6 @@ export default function Dashboard() {
               )}
             </div>
           </TabsContent>
-
-
 
         </Tabs>
       </div>
