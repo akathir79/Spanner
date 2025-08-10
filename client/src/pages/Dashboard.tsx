@@ -2776,10 +2776,16 @@ export default function Dashboard() {
                             }`}
                           >
                             <CardContent className="p-6 space-y-4">
-                              {/* Top Header with ID, Status Badge and Action Buttons */}
+                              {/* Top Header with ID, Posted Date, Status Badge and Action Buttons */}
                               <div className="flex items-center justify-between mb-3">
-                                <div className="text-sm font-mono font-medium text-green-400 bg-green-900/30 px-3 py-1 rounded-md inline-block border border-green-500/30">
-                                  ID: {job.id}
+                                <div className="flex items-center gap-3">
+                                  <div className="text-sm font-mono font-medium text-green-400 bg-green-900/30 px-3 py-1 rounded-md inline-block border border-green-500/30">
+                                    ID: {job.id}
+                                  </div>
+                                  <div className="flex items-center gap-1.5 text-xs text-amber-400 bg-amber-900/20 px-2 py-1 rounded border border-amber-500/30">
+                                    <Clock className="h-3 w-3" />
+                                    <span>Posted {new Date(job.createdAt).toLocaleDateString()}</span>
+                                  </div>
                                 </div>
                                 <div className="flex items-center gap-2">
                                   <Badge 
@@ -2992,10 +2998,7 @@ export default function Dashboard() {
                                     </Button>
                                   )}
                                 </div>
-                                <div className="flex items-center gap-2 text-sm text-slate-400">
-                                  <Clock className="h-4 w-4" />
-                                  <span>Posted {new Date(job.createdAt).toLocaleDateString()}</span>
-                                </div>
+
                               </div>
 
 
