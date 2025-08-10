@@ -2727,14 +2727,16 @@ export default function Dashboard() {
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <DollarSign className="h-5 w-5" />
+                    <span className="text-lg font-bold">₹</span>
                     {selectedJobPosting ? `Bids for "${selectedJobPosting.title}"` : 'Select a Job to View Bids'}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   {!selectedJobPosting ? (
                     <div className="text-center py-12">
-                      <DollarSign className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                      <div className="h-12 w-12 mx-auto mb-4 flex items-center justify-center text-3xl font-bold text-muted-foreground">
+                        ₹
+                      </div>
                       <h3 className="text-lg font-semibold mb-2">Select a Job Posting</h3>
                       <p className="text-muted-foreground">
                         Click on any job posting from the left to view worker bids.
