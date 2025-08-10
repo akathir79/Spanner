@@ -21,9 +21,16 @@ export function AnimatedStatusBadge({
   const [isAnimating, setIsAnimating] = useState(false);
   const [displayStatus, setDisplayStatus] = useState(status);
 
-  // Trigger animation when status changes
+  // Trigger animation when status changes (exclude approved status)
   useEffect(() => {
     if (previousStatus && previousStatus !== status) {
+      // Don't animate when transitioning to approved status
+      if (status === "approved") {
+        setDisplayStatus(status);
+        setIsAnimating(false);
+        return;
+      }
+      
       setIsAnimating(true);
       
       // Start transition after brief delay
