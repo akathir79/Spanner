@@ -1318,6 +1318,7 @@ const VoiceJobPostingForm = ({ onClose, autoStart = false }: { onClose?: () => v
       }
       
       console.log('✅ Audio recorder started successfully');
+      console.log('🎯 IMPORTANT - isListening should now be TRUE:', isListening);
       
       // Start timer
       const interval = setInterval(() => {
@@ -1620,7 +1621,7 @@ const VoiceJobPostingForm = ({ onClose, autoStart = false }: { onClose?: () => v
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex justify-center">
-            {!isListening ? (
+            {!isListening && !isProcessing ? (
               <Button
                 onClick={startListening}
                 size="lg"
