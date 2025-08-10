@@ -785,10 +785,10 @@ const VoiceJobPostingForm = ({ onClose, autoStart = false }: { onClose?: () => v
   const [analyser, setAnalyser] = useState<AnalyserNode | null>(null);
   const [currentStep, setCurrentStep] = useState('initial'); // 'initial', 'follow-up', 'language-choice', 'completed'
   const [missingFields, setMissingFields] = useState<string[]>([]);
-  const [followUpQuestion, setFollowUpQuestion] = useState('');
-  const [isSpeaking, setIsSpeaking] = useState(false);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
+  const [followUpQuestion, setFollowUpQuestion] = useState('');
+  const [isSpeaking, setIsSpeaking] = useState(false);
   
   const [formData, setFormData] = useState({
     title: "",
@@ -1119,17 +1119,21 @@ const VoiceJobPostingForm = ({ onClose, autoStart = false }: { onClose?: () => v
       };
       
       recorder.onstop = () => {
-        console.log('🎤 Recording stopped, creating blob...');
+        console.log('🛑 MediaRecorder stopped, creating blob...');
         const mimeType = recorder.mimeType || 'audio/webm';
         const recordedBlob = new Blob(audioChunks, { type: mimeType });
-        console.log('🎤 Audio blob created, size:', recordedBlob.size, 'type:', recordedBlob.type);
+        console.log('✅ AUDIO BLOB CREATED - Size:', recordedBlob.size, 'Type:', recordedBlob.type);
+        
+        // CRITICAL: Set the audio blob immediately
         setAudioBlob(recordedBlob);
         
         // Stop all tracks to release microphone
         stream.getTracks().forEach(track => {
           track.stop();
-          console.log('🎤 Stopped track:', track.label);
+          console.log('🔇 Stopped track:', track.label);
         });
+        
+        console.log('🎯 RECORDING COMPLETE - Blob ready for processing');
       };
       
       recorder.onerror = (event) => {
@@ -1264,13 +1268,17 @@ const VoiceJobPostingForm = ({ onClose, autoStart = false }: { onClose?: () => v
 
   // Start listening with audio recording
   const startListening = async () => {
-    console.log('startListening called, isSpeaking:', isSpeaking, 'isListening:', isListening);
+    console.log('🎯 START LISTENING - isSpeaking:', isSpeaking, 'isListening:', isListening);
     
     // Don't start if already listening or if assistant is speaking
     if (isListening || isSpeaking) {
-      console.log('Blocked recording: already listening or speaking');
+      console.log('🚫 BLOCKED - already listening or speaking');
       return;
     }
+
+    // Reset audio blob to ensure we start fresh
+    setAudioBlob(null);
+    console.log('🔄 Reset audio blob to null');
     
     // Check microphone permissions first
     try {
@@ -1284,37 +1292,47 @@ const VoiceJobPostingForm = ({ onClose, autoStart = false }: { onClose?: () => v
         return;
       }
     } catch (e) {
-      // Permissions API might not be supported, continue with recording attempt
+      console.log('⚠️ Permissions API not supported, continuing...');
     }
 
-    console.log('Setting isListening to true');
+    console.log('✅ Setting recording state...');
     setIsListening(true);
     setVoiceTranscript('');
     setRecordingTime(0);
     setDetectedLanguage('');
     setDetectedLanguageName('');
     
-    // Start audio recording for preserving original voice
-    const recorder = await startAudioRecording();
-    
-    if (!recorder) {
-      console.log('Failed to start recorder, setting isListening to false');
+    try {
+      // Start audio recording for preserving original voice
+      const recorder = await startAudioRecording();
+      
+      if (!recorder) {
+        console.error('❌ CRITICAL - Failed to start recorder');
+        setIsListening(false);
+        toast({
+          title: "Recording Failed",
+          description: "Could not start audio recording. Please check your microphone.",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      console.log('✅ Audio recorder started successfully');
+      
+      // Start timer
+      const interval = setInterval(() => {
+        setRecordingTime(prev => prev + 1);
+      }, 1000);
+      setTimerInterval(interval);
+      
+    } catch (error) {
+      console.error('❌ Error in startListening:', error);
       setIsListening(false);
-      return;
-    }
-    
-    console.log('Audio recorder started successfully');
-    
-    // Start timer
-    const interval = setInterval(() => {
-      setRecordingTime(prev => prev + 1);
-    }, 1000);
-    setTimerInterval(interval);
-    
-    // Note: We're primarily relying on MediaRecorder for audio capture
-    // Speech Recognition API is limited on Firefox but MediaRecorder works
-    if (recognition) {
-      recognition.start();
+      toast({
+        title: "Recording Error",
+        description: "Failed to start recording. Please try again.",
+        variant: "destructive"
+      });
     }
   };
 
@@ -1334,29 +1352,26 @@ const VoiceJobPostingForm = ({ onClose, autoStart = false }: { onClose?: () => v
     // Stop audio recording
     stopAudioRecording();
     
-    // Set up a more robust audio blob checking system
-    const checkForAudioBlob = (attempts = 0) => {
-      console.log(`🎤 Checking for audio blob, attempt ${attempts + 1}, current size:`, audioBlob?.size || 0);
+    // Set up audio processing with proper timing
+    setIsProcessing(true);
+    
+    // Wait for the MediaRecorder to finish and create the blob
+    setTimeout(() => {
+      console.log('🔍 CHECKING AUDIO BLOB - Size:', audioBlob?.size || 0);
       
       if (audioBlob && audioBlob.size > 0) {
-        console.log('🎤 Audio blob found, processing...', audioBlob.size, 'bytes');
+        console.log('✅ AUDIO BLOB FOUND - Processing audio:', audioBlob.size, 'bytes');
         processVoiceInput();
-      } else if (attempts < 5) {
-        // Try checking again after a short delay
-        setTimeout(() => checkForAudioBlob(attempts + 1), 500);
       } else {
-        console.error('🎤 No audio blob found after multiple attempts');
+        console.error('❌ NO AUDIO BLOB - Recording failed');
         setIsProcessing(false);
         toast({
           title: "No Audio Recorded",
-          description: "No audio was captured. Please check your microphone permissions and try again.",
+          description: "Recording failed. Please try again and speak clearly.",
           variant: "destructive"
         });
       }
-    };
-    
-    // Start checking for audio blob after a brief delay
-    setTimeout(() => checkForAudioBlob(), 1000);
+    }, 2000); // Increased delay to ensure MediaRecorder completes
   };
 
   // Process voice input using Vakyansh API
