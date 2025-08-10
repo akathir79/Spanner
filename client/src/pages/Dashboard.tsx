@@ -783,7 +783,7 @@ const VoiceJobPostingForm = ({ onClose }: { onClose?: () => void }) => {
   const [missingFields, setMissingFields] = useState<string[]>([]);
   const [followUpQuestion, setFollowUpQuestion] = useState('');
   const [isSpeaking, setIsSpeaking] = useState(false);
-  const [originalAudioBlob, setOriginalAudioBlob] = useState<Blob | null>(null);
+  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
   
   const [formData, setFormData] = useState({
@@ -1034,8 +1034,8 @@ const VoiceJobPostingForm = ({ onClose }: { onClose?: () => void }) => {
       };
       
       recorder.onstop = () => {
-        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
-        setOriginalAudioBlob(audioBlob);
+        const recordedBlob = new Blob(audioChunks, { type: 'audio/wav' });
+        setAudioBlob(recordedBlob);
       };
       
       recorder.start();
@@ -1120,9 +1120,9 @@ const VoiceJobPostingForm = ({ onClose }: { onClose?: () => void }) => {
     }
   };
 
-  // Process voice input using Bhashini API
+  // Process voice input using Vakyansh API
   const processVoiceInput = async () => {
-    if (!currentAudioBlob) {
+    if (!audioBlob) {
       toast({
         title: "No Audio Recording",
         description: "Please record some audio first.",
@@ -1136,7 +1136,7 @@ const VoiceJobPostingForm = ({ onClose }: { onClose?: () => void }) => {
     try {
       // Create FormData to send audio file
       const formData = new FormData();
-      const audioFile = new File([currentAudioBlob], 'voice_recording.wav', { type: 'audio/wav' });
+      const audioFile = new File([audioBlob], 'voice_recording.wav', { type: 'audio/wav' });
       formData.append('audio', audioFile);
 
       const response = await fetch('/api/voice/process', {
@@ -1584,7 +1584,7 @@ const JobPostingForm = ({ onClose }: { onClose?: () => void }) => {
       deadline: formData.deadline || null,
       requirements: formData.requirements,
       // Include voice recording metadata
-      voiceRecordingData: originalAudioBlob ? {
+      voiceRecordingData: audioBlob ? {
         detectedLanguage: detectedLanguageName,
         originalTranscript: voiceTranscript,
         englishTranslation: englishTranslation,
@@ -1593,11 +1593,11 @@ const JobPostingForm = ({ onClose }: { onClose?: () => void }) => {
     };
 
     // If there's an audio file, we should upload it first
-    if (originalAudioBlob) {
+    if (audioBlob) {
       try {
         // Create FormData to upload audio file
         const audioFormData = new FormData();
-        audioFormData.append('audio', originalAudioBlob, `job-voice-${Date.now()}.wav`);
+        audioFormData.append('audio', audioBlob, `job-voice-${Date.now()}.wav`);
         audioFormData.append('jobData', JSON.stringify(jobData));
         
         // Send with audio file
@@ -1632,7 +1632,7 @@ const JobPostingForm = ({ onClose }: { onClose?: () => void }) => {
           deadline: "",
           requirements: [],
         });
-        setOriginalAudioBlob(null);
+        setAudioBlob(null);
         setVoiceTranscript('');
         setEnglishTranslation('');
         setDetectedLanguage('');
