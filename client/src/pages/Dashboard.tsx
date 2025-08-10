@@ -3207,83 +3207,177 @@ export default function Dashboard() {
 
       {/* Job Edit Modal */}
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Edit Job Posting</DialogTitle>
+        <DialogContent className="max-w-4xl max-h-[95vh] overflow-y-auto bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-800">
+          <DialogHeader className="space-y-3 pb-6 border-b border-slate-200 dark:border-slate-700">
+            <DialogTitle className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-3">
+              <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                <Edit3 className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+              </div>
+              Edit Job Posting
+            </DialogTitle>
+            {editingJob && (
+              <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
+                <div className="font-mono bg-green-100 dark:bg-green-900/30 px-2 py-1 rounded text-green-700 dark:text-green-400">
+                  ID: {editingJob.id}
+                </div>
+                <div className="flex items-center gap-1">
+                  <Clock className="h-3 w-3" />
+                  <span>Posted {new Date(editingJob.createdAt).toLocaleDateString()}</span>
+                </div>
+              </div>
+            )}
           </DialogHeader>
+          
           {editingJob && (
-            <div className="space-y-6">
-              {/* Job Title */}
-              <div className="space-y-2">
-                <Label htmlFor="edit-title">Job Title</Label>
-                <Input
-                  id="edit-title"
-                  value={editingJobData.title || ''}
-                  onChange={(e) => setEditingJobData(prev => ({...prev, title: e.target.value}))}
-                  placeholder="Enter job title"
-                />
-              </div>
-
-              {/* Job Description */}
-              <div className="space-y-2">
-                <Label htmlFor="edit-description">Description</Label>
-                <Textarea
-                  id="edit-description"
-                  value={editingJobData.description || ''}
-                  onChange={(e) => setEditingJobData(prev => ({...prev, description: e.target.value}))}
-                  placeholder="Describe the job requirements"
-                  rows={4}
-                />
-              </div>
-
-              {/* Budget Range */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="edit-budget-min">Minimum Budget (₹)</Label>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 pt-6">
+              {/* Main Content - Left Side */}
+              <div className="lg:col-span-2 space-y-6">
+                {/* Job Title */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <FileText className="h-4 w-4 text-blue-600" />
+                    <Label htmlFor="edit-title" className="text-sm font-semibold text-slate-700 dark:text-slate-300">Job Title</Label>
+                  </div>
                   <Input
-                    id="edit-budget-min"
-                    type="number"
-                    value={editingJobData.budgetMin || ''}
-                    onChange={(e) => setEditingJobData(prev => ({...prev, budgetMin: e.target.value}))}
-                    placeholder="Enter minimum budget"
+                    id="edit-title"
+                    value={editingJobData.title || ''}
+                    onChange={(e) => setEditingJobData(prev => ({...prev, title: e.target.value}))}
+                    placeholder="Enter a clear, descriptive job title"
+                    className="text-lg font-medium border-2 focus:border-blue-500 bg-white dark:bg-slate-800"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="edit-budget-max">Maximum Budget (₹)</Label>
-                  <Input
-                    id="edit-budget-max"
-                    type="number"
-                    value={editingJobData.budgetMax || ''}
-                    onChange={(e) => setEditingJobData(prev => ({...prev, budgetMax: e.target.value}))}
-                    placeholder="Enter maximum budget"
+
+                {/* Job Description */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <FileText className="h-4 w-4 text-blue-600" />
+                    <Label htmlFor="edit-description" className="text-sm font-semibold text-slate-700 dark:text-slate-300">Description</Label>
+                  </div>
+                  <Textarea
+                    id="edit-description"
+                    value={editingJobData.description || ''}
+                    onChange={(e) => setEditingJobData(prev => ({...prev, description: e.target.value}))}
+                    placeholder="Provide detailed requirements, expectations, and any specific instructions..."
+                    rows={6}
+                    className="resize-none border-2 focus:border-blue-500 bg-white dark:bg-slate-800"
                   />
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    Be specific about your requirements to attract the right workers
+                  </p>
+                </div>
+
+                {/* Budget Section */}
+                <div className="space-y-4 bg-white dark:bg-slate-800 p-6 rounded-xl border-2 border-emerald-200 dark:border-emerald-800">
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="p-2 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg">
+                      <span className="text-emerald-600 dark:text-emerald-400 font-bold text-lg">₹</span>
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-slate-800 dark:text-slate-200">Budget Range</h3>
+                      <p className="text-sm text-slate-600 dark:text-slate-400">Set your preferred budget range</p>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="edit-budget-min" className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                        Minimum Budget (₹)
+                      </Label>
+                      <div className="relative">
+                        <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-emerald-600 dark:text-emerald-400 font-semibold">₹</span>
+                        <Input
+                          id="edit-budget-min"
+                          type="number"
+                          value={editingJobData.budgetMin || ''}
+                          onChange={(e) => setEditingJobData(prev => ({...prev, budgetMin: e.target.value}))}
+                          placeholder="1000"
+                          className="pl-8 border-2 focus:border-emerald-500 bg-white dark:bg-slate-700"
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="edit-budget-max" className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                        Maximum Budget (₹)
+                      </Label>
+                      <div className="relative">
+                        <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-emerald-600 dark:text-emerald-400 font-semibold">₹</span>
+                        <Input
+                          id="edit-budget-max"
+                          type="number"
+                          value={editingJobData.budgetMax || ''}
+                          onChange={(e) => setEditingJobData(prev => ({...prev, budgetMax: e.target.value}))}
+                          placeholder="5000"
+                          className="pl-8 border-2 focus:border-emerald-500 bg-white dark:bg-slate-700"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {editingJobData.budgetMin && editingJobData.budgetMax && (
+                    <div className="mt-4 p-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg border border-emerald-200 dark:border-emerald-800">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium text-emerald-800 dark:text-emerald-300">Budget Range:</span>
+                        <span className="font-bold text-emerald-700 dark:text-emerald-400">
+                          ₹{editingJobData.budgetMin} - ₹{editingJobData.budgetMax}
+                        </span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
-              {/* Service Category (Read-only for editing) */}
-              <div className="space-y-2">
-                <Label>Service Category</Label>
-                <div className="p-3 bg-muted/50 rounded border">
-                  {editingJob.serviceCategory}
-                </div>
-              </div>
+              {/* Sidebar - Right Side */}
+              <div className="space-y-6">
+                {/* Job Info Card */}
+                <div className="bg-white dark:bg-slate-800 p-6 rounded-xl border-2 border-slate-200 dark:border-slate-700">
+                  <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-4 flex items-center gap-2">
+                    <Settings className="h-4 w-4" />
+                    Job Information
+                  </h3>
+                  
+                  {/* Service Category */}
+                  <div className="space-y-3 mb-4">
+                    <Label className="text-sm font-medium text-slate-700 dark:text-slate-300">Service Category</Label>
+                    <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                      <span className="font-medium text-blue-800 dark:text-blue-300 capitalize">
+                        {editingJob.serviceCategory?.replace('_', ' ')}
+                      </span>
+                    </div>
+                  </div>
 
-              {/* Current Service Address (Read-only) */}
-              <div className="space-y-2">
-                <Label>Service Address</Label>
-                <div className="p-3 bg-muted/50 rounded border whitespace-pre-line">
-                  {editingJob.serviceAddress || 'Service address not specified'}
+                  {/* Current Service Address */}
+                  <div className="space-y-3">
+                    <Label className="text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                      <MapPin className="h-3 w-3" />
+                      Service Address
+                    </Label>
+                    <div className="p-3 bg-slate-50 dark:bg-slate-700 rounded-lg border border-slate-200 dark:border-slate-600">
+                      <p className="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-line leading-relaxed">
+                        {editingJob.serviceAddress || 'Service address not specified'}
+                      </p>
+                    </div>
+                  </div>
                 </div>
-              </div>
 
-              {/* Action Buttons */}
-              <div className="flex justify-end gap-3 pt-4">
-                <Button variant="outline" onClick={handleCancelEdit}>
-                  Cancel
-                </Button>
-                <Button onClick={handleSaveJob}>
-                  Save Changes
-                </Button>
+                {/* Action Buttons */}
+                <div className="bg-white dark:bg-slate-800 p-6 rounded-xl border-2 border-slate-200 dark:border-slate-700">
+                  <div className="space-y-3">
+                    <Button 
+                      onClick={handleSaveJob}
+                      className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-3 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200"
+                    >
+                      <Save className="h-4 w-4 mr-2" />
+                      Save Changes
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      onClick={handleCancelEdit}
+                      className="w-full border-2 border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 py-3 rounded-lg font-medium transition-all duration-200"
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
               </div>
             </div>
           )}
