@@ -69,7 +69,8 @@ import {
   Zap,
   BarChart,
   Paperclip,
-  Square
+  Square,
+  HelpCircle
 } from "lucide-react";
 import { useLocation } from "wouter";
 import LocationViewer from "@/components/LocationViewer";
@@ -763,7 +764,7 @@ const BankDetailsCard = ({ user, onUpdate }: { user: any, onUpdate: () => void }
   );
 };
 
-// Smart Voice Job Posting - Single Recording with AI Processing
+// Smart Voice Job Posting - Multi-Language with Follow-up Questions
 const VoiceJobPostingForm = ({ onClose }: { onClose?: () => void }) => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -771,10 +772,16 @@ const VoiceJobPostingForm = ({ onClose }: { onClose?: () => void }) => {
   const [isListening, setIsListening] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [voiceTranscript, setVoiceTranscript] = useState('');
+  const [englishTranslation, setEnglishTranslation] = useState('');
   const [detectedLanguage, setDetectedLanguage] = useState('');
+  const [userPreferredLanguage, setUserPreferredLanguage] = useState('');
   const [recognition, setRecognition] = useState<any>(null);
   const [recordingTime, setRecordingTime] = useState(0);
   const [timerInterval, setTimerInterval] = useState<NodeJS.Timeout | null>(null);
+  const [currentStep, setCurrentStep] = useState('initial'); // 'initial', 'follow-up', 'language-choice', 'completed'
+  const [missingFields, setMissingFields] = useState<string[]>([]);
+  const [followUpQuestion, setFollowUpQuestion] = useState('');
+  const [isSpeaking, setIsSpeaking] = useState(false);
   
   const [formData, setFormData] = useState({
     title: "",
@@ -789,11 +796,81 @@ const VoiceJobPostingForm = ({ onClose }: { onClose?: () => void }) => {
     requirements: [] as string[]
   });
 
-  // Language detection patterns
+  // Enhanced language detection with more Indian languages
   const languagePatterns = {
     tamil: /[\u0B80-\u0BFF]/,
     hindi: /[\u0900-\u097F]/,
+    malayalam: /[\u0D00-\u0D7F]/,
+    telugu: /[\u0C00-\u0C7F]/,
+    kannada: /[\u0C80-\u0CFF]/,
+    gujarati: /[\u0A80-\u0AFF]/,
+    punjabi: /[\u0A00-\u0A7F]/,
+    bengali: /[\u0980-\u09FF]/,
     english: /^[a-zA-Z0-9\s.,!?-]+$/
+  };
+
+  // Translation service (mock - in production, use Google Translate API)
+  const translateToEnglish = async (text: string, fromLang: string): Promise<string> => {
+    // Mock translation for common phrases
+    const translations: { [key: string]: { [phrase: string]: string } } = {
+      tamil: {
+        'குழாய் சரி செய்ய வேண்டும்': 'need to fix tap',
+        'பைப் லீக் ஆகுது': 'pipe is leaking',
+        'வீட்டு வேலை': 'house work',
+        'ஐநூறு ரூபாய்': '500 rupees'
+      },
+      hindi: {
+        'नल ठीक करना है': 'need to fix tap',
+        'पाइप लीक हो रहा है': 'pipe is leaking',
+        'घर का काम': 'house work',
+        'पांच सौ रुपये': '500 rupees'
+      },
+      malayalam: {
+        'കുഴൽ ശരിയാക്കണം': 'need to fix tap',
+        'പൈപ്പ് ചോർന്നുകൊണ്ടിരിക്കുന്നു': 'pipe is leaking'
+      },
+      telugu: {
+        'కుళాయి సరిచేయాలి': 'need to fix tap',
+        'పైప్ లీక్ అవుతోంది': 'pipe is leaking'
+      }
+    };
+
+    // Simple translation lookup (in production, use proper API)
+    if (translations[fromLang]) {
+      for (const [original, translation] of Object.entries(translations[fromLang])) {
+        if (text.toLowerCase().includes(original.toLowerCase())) {
+          return text.replace(new RegExp(original, 'gi'), translation);
+        }
+      }
+    }
+    
+    // Return original if no translation found (assume it's mixed or already English)
+    return text;
+  };
+
+  // Follow-up questions in multiple languages
+  const followUpQuestions = {
+    budget: {
+      english: "What's your budget range for this work?",
+      tamil: "இந்த வேலைக்கு உங்கள் பட்ஜெட் எவ்வளவு?",
+      hindi: "इस काम के लिए आपका बजट क्या है?",
+      malayalam: "ഈ ജോലിക്ക് നിങ്ങളുടെ ബഡ്ജറ്റ് എത്രയാണ്?",
+      telugu: "ఈ పనికి మీ బడ్జెట్ ఎంత?"
+    },
+    location: {
+      english: "Where is this work location? Which area and district?",
+      tamil: "வேலை எங்கே செய்ய வேண்டும்? எந்த பகுதி, மாவட்டம்?",
+      hindi: "यह काम कहाँ करना है? कौन सा इलाका और जिला?",
+      malayalam: "ഈ ജോലി എവിടെയാണ്? ഏത് പ്രദേശവും ജില്ലയും?",
+      telugu: "ఈ పని ఎక్కడ చేయాలి? ఏ ప్రాంతం, జిల్లా?"
+    },
+    service: {
+      english: "What type of service do you need? Like plumbing, electrical, painting?",
+      tamil: "எந்த வகை சேவை வேண்டும்? பிளம்பிங், எலக்ட்ரிக்கல், பெயிண்டிங்?",
+      hindi: "आपको किस प्रकार की सेवा चाहिए? जैसे प्लंबिंग, इलेक्ट्रिकल, पेंटिंग?",
+      malayalam: "നിങ്ങൾക്ക് എന്ത് തരത്തിലുള്ള സേവനം വേണം? പ്ലംബിംഗ്, ഇലക്ട്രിക്കൽ, പെയിന്റിംഗ്?",
+      telugu: "మీకు ఏ రకమైన సేవ అవసరం? ప్లంబింగ్, ఎలక్ట్రికల్, పెయింటింగ్?"
+    }
   };
 
   // Initialize Speech Recognition with multi-language support
@@ -845,12 +922,64 @@ const VoiceJobPostingForm = ({ onClose }: { onClose?: () => void }) => {
     }
   }, [timerInterval]);
 
-  // Detect language from transcript
+  // Enhanced language detection
   const detectLanguage = (text: string) => {
-    if (languagePatterns.tamil.test(text)) return 'Tamil';
-    if (languagePatterns.hindi.test(text)) return 'Hindi';
-    if (languagePatterns.english.test(text)) return 'English';
-    return 'Mixed/Unknown';
+    if (languagePatterns.tamil.test(text)) return 'tamil';
+    if (languagePatterns.hindi.test(text)) return 'hindi';
+    if (languagePatterns.malayalam.test(text)) return 'malayalam';
+    if (languagePatterns.telugu.test(text)) return 'telugu';
+    if (languagePatterns.kannada.test(text)) return 'kannada';
+    if (languagePatterns.gujarati.test(text)) return 'gujarati';
+    if (languagePatterns.punjabi.test(text)) return 'punjabi';
+    if (languagePatterns.bengali.test(text)) return 'bengali';
+    if (languagePatterns.english.test(text)) return 'english';
+    return 'mixed';
+  };
+
+  // Text-to-Speech with language support
+  const speak = (text: string, language: string = 'english') => {
+    if ('speechSynthesis' in window) {
+      const utterance = new SpeechSynthesisUtterance(text);
+      
+      // Set language code for speech synthesis
+      const langCodes: { [key: string]: string } = {
+        english: 'en-IN',
+        tamil: 'ta-IN',
+        hindi: 'hi-IN',
+        malayalam: 'ml-IN',
+        telugu: 'te-IN',
+        kannada: 'kn-IN',
+        gujarati: 'gu-IN',
+        punjabi: 'pa-IN',
+        bengali: 'bn-IN'
+      };
+      
+      utterance.lang = langCodes[language] || 'en-IN';
+      utterance.rate = 0.9;
+      utterance.pitch = 1;
+      
+      utterance.onstart = () => setIsSpeaking(true);
+      utterance.onend = () => setIsSpeaking(false);
+      
+      speechSynthesis.speak(utterance);
+    }
+  };
+
+  // Check for missing fields and generate follow-up questions
+  const checkMissingFields = (data: any): string[] => {
+    const missing: string[] = [];
+    
+    if (!data.serviceCategory) missing.push('service');
+    if (!data.budgetMin && !data.budgetMax) missing.push('budget');
+    if (!data.serviceAddress) missing.push('location');
+    
+    return missing;
+  };
+
+  // Generate follow-up question in user's preferred language
+  const generateFollowUpQuestion = (missingField: string, language: string): string => {
+    const questions = followUpQuestions[missingField as keyof typeof followUpQuestions];
+    return questions?.[language as keyof typeof questions] || questions?.english || '';
   };
 
   // Start listening
@@ -886,35 +1015,64 @@ const VoiceJobPostingForm = ({ onClose }: { onClose?: () => void }) => {
     }
   };
 
-  // AI-powered voice processing
-  const processVoiceInput = (transcript: string) => {
+  // Enhanced AI-powered voice processing with follow-up intelligence
+  const processVoiceInput = async (transcript: string) => {
     setIsProcessing(true);
     
-    // Smart extraction using regex and keywords
-    const text = transcript.toLowerCase();
+    // Detect language and translate if needed
+    const detectedLang = detectLanguage(transcript);
+    setDetectedLanguage(detectedLang);
     
-    // Extract service category
+    let englishText = transcript;
+    if (detectedLang !== 'english' && detectedLang !== 'mixed') {
+      englishText = await translateToEnglish(transcript, detectedLang);
+      setEnglishTranslation(englishText);
+    }
+    
+    // Smart extraction using regex and keywords from English text
+    const text = englishText.toLowerCase();
+    
+    // Extract service category with multilingual keywords
     const serviceCategories = [
-      { keywords: ['plumbing', 'plumber', 'pipe', 'leak', 'tap', 'bathroom'], category: 'Plumbing' },
-      { keywords: ['electrical', 'electrician', 'wire', 'light', 'fan', 'switch'], category: 'Electrical' },
-      { keywords: ['painting', 'paint', 'wall', 'color', 'brush'], category: 'Painting' },
-      { keywords: ['cleaning', 'clean', 'sweep', 'mop', 'wash'], category: 'Cleaning' },
-      { keywords: ['carpenter', 'wood', 'furniture', 'door', 'window'], category: 'Carpentry' },
-      { keywords: ['repair', 'fix', 'broken', 'service', 'maintenance'], category: 'Appliance Repair' },
-      { keywords: ['garden', 'lawn', 'plant', 'tree', 'grass'], category: 'Gardening' }
+      { 
+        keywords: ['plumbing', 'plumber', 'pipe', 'leak', 'tap', 'bathroom', 'குழாய்', 'नल', 'കുഴൽ'], 
+        category: 'Plumbing' 
+      },
+      { 
+        keywords: ['electrical', 'electrician', 'wire', 'light', 'fan', 'switch', 'வயர்', 'बिजली', 'വയർ'], 
+        category: 'Electrical' 
+      },
+      { 
+        keywords: ['painting', 'paint', 'wall', 'color', 'brush', 'பெயிண்ட்', 'पेंट', 'പെയിന്റ്'], 
+        category: 'Painting' 
+      },
+      { 
+        keywords: ['cleaning', 'clean', 'sweep', 'mop', 'wash', 'सफाई', 'വൃത്തിയാക്കൽ'], 
+        category: 'Cleaning' 
+      },
+      { 
+        keywords: ['carpenter', 'wood', 'furniture', 'door', 'window', 'மரவேலை', 'लकड़ी', 'മരപ്പണി'], 
+        category: 'Carpentry' 
+      },
+      { 
+        keywords: ['repair', 'fix', 'broken', 'service', 'maintenance', 'சரி', 'ठीक', 'ശരിയാക്കുക'], 
+        category: 'Appliance Repair' 
+      }
     ];
     
     let detectedCategory = '';
     for (const service of serviceCategories) {
-      if (service.keywords.some(keyword => text.includes(keyword))) {
+      if (service.keywords.some(keyword => 
+        text.includes(keyword) || transcript.toLowerCase().includes(keyword)
+      )) {
         detectedCategory = service.category;
         break;
       }
     }
     
-    // Extract budget using regex
-    const budgetRegex = /(\d+)\s*(?:to|से|வரை|-)\s*(\d+)|\b(\d+)\s*rupees?|\₹\s*(\d+)/gi;
-    const budgetMatches = [...transcript.matchAll(budgetRegex)];
+    // Enhanced budget extraction with multilingual support
+    const budgetRegex = /(\d+)\s*(?:to|से|வரை|മുതൽ|-)\s*(\d+)|\b(\d+)\s*(?:rupees?|रुपये|ரூபாய்|രൂപ)|\₹\s*(\d+)/gi;
+    const budgetMatches = [...(transcript + ' ' + englishText).matchAll(budgetRegex)];
     let budgetMin = '';
     let budgetMax = '';
     
@@ -932,27 +1090,29 @@ const VoiceJobPostingForm = ({ onClose }: { onClose?: () => void }) => {
       }
     }
     
-    // Extract location keywords
-    const locationKeywords = ['salem', 'chennai', 'coimbatore', 'madurai', 'trichy', 'area', 'district'];
+    // Enhanced location extraction
+    const locationKeywords = [
+      'salem', 'chennai', 'coimbatore', 'madurai', 'trichy', 'tiruchirappalli',
+      'area', 'district', 'সালেম', 'चेन्नै', 'സേലം', 'சேலம்'
+    ];
     let detectedLocation = '';
     for (const loc of locationKeywords) {
-      if (text.includes(loc)) {
-        detectedLocation = transcript.substring(
-          transcript.toLowerCase().indexOf(loc) - 10,
-          transcript.toLowerCase().indexOf(loc) + loc.length + 10
-        ).trim();
+      if (text.includes(loc) || transcript.toLowerCase().includes(loc)) {
+        const contextStart = Math.max(0, (transcript.toLowerCase().indexOf(loc) || text.indexOf(loc)) - 15);
+        const contextEnd = Math.min(transcript.length, contextStart + loc.length + 25);
+        detectedLocation = transcript.substring(contextStart, contextEnd).trim();
         break;
       }
     }
     
     // Generate title from first meaningful part
-    const sentences = transcript.split(/[.!?]/);
+    const sentences = englishText.split(/[.!?]/);
     const title = sentences[0].substring(0, 50).trim();
     
-    // Update form data
-    setFormData({
-      title: title || transcript.substring(0, 50),
-      description: transcript,
+    // Update form data with extracted information
+    const newFormData = {
+      title: title || englishText.substring(0, 50),
+      description: englishText,
       serviceCategory: detectedCategory,
       serviceAddress: detectedLocation,
       state: "Tamil Nadu",
@@ -961,14 +1121,29 @@ const VoiceJobPostingForm = ({ onClose }: { onClose?: () => void }) => {
       budgetMax,
       deadline: "",
       requirements: []
-    });
+    };
     
+    setFormData(newFormData);
     setIsProcessing(false);
     
-    toast({
-      title: "Voice Processed Successfully!",
-      description: `Detected ${detectedLanguage} language. Job details extracted automatically.`,
-    });
+    // Check for missing fields and ask follow-up questions
+    const missing = checkMissingFields(newFormData);
+    setMissingFields(missing);
+    
+    if (missing.length > 0) {
+      // Ask user to choose language for follow-up
+      setCurrentStep('language-choice');
+      toast({
+        title: "Information Processed!",
+        description: `Detected ${detectedLang} language. Some details are missing. Choose your preferred language for follow-up questions.`,
+      });
+    } else {
+      setCurrentStep('completed');
+      toast({
+        title: "Perfect! Job Details Complete",
+        description: `Detected ${detectedLang} language. All required information extracted successfully.`,
+      });
+    }
   };
 
   // Submit job mutation
@@ -1018,8 +1193,218 @@ const VoiceJobPostingForm = ({ onClose }: { onClose?: () => void }) => {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
+  // Handle follow-up recording for missing information
+  const startFollowUpRecording = () => {
+    if (missingFields.length > 0) {
+      const currentField = missingFields[0];
+      const question = generateFollowUpQuestion(currentField, userPreferredLanguage);
+      setFollowUpQuestion(question);
+      
+      // Speak the question
+      speak(question, userPreferredLanguage);
+      
+      // Start recording after speaking
+      setTimeout(() => {
+        if (recognition) {
+          setVoiceTranscript('');
+          recognition.start();
+        }
+      }, 2000);
+    }
+  };
+
+  // Process follow-up answer
+  const processFollowUpAnswer = async (answer: string) => {
+    const currentField = missingFields[0];
+    const detectedLang = detectLanguage(answer);
+    
+    let englishAnswer = answer;
+    if (detectedLang !== 'english') {
+      englishAnswer = await translateToEnglish(answer, detectedLang);
+    }
+    
+    // Update the specific field
+    const updatedData = { ...formData };
+    
+    if (currentField === 'budget') {
+      const budgetRegex = /(\d+)\s*(?:to|से|വரை|മുതൽ|-)\s*(\d+)|\b(\d+)\s*(?:rupees?|रुपये|ரূபாய்|രൂപ)|\₹\s*(\d+)/gi;
+      const matches = [...(answer + ' ' + englishAnswer).matchAll(budgetRegex)];
+      if (matches.length > 0) {
+        const match = matches[0];
+        if (match[1] && match[2]) {
+          updatedData.budgetMin = match[1];
+          updatedData.budgetMax = match[2];
+        } else if (match[3] || match[4]) {
+          updatedData.budgetMax = match[3] || match[4];
+          updatedData.budgetMin = '0';
+        }
+      }
+    } else if (currentField === 'location') {
+      updatedData.serviceAddress = englishAnswer;
+    } else if (currentField === 'service') {
+      updatedData.serviceCategory = englishAnswer;
+    }
+    
+    setFormData(updatedData);
+    
+    // Remove the processed field and check for more missing fields
+    const remainingFields = missingFields.slice(1);
+    setMissingFields(remainingFields);
+    
+    if (remainingFields.length > 0) {
+      // Ask next question
+      setTimeout(() => {
+        const nextField = remainingFields[0];
+        const nextQuestion = generateFollowUpQuestion(nextField, userPreferredLanguage);
+        setFollowUpQuestion(nextQuestion);
+        speak(nextQuestion, userPreferredLanguage);
+        
+        setTimeout(() => {
+          if (recognition) {
+            setVoiceTranscript('');
+            recognition.start();
+          }
+        }, 2000);
+      }, 1000);
+    } else {
+      setCurrentStep('completed');
+      const completionMessage = userPreferredLanguage === 'english' 
+        ? "Great! All information collected. Your job post is ready."
+        : userPreferredLanguage === 'tamil'
+        ? "அருமை! அனைத்து தகவல்களும் சேகரிக்கப்பட்டுள்ளன. உங்கள் வேலை போஸ்ட் தயார்."
+        : userPreferredLanguage === 'hindi'
+        ? "बढ़िया! सभी जानकारी एकत्र हो गई है। आपकी जॉब पोस्ट तैयार है।"
+        : "Great! All information collected. Your job post is ready.";
+      
+      speak(completionMessage, userPreferredLanguage);
+      toast({
+        title: "Job Details Completed!",
+        description: "All required information has been collected successfully.",
+      });
+    }
+  };
+
   return (
     <div className="space-y-6">
+      {/* Language Selection for Follow-up */}
+      {currentStep === 'language-choice' && (
+        <Card className="border-2 border-orange-200 bg-orange-50">
+          <CardContent className="p-6">
+            <div className="text-center space-y-4">
+              <h3 className="font-semibold text-lg text-orange-800">Choose Your Language</h3>
+              <p className="text-sm text-orange-600">
+                I need to ask you about {missingFields.join(', ')}. Which language would you prefer for questions?
+              </p>
+              <div className="flex flex-wrap gap-3 justify-center">
+                <Button
+                  onClick={() => {
+                    setUserPreferredLanguage('english');
+                    setCurrentStep('follow-up');
+                    startFollowUpRecording();
+                  }}
+                  className="bg-blue-500 hover:bg-blue-600 text-white"
+                >
+                  English
+                </Button>
+                <Button
+                  onClick={() => {
+                    setUserPreferredLanguage(detectedLanguage);
+                    setCurrentStep('follow-up');
+                    startFollowUpRecording();
+                  }}
+                  className="bg-green-500 hover:bg-green-600 text-white"
+                >
+                  {detectedLanguage === 'tamil' ? 'தமிழ்' :
+                   detectedLanguage === 'hindi' ? 'हिंदी' :
+                   detectedLanguage === 'malayalam' ? 'മലയാളം' :
+                   detectedLanguage === 'telugu' ? 'తెలుగు' :
+                   `Your Language (${detectedLanguage})`}
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Follow-up Question */}
+      {currentStep === 'follow-up' && (
+        <Card className="border-2 border-green-200 bg-green-50">
+          <CardContent className="p-6">
+            <div className="text-center space-y-4">
+              <div className="flex items-center justify-center gap-2">
+                <div className="p-2 bg-green-500 rounded-full">
+                  <HelpCircle className="h-5 w-5 text-white" />
+                </div>
+                <h3 className="font-semibold text-lg text-green-800">Follow-up Question</h3>
+              </div>
+              
+              {followUpQuestion && (
+                <div className="bg-white p-4 rounded-lg border border-green-200">
+                  <p className="text-green-700 font-medium">{followUpQuestion}</p>
+                </div>
+              )}
+
+              <div className="space-y-3">
+                {!isListening ? (
+                  <Button
+                    onClick={() => {
+                      if (recognition) {
+                        setVoiceTranscript('');
+                        recognition.start();
+                      }
+                    }}
+                    size="lg"
+                    className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white"
+                  >
+                    <Mic className="h-5 w-5 mr-2" />
+                    Answer Question
+                  </Button>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-center gap-2 text-red-600">
+                      <div className="h-3 w-3 animate-pulse bg-red-500 rounded-full" />
+                      <span className="font-medium">Listening for your answer... {formatTime(recordingTime)}</span>
+                    </div>
+                    <Button
+                      onClick={() => {
+                        stopListening();
+                        if (voiceTranscript) {
+                          processFollowUpAnswer(voiceTranscript);
+                        }
+                      }}
+                      size="lg"
+                      className="bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white"
+                    >
+                      <Square className="h-5 w-5 mr-2" />
+                      Stop & Process Answer
+                    </Button>
+                  </div>
+                )}
+
+                <Button
+                  onClick={() => speak(followUpQuestion, userPreferredLanguage)}
+                  variant="outline"
+                  disabled={isSpeaking}
+                  className="border-green-300"
+                >
+                  <Volume2 className="h-4 w-4 mr-2" />
+                  Repeat Question
+                </Button>
+              </div>
+
+              {voiceTranscript && (
+                <div className="text-left">
+                  <Label className="font-medium">Your Answer:</Label>
+                  <div className="mt-1 p-2 bg-white border rounded-lg">
+                    {voiceTranscript}
+                  </div>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Smart Voice Recording */}
       <Card className="border-2 border-purple-200">
         <CardContent className="p-6">
@@ -1031,7 +1416,7 @@ const VoiceJobPostingForm = ({ onClose }: { onClose?: () => void }) => {
               <div>
                 <h3 className="font-semibold text-lg">Smart Voice Job Posting</h3>
                 <p className="text-sm text-muted-foreground">
-                  Speak naturally in Tamil, Hindi, or English - AI will understand and create your job post
+                  Speak naturally in any Indian language - AI will understand and create your job post
                 </p>
               </div>
             </div>
