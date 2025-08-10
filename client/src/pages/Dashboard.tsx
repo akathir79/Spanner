@@ -2133,23 +2133,43 @@ export default function Dashboard() {
   // Removed Layout Settings Panel
 
   return (
-    <div className="min-h-screen bg-muted/30 pt-20 pb-8">{/* Removed customization features */}
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/40 pt-20 pb-8">
       <div className="container mx-auto px-4">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">
-            Welcome back, {user.firstName}! <span className="text-lg font-medium text-primary">({user.id})</span>
-          </h1>
-          <p className="text-muted-foreground">
-            Manage your bookings and find trusted workers for your service needs.
-          </p>
+        <div className="mb-8 relative">
+          <div className="bg-white/80 backdrop-blur-sm border border-white/20 rounded-2xl p-6 shadow-xl">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-blue-600 via-purple-600 to-blue-800 bg-clip-text text-transparent">
+                  Welcome back, {user.firstName}! 
+                </h1>
+                <div className="flex items-center gap-3 mb-3">
+                  <span className="text-sm font-mono font-semibold text-white bg-gradient-to-r from-blue-500 to-purple-600 px-3 py-1.5 rounded-full shadow-md">
+                    {user.id}
+                  </span>
+                  <span className="text-sm text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-200 font-medium">
+                    Member since {new Date(user.createdAt).toLocaleDateString()}
+                  </span>
+                </div>
+                <p className="text-slate-600 text-lg">
+                  Manage your bookings and find trusted workers for your service needs.
+                </p>
+              </div>
+              <div className="hidden md:flex items-center justify-center w-24 h-24 bg-gradient-to-r from-blue-100 to-purple-100 rounded-full border-4 border-white shadow-lg">
+                <User className="h-10 w-10 text-blue-600" />
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Post a New Job Button */}
-        <div className="mb-6">
+        <div className="mb-8">
           <Dialog open={isJobFormOpen} onOpenChange={setIsJobFormOpen}>
             <DialogTrigger asChild>
-              <Button size="lg" className="w-full sm:w-auto">
-                <Plus className="h-5 w-5 mr-2" />
+              <Button 
+                size="lg" 
+                className="w-full sm:w-auto h-14 px-8 bg-gradient-to-r from-blue-600 via-purple-600 to-blue-700 hover:from-blue-700 hover:via-purple-700 hover:to-blue-800 text-white font-semibold text-lg rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border-0"
+              >
+                <Plus className="h-6 w-6 mr-3" />
                 Post a New Job
               </Button>
             </DialogTrigger>
@@ -2165,35 +2185,35 @@ export default function Dashboard() {
           </Dialog>
         </div>
 
-        <Tabs defaultValue="bookings" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5 bg-muted">
+        <Tabs defaultValue="bookings" className="space-y-8">
+          <TabsList className="grid w-full grid-cols-5 bg-white/80 backdrop-blur-sm border border-white/30 rounded-xl p-2 shadow-lg">
             <TabsTrigger 
               value="bookings" 
-              className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-purple-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg font-medium transition-all duration-300"
             >
               My Bookings
             </TabsTrigger>
             <TabsTrigger 
               value="search"
-              className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-pink-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg font-medium transition-all duration-300"
             >
               Find Workers
             </TabsTrigger>
             <TabsTrigger 
               value="jobs"
-              className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500 data-[state=active]:to-teal-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg font-medium transition-all duration-300"
             >
               My Jobs
             </TabsTrigger>
             <TabsTrigger 
               value="bids"
-              className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-red-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg font-medium transition-all duration-300"
             >
               Bids
             </TabsTrigger>
             <TabsTrigger 
               value="profile"
-              className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500 data-[state=active]:to-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg font-medium transition-all duration-300"
             >
               Profile
             </TabsTrigger>
@@ -2204,12 +2224,14 @@ export default function Dashboard() {
             {/* Widget Container with Customization Support */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Bookings Widget - Full width by default */}
-              <Card className="lg:col-span-2">
-                <CardHeader>
+              <Card className="lg:col-span-2 bg-white/80 backdrop-blur-sm border border-white/30 rounded-xl shadow-lg">
+                <CardHeader className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-t-xl border-b border-blue-100/30">
                   <CardTitle className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <Calendar className="h-5 w-5" />
-                      <span>My Service Bookings</span>
+                    <div className="flex items-center space-x-3">
+                      <div className="p-2 bg-blue-100 rounded-lg">
+                        <Calendar className="h-5 w-5 text-blue-600" />
+                      </div>
+                      <span className="text-xl font-bold text-slate-800">My Service Bookings</span>
                     </div>
 {/* Removed customization controls */}
                   </CardTitle>
@@ -2224,25 +2246,30 @@ export default function Dashboard() {
                     ))}
                   </div>
                 ) : !bookings || bookings.length === 0 ? (
-                  <div className="text-center py-12">
-                    <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold mb-2">No bookings yet</h3>
-                    <p className="text-muted-foreground mb-4">
+                  <div className="text-center py-16">
+                    <div className="bg-gradient-to-r from-blue-100 to-purple-100 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6">
+                      <Calendar className="h-12 w-12 text-blue-600" />
+                    </div>
+                    <h3 className="text-2xl font-bold mb-3 text-slate-800">No bookings yet</h3>
+                    <p className="text-slate-600 mb-6 text-lg max-w-md mx-auto">
                       Start by searching for workers and booking your first service.
                     </p>
-                    <Button onClick={() => {
-                      const searchTab = document.querySelector('[data-state="inactive"][value="search"]') as HTMLElement;
-                      if (searchTab) searchTab.click();
-                    }}>
-                      <Search className="h-4 w-4 mr-2" />
+                    <Button 
+                      onClick={() => {
+                        const searchTab = document.querySelector('[data-state="inactive"][value="search"]') as HTMLElement;
+                        if (searchTab) searchTab.click();
+                      }}
+                      className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold px-8 py-3 rounded-xl shadow-lg transition-all duration-300"
+                    >
+                      <Search className="h-5 w-5 mr-2" />
                       Find Workers
                     </Button>
                   </div>
                 ) : (
                   <div className="space-y-4">
                     {bookings.map((booking: any) => (
-                      <Card key={booking.id} className="hover:shadow-md transition-shadow">
-                        <CardContent className="p-4">
+                      <Card key={booking.id} className="hover:shadow-lg transition-all duration-300 bg-white/90 backdrop-blur-sm border border-white/40 rounded-xl">
+                        <CardContent className="p-6">
                           <div className="flex justify-between items-start mb-3">
                             <div>
                               <h4 className="font-semibold capitalize">
@@ -2311,11 +2338,13 @@ export default function Dashboard() {
 
           {/* Find Workers Tab */}
           <TabsContent value="search" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Search className="h-5 w-5" />
-                  <span>Find Workers</span>
+            <Card className="bg-white/80 backdrop-blur-sm border border-white/30 rounded-xl shadow-lg">
+              <CardHeader className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-t-xl border-b border-purple-100/30">
+                <CardTitle className="flex items-center space-x-3">
+                  <div className="p-2 bg-purple-100 rounded-lg">
+                    <Search className="h-5 w-5 text-purple-600" />
+                  </div>
+                  <span className="text-xl font-bold text-slate-800">Find Workers</span>
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -2590,11 +2619,13 @@ export default function Dashboard() {
 
           {/* My Jobs Tab */}
           <TabsContent value="jobs" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="h-5 w-5" />
-                  My Job Postings
+            <Card className="bg-white/80 backdrop-blur-sm border border-white/30 rounded-xl shadow-lg">
+              <CardHeader className="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-t-xl border-b border-emerald-100/30">
+                <CardTitle className="flex items-center space-x-3">
+                  <div className="p-2 bg-emerald-100 rounded-lg">
+                    <Users className="h-5 w-5 text-emerald-600" />
+                  </div>
+                  <span className="text-xl font-bold text-slate-800">My Job Postings</span>
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -2607,12 +2638,12 @@ export default function Dashboard() {
                       ))}
                     </div>
                   ) : !jobPostings || jobPostings.length === 0 ? (
-                    <div className="text-center py-12">
-                      <div className="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-full w-20 h-20 mx-auto flex items-center justify-center mb-6">
-                        <Users className="h-10 w-10 text-blue-600" />
+                    <div className="text-center py-16">
+                      <div className="bg-gradient-to-r from-emerald-100 to-teal-100 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <Users className="h-12 w-12 text-emerald-600" />
                       </div>
-                      <h3 className="text-xl font-semibold mb-3 text-gray-900">No job postings yet</h3>
-                      <p className="text-gray-600 max-w-md mx-auto">
+                      <h3 className="text-2xl font-bold mb-3 text-slate-800">No job postings yet</h3>
+                      <p className="text-slate-600 mb-6 text-lg max-w-md mx-auto">
                         Use the "Post a New Job" button above to connect with skilled workers.
                       </p>
                     </div>
