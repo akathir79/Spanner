@@ -241,6 +241,7 @@ export default function AdminManagement() {
   const [showBulkVerifyDialog, setShowBulkVerifyDialog] = useState(false);
   const [showBulkDeleteDialog, setShowBulkDeleteDialog] = useState(false);
   const [bulkActionLoading, setBulkActionLoading] = useState(false);
+  const [selectAllFiltered, setSelectAllFiltered] = useState(false);
 
   // Animation refs
   const totalAdminButtonRef = useRef<HTMLButtonElement>(null);
@@ -876,17 +877,41 @@ export default function AdminManagement() {
                         <TableHeader>
                           <TableRow>
                             <TableHead className="w-[50px]">
-                              <Checkbox
-                                checked={selectedAdminIds.size === filteredAdmins.length && filteredAdmins.length > 0}
-                                onCheckedChange={(checked) => {
-                                  if (checked) {
-                                    setSelectedAdminIds(new Set(filteredAdmins.map(a => a.id)));
-                                  } else {
-                                    setSelectedAdminIds(new Set());
-                                  }
-                                }}
-                                aria-label="Select all admins"
-                              />
+                              <div className="flex items-center gap-1">
+                                <Checkbox
+                                  checked={selectAllFiltered ? selectedAdminIds.size === filteredAdmins.length && filteredAdmins.length > 0 : selectedAdminIds.size === admins.length && admins.length > 0}
+                                  onCheckedChange={(checked) => {
+                                    if (checked) {
+                                      if (selectAllFiltered) {
+                                        setSelectedAdminIds(new Set(filteredAdmins.map(a => a.id)));
+                                      } else {
+                                        setSelectedAdminIds(new Set(admins.map(a => a.id)));
+                                      }
+                                    } else {
+                                      setSelectedAdminIds(new Set());
+                                      setSelectAllFiltered(false);
+                                    }
+                                  }}
+                                  aria-label={selectAllFiltered ? "Select all filtered admins" : "Select all admins on page"}
+                                />
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => {
+                                    const newSelectAll = !selectAllFiltered;
+                                    setSelectAllFiltered(newSelectAll);
+                                    if (newSelectAll) {
+                                      setSelectedAdminIds(new Set(filteredAdmins.map(a => a.id)));
+                                    } else {
+                                      setSelectedAdminIds(new Set());
+                                    }
+                                  }}
+                                  className="text-xs text-blue-600 hover:text-blue-700 h-6 px-1"
+                                  title={selectAllFiltered ? "Switch to page selection" : `Select all ${filteredAdmins.length} filtered admins`}
+                                >
+                                  {selectAllFiltered ? "Page" : "All"}
+                                </Button>
+                              </div>
                             </TableHead>
                             <TableHead className="w-[190px]">
                               <div className="flex items-center gap-2">

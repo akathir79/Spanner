@@ -230,6 +230,7 @@ export default function WorkerManagement() {
   const [showBulkVerifyDialog, setShowBulkVerifyDialog] = useState(false);
   const [showBulkDeleteDialog, setShowBulkDeleteDialog] = useState(false);
   const [bulkActionLoading, setBulkActionLoading] = useState(false);
+  const [selectAllFiltered, setSelectAllFiltered] = useState(false);
 
 
   // Fetch all users
@@ -904,17 +905,41 @@ export default function WorkerManagement() {
                       <TableHeader>
                         <TableRow>
                           <TableHead className="w-[50px]">
-                            <Checkbox
-                              checked={selectedWorkerIds.size === clients.length && clients.length > 0}
-                              onCheckedChange={(checked) => {
-                                if (checked) {
-                                  setSelectedWorkerIds(new Set(clients.map(w => w.id)));
-                                } else {
-                                  setSelectedWorkerIds(new Set());
-                                }
-                              }}
-                              aria-label="Select all workers"
-                            />
+                            <div className="flex items-center gap-1">
+                              <Checkbox
+                                checked={selectAllFiltered ? selectedWorkerIds.size === filteredWorkers.length && filteredWorkers.length > 0 : selectedWorkerIds.size === clients.length && clients.length > 0}
+                                onCheckedChange={(checked) => {
+                                  if (checked) {
+                                    if (selectAllFiltered) {
+                                      setSelectedWorkerIds(new Set(filteredWorkers.map(w => w.id)));
+                                    } else {
+                                      setSelectedWorkerIds(new Set(clients.map(w => w.id)));
+                                    }
+                                  } else {
+                                    setSelectedWorkerIds(new Set());
+                                    setSelectAllFiltered(false);
+                                  }
+                                }}
+                                aria-label={selectAllFiltered ? "Select all filtered workers" : "Select all workers on page"}
+                              />
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => {
+                                  const newSelectAll = !selectAllFiltered;
+                                  setSelectAllFiltered(newSelectAll);
+                                  if (newSelectAll) {
+                                    setSelectedWorkerIds(new Set(filteredWorkers.map(w => w.id)));
+                                  } else {
+                                    setSelectedWorkerIds(new Set());
+                                  }
+                                }}
+                                className="text-xs text-blue-600 hover:text-blue-700 h-6 px-1"
+                                title={selectAllFiltered ? "Switch to page selection" : `Select all ${filteredWorkers.length} filtered workers`}
+                              >
+                                {selectAllFiltered ? "Page" : "All"}
+                              </Button>
+                            </div>
                           </TableHead>
                           <TableHead className="w-[190px]">
                             <div className="flex items-center gap-2">

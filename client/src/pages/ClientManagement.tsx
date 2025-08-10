@@ -230,6 +230,7 @@ export default function ClientManagement() {
   const [showBulkVerifyDialog, setShowBulkVerifyDialog] = useState(false);
   const [showBulkDeleteDialog, setShowBulkDeleteDialog] = useState(false);
   const [bulkActionLoading, setBulkActionLoading] = useState(false);
+  const [selectAllFiltered, setSelectAllFiltered] = useState(false);
 
 
   // Fetch all users
@@ -904,17 +905,41 @@ export default function ClientManagement() {
                       <TableHeader>
                         <TableRow>
                           <TableHead className="w-[50px]">
-                            <Checkbox
-                              checked={selectedClientIds.size === clients.length && clients.length > 0}
-                              onCheckedChange={(checked) => {
-                                if (checked) {
-                                  setSelectedClientIds(new Set(clients.map(c => c.id)));
-                                } else {
-                                  setSelectedClientIds(new Set());
-                                }
-                              }}
-                              aria-label="Select all clients"
-                            />
+                            <div className="flex items-center gap-1">
+                              <Checkbox
+                                checked={selectAllFiltered ? selectedClientIds.size === filteredClients.length && filteredClients.length > 0 : selectedClientIds.size === clients.length && clients.length > 0}
+                                onCheckedChange={(checked) => {
+                                  if (checked) {
+                                    if (selectAllFiltered) {
+                                      setSelectedClientIds(new Set(filteredClients.map(c => c.id)));
+                                    } else {
+                                      setSelectedClientIds(new Set(clients.map(c => c.id)));
+                                    }
+                                  } else {
+                                    setSelectedClientIds(new Set());
+                                    setSelectAllFiltered(false);
+                                  }
+                                }}
+                                aria-label={selectAllFiltered ? "Select all filtered clients" : "Select all clients on page"}
+                              />
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => {
+                                  const newSelectAll = !selectAllFiltered;
+                                  setSelectAllFiltered(newSelectAll);
+                                  if (newSelectAll) {
+                                    setSelectedClientIds(new Set(filteredClients.map(c => c.id)));
+                                  } else {
+                                    setSelectedClientIds(new Set());
+                                  }
+                                }}
+                                className="text-xs text-blue-600 hover:text-blue-700 h-6 px-1"
+                                title={selectAllFiltered ? "Switch to page selection" : `Select all ${filteredClients.length} filtered clients`}
+                              >
+                                {selectAllFiltered ? "Page" : "All"}
+                              </Button>
+                            </div>
                           </TableHead>
                           <TableHead className="w-[190px]">
                             <div className="flex items-center gap-2">
