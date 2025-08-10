@@ -35,7 +35,8 @@ import {
   EyeOff,
   Plus,
   FileText,
-  Filter
+  Filter,
+  Ban
 } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
