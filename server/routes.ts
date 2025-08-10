@@ -86,19 +86,20 @@ function addMinutes(date: Date, minutes: number): Date {
   return new Date(date.getTime() + minutes * 60000);
 }
 
-// Generate professional job ID with date-based format
-function generateJobId(): string {
+// Generate professional job ID with user ID format + counter + date
+async function generateJobId(clientId: string): Promise<string> {
   const now = new Date();
-  const year = now.getFullYear().toString().slice(-2);
-  const month = (now.getMonth() + 1).toString().padStart(2, '0');
   const day = now.getDate().toString().padStart(2, '0');
-  const hour = now.getHours().toString().padStart(2, '0');
-  const minute = now.getMinutes().toString().padStart(2, '0');
+  const month = (now.getMonth() + 1).toString().padStart(2, '0');
+  const year = now.getFullYear().toString();
+  const dateStr = `${day}${month}${year}`;
   
-  // Generate 3-digit random suffix for uniqueness
-  const randomSuffix = Math.floor(Math.random() * 900 + 100);
+  // Get the next sequential number for this client
+  const existingJobs = await storage.getJobPostingsByClient(clientId);
+  const jobCount = existingJobs.length + 1;
+  const sequentialNumber = jobCount.toString().padStart(3, '0');
   
-  return `JOB-${year}${month}${day}-${hour}${minute}-${randomSuffix}`;
+  return `${clientId}/${sequentialNumber}/${dateStr}`;
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -1725,8 +1726,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log("Received job posting data:", req.body);
       
-      // Generate professional job ID
-      const jobId = generateJobId();
+      // Generate professional job ID using client ID format
+      const jobId = await generateJobId(req.body.clientId);
       
       // Convert budget numbers to strings for database compatibility
       const { budgetMin, budgetMax, deadline, districtId, ...rest } = req.body;
