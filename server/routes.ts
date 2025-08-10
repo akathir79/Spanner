@@ -1665,14 +1665,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/job-postings", async (req, res) => {
     try {
+      console.log("Received job posting data:", req.body);
+      
       // Convert budget numbers to strings for database compatibility
-      const { budgetMin, budgetMax, ...rest } = req.body;
+      const { budgetMin, budgetMax, deadline, districtId, ...rest } = req.body;
       const jobData = {
         ...rest,
-        district: rest.districtId, // Map districtId to district field
+        district: districtId, // Map districtId to district field
         budgetMin: budgetMin !== undefined && budgetMin !== null ? budgetMin.toString() : null,
         budgetMax: budgetMax !== undefined && budgetMax !== null ? budgetMax.toString() : null,
+        deadline: deadline ? new Date(deadline) : null, // Ensure deadline is properly converted to Date
       };
+      
+      console.log("Processed job data for database:", jobData);
+      
       const job = await storage.createJobPosting(jobData);
       res.status(201).json(job);
     } catch (error) {
