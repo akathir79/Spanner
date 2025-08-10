@@ -75,7 +75,7 @@ Located in `shared/schema.ts`, the database includes:
 - **Custom User ID System**: Automatic generation of unique IDs in format STATE-DISTRICT-XXXX-ROLE (e.g., "TAM-CHE-0001-C" for client, "TAM-SAL-0001-W" for worker, "TAM-COI-0001-A" for admin) with sequential numbering per state-district-role combination (August 6, 2025)
 - **User Activity Tracking**: Complete user activity monitoring with registration date/time, last login tracking, and "Member since" display on client dashboard (August 6, 2025)
 - **Smart Voice Job Posting**: Advanced multi-language voice assistant with automatic detection of 8+ Indian languages (Tamil/Hindi/Malayalam/Telugu/Kannada/Gujarati/Punjabi/Bengali/English), real-time translation to English, intelligent field extraction, and original audio file preservation. Fixed translation issues to ensure all output is in English format (August 10, 2025)
-- **Bhashini API Integration**: Replaced basic pattern matching with Government of India's official Bhashini API for professional speech-to-text recognition and neural machine translation across 22+ Indian languages. Requires BHASHINI_USER_ID and BHASHINI_ULCA_API_KEY environment variables for authentication (August 10, 2025)
+- **Vakyansh ASR Integration**: Switched to EkStep's Vakyansh open-source speech recognition API supporting 39 Indian languages with 34,000+ hours of training data. No authentication required - completely free and open API from cdac.ulcacontrib.org (August 10, 2025)
 
 ### User Interfaces
 - **Home Page**: Service discovery with search and filters

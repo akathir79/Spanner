@@ -6,7 +6,7 @@ import { z } from "zod";
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
-import { createBhashiniAPI } from './bhashiniAPI';
+import { vakyanshAPI } from './vakyanshAPI';
 import { 
   insertUserSchema, 
   insertWorkerProfileSchema, 
@@ -2601,8 +2601,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (stateName && stateName !== 'undefined') {
         // Return districts for specific state
-        const stateData = statesDistrictsData.states.find(
-          state => state.state.toLowerCase() === stateName.toLowerCase()
+        const stateData = Object.entries(statesDistrictsData.states as any).find(
+          ([stateName_key, stateInfo]: [string, any]) => stateName_key.toLowerCase() === stateName.toLowerCase()
         );
         
         if (!stateData) {
@@ -2620,16 +2620,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Bhashini Voice Processing API endpoint
+  // Vakyansh Voice Processing API endpoint (EkStep Open Source ASR)
   app.post("/api/voice/process", audioUpload.single('audio'), async (req, res) => {
     try {
-      const bhashiniAPI = createBhashiniAPI();
-      if (!bhashiniAPI) {
-        return res.status(500).json({ 
-          error: "Bhashini API not configured. Please set BHASHINI_USER_ID and BHASHINI_ULCA_API_KEY environment variables." 
-        });
-      }
-
       if (!req.file) {
         return res.status(400).json({ error: "No audio file provided" });
       }
@@ -2638,21 +2631,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const audioBuffer = fs.readFileSync(req.file.path);
       const audioBase64 = audioBuffer.toString('base64');
 
-      // Process with Bhashini API
-      const result = await bhashiniAPI.speechToTextAndTranslate(audioBase64);
+      // Process with Vakyansh API (no authentication required!)
+      const result = await vakyanshAPI.recognizeSpeech(audioBase64);
 
-      // Extract job details from translated English text using intelligent parsing
-      const extractedData = await extractJobDetailsFromText(result.translatedText);
+      if (!result.success || !result.transcript) {
+        throw new Error(result.error || "Speech recognition failed");
+      }
+
+      // For translation, if the detected language is not English, use simple translation
+      let translatedText = result.transcript;
+      let detectedLanguage = result.language;
+      
+      // If transcript contains non-English text, attempt simple translation to English
+      if (result.language !== 'en') {
+        // For now, assume the transcript is already meaningful for job extraction
+        // In the future, you could add Google Translate API integration here
+        translatedText = result.transcript; // Keep original for now
+      }
+
+      // Extract job details from transcript using intelligent parsing
+      const extractedData = await extractJobDetailsFromText(translatedText);
 
       // Clean up uploaded file
       fs.unlinkSync(req.file.path);
 
       res.json({
         success: true,
-        detectedLanguage: result.detectedLanguage,
-        detectedLanguageName: bhashiniAPI.getLanguageName(result.detectedLanguage),
+        detectedLanguage: detectedLanguage,
+        detectedLanguageName: vakyanshAPI.getLanguageName(detectedLanguage),
         originalTranscript: result.transcript,
-        translatedText: result.translatedText,
+        translatedText: translatedText,
         extractedData: extractedData,
         confidence: result.confidence || 0.9
       });

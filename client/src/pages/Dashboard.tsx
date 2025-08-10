@@ -1181,7 +1181,7 @@ const VoiceJobPostingForm = ({ onClose }: { onClose?: () => void }) => {
       console.error('Voice processing error:', error);
       toast({
         title: "Voice Processing Failed",
-        description: error instanceof Error ? error.message : "Please check Bhashini API configuration and try again.",
+        description: error instanceof Error ? error.message : "Speech recognition service is temporarily unavailable. Please try again.",
         variant: "destructive"
       });
     } finally {
