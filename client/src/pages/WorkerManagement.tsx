@@ -632,7 +632,7 @@ export default function WorkerManagement() {
   // Worker approval mutation
   const approveWorkerMutation = useMutation({
     mutationFn: async (workerId: string) => {
-      return await apiRequest("POST", `/api/admin/approve-worker/${workerId}`, {});
+      return await apiRequest(`/api/admin/approve-worker/${workerId}`, "POST", {});
     },
     onSuccess: (_, workerId) => {
       toast({
@@ -653,7 +653,7 @@ export default function WorkerManagement() {
   // Worker rejection mutation
   const rejectWorkerMutation = useMutation({
     mutationFn: async (workerId: string) => {
-      return await apiRequest("DELETE", `/api/admin/reject-worker/${workerId}`, {});
+      return await apiRequest(`/api/admin/reject-worker/${workerId}`, "DELETE", {});
     },
     onSuccess: (_, workerId) => {
       toast({
