@@ -222,25 +222,6 @@ export default function WorkerManagement() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [location, setLocation] = useLocation();
-
-  // Data fetching
-  const { data: users = [], isLoading: usersLoading, error: usersError } = useQuery<User[]>({
-    queryKey: ["/api/admin/users"],
-  });
-
-  // Early return for error state to prevent hooks ordering issues
-  if (usersError) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Alert className="max-w-md">
-          <AlertCircle className="w-4 h-4" />
-          <AlertDescription>
-            Failed to load worker data. Please try refreshing the page.
-          </AlertDescription>
-        </Alert>
-      </div>
-    );
-  }
   
   // Current view state
   const [view, setView] = useState<"total" | "districts" | "district">("total");
@@ -280,6 +261,25 @@ export default function WorkerManagement() {
 
   // Animation refs
   const totalWorkerButtonRef = useRef<HTMLButtonElement>(null);
+
+  // Data fetching
+  const { data: users = [], isLoading: usersLoading, error: usersError } = useQuery<User[]>({
+    queryKey: ["/api/admin/users"],
+  });
+
+  // Handle error state after all hooks are declared
+  if (usersError) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Alert className="max-w-md">
+          <AlertCircle className="w-4 h-4" />
+          <AlertDescription>
+            Failed to load worker data. Please try refreshing the page.
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
 
   // Type the financialStatements as an array to fix TypeScript errors
   const typedFinancialStatements: any[] = [];
