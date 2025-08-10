@@ -161,10 +161,10 @@ function getActivityStatus(lastLoginAt?: string, createdAt?: string) {
 
 // Helper function to get user status category for filtering
 function getUserStatusCategory(client: User): string {
-  if (!worker.lastLoginAt) {
+  if (!client.lastLoginAt) {
     // Check if user was created recently (within 24 hours)
-    if (worker.createdAt) {
-      const created = new Date(worker.createdAt);
+    if (client.createdAt) {
+      const created = new Date(client.createdAt);
       const now = new Date();
       const hoursSinceCreation = (now.getTime() - created.getTime()) / (1000 * 60 * 60);
       
@@ -175,7 +175,7 @@ function getUserStatusCategory(client: User): string {
     return "no_login";
   }
 
-  const lastLogin = new Date(worker.lastLoginAt);
+  const lastLogin = new Date(client.lastLoginAt);
   const now = new Date();
   const daysSinceLogin = Math.floor((now.getTime() - lastLogin.getTime()) / (1000 * 60 * 60 * 24));
 
@@ -255,7 +255,7 @@ export default function WorkerManagement() {
   // Type the financialStatements as an array to fix TypeScript errors
   const typedFinancialStatements = (financialStatements as any[]) || [];
 
-  // Memoize filtered workers to prevent recalculation on every render
+  // Memoize filtered clients to prevent recalculation on every render
   const allWorkers = useMemo(() => {
     return (users as User[]).filter((u: User) => u.role === "worker");
   }, [users]);
@@ -279,15 +279,9 @@ export default function WorkerManagement() {
           case "just_registered":
             return userStatus === "just_registered";
           case "verified":
-            return worker.isVerified === true;
+            return client.isVerified === true;
           case "unverified":
-            return worker.isVerified === false;
-          case "pending":
-            return worker.status === "pending";
-          case "approved":
-            return worker.status === "approved";
-          case "rejected":
-            return worker.status === "rejected";
+            return client.isVerified === false;
           default:
             return true;
         }
@@ -298,47 +292,47 @@ export default function WorkerManagement() {
     if (!searchQuery.trim()) return filtered;
 
     const query = searchQuery.toLowerCase().trim();
-    return filtered.filter(worker => {
+    return filtered.filter(client => {
       switch (searchFilter) {
         case "id":
-          return worker.id.toLowerCase().includes(query);
+          return client.id.toLowerCase().includes(query);
         case "name":
-          return `${worker.firstName} ${worker.lastName}`.toLowerCase().includes(query);
+          return `${client.firstName} ${client.lastName}`.toLowerCase().includes(query);
         case "email":
-          return worker.email?.toLowerCase().includes(query) || false;
+          return client.email?.toLowerCase().includes(query) || false;
         case "mobile":
-          return worker.mobile.includes(query);
+          return client.mobile.includes(query);
         case "location":
-          return worker.district?.toLowerCase().includes(query) || 
-                 worker.state?.toLowerCase().includes(query) || false;
+          return client.district?.toLowerCase().includes(query) || 
+                 client.state?.toLowerCase().includes(query) || false;
         case "all":
         default:
           return (
-            worker.id.toLowerCase().includes(query) ||
-            `${worker.firstName} ${worker.lastName}`.toLowerCase().includes(query) ||
-            worker.email?.toLowerCase().includes(query) ||
-            worker.mobile.includes(query) ||
-            worker.district?.toLowerCase().includes(query) ||
-            worker.state?.toLowerCase().includes(query)
+            client.id.toLowerCase().includes(query) ||
+            `${client.firstName} ${client.lastName}`.toLowerCase().includes(query) ||
+            client.email?.toLowerCase().includes(query) ||
+            client.mobile.includes(query) ||
+            client.district?.toLowerCase().includes(query) ||
+            client.state?.toLowerCase().includes(query)
           );
       }
     });
-  }, [allWorkers, searchQuery, searchFilter, statusFilter]);
+  }, [allClients, searchQuery, searchFilter, statusFilter]);
 
-  // Paginated workers for current view
-  const workers = useMemo(() => {
+  // Paginated clients for current view
+  const clients = useMemo(() => {
     const startIndex = (currentPage - 1) * pageSize;
     const endIndex = startIndex + pageSize;
-    const paginated = filteredWorkers.slice(startIndex, endIndex);
+    const paginated = filteredClients.slice(startIndex, endIndex);
     
     // Update total pages
-    const calculatedTotalPages = Math.ceil(filteredWorkers.length / pageSize);
+    const calculatedTotalPages = Math.ceil(filteredClients.length / pageSize);
     if (calculatedTotalPages !== totalPages) {
       setTotalPages(calculatedTotalPages);
     }
     
     return paginated;
-  }, [filteredWorkers, currentPage, pageSize, totalPages]);
+  }, [filteredClients, currentPage, pageSize, totalPages]);
 
   // Roll-in animation effect on component load
   useEffect(() => {
@@ -361,16 +355,16 @@ export default function WorkerManagement() {
     ? (statesDistrictsData.states as StateData[]).find(s => s.state === selectedState)?.districts || []
     : [];
 
-  // Filtered district workers (without pagination)
+  // Filtered district clients (without pagination)
   const filteredDistrictClients = useMemo(() => {
     if (!selectedDistrict) return [];
     
-    let districtWorkers = allWorkers.filter((client: User) => worker.district === selectedDistrict);
+    let districtClients = allClients.filter((client: User) => client.district === selectedDistrict);
     
     // Apply status filter
     if (statusFilter !== "all") {
-      districtWorkers = districtWorkers.filter(worker => {
-        const userStatus = getUserStatusCategory(worker);
+      districtClients = districtClients.filter(client => {
+        const userStatus = getUserStatusCategory(client);
         
         switch (statusFilter) {
           case "active":
@@ -382,46 +376,46 @@ export default function WorkerManagement() {
           case "just_registered":
             return userStatus === "just_registered";
           case "verified":
-            return worker.isVerified === true;
+            return client.isVerified === true;
           case "unverified":
-            return worker.isVerified === false;
+            return client.isVerified === false;
           default:
             return true;
         }
       });
     }
     
-    if (!searchQuery.trim()) return districtWorkers;
+    if (!searchQuery.trim()) return districtClients;
 
     const query = searchQuery.toLowerCase().trim();
-    return districtWorkers.filter(worker => {
+    return districtClients.filter(client => {
       switch (searchFilter) {
         case "id":
-          return worker.id.toLowerCase().includes(query);
+          return client.id.toLowerCase().includes(query);
         case "name":
-          return `${worker.firstName} ${worker.lastName}`.toLowerCase().includes(query);
+          return `${client.firstName} ${client.lastName}`.toLowerCase().includes(query);
         case "email":
-          return worker.email?.toLowerCase().includes(query) || false;
+          return client.email?.toLowerCase().includes(query) || false;
         case "mobile":
-          return worker.mobile.includes(query);
+          return client.mobile.includes(query);
         case "location":
-          return worker.district?.toLowerCase().includes(query) || 
-                 worker.state?.toLowerCase().includes(query) || false;
+          return client.district?.toLowerCase().includes(query) || 
+                 client.state?.toLowerCase().includes(query) || false;
         case "all":
         default:
           return (
-            worker.id.toLowerCase().includes(query) ||
-            `${worker.firstName} ${worker.lastName}`.toLowerCase().includes(query) ||
-            worker.email?.toLowerCase().includes(query) ||
-            worker.mobile.includes(query) ||
-            worker.district?.toLowerCase().includes(query) ||
-            worker.state?.toLowerCase().includes(query)
+            client.id.toLowerCase().includes(query) ||
+            `${client.firstName} ${client.lastName}`.toLowerCase().includes(query) ||
+            client.email?.toLowerCase().includes(query) ||
+            client.mobile.includes(query) ||
+            client.district?.toLowerCase().includes(query) ||
+            client.state?.toLowerCase().includes(query)
           );
       }
     });
-  }, [allWorkers, selectedDistrict, searchQuery, searchFilter, statusFilter]);
+  }, [allClients, selectedDistrict, searchQuery, searchFilter, statusFilter]);
 
-  // Paginated district workers for current view
+  // Paginated district clients for current view
   const clientsForDistrict = useMemo(() => {
     const startIndex = (districtCurrentPage - 1) * districtPageSize;
     const endIndex = startIndex + districtPageSize;
@@ -436,14 +430,14 @@ export default function WorkerManagement() {
     return paginated;
   }, [filteredDistrictClients, districtCurrentPage, districtPageSize, districtTotalPages]);
 
-  // Get client count for each state from database (using allWorkers, not filtered)
+  // Get client count for each state from database (using allClients, not filtered)
   const getClientCountForState = (stateName: string) => {
-    return allWorkers.filter((client: User) => worker.state === stateName).length;
+    return allClients.filter((client: User) => client.state === stateName).length;
   };
 
-  // Get client count for each district from database (using allWorkers, not filtered)
+  // Get client count for each district from database (using allClients, not filtered)
   const getClientCountForDistrict = (districtName: string) => {
-    return allWorkers.filter((client: User) => worker.district === districtName).length;
+    return allClients.filter((client: User) => client.district === districtName).length;
   };
 
   // Mutations for client actions
@@ -554,17 +548,17 @@ export default function WorkerManagement() {
 
   // Action handlers
   const handleViewDetails = (client: User) => {
-    setSelectedClient(worker);
+    setSelectedClient(client);
     setShowDetailsDialog(true);
   };
 
   const handleSendMessage = (client: User) => {
-    setSelectedClient(worker);
+    setSelectedClient(client);
     setShowMessageDialog(true);
   };
 
   const handleSendDirectMessage = (client: User) => {
-    setSelectedClient(worker);
+    setSelectedClient(client);
     setShowMessageDialog(true);
   };
 
@@ -572,27 +566,27 @@ export default function WorkerManagement() {
     // Handle SMS functionality
     toast({
       title: "SMS Feature",
-      description: `SMS will be sent to ${worker.firstName} ${worker.lastName} (${worker.mobile})`,
+      description: `SMS will be sent to ${client.firstName} ${client.lastName} (${client.mobile})`,
     });
   };
 
   const handleSendWhatsApp = (client: User) => {
     // Handle WhatsApp functionality - open WhatsApp with phone number
-    const phoneNumber = worker.mobile.replace(/\D/g, ''); // Remove non-digits
+    const phoneNumber = client.mobile.replace(/\D/g, ''); // Remove non-digits
     const whatsappUrl = `https://wa.me/${phoneNumber}`;
     window.open(whatsappUrl, '_blank');
   };
 
   const handleVerifyUser = (client: User) => {
-    verifyUserMutation.mutate(worker.id);
+    verifyUserMutation.mutate(client.id);
   };
 
   const handleSuspendUser = (client: User) => {
-    suspendUserMutation.mutate(worker.id);
+    suspendUserMutation.mutate(client.id);
   };
 
   const handleDeleteUser = (client: User) => {
-    setSelectedClient(worker);
+    setSelectedClient(client);
     setShowDeleteDialog(true);
   };
 
@@ -612,12 +606,12 @@ export default function WorkerManagement() {
   };
 
   const handleViewTransferHistory = (client: User) => {
-    setSelectedClient(worker);
+    setSelectedClient(client);
     setShowTransferHistoryDialog(true);
   };
 
   const handleViewFinancialStatements = (client: User) => {
-    setSelectedClient(worker);
+    setSelectedClient(client);
     setShowFinancialStatementsDialog(true);
   };
 
@@ -742,7 +736,7 @@ export default function WorkerManagement() {
                 variant="secondary" 
                 className="absolute right-2 top-1/2 -translate-y-1/2 h-5 px-2 min-w-[20px] rounded-md flex items-center justify-center text-xs bg-purple-500 text-white hover:bg-purple-600"
               >
-                {filteredWorkers.length}
+                {filteredClients.length}
               </Badge>
             </button>
           </div>
@@ -806,7 +800,7 @@ export default function WorkerManagement() {
                       All Registered Clients
                     </h2>
                     <p className="text-gray-600 dark:text-gray-400">
-                      Complete client database • {filteredWorkers.length} total workers • Showing {((currentPage - 1) * pageSize) + 1}-{Math.min(currentPage * pageSize, filteredWorkers.length)} of {filteredWorkers.length} {(searchQuery || statusFilter !== 'all') ? `filtered results` : ''}
+                      Complete client database • {filteredClients.length} total clients • Showing {((currentPage - 1) * pageSize) + 1}-{Math.min(currentPage * pageSize, filteredClients.length)} of {filteredClients.length} {(searchQuery || statusFilter !== 'all') ? `filtered results` : ''}
                     </p>
                   </div>
                   
@@ -815,7 +809,7 @@ export default function WorkerManagement() {
                     <div className="relative w-72">
                       <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                       <Input
-                        placeholder="Search workers..."
+                        placeholder="Search clients..."
                         value={searchQuery}
                         onChange={(e) => {
                           setSearchQuery(e.target.value);
@@ -850,14 +844,14 @@ export default function WorkerManagement() {
               </div>
               
               <div className="flex-1 overflow-y-auto p-6">
-                {workers.length === 0 ? (
+                {clients.length === 0 ? (
                   <div className="text-center py-12">
                     <div className="text-gray-400 mb-4">
                       <svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
                       </svg>
                     </div>
-                    <p className="text-gray-500 dark:text-gray-400 text-lg">No workers registered yet</p>
+                    <p className="text-gray-500 dark:text-gray-400 text-lg">No clients registered yet</p>
                     <p className="text-gray-400 dark:text-gray-500 text-sm mt-1">Client registrations will appear here</p>
                   </div>
                 ) : (
@@ -964,10 +958,10 @@ export default function WorkerManagement() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {workers.map((worker) => {
-                          const activityStatus = getActivityStatus(worker.lastLoginAt, worker.createdAt);
+                        {clients.map((client) => {
+                          const activityStatus = getActivityStatus(client.lastLoginAt, client.createdAt);
                           return (
-                            <TableRow key={worker.id}>
+                            <TableRow key={client.id}>
                               <TableCell className="py-2">
                               <Tooltip>
                                 <TooltipTrigger asChild>
@@ -975,18 +969,18 @@ export default function WorkerManagement() {
                                     <Avatar className="h-10 w-10 flex-shrink-0">
                                       <AvatarImage 
                                         src={(client as any).profilePicture} 
-                                        alt={`${worker.firstName} ${worker.lastName}`} 
+                                        alt={`${client.firstName} ${client.lastName}`} 
                                       />
                                       <AvatarFallback className="bg-blue-100 text-blue-600 font-semibold">
-                                        {worker.firstName.charAt(0).toUpperCase()}{worker.lastName.charAt(0).toUpperCase()}
+                                        {client.firstName.charAt(0).toUpperCase()}{client.lastName.charAt(0).toUpperCase()}
                                       </AvatarFallback>
                                     </Avatar>
                                     <div className="space-y-1 min-w-0 flex-1">
                                       <div className="font-medium text-gray-900 dark:text-white text-sm">
-                                        {worker.firstName} {worker.lastName}
+                                        {client.firstName} {client.lastName}
                                       </div>
                                       <div className="text-xs text-green-800 dark:text-green-400 font-mono font-bold">
-                                        ID: {worker.id}
+                                        ID: {client.id}
                                       </div>
                                       <div className="flex items-center gap-2 flex-wrap">
                                         <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900 dark:text-blue-100 text-xs px-2 py-1">
@@ -1010,23 +1004,23 @@ export default function WorkerManagement() {
                                           <span className="ml-1">{activityStatus.label}</span>
                                         </Badge>
                                         <Badge
-                                          variant={worker.isVerified ? "default" : "destructive"}
-                                          className={worker.isVerified 
+                                          variant={client.isVerified ? "default" : "destructive"}
+                                          className={client.isVerified 
                                             ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100 text-xs" 
                                             : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100 text-xs"
                                           }
                                         >
-                                          {worker.isVerified ? "Verified" : "Unverified"}
+                                          {client.isVerified ? "Verified" : "Unverified"}
                                         </Badge>
                                       </div>
                                       <div className="text-xs text-gray-500 dark:text-gray-400">
-                                        Last: {worker.lastLoginAt ? formatIndianDateTime(worker.lastLoginAt) : 'No Login'}
+                                        Last: {client.lastLoginAt ? formatIndianDateTime(client.lastLoginAt) : 'No Login'}
                                       </div>
                                       <div className="text-xs text-gray-400 dark:text-gray-500 italic">
-                                        Reg: {formatIndianDateTime(worker.createdAt)}
+                                        Reg: {formatIndianDateTime(client.createdAt)}
                                       </div>
                                       <div className="text-xs text-gray-400 dark:text-gray-500 italic">
-                                        Member since {getMemberSince(worker.createdAt)}
+                                        Member since {getMemberSince(client.createdAt)}
                                       </div>
                                     </div>
                                   </div>
@@ -1037,10 +1031,10 @@ export default function WorkerManagement() {
                                       <Avatar className="h-16 w-16 flex-shrink-0">
                                         <AvatarImage 
                                           src={(client as any).profilePicture} 
-                                          alt={`${worker.firstName} ${worker.lastName}`} 
+                                          alt={`${client.firstName} ${client.lastName}`} 
                                         />
                                         <AvatarFallback className="bg-blue-100 text-blue-600 font-bold text-lg">
-                                          {worker.firstName.charAt(0).toUpperCase()}{worker.lastName.charAt(0).toUpperCase()}
+                                          {client.firstName.charAt(0).toUpperCase()}{client.lastName.charAt(0).toUpperCase()}
                                         </AvatarFallback>
                                       </Avatar>
                                       <div>
@@ -1049,19 +1043,19 @@ export default function WorkerManagement() {
                                       </div>
                                     </div>
                                     <div className="space-y-2">
-                                      <div className="text-sm"><strong>Full Name:</strong> {worker.firstName} {worker.lastName}</div>
-                                      <div className="text-sm"><strong>Client ID:</strong> {worker.id}</div>
+                                      <div className="text-sm"><strong>Full Name:</strong> {client.firstName} {client.lastName}</div>
+                                      <div className="text-sm"><strong>Client ID:</strong> {client.id}</div>
                                       <div className="text-sm"><strong>Role:</strong> Client User</div>
                                       <div className="flex items-center gap-2">
                                         <strong className="text-sm">Verification Status:</strong>
                                         <Badge
-                                          variant={worker.isVerified ? "default" : "destructive"}
-                                          className={worker.isVerified 
+                                          variant={client.isVerified ? "default" : "destructive"}
+                                          className={client.isVerified 
                                             ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100" 
                                             : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100"
                                           }
                                         >
-                                          {worker.isVerified ? "Verified" : "Unverified"}
+                                          {client.isVerified ? "Verified" : "Unverified"}
                                         </Badge>
                                       </div>
                                       <div className="flex items-center gap-2">
@@ -1071,13 +1065,13 @@ export default function WorkerManagement() {
                                             activityStatus.label === 'Just Registered' || 
                                             activityStatus.label === 'No Login' || 
                                             activityStatus.label === 'Inactive' ||
-                                            !worker.isVerified ? "destructive" : "default"
+                                            !client.isVerified ? "destructive" : "default"
                                           }
                                           className={
                                             activityStatus.label === 'Just Registered' || 
                                             activityStatus.label === 'No Login' || 
                                             activityStatus.label === 'Inactive' ||
-                                            !worker.isVerified
+                                            !client.isVerified
                                               ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100" 
                                               : "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100"
                                           }
@@ -1086,13 +1080,13 @@ export default function WorkerManagement() {
                                           <span className="ml-1">{activityStatus.label}</span>
                                         </Badge>
                                       </div>
-                                      <div className="text-sm"><strong>Registration Date:</strong> {formatIndianDateTime(worker.createdAt)}</div>
-                                      <div className="text-sm"><strong>Last Login:</strong> {worker.lastLoginAt ? formatIndianDateTime(worker.lastLoginAt) : 'No Login'}</div>
-                                      {worker.mobile && (
-                                        <div className="text-sm"><strong>Mobile:</strong> {worker.mobile}</div>
+                                      <div className="text-sm"><strong>Registration Date:</strong> {formatIndianDateTime(client.createdAt)}</div>
+                                      <div className="text-sm"><strong>Last Login:</strong> {client.lastLoginAt ? formatIndianDateTime(client.lastLoginAt) : 'No Login'}</div>
+                                      {client.mobile && (
+                                        <div className="text-sm"><strong>Mobile:</strong> {client.mobile}</div>
                                       )}
-                                      {worker.email && (
-                                        <div className="text-sm"><strong>Email:</strong> {worker.email}</div>
+                                      {client.email && (
+                                        <div className="text-sm"><strong>Email:</strong> {client.email}</div>
                                       )}
                                     </div>
                                   </div>
@@ -1106,14 +1100,14 @@ export default function WorkerManagement() {
                                     {(client as any).address ? (
                                       <div>
                                         <div className="text-gray-700 dark:text-gray-300 text-sm font-bold">
-                                          {worker.district}, {worker.state}
+                                          {client.district}, {client.state}
                                         </div>
                                         <div className="font-medium text-gray-600 dark:text-gray-400 text-xs mt-1">Address:</div>
                                         <div className="text-gray-900 dark:text-white text-xs">
                                           {(client as any).address}
                                         </div>
                                         <div className="text-gray-700 dark:text-gray-300 text-xs">
-                                          {worker.district}, {worker.state}
+                                          {client.district}, {client.state}
                                         </div>
                                         {(client as any).pincode && (
                                           <div className="text-gray-600 dark:text-gray-400 text-xs">
@@ -1127,7 +1121,7 @@ export default function WorkerManagement() {
                                             className="h-6 w-6 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
                                             onClick={(e) => {
                                               e.stopPropagation();
-                                              const fullAddress = `${worker.firstName} ${worker.lastName}\n${(client as any).address}, ${worker.district}, ${worker.state}${(client as any).pincode ? `, PIN: ${(client as any).pincode}` : ''}`;
+                                              const fullAddress = `${client.firstName} ${client.lastName}\n${(client as any).address}, ${client.district}, ${client.state}${(client as any).pincode ? `, PIN: ${(client as any).pincode}` : ''}`;
                                               navigator.clipboard.writeText(fullAddress);
                                             }}
                                             title="Copy Address with Name"
@@ -1136,10 +1130,10 @@ export default function WorkerManagement() {
                                           </Button>
                                         </div>
                                       </div>
-                                    ) : worker.district && worker.state ? (
+                                    ) : client.district && client.state ? (
                                       <div>
                                         <div className="text-gray-900 dark:text-white">
-                                          {worker.district}, {worker.state}
+                                          {client.district}, {client.state}
                                         </div>
                                       </div>
                                     ) : (
@@ -1155,8 +1149,8 @@ export default function WorkerManagement() {
                                     {(client as any).address ? (
                                       <div className="space-y-1">
                                         <div className="text-sm"><strong>Full Address:</strong> {(client as any).address}</div>
-                                        <div className="text-sm"><strong>District:</strong> {worker.district}</div>
-                                        <div className="text-sm"><strong>State:</strong> {worker.state}</div>
+                                        <div className="text-sm"><strong>District:</strong> {client.district}</div>
+                                        <div className="text-sm"><strong>State:</strong> {client.state}</div>
                                         {(client as any).pincode && (
                                           <div className="text-sm"><strong>PIN Code:</strong> {(client as any).pincode}</div>
                                         )}
@@ -1167,7 +1161,7 @@ export default function WorkerManagement() {
                                             className="h-6 w-6 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
                                             onClick={(e) => {
                                               e.stopPropagation();
-                                              const fullAddress = `${worker.firstName} ${worker.lastName}\n${(client as any).address}, ${worker.district}, ${worker.state}${(client as any).pincode ? `, PIN: ${(client as any).pincode}` : ''}`;
+                                              const fullAddress = `${client.firstName} ${client.lastName}\n${(client as any).address}, ${client.district}, ${client.state}${(client as any).pincode ? `, PIN: ${(client as any).pincode}` : ''}`;
                                               navigator.clipboard.writeText(fullAddress);
                                             }}
                                             title="Copy Address with Name"
@@ -1178,8 +1172,8 @@ export default function WorkerManagement() {
                                       </div>
                                     ) : (
                                       <div className="text-sm text-gray-500">
-                                        {worker.district && worker.state ? 
-                                          `Located in ${worker.district}, ${worker.state}` : 
+                                        {client.district && client.state ? 
+                                          `Located in ${client.district}, ${client.state}` : 
                                           'No location information provided'
                                         }
                                       </div>
@@ -1219,7 +1213,7 @@ export default function WorkerManagement() {
                                               }
                                             }, 200);
                                           }
-                                          handleViewFinancialStatements(worker);
+                                          handleViewFinancialStatements(client);
                                         }}
                                         onMouseEnter={(e) => {
                                           const button = e.currentTarget;
@@ -1241,7 +1235,7 @@ export default function WorkerManagement() {
                                         className="h-6 w-6 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
                                         onClick={(e) => {
                                           e.stopPropagation();
-                                          const financialData = `${worker.firstName} ${worker.lastName} - Financial Summary\nBookings: 0 (In progress: 0, Completed: 0)\nBalance: ₹0\nSpent: ₹0\nCommission: ₹0\nGST: ₹0`;
+                                          const financialData = `${client.firstName} ${client.lastName} - Financial Summary\nBookings: 0 (In progress: 0, Completed: 0)\nBalance: ₹0\nSpent: ₹0\nCommission: ₹0\nGST: ₹0`;
                                           navigator.clipboard.writeText(financialData);
                                         }}
                                         title="Copy Financial Data"
@@ -1270,7 +1264,7 @@ export default function WorkerManagement() {
                                         className="h-6 w-6 p-0 text-green-600 hover:text-green-700 hover:bg-green-50"
                                         onClick={(e) => {
                                           e.stopPropagation();
-                                          handleViewFinancialStatements(worker);
+                                          handleViewFinancialStatements(client);
                                         }}
                                         title="Financial Statements"
                                       >
@@ -1282,7 +1276,7 @@ export default function WorkerManagement() {
                                         className="h-6 w-6 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
                                         onClick={(e) => {
                                           e.stopPropagation();
-                                          const financialData = `${worker.firstName} ${worker.lastName} - Financial Summary\nBookings: 0 (In progress: 0, Completed: 0)\nBalance: ₹0\nSpent: ₹0\nCommission: ₹0\nGST: ₹0`;
+                                          const financialData = `${client.firstName} ${client.lastName} - Financial Summary\nBookings: 0 (In progress: 0, Completed: 0)\nBalance: ₹0\nSpent: ₹0\nCommission: ₹0\nGST: ₹0`;
                                           navigator.clipboard.writeText(financialData);
                                         }}
                                         title="Copy Financial Data"
@@ -1300,29 +1294,29 @@ export default function WorkerManagement() {
                                   <div className="text-sm space-y-1 cursor-pointer">
                                     <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
                                       <Phone className="w-3 h-3" />
-                                      <span>{worker.mobile}</span>
+                                      <span>{client.mobile}</span>
                                       <Button
                                         size="sm"
                                         variant="ghost"
                                         className="h-4 w-4 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50 ml-1"
                                         onClick={(e) => {
                                           e.stopPropagation();
-                                          navigator.clipboard.writeText(worker.mobile);
+                                          navigator.clipboard.writeText(client.mobile);
                                         }}
                                         title="Copy Mobile Number"
                                       >
                                         <Copy className="w-2 h-2" />
                                       </Button>
                                     </div>
-                                    {worker.email && (
+                                    {client.email && (
                                       <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
                                         <Mail className="w-3 h-3" />
                                         <a 
-                                          href={`mailto:${worker.email}`}
+                                          href={`mailto:${client.email}`}
                                           className="truncate max-w-[150px] text-blue-600 hover:text-blue-700 underline"
                                           onClick={(e) => e.stopPropagation()}
                                         >
-                                          {worker.email}
+                                          {client.email}
                                         </a>
                                       </div>
                                     )}
@@ -1333,7 +1327,7 @@ export default function WorkerManagement() {
                                         className="h-6 w-6 p-0 text-green-600 hover:text-green-700 hover:bg-green-50"
                                         onClick={(e) => {
                                           e.stopPropagation();
-                                          window.open(`https://wa.me/91${worker.mobile}`, '_blank');
+                                          window.open(`https://wa.me/91${client.mobile}`, '_blank');
                                         }}
                                         title="WhatsApp"
                                       >
@@ -1345,20 +1339,20 @@ export default function WorkerManagement() {
                                         className="h-6 w-6 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
                                         onClick={(e) => {
                                           e.stopPropagation();
-                                          window.location.href = `sms:+91${worker.mobile}`;
+                                          window.location.href = `sms:+91${client.mobile}`;
                                         }}
                                         title="SMS"
                                       >
                                         <Square className="w-3 h-3" />
                                       </Button>
-                                      {worker.email && (
+                                      {client.email && (
                                         <Button
                                           size="sm"
                                           variant="ghost"
                                           className="h-6 w-6 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
                                           onClick={(e) => {
                                             e.stopPropagation();
-                                            window.location.href = `mailto:${worker.email}`;
+                                            window.location.href = `mailto:${client.email}`;
                                           }}
                                           title="Email"
                                         >
@@ -1383,7 +1377,7 @@ export default function WorkerManagement() {
                                         className="h-6 w-6 p-0 text-orange-600 hover:text-orange-700 hover:bg-orange-50"
                                         onClick={(e) => {
                                           e.stopPropagation();
-                                          window.location.href = `tel:+91${worker.mobile}`;
+                                          window.location.href = `tel:+91${client.mobile}`;
                                         }}
                                         title="Call Phone"
                                       >
@@ -1398,29 +1392,29 @@ export default function WorkerManagement() {
                                     <div className="space-y-1">
                                       <div className="flex items-center gap-2">
                                         <Phone className="w-3 h-3" />
-                                        <span>{worker.mobile}</span>
+                                        <span>{client.mobile}</span>
                                         <Button
                                           size="sm"
                                           variant="ghost"
                                           className="h-4 w-4 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50 ml-1"
                                           onClick={(e) => {
                                             e.stopPropagation();
-                                            navigator.clipboard.writeText(worker.mobile);
+                                            navigator.clipboard.writeText(client.mobile);
                                           }}
                                           title="Copy Mobile Number"
                                         >
                                           <Copy className="w-2 h-2" />
                                         </Button>
                                       </div>
-                                      {worker.email && (
+                                      {client.email && (
                                         <div className="flex items-center gap-2">
                                           <Mail className="w-3 h-3" />
                                           <a 
-                                            href={`mailto:${worker.email}`}
+                                            href={`mailto:${client.email}`}
                                             className="text-blue-600 hover:text-blue-700 underline"
                                             onClick={(e) => e.stopPropagation()}
                                           >
-                                            {worker.email}
+                                            {client.email}
                                           </a>
                                         </div>
                                       )}
@@ -1431,7 +1425,7 @@ export default function WorkerManagement() {
                                           className="h-6 w-6 p-0 text-green-600 hover:text-green-700 hover:bg-green-50"
                                           onClick={(e) => {
                                             e.stopPropagation();
-                                            window.open(`https://wa.me/91${worker.mobile}`, '_blank');
+                                            window.open(`https://wa.me/91${client.mobile}`, '_blank');
                                           }}
                                           title="WhatsApp"
                                         >
@@ -1443,20 +1437,20 @@ export default function WorkerManagement() {
                                           className="h-6 w-6 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
                                           onClick={(e) => {
                                             e.stopPropagation();
-                                            window.location.href = `sms:+91${worker.mobile}`;
+                                            window.location.href = `sms:+91${client.mobile}`;
                                           }}
                                           title="SMS"
                                         >
                                           <Square className="w-3 h-3" />
                                         </Button>
-                                        {worker.email && (
+                                        {client.email && (
                                           <Button
                                             size="sm"
                                             variant="ghost"
                                             className="h-6 w-6 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
                                             onClick={(e) => {
                                               e.stopPropagation();
-                                              window.location.href = `mailto:${worker.email}`;
+                                              window.location.href = `mailto:${client.email}`;
                                             }}
                                             title="Email"
                                           >
@@ -1481,7 +1475,7 @@ export default function WorkerManagement() {
                                           className="h-6 w-6 p-0 text-orange-600 hover:text-orange-700 hover:bg-orange-50"
                                           onClick={(e) => {
                                             e.stopPropagation();
-                                            window.location.href = `tel:+91${worker.mobile}`;
+                                            window.location.href = `tel:+91${client.mobile}`;
                                           }}
                                           title="Call Phone"
                                         >
@@ -1560,7 +1554,7 @@ export default function WorkerManagement() {
                                             onClick={(e) => {
                                               e.stopPropagation();
                                               // Handle money transfer functionality
-                                              console.log('Transfer money to:', worker.firstName, worker.lastName);
+                                              console.log('Transfer money to:', client.firstName, client.lastName);
                                             }}
                                             title="Transfer Money"
                                           >
@@ -1572,7 +1566,7 @@ export default function WorkerManagement() {
                                             className="h-6 w-6 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
                                             onClick={(e) => {
                                               e.stopPropagation();
-                                              handleViewTransferHistory(worker);
+                                              handleViewTransferHistory(client);
                                             }}
                                             title="Transfer History"
                                           >
@@ -1584,7 +1578,7 @@ export default function WorkerManagement() {
                                             className="h-6 w-6 p-0 text-purple-600 hover:text-purple-700 hover:bg-purple-50"
                                             onClick={(e) => {
                                               e.stopPropagation();
-                                              const bankDetails = `${worker.firstName} ${worker.lastName} - Bank Details\nAccount: ${(client as any).bankAccountNumber}\nIFSC: ${(client as any).bankIFSC}${(client as any).bankMICR ? `\nMICR: ${(client as any).bankMICR}` : ''}${(client as any).bankName ? `\nBank: ${(client as any).bankName}` : ''}${(client as any).bankAddress ? `\nAddress: ${(client as any).bankAddress}` : ''}`;
+                                              const bankDetails = `${client.firstName} ${client.lastName} - Bank Details\nAccount: ${(client as any).bankAccountNumber}\nIFSC: ${(client as any).bankIFSC}${(client as any).bankMICR ? `\nMICR: ${(client as any).bankMICR}` : ''}${(client as any).bankName ? `\nBank: ${(client as any).bankName}` : ''}${(client as any).bankAddress ? `\nAddress: ${(client as any).bankAddress}` : ''}`;
                                               navigator.clipboard.writeText(bankDetails);
                                             }}
                                             title="Copy Bank Details"
@@ -1646,7 +1640,7 @@ export default function WorkerManagement() {
                                           onClick={(e) => {
                                             e.stopPropagation();
                                             // Handle money transfer functionality
-                                            console.log('Transfer money to:', worker.firstName, worker.lastName);
+                                            console.log('Transfer money to:', client.firstName, client.lastName);
                                           }}
                                         >
                                           <ArrowRightLeft className="w-3 h-3 mr-1" />
@@ -1658,7 +1652,7 @@ export default function WorkerManagement() {
                                           className="h-7 px-2 text-blue-600 border-blue-200 hover:text-blue-700 hover:bg-blue-50"
                                           onClick={(e) => {
                                             e.stopPropagation();
-                                            handleViewTransferHistory(worker);
+                                            handleViewTransferHistory(client);
                                           }}
                                         >
                                           <History className="w-3 h-3 mr-1" />
@@ -1670,7 +1664,7 @@ export default function WorkerManagement() {
                                           className="h-7 px-2 text-purple-600 border-purple-200 hover:text-purple-700 hover:bg-purple-50"
                                           onClick={(e) => {
                                             e.stopPropagation();
-                                            const bankDetails = `${worker.firstName} ${worker.lastName} - Bank Details\nAccount: ${(client as any).bankAccountNumber}\nIFSC: ${(client as any).bankIFSC}${(client as any).bankMICR ? `\nMICR: ${(client as any).bankMICR}` : ''}${(client as any).bankName ? `\nBank: ${(client as any).bankName}` : ''}${(client as any).bankAddress ? `\nAddress: ${(client as any).bankAddress}` : ''}`;
+                                            const bankDetails = `${client.firstName} ${client.lastName} - Bank Details\nAccount: ${(client as any).bankAccountNumber}\nIFSC: ${(client as any).bankIFSC}${(client as any).bankMICR ? `\nMICR: ${(client as any).bankMICR}` : ''}${(client as any).bankName ? `\nBank: ${(client as any).bankName}` : ''}${(client as any).bankAddress ? `\nAddress: ${(client as any).bankAddress}` : ''}`;
                                             navigator.clipboard.writeText(bankDetails);
                                           }}
                                         >
@@ -1694,7 +1688,7 @@ export default function WorkerManagement() {
                                   </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end" className="w-48">
-                                  <DropdownMenuItem onClick={() => handleViewDetails(worker)}>
+                                  <DropdownMenuItem onClick={() => handleViewDetails(client)}>
                                     <Eye className="w-4 h-4 mr-2" />
                                     View Details
                                   </DropdownMenuItem>
@@ -1704,35 +1698,35 @@ export default function WorkerManagement() {
                                       Send Message
                                     </DropdownMenuSubTrigger>
                                     <DropdownMenuSubContent>
-                                      <DropdownMenuItem onClick={() => handleSendWhatsApp(worker)}>
+                                      <DropdownMenuItem onClick={() => handleSendWhatsApp(client)}>
                                         <MessageCircle className="w-4 h-4 mr-2 text-green-600" />
                                         <span className="text-green-600">WhatsApp</span>
                                       </DropdownMenuItem>
-                                      <DropdownMenuItem onClick={() => handleSendSMS(worker)}>
+                                      <DropdownMenuItem onClick={() => handleSendSMS(client)}>
                                         <Square className="w-4 h-4 mr-2 text-blue-600" />
                                         <span className="text-blue-600">SMS</span>
                                       </DropdownMenuItem>
-                                      {worker.email && (
-                                        <DropdownMenuItem onClick={() => window.location.href = `mailto:${worker.email}`}>
+                                      {client.email && (
+                                        <DropdownMenuItem onClick={() => window.location.href = `mailto:${client.email}`}>
                                           <Mail className="w-4 h-4 mr-2 text-red-600" />
                                           <span className="text-red-600">Email</span>
                                         </DropdownMenuItem>
                                       )}
-                                      <DropdownMenuItem onClick={() => handleSendDirectMessage(worker)}>
+                                      <DropdownMenuItem onClick={() => handleSendDirectMessage(client)}>
                                         <MessageSquare className="w-4 h-4 mr-2 text-purple-600" />
                                         <span className="text-purple-600">Message</span>
                                       </DropdownMenuItem>
                                     </DropdownMenuSubContent>
                                   </DropdownMenuSub>
-                                  <DropdownMenuItem onClick={() => handleVerifyUser(worker)}>
+                                  <DropdownMenuItem onClick={() => handleVerifyUser(client)}>
                                     <CheckCircle className="w-4 h-4 mr-2 text-green-600" />
                                     <span className="text-green-600">Verify User</span>
                                   </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => handleSuspendUser(worker)}>
+                                  <DropdownMenuItem onClick={() => handleSuspendUser(client)}>
                                     <XCircle className="w-4 h-4 mr-2 text-red-600" />
                                     <span className="text-red-600">Suspend User</span>
                                   </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => handleDeleteUser(worker)}>
+                                  <DropdownMenuItem onClick={() => handleDeleteUser(client)}>
                                     <Trash2 className="w-4 h-4 mr-2 text-red-600" />
                                     <span className="text-red-600">Delete User</span>
                                   </DropdownMenuItem>
@@ -1748,7 +1742,7 @@ export default function WorkerManagement() {
                 )}
                 
                 {/* Pagination Controls */}
-                {filteredWorkers.length > 0 && (
+                {filteredClients.length > 0 && (
                   <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
                     <div className="flex items-center gap-4">
                       <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
@@ -1903,7 +1897,7 @@ export default function WorkerManagement() {
                       Clients in {selectedDistrict}
                     </h2>
                     <p className="text-gray-600 dark:text-gray-400">
-                      {selectedState} • {filteredDistrictClients.length} total workers • Showing {((districtCurrentPage - 1) * districtPageSize) + 1}-{Math.min(districtCurrentPage * districtPageSize, filteredDistrictClients.length)} of {filteredDistrictClients.length} {searchQuery && `filtered results`}
+                      {selectedState} • {filteredDistrictClients.length} total clients • Showing {((districtCurrentPage - 1) * districtPageSize) + 1}-{Math.min(districtCurrentPage * districtPageSize, filteredDistrictClients.length)} of {filteredDistrictClients.length} {searchQuery && `filtered results`}
                     </p>
                   </div>
                   
@@ -1963,7 +1957,7 @@ export default function WorkerManagement() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
                       </svg>
                     </div>
-                    <p className="text-gray-500 dark:text-gray-400 text-lg">No workers found in this district</p>
+                    <p className="text-gray-500 dark:text-gray-400 text-lg">No clients found in this district</p>
                     <p className="text-gray-400 dark:text-gray-500 text-sm mt-1">Clients will appear here once they register</p>
                   </div>
                 ) : (
@@ -2070,10 +2064,10 @@ export default function WorkerManagement() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {clientsForDistrict.map((worker) => {
-                          const activityStatus = getActivityStatus(worker.lastLoginAt, worker.createdAt);
+                        {clientsForDistrict.map((client) => {
+                          const activityStatus = getActivityStatus(client.lastLoginAt, client.createdAt);
                           return (
-                            <TableRow key={worker.id}>
+                            <TableRow key={client.id}>
                               <TableCell className="py-2">
                               <Tooltip>
                                   <TooltipTrigger asChild>
@@ -2081,18 +2075,18 @@ export default function WorkerManagement() {
                                       <Avatar className="h-10 w-10 flex-shrink-0">
                                         <AvatarImage 
                                           src={(client as any).profilePicture} 
-                                          alt={`${worker.firstName} ${worker.lastName}`} 
+                                          alt={`${client.firstName} ${client.lastName}`} 
                                         />
                                         <AvatarFallback className="bg-blue-100 text-blue-600 font-semibold">
-                                          {worker.firstName.charAt(0).toUpperCase()}{worker.lastName.charAt(0).toUpperCase()}
+                                          {client.firstName.charAt(0).toUpperCase()}{client.lastName.charAt(0).toUpperCase()}
                                         </AvatarFallback>
                                       </Avatar>
                                       <div className="min-w-0 flex-1">
                                         <div className="font-medium text-gray-900 dark:text-white">
-                                          {worker.firstName} {worker.lastName}
+                                          {client.firstName} {client.lastName}
                                         </div>
                                         <div className="text-sm text-green-800 dark:text-green-400 font-mono font-bold truncate">
-                                          ID: {worker.id}
+                                          ID: {client.id}
                                         </div>
                                         <div className="mt-1 space-y-1">
                                           <div className="flex items-center gap-2 flex-wrap">
@@ -2117,25 +2111,25 @@ export default function WorkerManagement() {
                                               <span className="ml-1">{activityStatus.label}</span>
                                             </Badge>
                                             <Badge
-                                              variant={worker.isVerified ? "default" : "destructive"}
-                                              className={worker.isVerified 
+                                              variant={client.isVerified ? "default" : "destructive"}
+                                              className={client.isVerified 
                                                 ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100 text-xs" 
                                                 : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100 text-xs"
                                               }
                                             >
-                                              {worker.isVerified ? "Verified" : "Unverified"}
+                                              {client.isVerified ? "Verified" : "Unverified"}
                                             </Badge>
                                           </div>
-                                          {worker.lastLoginAt && (
+                                          {client.lastLoginAt && (
                                             <div className="text-xs text-gray-500 dark:text-gray-400">
-                                              Last: {formatIndianDateTime(worker.lastLoginAt)}
+                                              Last: {formatIndianDateTime(client.lastLoginAt)}
                                             </div>
                                           )}
                                           <div className="text-xs text-gray-500 dark:text-gray-400">
-                                            Reg: {formatIndianDateTime(worker.createdAt)}
+                                            Reg: {formatIndianDateTime(client.createdAt)}
                                           </div>
                                           <div className="text-xs text-gray-400 dark:text-gray-500 italic">
-                                            Member since {getMemberSince(worker.createdAt)}
+                                            Member since {getMemberSince(client.createdAt)}
                                           </div>
                                         </div>
                                       </div>
@@ -2147,10 +2141,10 @@ export default function WorkerManagement() {
                                         <Avatar className="h-16 w-16 flex-shrink-0">
                                           <AvatarImage 
                                             src={(client as any).profilePicture} 
-                                            alt={`${worker.firstName} ${worker.lastName}`} 
+                                            alt={`${client.firstName} ${client.lastName}`} 
                                           />
                                           <AvatarFallback className="bg-blue-100 text-blue-600 font-bold text-lg">
-                                            {worker.firstName.charAt(0).toUpperCase()}{worker.lastName.charAt(0).toUpperCase()}
+                                            {client.firstName.charAt(0).toUpperCase()}{client.lastName.charAt(0).toUpperCase()}
                                           </AvatarFallback>
                                         </Avatar>
                                         <div>
@@ -2159,19 +2153,19 @@ export default function WorkerManagement() {
                                         </div>
                                       </div>
                                       <div className="space-y-2">
-                                        <div className="text-sm"><strong>Full Name:</strong> {worker.firstName} {worker.lastName}</div>
-                                        <div className="text-sm"><strong>Client ID:</strong> {worker.id}</div>
+                                        <div className="text-sm"><strong>Full Name:</strong> {client.firstName} {client.lastName}</div>
+                                        <div className="text-sm"><strong>Client ID:</strong> {client.id}</div>
                                         <div className="text-sm"><strong>Role:</strong> Client User</div>
                                         <div className="flex items-center gap-2">
                                           <strong className="text-sm">Verification Status:</strong>
                                           <Badge
-                                            variant={worker.isVerified ? "default" : "destructive"}
-                                            className={worker.isVerified 
+                                            variant={client.isVerified ? "default" : "destructive"}
+                                            className={client.isVerified 
                                               ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100" 
                                               : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100"
                                             }
                                           >
-                                            {worker.isVerified ? "Verified" : "Unverified"}
+                                            {client.isVerified ? "Verified" : "Unverified"}
                                           </Badge>
                                         </div>
                                         <div className="flex items-center gap-2">
@@ -2181,13 +2175,13 @@ export default function WorkerManagement() {
                                               activityStatus.label === 'Just Registered' || 
                                               activityStatus.label === 'No Login' || 
                                               activityStatus.label === 'Inactive' ||
-                                              !worker.isVerified ? "destructive" : "default"
+                                              !client.isVerified ? "destructive" : "default"
                                             }
                                             className={
                                               activityStatus.label === 'Just Registered' || 
                                               activityStatus.label === 'No Login' || 
                                               activityStatus.label === 'Inactive' ||
-                                              !worker.isVerified
+                                              !client.isVerified
                                                 ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100" 
                                                 : "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100"
                                             }
@@ -2196,14 +2190,14 @@ export default function WorkerManagement() {
                                             <span className="ml-1">{activityStatus.label}</span>
                                           </Badge>
                                         </div>
-                                        <div className="text-sm"><strong>Registration Date:</strong> {formatIndianDateTime(worker.createdAt)}</div>
-                                        <div className="text-sm"><strong>Last Login:</strong> {worker.lastLoginAt ? formatIndianDateTime(worker.lastLoginAt) : 'No Login'}</div>
-                                        <div className="text-sm"><strong>Member Since:</strong> {getMemberSince(worker.createdAt)}</div>
-                                        {worker.mobile && (
-                                          <div className="text-sm"><strong>Mobile:</strong> {worker.mobile}</div>
+                                        <div className="text-sm"><strong>Registration Date:</strong> {formatIndianDateTime(client.createdAt)}</div>
+                                        <div className="text-sm"><strong>Last Login:</strong> {client.lastLoginAt ? formatIndianDateTime(client.lastLoginAt) : 'No Login'}</div>
+                                        <div className="text-sm"><strong>Member Since:</strong> {getMemberSince(client.createdAt)}</div>
+                                        {client.mobile && (
+                                          <div className="text-sm"><strong>Mobile:</strong> {client.mobile}</div>
                                         )}
-                                        {worker.email && (
-                                          <div className="text-sm"><strong>Email:</strong> {worker.email}</div>
+                                        {client.email && (
+                                          <div className="text-sm"><strong>Email:</strong> {client.email}</div>
                                         )}
                                       </div>
                                     </div>
@@ -2217,14 +2211,14 @@ export default function WorkerManagement() {
                                       {(client as any).address ? (
                                     <div>
                                       <div className="text-gray-700 dark:text-gray-300 text-sm font-bold">
-                                        {worker.district}, {worker.state}
+                                        {client.district}, {client.state}
                                       </div>
                                       <div className="font-medium text-gray-600 dark:text-gray-400 text-xs mt-1">Address:</div>
                                       <div className="text-gray-900 dark:text-white text-xs">
                                         {(client as any).address}
                                       </div>
                                       <div className="text-gray-700 dark:text-gray-300 text-xs">
-                                        {worker.district}, {worker.state}
+                                        {client.district}, {client.state}
                                       </div>
                                       {(client as any).pincode && (
                                         <div className="text-gray-600 dark:text-gray-400 text-xs">
@@ -2238,7 +2232,7 @@ export default function WorkerManagement() {
                                           className="h-6 w-6 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
                                           onClick={(e) => {
                                             e.stopPropagation();
-                                            const fullAddress = `${worker.firstName} ${worker.lastName}\n${(client as any).address}, ${worker.district}, ${worker.state}${(client as any).pincode ? `, PIN: ${(client as any).pincode}` : ''}`;
+                                            const fullAddress = `${client.firstName} ${client.lastName}\n${(client as any).address}, ${client.district}, ${client.state}${(client as any).pincode ? `, PIN: ${(client as any).pincode}` : ''}`;
                                             navigator.clipboard.writeText(fullAddress);
                                           }}
                                           title="Copy Address with Name"
@@ -2247,10 +2241,10 @@ export default function WorkerManagement() {
                                         </Button>
                                       </div>
                                     </div>
-                                  ) : worker.district && worker.state ? (
+                                  ) : client.district && client.state ? (
                                     <div>
                                       <div className="text-gray-900 dark:text-white">
-                                        {worker.district}, {worker.state}
+                                        {client.district}, {client.state}
                                       </div>
                                     </div>
                                   ) : (
@@ -2265,8 +2259,8 @@ export default function WorkerManagement() {
                                       <div className="space-y-1">
                                         <div className="text-sm"><strong>Location Details:</strong></div>
                                         <div className="text-sm"><strong>Full Address:</strong> {(client as any).address}</div>
-                                        <div className="text-sm"><strong>District:</strong> {worker.district}</div>
-                                        <div className="text-sm"><strong>State:</strong> {worker.state}</div>
+                                        <div className="text-sm"><strong>District:</strong> {client.district}</div>
+                                        <div className="text-sm"><strong>State:</strong> {client.state}</div>
                                         {(client as any).pincode && (
                                           <div className="text-sm"><strong>PIN Code:</strong> {(client as any).pincode}</div>
                                         )}
@@ -2277,7 +2271,7 @@ export default function WorkerManagement() {
                                             className="h-6 w-6 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
                                             onClick={(e) => {
                                               e.stopPropagation();
-                                              const fullAddress = `${worker.firstName} ${worker.lastName}\n${(client as any).address}, ${worker.district}, ${worker.state}${(client as any).pincode ? `, PIN: ${(client as any).pincode}` : ''}`;
+                                              const fullAddress = `${client.firstName} ${client.lastName}\n${(client as any).address}, ${client.district}, ${client.state}${(client as any).pincode ? `, PIN: ${(client as any).pincode}` : ''}`;
                                               navigator.clipboard.writeText(fullAddress);
                                             }}
                                             title="Copy Address with Name"
@@ -2321,7 +2315,7 @@ export default function WorkerManagement() {
                                             }
                                           }, 200);
                                         }
-                                        handleViewFinancialStatements(worker);
+                                        handleViewFinancialStatements(client);
                                       }}
                                       onMouseEnter={(e) => {
                                         const button = e.currentTarget;
@@ -2343,7 +2337,7 @@ export default function WorkerManagement() {
                                       className="h-6 w-6 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
                                       onClick={(e) => {
                                         e.stopPropagation();
-                                        const financialData = `${worker.firstName} ${worker.lastName} - Financial Summary\nBookings: 0 (In progress: 0, Completed: 0)\nBalance: ₹0\nSpent: ₹0\nCommission: ₹0\nGST: ₹0`;
+                                        const financialData = `${client.firstName} ${client.lastName} - Financial Summary\nBookings: 0 (In progress: 0, Completed: 0)\nBalance: ₹0\nSpent: ₹0\nCommission: ₹0\nGST: ₹0`;
                                         navigator.clipboard.writeText(financialData);
                                       }}
                                       title="Copy Financial Data"
@@ -2372,7 +2366,7 @@ export default function WorkerManagement() {
                                           className="h-6 w-6 p-0 text-green-600 hover:text-green-700 hover:bg-green-50"
                                           onClick={(e) => {
                                             e.stopPropagation();
-                                            handleViewFinancialStatements(worker);
+                                            handleViewFinancialStatements(client);
                                           }}
                                           title="Financial Statements"
                                         >
@@ -2384,7 +2378,7 @@ export default function WorkerManagement() {
                                           className="h-6 w-6 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
                                           onClick={(e) => {
                                             e.stopPropagation();
-                                            const financialData = `${worker.firstName} ${worker.lastName} - Financial Summary\nBookings: 0 (In progress: 0, Completed: 0)\nBalance: ₹0\nSpent: ₹0\nCommission: ₹0\nGST: ₹0`;
+                                            const financialData = `${client.firstName} ${client.lastName} - Financial Summary\nBookings: 0 (In progress: 0, Completed: 0)\nBalance: ₹0\nSpent: ₹0\nCommission: ₹0\nGST: ₹0`;
                                             navigator.clipboard.writeText(financialData);
                                           }}
                                           title="Copy Financial Data"
@@ -2402,29 +2396,29 @@ export default function WorkerManagement() {
                                     <div className="text-sm space-y-1 cursor-pointer">
                                       <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
                                         <Phone className="w-3 h-3" />
-                                        <span>{worker.mobile}</span>
+                                        <span>{client.mobile}</span>
                                         <Button
                                           size="sm"
                                           variant="ghost"
                                           className="h-4 w-4 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50 ml-1"
                                           onClick={(e) => {
                                             e.stopPropagation();
-                                            navigator.clipboard.writeText(worker.mobile);
+                                            navigator.clipboard.writeText(client.mobile);
                                           }}
                                           title="Copy Mobile Number"
                                         >
                                           <Copy className="w-2 h-2" />
                                         </Button>
                                       </div>
-                                      {worker.email && (
+                                      {client.email && (
                                         <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
                                           <Mail className="w-3 h-3" />
                                           <a 
-                                            href={`mailto:${worker.email}`}
+                                            href={`mailto:${client.email}`}
                                             className="truncate max-w-[150px] text-blue-600 hover:text-blue-700 underline"
                                             onClick={(e) => e.stopPropagation()}
                                           >
-                                            {worker.email}
+                                            {client.email}
                                           </a>
                                         </div>
                                       )}
@@ -2435,7 +2429,7 @@ export default function WorkerManagement() {
                                           className="h-6 w-6 p-0 text-green-600 hover:text-green-700 hover:bg-green-50"
                                           onClick={(e) => {
                                             e.stopPropagation();
-                                            window.open(`https://wa.me/91${worker.mobile}`, '_blank');
+                                            window.open(`https://wa.me/91${client.mobile}`, '_blank');
                                           }}
                                           title="WhatsApp"
                                         >
@@ -2447,20 +2441,20 @@ export default function WorkerManagement() {
                                           className="h-6 w-6 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
                                           onClick={(e) => {
                                             e.stopPropagation();
-                                            window.location.href = `sms:+91${worker.mobile}`;
+                                            window.location.href = `sms:+91${client.mobile}`;
                                           }}
                                           title="SMS"
                                         >
                                           <Square className="w-3 h-3" />
                                         </Button>
-                                        {worker.email && (
+                                        {client.email && (
                                           <Button
                                             size="sm"
                                             variant="ghost"
                                             className="h-6 w-6 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
                                             onClick={(e) => {
                                               e.stopPropagation();
-                                              window.location.href = `mailto:${worker.email}`;
+                                              window.location.href = `mailto:${client.email}`;
                                             }}
                                             title="Email"
                                           >
@@ -2485,7 +2479,7 @@ export default function WorkerManagement() {
                                           className="h-6 w-6 p-0 text-orange-600 hover:text-orange-700 hover:bg-orange-50"
                                           onClick={(e) => {
                                             e.stopPropagation();
-                                            window.location.href = `tel:+91${worker.mobile}`;
+                                            window.location.href = `tel:+91${client.mobile}`;
                                           }}
                                           title="Call Phone"
                                         >
@@ -2500,29 +2494,29 @@ export default function WorkerManagement() {
                                       <div className="space-y-1">
                                         <div className="flex items-center gap-2">
                                           <Phone className="w-3 h-3" />
-                                          <span>{worker.mobile}</span>
+                                          <span>{client.mobile}</span>
                                           <Button
                                             size="sm"
                                             variant="ghost"
                                             className="h-4 w-4 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50 ml-1"
                                             onClick={(e) => {
                                               e.stopPropagation();
-                                              navigator.clipboard.writeText(worker.mobile);
+                                              navigator.clipboard.writeText(client.mobile);
                                             }}
                                             title="Copy Mobile Number"
                                           >
                                             <Copy className="w-2 h-2" />
                                           </Button>
                                         </div>
-                                        {worker.email && (
+                                        {client.email && (
                                           <div className="flex items-center gap-2">
                                             <Mail className="w-3 h-3" />
                                             <a 
-                                              href={`mailto:${worker.email}`}
+                                              href={`mailto:${client.email}`}
                                               className="text-blue-600 hover:text-blue-700 underline"
                                               onClick={(e) => e.stopPropagation()}
                                             >
-                                              {worker.email}
+                                              {client.email}
                                             </a>
                                           </div>
                                         )}
@@ -2533,7 +2527,7 @@ export default function WorkerManagement() {
                                             className="h-6 w-6 p-0 text-green-600 hover:text-green-700 hover:bg-green-50"
                                             onClick={(e) => {
                                               e.stopPropagation();
-                                              window.open(`https://wa.me/91${worker.mobile}`, '_blank');
+                                              window.open(`https://wa.me/91${client.mobile}`, '_blank');
                                             }}
                                             title="WhatsApp"
                                           >
@@ -2545,20 +2539,20 @@ export default function WorkerManagement() {
                                             className="h-6 w-6 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
                                             onClick={(e) => {
                                               e.stopPropagation();
-                                              window.location.href = `sms:+91${worker.mobile}`;
+                                              window.location.href = `sms:+91${client.mobile}`;
                                             }}
                                             title="SMS"
                                           >
                                             <Square className="w-3 h-3" />
                                           </Button>
-                                          {worker.email && (
+                                          {client.email && (
                                             <Button
                                               size="sm"
                                               variant="ghost"
                                               className="h-6 w-6 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
                                               onClick={(e) => {
                                                 e.stopPropagation();
-                                                window.location.href = `mailto:${worker.email}`;
+                                                window.location.href = `mailto:${client.email}`;
                                               }}
                                               title="Email"
                                             >
@@ -2583,7 +2577,7 @@ export default function WorkerManagement() {
                                             className="h-6 w-6 p-0 text-orange-600 hover:text-orange-700 hover:bg-orange-50"
                                             onClick={(e) => {
                                               e.stopPropagation();
-                                              window.location.href = `tel:+91${worker.mobile}`;
+                                              window.location.href = `tel:+91${client.mobile}`;
                                             }}
                                             title="Call Phone"
                                           >
@@ -2662,7 +2656,7 @@ export default function WorkerManagement() {
                                               onClick={(e) => {
                                                 e.stopPropagation();
                                                 // Handle money transfer functionality
-                                                console.log('Transfer money to:', worker.firstName, worker.lastName);
+                                                console.log('Transfer money to:', client.firstName, client.lastName);
                                               }}
                                               title="Transfer Money"
                                             >
@@ -2674,7 +2668,7 @@ export default function WorkerManagement() {
                                               className="h-6 w-6 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
                                               onClick={(e) => {
                                                 e.stopPropagation();
-                                                handleViewTransferHistory(worker);
+                                                handleViewTransferHistory(client);
                                               }}
                                               title="Transfer History"
                                             >
@@ -2686,7 +2680,7 @@ export default function WorkerManagement() {
                                               className="h-6 w-6 p-0 text-purple-600 hover:text-purple-700 hover:bg-purple-50"
                                               onClick={(e) => {
                                                 e.stopPropagation();
-                                                const bankDetails = `${worker.firstName} ${worker.lastName} - Bank Details\nAccount: ${(client as any).bankAccountNumber}\nIFSC: ${(client as any).bankIFSC}${(client as any).bankMICR ? `\nMICR: ${(client as any).bankMICR}` : ''}${(client as any).bankName ? `\nBank: ${(client as any).bankName}` : ''}${(client as any).bankAddress ? `\nAddress: ${(client as any).bankAddress}` : ''}`;
+                                                const bankDetails = `${client.firstName} ${client.lastName} - Bank Details\nAccount: ${(client as any).bankAccountNumber}\nIFSC: ${(client as any).bankIFSC}${(client as any).bankMICR ? `\nMICR: ${(client as any).bankMICR}` : ''}${(client as any).bankName ? `\nBank: ${(client as any).bankName}` : ''}${(client as any).bankAddress ? `\nAddress: ${(client as any).bankAddress}` : ''}`;
                                                 navigator.clipboard.writeText(bankDetails);
                                               }}
                                               title="Copy Bank Details"
@@ -2748,7 +2742,7 @@ export default function WorkerManagement() {
                                             onClick={(e) => {
                                               e.stopPropagation();
                                               // Handle money transfer functionality
-                                              console.log('Transfer money to:', worker.firstName, worker.lastName);
+                                              console.log('Transfer money to:', client.firstName, client.lastName);
                                             }}
                                           >
                                             <ArrowRightLeft className="w-3 h-3 mr-1" />
@@ -2760,7 +2754,7 @@ export default function WorkerManagement() {
                                             className="h-7 px-2 text-blue-600 border-blue-200 hover:text-blue-700 hover:bg-blue-50"
                                             onClick={(e) => {
                                               e.stopPropagation();
-                                              handleViewTransferHistory(worker);
+                                              handleViewTransferHistory(client);
                                             }}
                                           >
                                             <History className="w-3 h-3 mr-1" />
@@ -2772,7 +2766,7 @@ export default function WorkerManagement() {
                                             className="h-7 px-2 text-purple-600 border-purple-200 hover:text-purple-700 hover:bg-purple-50"
                                             onClick={(e) => {
                                               e.stopPropagation();
-                                              const bankDetails = `${worker.firstName} ${worker.lastName} - Bank Details\nAccount: ${(client as any).bankAccountNumber}\nIFSC: ${(client as any).bankIFSC}${(client as any).bankMICR ? `\nMICR: ${(client as any).bankMICR}` : ''}${(client as any).bankName ? `\nBank: ${(client as any).bankName}` : ''}${(client as any).bankAddress ? `\nAddress: ${(client as any).bankAddress}` : ''}`;
+                                              const bankDetails = `${client.firstName} ${client.lastName} - Bank Details\nAccount: ${(client as any).bankAccountNumber}\nIFSC: ${(client as any).bankIFSC}${(client as any).bankMICR ? `\nMICR: ${(client as any).bankMICR}` : ''}${(client as any).bankName ? `\nBank: ${(client as any).bankName}` : ''}${(client as any).bankAddress ? `\nAddress: ${(client as any).bankAddress}` : ''}`;
                                               navigator.clipboard.writeText(bankDetails);
                                             }}
                                           >
@@ -2796,7 +2790,7 @@ export default function WorkerManagement() {
                                     </Button>
                                   </DropdownMenuTrigger>
                                   <DropdownMenuContent align="end" className="w-48">
-                                    <DropdownMenuItem onClick={() => handleViewDetails(worker)}>
+                                    <DropdownMenuItem onClick={() => handleViewDetails(client)}>
                                       <Eye className="w-4 h-4 mr-2" />
                                       View Details
                                     </DropdownMenuItem>
@@ -2806,35 +2800,35 @@ export default function WorkerManagement() {
                                         Send Message
                                       </DropdownMenuSubTrigger>
                                       <DropdownMenuSubContent>
-                                        <DropdownMenuItem onClick={() => handleSendWhatsApp(worker)}>
+                                        <DropdownMenuItem onClick={() => handleSendWhatsApp(client)}>
                                           <MessageCircle className="w-4 h-4 mr-2 text-green-600" />
                                           <span className="text-green-600">WhatsApp</span>
                                         </DropdownMenuItem>
-                                        <DropdownMenuItem onClick={() => handleSendSMS(worker)}>
+                                        <DropdownMenuItem onClick={() => handleSendSMS(client)}>
                                           <Square className="w-4 h-4 mr-2 text-blue-600" />
                                           <span className="text-blue-600">SMS</span>
                                         </DropdownMenuItem>
-                                        <DropdownMenuItem onClick={() => handleSendDirectMessage(worker)}>
+                                        <DropdownMenuItem onClick={() => handleSendDirectMessage(client)}>
                                           <MessageSquare className="w-4 h-4 mr-2 text-purple-600" />
                                           <span className="text-purple-600">Message</span>
                                         </DropdownMenuItem>
-                                        {worker.email && (
-                                          <DropdownMenuItem onClick={() => window.location.href = `mailto:${worker.email}`}>
+                                        {client.email && (
+                                          <DropdownMenuItem onClick={() => window.location.href = `mailto:${client.email}`}>
                                             <Mail className="w-4 h-4 mr-2 text-red-600" />
                                             <span className="text-red-600">Email</span>
                                           </DropdownMenuItem>
                                         )}
                                       </DropdownMenuSubContent>
                                     </DropdownMenuSub>
-                                    <DropdownMenuItem onClick={() => handleVerifyUser(worker)}>
+                                    <DropdownMenuItem onClick={() => handleVerifyUser(client)}>
                                       <CheckCircle className="w-4 h-4 mr-2 text-green-600" />
                                       <span className="text-green-600">Verify User</span>
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => handleSuspendUser(worker)}>
+                                    <DropdownMenuItem onClick={() => handleSuspendUser(client)}>
                                       <XCircle className="w-4 h-4 mr-2 text-red-600" />
                                       <span className="text-red-600">Suspend User</span>
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => handleDeleteUser(worker)}>
+                                    <DropdownMenuItem onClick={() => handleDeleteUser(client)}>
                                       <Trash2 className="w-4 h-4 mr-2 text-red-600" />
                                       <span className="text-red-600">Delete User</span>
                                     </DropdownMenuItem>
