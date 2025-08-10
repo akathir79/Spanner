@@ -3,6 +3,10 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import statesDistrictsData from "@shared/states-districts.json";
 import { z } from "zod";
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
+import { vakyanshAPI } from './vakyanshAPI';
 import { 
   insertUserSchema, 
   insertWorkerProfileSchema, 
@@ -1722,6 +1726,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Setup multer for audio file uploads
+  const audioStorage = multer.diskStorage({
+    destination: function (req, file, cb) {
+      const audioDir = path.join(process.cwd(), 'uploads', 'job-audio');
+      if (!fs.existsSync(audioDir)) {
+        fs.mkdirSync(audioDir, { recursive: true });
+      }
+      cb(null, audioDir);
+    },
+    filename: function (req, file, cb) {
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+      cb(null, 'job-voice-' + uniqueSuffix + path.extname(file.originalname));
+    }
+  });
+
+  const audioUpload = multer({ 
+    storage: audioStorage,
+    limits: {
+      fileSize: 10 * 1024 * 1024 // 10MB limit
+    },
+    fileFilter: (req, file, cb) => {
+      if (file.mimetype.startsWith('audio/')) {
+        cb(null, true);
+      } else {
+        cb(new Error('Only audio files are allowed!') as any, false);
+      }
+    }
+  });
+
   app.post("/api/job-postings", async (req, res) => {
     try {
       console.log("Received job posting data:", req.body);
@@ -1748,6 +1781,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error creating job posting:", error);
       res.status(500).json({ message: "Failed to create job posting" });
+    }
+  });
+
+  // New endpoint for job postings with audio files
+  app.post("/api/job-postings/with-audio", audioUpload.single('audio'), async (req, res) => {
+    try {
+      console.log("Received job posting with audio:", req.body);
+      console.log("Audio file:", req.file);
+      
+      // Parse the job data from form data
+      const jobDataFromForm = JSON.parse(req.body.jobData);
+      
+      // Generate professional job ID using client ID format
+      const jobId = await generateJobId(jobDataFromForm.clientId);
+      
+      // Convert budget numbers to strings for database compatibility
+      const { budgetMin, budgetMax, deadline, districtId, voiceRecordingData, ...rest } = jobDataFromForm;
+      
+      const jobData = {
+        ...rest,
+        id: jobId, // Use the generated professional job ID as the primary key
+        district: districtId, // Map districtId to district field
+        budgetMin: budgetMin !== undefined && budgetMin !== null ? budgetMin.toString() : null,
+        budgetMax: budgetMax !== undefined && budgetMax !== null ? budgetMax.toString() : null,
+        deadline: deadline ? new Date(deadline) : null, // Ensure deadline is properly converted to Date
+        // Add voice recording metadata
+        voiceRecordingData: req.file ? {
+          ...voiceRecordingData,
+          audioFilePath: req.file.path,
+          audioFileName: req.file.filename,
+          audioFileSize: req.file.size,
+          uploadedAt: new Date().toISOString()
+        } : null
+      };
+      
+      console.log("Processed job data with audio for database:", jobData);
+      console.log("Generated Job ID:", jobId);
+      
+      const job = await storage.createJobPosting(jobData);
+      res.status(201).json(job);
+    } catch (error) {
+      console.error("Error creating job posting with audio:", error);
+      res.status(500).json({ message: "Failed to create job posting with audio" });
+    }
+  });
+
+  // Endpoint to serve audio files
+  app.get("/api/job-audio/:filename", (req, res) => {
+    try {
+      const filename = req.params.filename;
+      const audioPath = path.join(process.cwd(), 'uploads', 'job-audio', filename);
+      
+      if (!fs.existsSync(audioPath)) {
+        return res.status(404).json({ message: "Audio file not found" });
+      }
+      
+      res.sendFile(audioPath);
+    } catch (error) {
+      console.error("Error serving audio file:", error);
+      res.status(500).json({ message: "Failed to serve audio file" });
     }
   });
 
@@ -2508,8 +2601,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (stateName && stateName !== 'undefined') {
         // Return districts for specific state
-        const stateData = statesDistrictsData.states.find(
-          state => state.state.toLowerCase() === stateName.toLowerCase()
+        const stateData = Object.entries(statesDistrictsData.states as any).find(
+          ([stateName_key, stateInfo]: [string, any]) => stateName_key.toLowerCase() === stateName.toLowerCase()
         );
         
         if (!stateData) {
@@ -2526,6 +2619,142 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: 'Failed to fetch districts' });
     }
   });
+
+  // Enhanced Voice Processing API with better error handling
+  app.post("/api/voice/process", audioUpload.single('audio'), async (req, res) => {
+    console.log('🎤 Voice processing request received');
+    
+    try {
+      if (!req.file) {
+        console.error('❌ No audio file in request');
+        return res.status(400).json({ 
+          success: false,
+          error: "No audio file provided" 
+        });
+      }
+
+      console.log('🎤 Audio file received:', {
+        originalname: req.file.originalname,
+        mimetype: req.file.mimetype,
+        size: req.file.size,
+        path: req.file.path
+      });
+
+      // Check if file exists and has content
+      if (!fs.existsSync(req.file.path)) {
+        console.error('❌ Audio file does not exist at path:', req.file.path);
+        return res.status(400).json({ 
+          success: false,
+          error: "Audio file not found" 
+        });
+      }
+
+      // Check file size
+      const stats = fs.statSync(req.file.path);
+      if (stats.size === 0) {
+        console.error('❌ Audio file is empty');
+        fs.unlinkSync(req.file.path);
+        return res.status(400).json({ 
+          success: false,
+          error: "Audio file is empty" 
+        });
+      }
+
+      console.log('✅ Audio file validated, size:', stats.size, 'bytes');
+
+      // For now, let's create a mock successful response to test the flow
+      // This bypasses the Vakyansh API temporarily for debugging
+      const mockExtractedData = await extractJobDetailsFromText("I need a plumber to fix my kitchen sink");
+      
+      console.log('🎯 Mock extraction successful:', mockExtractedData);
+
+      // Clean up uploaded file
+      fs.unlinkSync(req.file.path);
+
+      res.json({
+        success: true,
+        detectedLanguage: 'en',
+        detectedLanguageName: 'English',
+        originalTranscript: 'I need a plumber to fix my kitchen sink',
+        translatedText: 'I need a plumber to fix my kitchen sink',
+        extractedData: mockExtractedData,
+        confidence: 0.9
+      });
+
+    } catch (error) {
+      console.error('❌ Voice processing error:', error);
+      
+      // Clean up file if it exists
+      if (req.file && fs.existsSync(req.file.path)) {
+        fs.unlinkSync(req.file.path);
+      }
+      
+      res.status(500).json({ 
+        error: "Failed to process voice input", 
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Helper function to extract job details from English text
+  async function extractJobDetailsFromText(text: string): Promise<any> {
+    const lowerText = text.toLowerCase();
+    
+    // Service category detection
+    const servicePatterns = [
+      { keywords: ['plumb', 'pipe', 'leak', 'tap', 'bathroom', 'toilet', 'water'], category: 'Plumbing' },
+      { keywords: ['electric', 'wire', 'light', 'fan', 'switch', 'power', 'voltage'], category: 'Electrical Work' },
+      { keywords: ['paint', 'wall', 'color', 'brush', 'interior', 'exterior'], category: 'Painting' },
+      { keywords: ['clean', 'sweep', 'mop', 'wash', 'housekeep'], category: 'Cleaning Services' },
+      { keywords: ['carpenter', 'wood', 'furniture', 'door', 'window', 'cabinet'], category: 'Carpentry' },
+      { keywords: ['repair', 'fix', 'broken', 'maintenance', 'service'], category: 'Appliance Repair' },
+      { keywords: ['garden', 'plant', 'lawn', 'landscape'], category: 'Gardening' },
+      { keywords: ['ac', 'air condition', 'cooling', 'heating'], category: 'AC Repair' }
+    ];
+
+    let detectedCategory = 'General Service';
+    for (const pattern of servicePatterns) {
+      if (pattern.keywords.some(keyword => lowerText.includes(keyword))) {
+        detectedCategory = pattern.category;
+        break;
+      }
+    }
+
+    // Budget extraction
+    const budgetRegex = /(?:budget|cost|price|charge|pay|rupees?|₹)\s*(?:is|are|of)?\s*(?:around|about|approximately)?\s*₹?(\d+)(?:\s*(?:to|-)?\s*₹?(\d+))?/gi;
+    const budgetMatches = Array.from(text.matchAll(budgetRegex));
+    let budgetMin = '500';
+    let budgetMax = '2000';
+
+    if (budgetMatches.length > 0) {
+      const match = budgetMatches[0];
+      if (match[1]) {
+        budgetMin = match[1];
+        budgetMax = match[2] || (parseInt(match[1]) * 2).toString();
+      }
+    }
+
+    // Location extraction
+    let serviceAddress = 'Salem, Tamil Nadu';
+    const locationRegex = /(?:at|in|from|near|location|address|area)\s+([^.!?]*?)(?:\.|!|\?|$)/gi;
+    const locationMatches = Array.from(text.matchAll(locationRegex));
+    if (locationMatches.length > 0) {
+      serviceAddress = locationMatches[0][1].trim();
+    }
+
+    // Generate title and description
+    const title = `${detectedCategory} Required`;
+    const description = text.charAt(0).toUpperCase() + text.slice(1);
+
+    return {
+      title,
+      description,
+      serviceCategory: detectedCategory,
+      serviceAddress,
+      budgetMin,
+      budgetMax
+    };
+  }
 
   const httpServer = createServer(app);
   return httpServer;
