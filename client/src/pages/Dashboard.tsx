@@ -1344,53 +1344,75 @@ const JobPostingForm = ({ onClose }: { onClose?: () => void }) => {
       </div>
 
       {/* Deadline Section */}
-      <div className="space-y-3">
-        <Label htmlFor="deadline" className="text-sm font-medium text-foreground">Completion Deadline</Label>
+      <div className="space-y-3 p-4 bg-white/60 rounded-lg border border-indigo-100/50 shadow-sm">
+        <Label htmlFor="deadline" className="text-sm font-semibold text-foreground flex items-center gap-2">
+          <Calendar className="h-4 w-4 text-indigo-600" />
+          <span>Completion Deadline</span>
+        </Label>
         <Input
           id="deadline"
           type="date"
           value={formData.deadline}
           onChange={(e) => setFormData({ ...formData, deadline: e.target.value })}
-          className="h-11 text-base bg-background border-border/50"
+          className="h-12 text-base bg-white/80 border-2 border-indigo-200/50 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition-all"
         />
-        <p className="text-xs text-muted-foreground">When do you need this work completed? (Optional)</p>
+        <div className="bg-gradient-to-r from-indigo-50 to-blue-50 px-4 py-2 rounded-lg border border-indigo-200/30">
+          <p className="text-xs text-indigo-700 font-medium flex items-center gap-1">
+            <Clock className="h-3 w-3" />
+            When do you need this work completed? (Optional)
+          </p>
+        </div>
       </div>
 
       {/* Requirements Section */}
-      <div className="space-y-3">
-        <Label className="text-sm font-medium text-foreground">Special Requirements</Label>
-        <div className="flex gap-2">
-          <Input
-            value={newRequirement}
-            onChange={(e) => setNewRequirement(e.target.value)}
-            placeholder="e.g., Bring own tools, materials, weekend availability..."
-            className="h-11 text-base bg-background border-border/50"
-            onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addRequirement())}
-          />
+      <div className="space-y-3 p-4 bg-white/60 rounded-lg border border-orange-100/50 shadow-sm">
+        <Label className="text-sm font-semibold text-foreground flex items-center gap-2">
+          <Zap className="h-4 w-4 text-orange-600" />
+          <span>Special Requirements</span>
+        </Label>
+        <div className="flex gap-3">
+          <div className="flex-1">
+            <Input
+              value={newRequirement}
+              onChange={(e) => setNewRequirement(e.target.value)}
+              placeholder="e.g., Bring own tools, materials, weekend availability..."
+              className="h-12 text-base bg-white/80 border-2 border-orange-200/50 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition-all"
+              onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addRequirement())}
+            />
+          </div>
           <Button 
             type="button" 
             onClick={addRequirement} 
             size="sm"
-            className="h-11 px-4 bg-blue-600 hover:bg-blue-700 text-white"
+            className="h-12 px-6 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-semibold rounded-lg shadow-md transition-all"
           >
+            <Plus className="h-4 w-4 mr-1" />
             Add
           </Button>
         </div>
         {formData.requirements.length > 0 && (
-          <div className="flex flex-wrap gap-2 mt-3 p-3 bg-muted/30 rounded-md border border-border/30">
-            {formData.requirements.map((req, index) => (
-              <Badge 
-                key={index} 
-                variant="secondary" 
-                className="cursor-pointer bg-blue-100 text-blue-800 hover:bg-blue-200 border border-blue-300 px-3 py-1"
-                onClick={() => removeRequirement(index)}
-              >
-                {req} <X className="ml-1 h-3 w-3" />
-              </Badge>
-            ))}
+          <div className="bg-gradient-to-r from-orange-50 to-amber-50 p-4 rounded-lg border-2 border-orange-200/30">
+            <div className="flex flex-wrap gap-2">
+              {formData.requirements.map((req, index) => (
+                <Badge 
+                  key={index} 
+                  variant="secondary" 
+                  className="cursor-pointer bg-gradient-to-r from-orange-100 to-amber-100 text-orange-800 hover:from-orange-200 hover:to-amber-200 border border-orange-300 px-3 py-2 font-medium rounded-full transition-all"
+                  onClick={() => removeRequirement(index)}
+                >
+                  {req} 
+                  <X className="ml-2 h-3 w-3 text-orange-600" />
+                </Badge>
+              ))}
+            </div>
           </div>
         )}
-        <p className="text-xs text-muted-foreground">Add any special requirements or preferences for workers</p>
+        <div className="bg-gradient-to-r from-orange-50 to-yellow-50 px-4 py-2 rounded-lg border border-orange-200/30">
+          <p className="text-xs text-orange-700 font-medium flex items-center gap-1">
+            <Info className="h-3 w-3" />
+            Add any special requirements or preferences for workers
+          </p>
+        </div>
       </div>
 
       {/* Submit Section */}
