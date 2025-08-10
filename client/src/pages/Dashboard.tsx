@@ -2776,9 +2776,9 @@ export default function Dashboard() {
                             }`}
                           >
                             <CardContent className="p-6 space-y-4">
-                              {/* Top Header with ID, Posted Date, Status Badge and Action Buttons */}
+                              {/* Top Header with ID, Posted Date, Budget, Status Badge and Action Buttons */}
                               <div className="flex items-center justify-between mb-3">
-                                <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-2">
                                   <div className="text-sm font-mono font-medium text-green-400 bg-green-900/30 px-3 py-1 rounded-md inline-block border border-green-500/30">
                                     ID: {job.id}
                                   </div>
@@ -2786,6 +2786,24 @@ export default function Dashboard() {
                                     <Clock className="h-3 w-3" />
                                     <span>Posted {new Date(job.createdAt).toLocaleDateString()}</span>
                                   </div>
+                                  <div className={`flex items-center gap-1.5 px-2 py-1 rounded border text-xs ${
+                                    job.budgetMin && job.budgetMax ? 'text-emerald-400 bg-emerald-900/20 border-emerald-500/30' : 'text-slate-400 bg-slate-700/30 border-slate-500/30'
+                                  }`}>
+                                    <span className="font-semibold">₹</span>
+                                    <span className="font-medium">
+                                      {job.budgetMin && job.budgetMax ? `₹${job.budgetMin} - ₹${job.budgetMax}` : 'Negotiable'}
+                                    </span>
+                                  </div>
+                                  {noBids && job.status === "open" && (
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className="h-7 px-2 text-xs bg-orange-900/20 hover:bg-orange-800/30 text-orange-400 border-orange-500/30"
+                                      onClick={() => handleEditJob(job)}
+                                    >
+                                      Increase Budget
+                                    </Button>
+                                  )}
                                 </div>
                                 <div className="flex items-center gap-2">
                                   <Badge 
@@ -2974,32 +2992,7 @@ export default function Dashboard() {
                                 </p>
                               </div>
                               
-                              {/* Budget Section */}
-                              <div className="flex items-center justify-between flex-wrap gap-3">
-                                <div className="flex items-center gap-3">
-                                  <div className={`flex items-center gap-2 px-3 py-2 rounded-lg ${
-                                    job.budgetMin && job.budgetMax ? 'text-emerald-300 bg-emerald-900/30 border border-emerald-500/30' : 'text-slate-300 bg-slate-700/50 border border-slate-500/30'
-                                  }`}>
-                                    <span className={`text-base font-semibold ${
-                                      job.budgetMin && job.budgetMax ? 'text-emerald-400' : 'text-slate-400'
-                                    }`}>₹</span>
-                                    <span className="text-sm font-medium">
-                                      {job.budgetMin && job.budgetMax ? `₹${job.budgetMin} - ₹${job.budgetMax}` : 'Negotiable'}
-                                    </span>
-                                  </div>
-                                  {noBids && job.status === "open" && (
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      className="h-8 text-xs bg-orange-900/30 hover:bg-orange-800/50 text-orange-300 border-orange-500/50"
-                                      onClick={() => handleEditJob(job)}
-                                    >
-                                      Increase Budget
-                                    </Button>
-                                  )}
-                                </div>
 
-                              </div>
 
 
                               
