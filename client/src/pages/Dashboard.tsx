@@ -884,47 +884,63 @@ const JobPostingForm = ({ onClose }: { onClose?: () => void }) => {
           const nearbyDistrict = await findNearestDistrict(latitude, longitude, allDistricts);
           
           if (nearbyDistrict) {
-            // Use browser's reverse geocoding API for detailed address
+            // Use Nominatim API for detailed address (same as client registration)
             try {
-              const response = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`);
-              const geoData = await response.json();
+              const response = await fetch(
+                `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1&accept-language=en`
+              );
               
-              // Extract detailed address components
-              const area = geoData.locality || geoData.city || "";
-              const subArea = geoData.principalSubdivision || "";
-              const pincode = geoData.postcode || "";
+              if (!response.ok) throw new Error('Failed to get location data');
               
-              // Format professional address in required format
-              let detailedAddress = "";
+              const data = await response.json();
               
-              // First line: Area, Sub-area (like "Narasothipatti, Salem West")
-              if (area && subArea && area !== subArea) {
-                detailedAddress = `${area}, ${subArea}`;
-              } else if (area) {
-                detailedAddress = area;
+              if (data && data.address) {
+                const locationData = data.address;
+                const detectedPincode = locationData.postcode || '';
+                
+                // Format professional address in required format
+                let formattedAddress = "";
+                
+                // Build area components for first line
+                const areaComponents = [];
+                if (locationData.village || locationData.suburb || locationData.neighbourhood) {
+                  areaComponents.push(locationData.village || locationData.suburb || locationData.neighbourhood);
+                }
+                if (locationData.city_district || (locationData.city && locationData.city !== nearbyDistrict.name)) {
+                  areaComponents.push(locationData.city_district || locationData.city);
+                }
+                
+                // First line: Area details (like "Narasothipatti, Salem West")
+                if (areaComponents.length > 0) {
+                  formattedAddress = areaComponents.join(', ');
+                } else if (locationData.road) {
+                  formattedAddress = locationData.road;
+                } else {
+                  formattedAddress = "Current Location";
+                }
+                
+                // Second line: District, State (like "Salem, Tamil Nadu")
+                formattedAddress += `\n${nearbyDistrict.name}, ${nearbyDistrict.state}`;
+                
+                // Third line: PIN code if available
+                if (detectedPincode) {
+                  formattedAddress += `\nPIN: ${detectedPincode}`;
+                }
+                
+                setFormData(prev => ({ 
+                  ...prev, 
+                  serviceAddress: formattedAddress,
+                  state: nearbyDistrict.state,
+                  districtId: nearbyDistrict.name 
+                }));
+                
+                toast({
+                  title: "Location detected",
+                  description: `Address set successfully. You can edit if needed.`,
+                });
               } else {
-                detailedAddress = "Current Location";
+                throw new Error('No address data found');
               }
-              
-              // Second line: District, State (like "Salem, Tamil Nadu")
-              detailedAddress += `\n${nearbyDistrict.name}, ${nearbyDistrict.state}`;
-              
-              // Third line: PIN code if available
-              if (pincode) {
-                detailedAddress += `\nPIN: ${pincode}`;
-              }
-              
-              setFormData(prev => ({ 
-                ...prev, 
-                serviceAddress: detailedAddress,
-                state: nearbyDistrict.state,
-                districtId: nearbyDistrict.name 
-              }));
-              
-              toast({
-                title: "Location detected",
-                description: `Address set with area details. You can edit if needed.`,
-              });
             } catch (error) {
               // Fallback to basic district info if reverse geocoding fails
               const basicAddress = `Current Location\n${nearbyDistrict.name}, ${nearbyDistrict.state}`;
