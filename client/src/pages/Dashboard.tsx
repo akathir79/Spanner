@@ -884,18 +884,54 @@ const JobPostingForm = ({ onClose }: { onClose?: () => void }) => {
           const nearbyDistrict = await findNearestDistrict(latitude, longitude, allDistricts);
           
           if (nearbyDistrict) {
-            // Use reverse geocoding to get full address
-            const address = `Current Location\n${nearbyDistrict.name}, ${nearbyDistrict.state}\nPIN: Auto-detected`;
-            setFormData(prev => ({ 
-              ...prev, 
-              serviceAddress: address,
-              state: nearbyDistrict.state,
-              districtId: nearbyDistrict.id 
-            }));
-            toast({
-              title: "Location detected",
-              description: `Address set to ${nearbyDistrict.name}, ${nearbyDistrict.state}. You can edit if needed.`,
-            });
+            // Use browser's reverse geocoding API for detailed address
+            try {
+              const response = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`);
+              const geoData = await response.json();
+              
+              // Extract detailed address components
+              const area = geoData.locality || geoData.city || nearbyDistrict.name;
+              const subArea = geoData.principalSubdivision || "";
+              const pincode = geoData.postcode || "";
+              
+              // Format professional address
+              let detailedAddress = "";
+              if (subArea && subArea !== area) {
+                detailedAddress = `${subArea}, ${area}`;
+              } else {
+                detailedAddress = area;
+              }
+              detailedAddress += `\n${nearbyDistrict.name}, ${nearbyDistrict.state}`;
+              if (pincode) {
+                detailedAddress += `\nPIN: ${pincode}`;
+              }
+              
+              setFormData(prev => ({ 
+                ...prev, 
+                serviceAddress: detailedAddress,
+                state: nearbyDistrict.state,
+                districtId: nearbyDistrict.name 
+              }));
+              
+              toast({
+                title: "Location detected",
+                description: `Address set to ${area}, ${nearbyDistrict.name}. You can edit if needed.`,
+              });
+            } catch (error) {
+              // Fallback to basic district info if reverse geocoding fails
+              const basicAddress = `${nearbyDistrict.name}, ${nearbyDistrict.state}`;
+              setFormData(prev => ({ 
+                ...prev, 
+                serviceAddress: basicAddress,
+                state: nearbyDistrict.state,
+                districtId: nearbyDistrict.name 
+              }));
+              
+              toast({
+                title: "Location detected",
+                description: `Address set to ${nearbyDistrict.name}, ${nearbyDistrict.state}. Please add specific area details.`,
+              });
+            }
           } else {
             toast({
               title: "Location not found",
