@@ -190,7 +190,7 @@ export default function WorkerManagement() {
   const [, setLocation] = useLocation();
   const { user } = useAuth();
   const { toast } = useToast();
-  const queryWorker = useQueryWorker();
+  const queryClient = useQueryClient();
   const [selectedState, setSelectedState] = useState<string | null>(null);
   const [selectedDistrict, setSelectedDistrict] = useState<string | null>(null);
   const [view, setView] = useState<"total" | "states" | "districts" | "workers">("states");
@@ -446,7 +446,7 @@ export default function WorkerManagement() {
       return await apiRequest("PUT", `/api/admin/verify-user/${userId}`);
     },
     onSuccess: () => {
-      queryWorker.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
       toast({
         title: "Success",
         description: "User verified successfully",
@@ -466,7 +466,7 @@ export default function WorkerManagement() {
       return await apiRequest("PUT", `/api/admin/suspend-user/${userId}`);
     },
     onSuccess: () => {
-      queryWorker.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
       toast({
         title: "Success",
         description: "User suspended successfully",
@@ -487,7 +487,7 @@ export default function WorkerManagement() {
       return await apiRequest("DELETE", `/api/admin/delete-user/${userId}`);
     },
     onSuccess: () => {
-      queryWorker.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
       setShowDeleteDialog(false);
       setSelectedWorker(null);
       toast({
@@ -531,7 +531,7 @@ export default function WorkerManagement() {
       return await apiRequest("DELETE", `/api/transfer-history/${transferId}`);
     },
     onSuccess: () => {
-      queryWorker.invalidateQueries({ queryKey: ["/api/transfer-history", selectedWorker?.id] });
+      queryClient.invalidateQueries({ queryKey: ["/api/transfer-history", selectedWorker?.id] });
       toast({
         title: "Success",
         description: "Transfer history deleted successfully",
