@@ -1025,25 +1025,72 @@ const VoiceJobPostingForm = ({ onClose }: { onClose?: () => void }) => {
   // Audio recording for preserving original voice
   const startAudioRecording = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const recorder = new MediaRecorder(stream);
+      // Check if mediaDevices is supported
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        console.warn('MediaDevices API not supported');
+        return null;
+      }
+
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          sampleRate: 16000
+        }
+      });
+      
+      const recorder = new MediaRecorder(stream, {
+        mimeType: MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/mp4'
+      });
+      
       const audioChunks: BlobPart[] = [];
       
       recorder.ondataavailable = (event) => {
-        audioChunks.push(event.data);
+        if (event.data.size > 0) {
+          audioChunks.push(event.data);
+        }
       };
       
       recorder.onstop = () => {
-        const recordedBlob = new Blob(audioChunks, { type: 'audio/wav' });
+        const mimeType = recorder.mimeType || 'audio/webm';
+        const recordedBlob = new Blob(audioChunks, { type: mimeType });
         setAudioBlob(recordedBlob);
+        console.log('Audio recording completed, blob size:', recordedBlob.size);
       };
       
-      recorder.start();
+      recorder.onerror = (event) => {
+        console.error('MediaRecorder error:', event);
+        toast({
+          title: "Recording Error",
+          description: "Failed to record audio. Please try again.",
+          variant: "destructive"
+        });
+      };
+      
+      recorder.start(1000); // Collect data every second
       setMediaRecorder(recorder);
       
       return recorder;
     } catch (error) {
       console.error('Error starting audio recording:', error);
+      
+      let errorMessage = "Please allow microphone access and try again.";
+      if (error instanceof Error) {
+        if (error.name === 'NotAllowedError') {
+          errorMessage = "Microphone access denied. Please allow microphone permissions and refresh the page.";
+        } else if (error.name === 'NotFoundError') {
+          errorMessage = "No microphone found. Please check your audio devices.";
+        } else if (error.name === 'NotSupportedError') {
+          errorMessage = "Audio recording not supported in this browser.";
+        }
+      }
+      
+      toast({
+        title: "Recording Error",
+        description: errorMessage,
+        variant: "destructive"
+      });
+      
       return null;
     }
   };
@@ -1074,29 +1121,45 @@ const VoiceJobPostingForm = ({ onClose }: { onClose?: () => void }) => {
 
   // Start listening with audio recording
   const startListening = async () => {
+    // Check microphone permissions first
+    try {
+      const permissionStatus = await navigator.permissions.query({ name: 'microphone' as PermissionName });
+      if (permissionStatus.state === 'denied') {
+        toast({
+          title: "Microphone Access Required",
+          description: "Please allow microphone access in your browser settings and refresh the page.",
+          variant: "destructive"
+        });
+        return;
+      }
+    } catch (e) {
+      // Permissions API might not be supported, continue with recording attempt
+    }
+
+    setIsListening(true);
+    setVoiceTranscript('');
+    setRecordingTime(0);
+    setDetectedLanguage('');
+    setDetectedLanguageName('');
+    
+    // Start audio recording for preserving original voice
+    const recorder = await startAudioRecording();
+    
+    if (!recorder) {
+      setIsListening(false);
+      return;
+    }
+    
+    // Start timer
+    const interval = setInterval(() => {
+      setRecordingTime(prev => prev + 1);
+    }, 1000);
+    setTimerInterval(interval);
+    
+    // Note: We're primarily relying on MediaRecorder for audio capture
+    // Speech Recognition API is limited on Firefox but MediaRecorder works
     if (recognition) {
-      setIsListening(true);
-      setVoiceTranscript('');
-      setRecordingTime(0);
-      setDetectedLanguage('');
-      setDetectedLanguageName('');
-      
-      // Start audio recording for preserving original voice
-      await startAudioRecording();
-      
-      // Start timer
-      const interval = setInterval(() => {
-        setRecordingTime(prev => prev + 1);
-      }, 1000);
-      setTimerInterval(interval);
-      
       recognition.start();
-    } else {
-      toast({
-        title: "Voice Recognition Not Available",
-        description: "Please type your job details manually.",
-        variant: "destructive"
-      });
     }
   };
 
