@@ -1356,42 +1356,35 @@ const VoiceJobPostingForm = ({ onClose, autoStart = false }: { onClose?: () => v
     // Set up audio processing with proper timing
     setIsProcessing(true);
     
-    // Wait for the MediaRecorder to finish and create the blob
+    // Wait a moment for audio blob to be processed
     setTimeout(() => {
-      console.log('🔍 CHECKING AUDIO BLOB - Size:', audioBlob?.size || 0);
-      
-      if (audioBlob && audioBlob.size > 0) {
-        console.log('✅ AUDIO BLOB FOUND - Processing audio:', audioBlob.size, 'bytes');
-        processVoiceInput();
-      } else {
-        console.error('❌ NO AUDIO BLOB - Recording failed');
-        setIsProcessing(false);
-        toast({
-          title: "No Audio Recorded",
-          description: "Recording failed. Please try again and speak clearly.",
-          variant: "destructive"
-        });
-      }
-    }, 2000); // Increased delay to ensure MediaRecorder completes
+      console.log('🔍 Checking audio blob, size:', audioBlob?.size || 0);
+      processVoiceInput();
+    }, 1000);
   };
 
-  // Process voice input using Vakyansh API
+  // Process voice input using enhanced API
   const processVoiceInput = async () => {
-    if (!audioBlob) {
+    console.log('🎤 Processing voice input, audioBlob size:', audioBlob?.size || 0);
+    
+    if (!audioBlob || audioBlob.size === 0) {
+      console.error('❌ No audio blob available');
+      setIsProcessing(false);
       toast({
-        title: "No Audio Recording",
-        description: "Please record some audio first.",
+        title: "No Audio Recorded", 
+        description: "Recording failed. Please try again and speak clearly.",
         variant: "destructive"
       });
       return;
     }
 
-    setIsProcessing(true);
-    
     try {
-      // Create FormData to send audio file
+      console.log('📤 Sending audio to server for processing...');
+      
       const formData = new FormData();
-      const audioFile = new File([audioBlob], 'voice_recording.wav', { type: 'audio/wav' });
+      const audioFile = new File([audioBlob], 'voice-recording.webm', { 
+        type: audioBlob.type || 'audio/webm' 
+      });
       formData.append('audio', audioFile);
 
       const response = await fetch('/api/voice/process', {
@@ -1399,7 +1392,9 @@ const VoiceJobPostingForm = ({ onClose, autoStart = false }: { onClose?: () => v
         body: formData
       });
 
+      console.log('📥 Server response status:', response.status);
       const result = await response.json();
+      console.log('📥 Server response:', result);
 
       if (!response.ok) {
         throw new Error(result.error || 'Voice processing failed');
