@@ -2785,8 +2785,23 @@ export default function Dashboard() {
                                     {job.title}
                                   </h3>
                                   <p className="text-sm text-indigo-600 font-medium mt-1">
-                                    {job.serviceCategory} • {job.district}
+                                    {job.serviceCategory} • {job.district}, Tamil Nadu
                                   </p>
+                                  {/* Requirements badges moved here */}
+                                  {job.requirements && job.requirements.length > 0 && (
+                                    <div className="flex flex-wrap gap-1 mt-2">
+                                      {job.requirements.slice(0, 2).map((req: string, index: number) => (
+                                        <Badge key={index} variant="outline" className="text-xs">
+                                          {req}
+                                        </Badge>
+                                      ))}
+                                      {job.requirements.length > 2 && (
+                                        <Badge variant="outline" className="text-xs">
+                                          +{job.requirements.length - 2} more
+                                        </Badge>
+                                      )}
+                                    </div>
+                                  )}
                                 </div>
                                 <div className="flex items-center gap-2">
                                   <Badge 
@@ -2878,10 +2893,15 @@ export default function Dashboard() {
                                 </CollapsibleContent>
                               </Collapsible>
 
-                              {/* Media Attachments Section */}
-                              <div className="border-t border-gray-100 pt-4">
-                                <div className="flex items-center justify-between mb-3">
-                                  <span className="text-sm font-medium text-gray-900">Media Attachments</span>
+                              {/* Expandable Media Attachments Section */}
+                              <Collapsible>
+                                <CollapsibleTrigger asChild>
+                                  <Button variant="ghost" className="w-full justify-between p-0 h-auto border-t border-gray-100 pt-4">
+                                    <span className="text-sm font-medium text-gray-900">Media Attachments</span>
+                                    <ChevronDown className="h-4 w-4" />
+                                  </Button>
+                                </CollapsibleTrigger>
+                                <CollapsibleContent className="space-y-3">
                                   <div className="flex gap-2">
                                     <Button
                                       variant="outline"
@@ -2930,9 +2950,8 @@ export default function Dashboard() {
                                       <span className="text-xs font-medium">Video</span>
                                     </Button>
                                   </div>
-                                </div>
                                 
-                                {/* Display uploaded media */}
+                                  {/* Display uploaded media */}
                                 {jobMediaFiles[job.id] && (
                                   <div className="space-y-2">
                                     {/* Audio */}
@@ -2991,27 +3010,13 @@ export default function Dashboard() {
                                   </div>
                                 )}
                                 
-                                {/* Size constraints info */}
-                                <div className="text-xs text-muted-foreground mt-2">
-                                  Max file sizes: Audio 10MB • Images 5MB • Videos 50MB
-                                </div>
-                              </div>
+                                  {/* Size constraints info */}
+                                  <div className="text-xs text-muted-foreground mt-2">
+                                    Max file sizes: Audio 10MB • Images 5MB • Videos 50MB
+                                  </div>
+                                </CollapsibleContent>
+                              </Collapsible>
                               
-                              {/* Requirements */}
-                              {job.requirements && job.requirements.length > 0 && (
-                                <div className="flex flex-wrap gap-1">
-                                  {job.requirements.slice(0, 2).map((req: string, index: number) => (
-                                    <Badge key={index} variant="outline" className="text-xs">
-                                      {req}
-                                    </Badge>
-                                  ))}
-                                  {job.requirements.length > 2 && (
-                                    <Badge variant="outline" className="text-xs">
-                                      +{job.requirements.length - 2} more
-                                    </Badge>
-                                  )}
-                                </div>
-                              )}
                             </CardContent>
                           </Card>
                         );
