@@ -1119,18 +1119,6 @@ const JobPostingForm = ({ onClose }: { onClose?: () => void }) => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 p-6 bg-gradient-to-br from-background via-background to-muted/20">
-      {/* Header Section */}
-      <div className="space-y-2 pb-4 border-b border-gradient-to-r from-blue-200 via-purple-200 to-blue-200 bg-gradient-to-r from-blue-50/50 via-purple-50/30 to-blue-50/50 -mx-6 px-6 -mt-6 pt-6 rounded-t-lg">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-blue-100 rounded-lg">
-            <Briefcase className="h-5 w-5 text-blue-600" />
-          </div>
-          <div>
-            <h3 className="text-xl font-bold text-foreground">Job Details</h3>
-            <p className="text-sm text-muted-foreground">Provide clear details to attract the right workers</p>
-          </div>
-        </div>
-      </div>
 
       {/* Job Title Section */}
       <div className="space-y-3 p-4 bg-white/60 rounded-lg border border-blue-100/50 shadow-sm">
