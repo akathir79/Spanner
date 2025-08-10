@@ -462,6 +462,7 @@ export default function WorkerDashboard() {
   const isWorkerApproved = user?.status === "approved";
   const isWorkerPending = user?.status === "pending";
   const isWorkerRejected = user?.status === "rejected";
+  const isWorkerSuspended = user?.status === "suspended";
 
   // Show loading state while auth is loading
   if (authLoading) {
@@ -478,6 +479,55 @@ export default function WorkerDashboard() {
   // Redirect if user is null or wrong role
   if (!user || user.role !== "worker") {
     return null;
+  }
+
+  // Show suspension notice for suspended workers
+  if (isWorkerSuspended) {
+    return (
+      <div className="min-h-screen bg-muted/30 pt-20 pb-8">
+        <div className="container mx-auto px-4 max-w-4xl">
+          <div className="mb-8 text-center">
+            <h1 className="text-3xl font-bold mb-2">
+              Welcome, {user.firstName}!
+            </h1>
+            <p className="text-muted-foreground">
+              Your account has been suspended by admin
+            </p>
+          </div>
+
+          <Card className="border-orange-200 bg-orange-50 dark:bg-orange-950 dark:border-orange-800">
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2 text-orange-800 dark:text-orange-200">
+                <Ban className="h-5 w-5" />
+                <span>Account Suspended</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <p className="text-orange-700 dark:text-orange-300">
+                  Your worker account has been temporarily suspended by an administrator. 
+                  You have read-only access to view your profile and previous bookings, 
+                  but cannot accept new jobs or update your availability.
+                </p>
+                <div className="bg-orange-100 dark:bg-orange-900 p-4 rounded-lg">
+                  <p className="text-sm text-orange-800 dark:text-orange-200">
+                    <strong>What you can do:</strong>
+                  </p>
+                  <ul className="text-sm text-orange-700 dark:text-orange-300 mt-2 space-y-1">
+                    <li>• View your profile information</li>
+                    <li>• Check your booking history</li>
+                    <li>• Contact support if you believe this is an error</li>
+                  </ul>
+                </div>
+                <p className="text-sm text-orange-600 dark:text-orange-400">
+                  For questions about your suspension, please contact our support team.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
   }
 
   // Show approval pending state for unapproved workers
@@ -583,7 +633,7 @@ export default function WorkerDashboard() {
                     <div>
                       <Label className="text-sm text-muted-foreground">Registration Date</Label>
                       <p className="font-medium p-2 bg-muted rounded border">
-                        {user.createdAt ? format(new Date(user.createdAt), "MMM dd, yyyy") : "Not available"}
+                        {user?.createdAt ? format(new Date(user.createdAt), "MMM dd, yyyy") : "Not available"}
                       </p>
                     </div>
                   </div>
@@ -917,7 +967,7 @@ export default function WorkerDashboard() {
                         <p className="text-sm text-muted-foreground">{user.mobile}</p>
                         <p className="text-sm text-muted-foreground">{user.email}</p>
                         <p className="text-xs text-muted-foreground mt-2">
-                          ID: {user.customId}
+                          ID: {user?.id || "Not available"}
                         </p>
                       </div>
                     </div>

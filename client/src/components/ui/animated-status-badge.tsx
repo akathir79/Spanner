@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, Clock, XCircle, AlertCircle, Shield } from "lucide-react";
+import { CheckCircle, Clock, XCircle, AlertCircle, Shield, Ban } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface AnimatedStatusBadgeProps {
-  status: "pending" | "verified" | "approved" | "rejected" | "unknown";
-  previousStatus?: "pending" | "verified" | "approved" | "rejected" | "unknown";
+  status: "pending" | "verified" | "approved" | "rejected" | "suspended" | "unknown";
+  previousStatus?: "pending" | "verified" | "approved" | "rejected" | "suspended" | "unknown";
   className?: string;
   showIcon?: boolean;
   size?: "sm" | "md" | "lg";
@@ -85,6 +85,14 @@ export function AnimatedStatusBadge({
           icon: <XCircle className={cn("flex-shrink-0", size === "sm" ? "w-3 h-3" : size === "lg" ? "w-4 h-4" : "w-3.5 h-3.5")} />,
           label: "Rejected",
           pulseColor: "bg-red-400"
+        };
+      case "suspended":
+        return {
+          variant: "destructive" as const,
+          className: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-100 border-orange-200 dark:border-orange-700",
+          icon: <Ban className={cn("flex-shrink-0", size === "sm" ? "w-3 h-3" : size === "lg" ? "w-4 h-4" : "w-3.5 h-3.5")} />,
+          label: "Suspended",
+          pulseColor: "bg-orange-400"
         };
       default:
         return {

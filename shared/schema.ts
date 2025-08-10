@@ -41,7 +41,11 @@ export const users = pgTable("users", {
   bankMICR: text("bank_micr"), // MICR code
   isVerified: boolean("is_verified").default(false),
   isActive: boolean("is_active").default(true),
-  status: text("status").default("pending"), // pending, verified, approved, rejected (for worker approval workflow)
+  isSuspended: boolean("is_suspended").default(false), // Track suspension status
+  suspendedAt: timestamp("suspended_at"), // When user was suspended
+  suspendedBy: varchar("suspended_by"), // Admin ID who suspended the user
+  suspensionReason: text("suspension_reason"), // Reason for suspension
+  status: text("status").default("pending"), // pending, verified, approved, rejected, suspended (for worker approval workflow)
   verificationComment: text("verification_comment"), // Admin comment when verifying worker
   verifiedAt: timestamp("verified_at"), // When worker was verified
   verifiedBy: varchar("verified_by"), // Admin ID who verified the worker

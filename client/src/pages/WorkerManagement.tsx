@@ -621,12 +621,54 @@ export default function WorkerManagement() {
     });
   };
 
+  // Worker suspension mutation
+  const suspendWorkerMutation = useMutation({
+    mutationFn: async (workerId: string) => {
+      return await apiRequest("POST", `/api/admin/suspend-worker/${workerId}`, { reason: "Suspended by admin" });
+    },
+    onSuccess: (_, workerId) => {
+      toast({
+        title: "Worker Suspended",
+        description: "Worker has been suspended and cannot access their dashboard.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Suspension Failed",
+        description: error.message || "Failed to suspend worker",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Worker resume mutation
+  const resumeWorkerMutation = useMutation({
+    mutationFn: async (workerId: string) => {
+      return await apiRequest("POST", `/api/admin/resume-worker/${workerId}`, {});
+    },
+    onSuccess: (_, workerId) => {
+      toast({
+        title: "Worker Resumed",
+        description: "Worker has been resumed and can now access their dashboard.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Resume Failed",
+        description: error.message || "Failed to resume worker",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleSuspendUser = (worker: User) => {
-    // Handle user suspension
-    toast({
-      title: "Suspend User",
-      description: `${worker.firstName} ${worker.lastName} has been suspended`,
-    });
+    if (worker.status === "suspended") {
+      resumeWorkerMutation.mutate(worker.id);
+    } else {
+      suspendWorkerMutation.mutate(worker.id);
+    }
   };
 
   // Worker approval mutation
@@ -1248,14 +1290,30 @@ export default function WorkerManagement() {
                                         </DropdownMenuSubContent>
                                       </DropdownMenuSub>
                                       
-                                      {/* Only show these actions for approved workers */}
+                                      {/* Suspend/Resume actions for approved workers */}
                                       {worker.status === "approved" && (
-                                        <>
-                                          <DropdownMenuItem onClick={() => handleSuspendUser(worker)}>
-                                            <XCircle className="w-4 h-4 mr-2 text-red-600" />
-                                            <span className="text-red-600">Suspend User</span>
-                                          </DropdownMenuItem>
-                                        </>
+                                        <DropdownMenuItem 
+                                          onClick={() => handleSuspendUser(worker)}
+                                          disabled={suspendWorkerMutation.isPending}
+                                        >
+                                          <XCircle className="w-4 h-4 mr-2 text-red-600" />
+                                          <span className="text-red-600">
+                                            {suspendWorkerMutation.isPending ? "Suspending..." : "Suspend User"}
+                                          </span>
+                                        </DropdownMenuItem>
+                                      )}
+
+                                      {/* Resume action for suspended workers */}
+                                      {worker.status === "suspended" && (
+                                        <DropdownMenuItem 
+                                          onClick={() => handleSuspendUser(worker)}
+                                          disabled={resumeWorkerMutation.isPending}
+                                        >
+                                          <CheckCircle className="w-4 h-4 mr-2 text-green-600" />
+                                          <span className="text-green-600">
+                                            {resumeWorkerMutation.isPending ? "Resuming..." : "Resume User"}
+                                          </span>
+                                        </DropdownMenuItem>
                                       )}
                                       
                                       <DropdownMenuItem onClick={() => handleDeleteUser(worker)}>
@@ -1750,14 +1808,30 @@ export default function WorkerManagement() {
                                         </DropdownMenuSubContent>
                                       </DropdownMenuSub>
                                       
-                                      {/* Only show these actions for approved workers */}
+                                      {/* Suspend/Resume actions for approved workers */}
                                       {worker.status === "approved" && (
-                                        <>
-                                          <DropdownMenuItem onClick={() => handleSuspendUser(worker)}>
-                                            <XCircle className="w-4 h-4 mr-2 text-red-600" />
-                                            <span className="text-red-600">Suspend User</span>
-                                          </DropdownMenuItem>
-                                        </>
+                                        <DropdownMenuItem 
+                                          onClick={() => handleSuspendUser(worker)}
+                                          disabled={suspendWorkerMutation.isPending}
+                                        >
+                                          <XCircle className="w-4 h-4 mr-2 text-red-600" />
+                                          <span className="text-red-600">
+                                            {suspendWorkerMutation.isPending ? "Suspending..." : "Suspend User"}
+                                          </span>
+                                        </DropdownMenuItem>
+                                      )}
+
+                                      {/* Resume action for suspended workers */}
+                                      {worker.status === "suspended" && (
+                                        <DropdownMenuItem 
+                                          onClick={() => handleSuspendUser(worker)}
+                                          disabled={resumeWorkerMutation.isPending}
+                                        >
+                                          <CheckCircle className="w-4 h-4 mr-2 text-green-600" />
+                                          <span className="text-green-600">
+                                            {resumeWorkerMutation.isPending ? "Resuming..." : "Resume User"}
+                                          </span>
+                                        </DropdownMenuItem>
                                       )}
                                       
                                       <DropdownMenuItem onClick={() => handleDeleteUser(worker)}>

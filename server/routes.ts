@@ -1277,6 +1277,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Suspend worker
+  app.post("/api/admin/suspend-worker/:workerId", async (req, res) => {
+    try {
+      const { workerId } = req.params;
+      const { reason } = req.body;
+      
+      const updatedUser = await storage.updateUser(workerId, { 
+        status: "suspended",
+        isSuspended: true,
+        suspendedAt: new Date(),
+        suspendedBy: "ADMIN",
+        suspensionReason: reason || "No reason provided"
+      });
+      
+      if (!updatedUser) {
+        return res.status(404).json({ message: "Worker not found" });
+      }
+      
+      res.json({ message: "Worker suspended successfully", user: updatedUser });
+    } catch (error) {
+      console.error("Error suspending worker:", error);
+      res.status(500).json({ error: "Failed to suspend worker" });
+    }
+  });
+
+  // Resume worker (unsuspend)
+  app.post("/api/admin/resume-worker/:workerId", async (req, res) => {
+    try {
+      const { workerId } = req.params;
+      
+      const updatedUser = await storage.updateUser(workerId, { 
+        status: "approved", // Resume to approved status
+        isSuspended: false,
+        suspendedAt: null,
+        suspendedBy: null,
+        suspensionReason: null
+      });
+      
+      if (!updatedUser) {
+        return res.status(404).json({ message: "Worker not found" });
+      }
+      
+      res.json({ message: "Worker resumed successfully", user: updatedUser });
+    } catch (error) {
+      console.error("Error resuming worker:", error);
+      res.status(500).json({ error: "Failed to resume worker" });
+    }
+  });
+
   app.delete("/api/admin/reject-worker/:workerId", async (req, res) => {
     try {
       const { workerId } = req.params;
