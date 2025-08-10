@@ -330,20 +330,24 @@ export default function WorkerManagement() {
     });
   }, [allWorkers, searchQuery, searchFilter, statusFilter]);
 
+  // Calculate total pages
+  const calculatedTotalPages = useMemo(() => {
+    return Math.ceil(filteredWorkers.length / pageSize);
+  }, [filteredWorkers.length, pageSize]);
+
+  // Update total pages when calculated value changes
+  useEffect(() => {
+    if (calculatedTotalPages !== totalPages) {
+      setTotalPages(calculatedTotalPages);
+    }
+  }, [calculatedTotalPages, totalPages]);
+
   // Paginated workers for current view
   const workers = useMemo(() => {
     const startIndex = (currentPage - 1) * pageSize;
     const endIndex = startIndex + pageSize;
-    const paginated = filteredWorkers.slice(startIndex, endIndex);
-    
-    // Update total pages
-    const calculatedTotalPages = Math.ceil(filteredWorkers.length / pageSize);
-    if (calculatedTotalPages !== totalPages) {
-      setTotalPages(calculatedTotalPages);
-    }
-    
-    return paginated;
-  }, [filteredWorkers, currentPage, pageSize, totalPages]);
+    return filteredWorkers.slice(startIndex, endIndex);
+  }, [filteredWorkers, currentPage, pageSize]);
 
   // Roll-in animation effect on component load
   useEffect(() => {
@@ -740,6 +744,7 @@ export default function WorkerManagement() {
     setDistrictCurrentPage(page);
   };
 
+  // Early return must be after all hooks
   if (usersError) {
     return (
       <div className="flex items-center justify-center min-h-screen">
