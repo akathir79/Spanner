@@ -261,7 +261,7 @@ export class DatabaseStorage implements IStorage {
     }
     
     console.log("Final user data with ID:", userDataWithId.id);
-    const [user] = await db.insert(users).values(userDataWithId).returning();
+    const [user] = await db.insert(users).values([userDataWithId]).returning();
     return user;
   }
 
@@ -570,63 +570,7 @@ export class DatabaseStorage implements IStorage {
     return booking || undefined;
   }
 
-  async getBookingsWithDetails(userId: string): Promise<any[]> {
-    const results = await db
-      .select({
-        booking: bookings,
-        client: {
-          id: users.id,
-          firstName: users.firstName,
-          lastName: users.lastName,
-          mobile: users.mobile,
-          profilePicture: users.profilePicture,
-        },
-        worker: {
-          id: users.id,
-          firstName: users.firstName,
-          lastName: users.lastName,
-          mobile: users.mobile,
-          profilePicture: users.profilePicture,
-        }
-      })
-      .from(bookings)
-      .leftJoin(users, eq(bookings.clientId, users.id))
-      .leftJoin(users, eq(bookings.workerId, users.id))
-      .where(
-        or(
-          eq(bookings.clientId, userId),
-          eq(bookings.workerId, userId)
-        )
-      )
-      .orderBy(desc(bookings.createdAt));
 
-    // Need to do separate queries to get both client and worker info
-    const enrichedBookings = [];
-    for (const result of results) {
-      const [client] = await db.select().from(users).where(eq(users.id, result.booking.clientId));
-      const [worker] = await db.select().from(users).where(eq(users.id, result.booking.workerId));
-      
-      enrichedBookings.push({
-        ...result.booking,
-        client: client ? {
-          id: client.id,
-          firstName: client.firstName,
-          lastName: client.lastName,
-          mobile: client.mobile,
-          profilePicture: client.profilePicture,
-        } : null,
-        worker: worker ? {
-          id: worker.id,
-          firstName: worker.firstName,
-          lastName: worker.lastName,
-          mobile: worker.mobile,
-          profilePicture: worker.profilePicture,
-        } : null,
-      });
-    }
-
-    return enrichedBookings;
-  }
 
   async updateBookingReview(bookingId: string, rating: number, review: string): Promise<Booking | undefined> {
     const [booking] = await db
@@ -693,10 +637,11 @@ export class DatabaseStorage implements IStorage {
     return results.map(result => {
       const user = result.users;
       const bankDetails = result.worker_bank_details;
+      const workerProfile = result.worker_profiles;
       
       const mapped = {
         ...user,
-        workerProfile: result.worker_profiles || undefined,
+        workerProfile: workerProfile || undefined,
         workerBankDetails: bankDetails || undefined,
         // Flatten bank details directly onto user object for easier access
         ...(bankDetails && {
@@ -708,6 +653,15 @@ export class DatabaseStorage implements IStorage {
           bankAddress: bankDetails.bankAddress,
           bankAccountType: bankDetails.accountType,
           bankAccountHolderName: bankDetails.accountHolderName
+        }),
+        // Flatten worker profile service details for easier access
+        ...(workerProfile && {
+          primaryService: workerProfile.primaryService,
+          skills: workerProfile.skills,
+          experienceYears: workerProfile.experienceYears,
+          hourlyRate: workerProfile.hourlyRate,
+          address: workerProfile.address,
+          pincode: workerProfile.pincode
         })
       };
       
@@ -808,7 +762,7 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(jobPostings.createdAt));
     
     return result.map(row => ({
-      ...row.job_postings,
+      ...row.job_postings!,
       client: row.users!
     }));
   }

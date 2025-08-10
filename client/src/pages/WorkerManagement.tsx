@@ -861,7 +861,7 @@ export default function WorkerManagement() {
                         <TableRow>
                           <TableHead className="w-[190px]">
                             <div className="flex items-center gap-2">
-                              <span>User</span>
+                              <span>Worker</span>
                               <Select value={statusFilter} onValueChange={(value) => {
                                 setStatusFilter(value as any);
                                 setCurrentPage(1); // Reset to first page when filtering
@@ -2023,7 +2023,7 @@ export default function WorkerManagement() {
                         <TableRow>
                           <TableHead className="w-[190px]">
                             <div className="flex items-center gap-2">
-                              <span>User</span>
+                              <span>Worker</span>
                               <Select value={statusFilter} onValueChange={(value) => {
                                 setStatusFilter(value as any);
                                 setCurrentPage(1); // Reset to first page when filtering
