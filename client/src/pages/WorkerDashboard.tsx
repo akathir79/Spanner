@@ -462,7 +462,9 @@ export default function WorkerDashboard() {
 
   // Helper functions
   const handleRejoinRequest = () => {
+    console.log("handleRejoinRequest called with reason:", rejoinReason);
     if (!rejoinReason.trim()) {
+      console.log("No reason provided, showing error toast");
       toast({
         title: "Reason Required",
         description: "Please provide a reason for your rejoin request.",
@@ -470,6 +472,7 @@ export default function WorkerDashboard() {
       });
       return;
     }
+    console.log("Submitting rejoin request with reason:", rejoinReason.trim());
     rejoinRequestMutation.mutate(rejoinReason.trim());
   };
 
@@ -576,7 +579,10 @@ export default function WorkerDashboard() {
                     </div>
                   ) : (
                     <Button 
-                      onClick={() => setShowRejoinModal(true)}
+                      onClick={() => {
+                        console.log("Rejoin button clicked, opening modal");
+                        setShowRejoinModal(true);
+                      }}
                       className="w-fit bg-blue-600 hover:bg-blue-700 text-white"
                     >
                       Request to Rejoin
@@ -1196,7 +1202,10 @@ export default function WorkerDashboard() {
       </div>
 
       {/* Rejoin Request Modal */}
-      <Dialog open={showRejoinModal} onOpenChange={setShowRejoinModal}>
+      <Dialog open={showRejoinModal} onOpenChange={(open) => {
+        console.log("Dialog open state changed:", open);
+        setShowRejoinModal(open);
+      }}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Request to Rejoin</DialogTitle>
