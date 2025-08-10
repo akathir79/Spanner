@@ -74,15 +74,14 @@ Located in `shared/schema.ts`, the database includes:
 - **UI Improvements**: All dropdowns have consistent scrollbar functionality with enhanced visibility (August 4, 2025)
 - **Custom User ID System**: Automatic generation of unique IDs in format STATE-DISTRICT-XXXX-ROLE (e.g., "TAM-CHE-0001-C" for client, "TAM-SAL-0001-W" for worker, "TAM-COI-0001-A" for admin) with sequential numbering per state-district-role combination (August 6, 2025)
 - **User Activity Tracking**: Complete user activity monitoring with registration date/time, last login tracking, and "Member since" display on client dashboard (August 6, 2025)
-- **Smart Voice Job Posting**: Advanced multi-language voice assistant with automatic detection of 8+ Indian languages (Tamil/Hindi/Malayalam/Telugu/Kannada/Gujarati/Punjabi/Bengali/English), real-time translation to English, intelligent field extraction, and original audio file preservation. Fixed translation issues to ensure all output is in English format (August 10, 2025)
-- **Vakyansh ASR Integration**: Switched to EkStep's Vakyansh open-source speech recognition API supporting 39 Indian languages with 34,000+ hours of training data. No authentication required - completely free and open API from cdac.ulcacontrib.org (August 10, 2025)
+- **Simplified Job Posting**: Clean, user-friendly form-based job posting system with auto-location detection and comprehensive service category selection (August 10, 2025)
 
 ### User Interfaces
 - **Home Page**: Service discovery with search and filters
-- **Client Dashboard**: Booking management and service requests with professional voice-assisted job posting
+- **Client Dashboard**: Clean, intuitive booking management and service requests with streamlined job posting
 - **Worker Dashboard**: Job management, earnings tracking, and availability control
 - **Admin Dashboard**: Platform oversight, user management, and analytics
-- **Smart Voice Assistant**: Advanced multi-language voice system with real-time translation, intelligent follow-up questions, and language preference selection for seamless job posting in any Indian language
+- **Streamlined Interface**: Simple, efficient user interface focused on core functionality without complex features
 
 ### Language Support
 - English-only interface for India-wide coverage
