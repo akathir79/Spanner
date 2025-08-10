@@ -690,7 +690,7 @@ export default function WorkerManagement() {
     setIsVerifying(true);
     try {
       const endpoint = shouldApprove ? "approve-worker" : "verify-worker";
-      const response = await apiRequest(`/api/admin/${endpoint}/${workerToVerify.id}`, "POST", { comment: verificationComment });
+      const response = await apiRequest("POST", `/api/admin/${endpoint}/${workerToVerify.id}`, { comment: verificationComment });
 
       if (response) {
         await queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
