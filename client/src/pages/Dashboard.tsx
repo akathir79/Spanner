@@ -890,18 +890,26 @@ const JobPostingForm = ({ onClose }: { onClose?: () => void }) => {
               const geoData = await response.json();
               
               // Extract detailed address components
-              const area = geoData.locality || geoData.city || nearbyDistrict.name;
+              const area = geoData.locality || geoData.city || "";
               const subArea = geoData.principalSubdivision || "";
               const pincode = geoData.postcode || "";
               
-              // Format professional address
+              // Format professional address in required format
               let detailedAddress = "";
-              if (subArea && subArea !== area) {
-                detailedAddress = `${subArea}, ${area}`;
-              } else {
+              
+              // First line: Area, Sub-area (like "Narasothipatti, Salem West")
+              if (area && subArea && area !== subArea) {
+                detailedAddress = `${area}, ${subArea}`;
+              } else if (area) {
                 detailedAddress = area;
+              } else {
+                detailedAddress = "Current Location";
               }
+              
+              // Second line: District, State (like "Salem, Tamil Nadu")
               detailedAddress += `\n${nearbyDistrict.name}, ${nearbyDistrict.state}`;
+              
+              // Third line: PIN code if available
               if (pincode) {
                 detailedAddress += `\nPIN: ${pincode}`;
               }
@@ -915,11 +923,11 @@ const JobPostingForm = ({ onClose }: { onClose?: () => void }) => {
               
               toast({
                 title: "Location detected",
-                description: `Address set to ${area}, ${nearbyDistrict.name}. You can edit if needed.`,
+                description: `Address set with area details. You can edit if needed.`,
               });
             } catch (error) {
               // Fallback to basic district info if reverse geocoding fails
-              const basicAddress = `${nearbyDistrict.name}, ${nearbyDistrict.state}`;
+              const basicAddress = `Current Location\n${nearbyDistrict.name}, ${nearbyDistrict.state}`;
               setFormData(prev => ({ 
                 ...prev, 
                 serviceAddress: basicAddress,
@@ -929,7 +937,7 @@ const JobPostingForm = ({ onClose }: { onClose?: () => void }) => {
               
               toast({
                 title: "Location detected",
-                description: `Address set to ${nearbyDistrict.name}, ${nearbyDistrict.state}. Please add specific area details.`,
+                description: `Basic location set. Please add specific area details.`,
               });
             }
           } else {
