@@ -2179,38 +2179,40 @@ export default function Dashboard() {
         </div>
 
         <Tabs defaultValue="bookings" className="space-y-8">
-          <TabsList className="grid w-full grid-cols-5 bg-gradient-to-r from-slate-100/90 via-white/90 to-slate-100/90 backdrop-blur-md border-2 border-white/40 rounded-2xl p-3 shadow-2xl">
-            <TabsTrigger 
-              value="bookings" 
-              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-purple-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:scale-105 rounded-xl font-semibold text-sm py-3 transition-all duration-300 hover:scale-102"
-            >
-              My Bookings
-            </TabsTrigger>
-            <TabsTrigger 
-              value="search"
-              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-pink-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:scale-105 rounded-xl font-semibold text-sm py-3 transition-all duration-300 hover:scale-102"
-            >
-              Find Workers
-            </TabsTrigger>
-            <TabsTrigger 
-              value="jobs"
-              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500 data-[state=active]:to-teal-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:scale-105 rounded-xl font-semibold text-sm py-3 transition-all duration-300 hover:scale-102"
-            >
-              My Jobs
-            </TabsTrigger>
-            <TabsTrigger 
-              value="bids"
-              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-red-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:scale-105 rounded-xl font-semibold text-sm py-3 transition-all duration-300 hover:scale-102"
-            >
-              Bids
-            </TabsTrigger>
-            <TabsTrigger 
-              value="profile"
-              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500 data-[state=active]:to-blue-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:scale-105 rounded-xl font-semibold text-sm py-3 transition-all duration-300 hover:scale-102"
-            >
-              Profile
-            </TabsTrigger>
-          </TabsList>
+          <div className="bg-white/90 backdrop-blur-lg border border-white/50 rounded-3xl p-2 shadow-2xl">
+            <TabsList className="grid w-full grid-cols-5 bg-transparent rounded-2xl p-1 gap-1">
+              <TabsTrigger 
+                value="bookings" 
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-purple-600 data-[state=active]:text-white data-[state=active]:shadow-xl data-[state=active]:border-0 rounded-2xl font-bold text-sm py-4 px-4 transition-all duration-300 hover:bg-slate-100 data-[state=inactive]:text-slate-600 data-[state=inactive]:hover:text-slate-800"
+              >
+                My Bookings
+              </TabsTrigger>
+              <TabsTrigger 
+                value="search"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-pink-600 data-[state=active]:text-white data-[state=active]:shadow-xl data-[state=active]:border-0 rounded-2xl font-bold text-sm py-4 px-4 transition-all duration-300 hover:bg-slate-100 data-[state=inactive]:text-slate-600 data-[state=inactive]:hover:text-slate-800"
+              >
+                Find Workers
+              </TabsTrigger>
+              <TabsTrigger 
+                value="jobs"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500 data-[state=active]:to-teal-600 data-[state=active]:text-white data-[state=active]:shadow-xl data-[state=active]:border-0 rounded-2xl font-bold text-sm py-4 px-4 transition-all duration-300 hover:bg-slate-100 data-[state=inactive]:text-slate-600 data-[state=inactive]:hover:text-slate-800"
+              >
+                My Jobs
+              </TabsTrigger>
+              <TabsTrigger 
+                value="bids"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-red-600 data-[state=active]:text-white data-[state=active]:shadow-xl data-[state=active]:border-0 rounded-2xl font-bold text-sm py-4 px-4 transition-all duration-300 hover:bg-slate-100 data-[state=inactive]:text-slate-600 data-[state=inactive]:hover:text-slate-800"
+              >
+                Bids
+              </TabsTrigger>
+              <TabsTrigger 
+                value="profile"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500 data-[state=active]:to-blue-600 data-[state=active]:text-white data-[state=active]:shadow-xl data-[state=active]:border-0 rounded-2xl font-bold text-sm py-4 px-4 transition-all duration-300 hover:bg-slate-100 data-[state=inactive]:text-slate-600 data-[state=inactive]:hover:text-slate-800"
+              >
+                Profile
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
           {/* My Bookings Tab */}
           <TabsContent value="bookings" className="space-y-6">
