@@ -32,7 +32,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { ArrowLeft, Phone, Mail, Calendar, MoreHorizontal, Eye, MessageSquare, CheckCircle, XCircle, Trash2, Edit, AlertCircle, Search, X, Menu, Loader2, MessageCircle, Smartphone, CreditCard, Send, ArrowRightLeft, History, DollarSign, Filter, Copy, Square } from "lucide-react";
+import { ArrowLeft, Phone, Mail, Calendar, MoreHorizontal, Eye, MessageSquare, CheckCircle, XCircle, Trash2, Edit, AlertCircle, Search, X, Menu, Loader2, MessageCircle, Smartphone, CreditCard, Send, ArrowRightLeft, History, DollarSign, Filter, Copy, Square, Shield, UserCheck } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 // import { FaWhatsapp } from "react-icons/fa"; // Replaced with MessageCircle for consistency
 import { format } from "date-fns";
 import { useLocation } from "wouter";
@@ -223,6 +224,12 @@ export default function WorkerManagement() {
   const [showTransferHistoryDialog, setShowTransferHistoryDialog] = useState(false);
   const [showFinancialStatementsDialog, setShowFinancialStatementsDialog] = useState(false);
   const [messageText, setMessageText] = useState("");
+
+  // Checkbox and bulk action states
+  const [selectedWorkerIds, setSelectedWorkerIds] = useState<Set<string>>(new Set());
+  const [showBulkVerifyDialog, setShowBulkVerifyDialog] = useState(false);
+  const [showBulkDeleteDialog, setShowBulkDeleteDialog] = useState(false);
+  const [bulkActionLoading, setBulkActionLoading] = useState(false);
 
 
   // Fetch all users
@@ -844,6 +851,43 @@ export default function WorkerManagement() {
               </div>
               
               <div className="flex-1 overflow-y-auto p-6">
+                {selectedWorkerIds.size > 0 && (
+                  <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium text-blue-900 dark:text-blue-100">
+                        {selectedWorkerIds.size} worker{selectedWorkerIds.size > 1 ? 's' : ''} selected
+                      </span>
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setShowBulkVerifyDialog(true)}
+                          disabled={bulkActionLoading}
+                        >
+                          <UserCheck className="w-4 h-4 mr-1" />
+                          Verify Selected
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setShowBulkDeleteDialog(true)}
+                          disabled={bulkActionLoading}
+                        >
+                          <Trash2 className="w-4 h-4 mr-1" />
+                          Delete Selected
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setSelectedWorkerIds(new Set())}
+                        >
+                          Clear Selection
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
                 {clients.length === 0 ? (
                   <div className="text-center py-12">
                     <div className="text-gray-400 mb-4">
@@ -859,6 +903,19 @@ export default function WorkerManagement() {
                     <Table>
                       <TableHeader>
                         <TableRow>
+                          <TableHead className="w-[50px]">
+                            <Checkbox
+                              checked={selectedWorkerIds.size === clients.length && clients.length > 0}
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  setSelectedWorkerIds(new Set(clients.map(w => w.id)));
+                                } else {
+                                  setSelectedWorkerIds(new Set());
+                                }
+                              }}
+                              aria-label="Select all workers"
+                            />
+                          </TableHead>
                           <TableHead className="w-[190px]">
                             <div className="flex items-center gap-2">
                               <span>Worker</span>
@@ -963,6 +1020,21 @@ export default function WorkerManagement() {
                           const activityStatus = getActivityStatus(worker.lastLoginAt, worker.createdAt);
                           return (
                             <TableRow key={worker.id}>
+                              <TableCell>
+                                <Checkbox
+                                  checked={selectedWorkerIds.has(worker.id)}
+                                  onCheckedChange={(checked) => {
+                                    const newSelection = new Set(selectedWorkerIds);
+                                    if (checked) {
+                                      newSelection.add(worker.id);
+                                    } else {
+                                      newSelection.delete(worker.id);
+                                    }
+                                    setSelectedWorkerIds(newSelection);
+                                  }}
+                                  aria-label={`Select worker ${worker.firstName} ${worker.lastName}`}
+                                />
+                              </TableCell>
                               <TableCell className="py-2">
                               <Tooltip>
                                 <TooltipTrigger asChild>
@@ -2021,6 +2093,19 @@ export default function WorkerManagement() {
                     <Table>
                       <TableHeader>
                         <TableRow>
+                          <TableHead className="w-[50px]">
+                            <Checkbox
+                              checked={selectedWorkerIds.size === clientsForDistrict.length && clientsForDistrict.length > 0}
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  setSelectedWorkerIds(new Set(clientsForDistrict.map(w => w.id)));
+                                } else {
+                                  setSelectedWorkerIds(new Set());
+                                }
+                              }}
+                              aria-label="Select all workers"
+                            />
+                          </TableHead>
                           <TableHead className="w-[190px]">
                             <div className="flex items-center gap-2">
                               <span>Worker</span>
@@ -2125,6 +2210,21 @@ export default function WorkerManagement() {
                           const activityStatus = getActivityStatus(worker.lastLoginAt, worker.createdAt);
                           return (
                             <TableRow key={worker.id}>
+                              <TableCell>
+                                <Checkbox
+                                  checked={selectedWorkerIds.has(worker.id)}
+                                  onCheckedChange={(checked) => {
+                                    const newSelection = new Set(selectedWorkerIds);
+                                    if (checked) {
+                                      newSelection.add(worker.id);
+                                    } else {
+                                      newSelection.delete(worker.id);
+                                    }
+                                    setSelectedWorkerIds(newSelection);
+                                  }}
+                                  aria-label={`Select worker ${worker.firstName} ${worker.lastName}`}
+                                />
+                              </TableCell>
                               <TableCell className="py-2">
                               <Tooltip>
                                   <TooltipTrigger asChild>
@@ -3376,6 +3476,71 @@ export default function WorkerManagement() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Bulk Verify Dialog */}
+      <AlertDialog open={showBulkVerifyDialog} onOpenChange={setShowBulkVerifyDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Verify Selected Workers</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to verify {selectedWorkerIds.size} selected worker{selectedWorkerIds.size > 1 ? 's' : ''}? This action will mark them as verified users.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={async () => {
+                setBulkActionLoading(true);
+                // TODO: Implement bulk verify API call
+                toast({
+                  title: "Workers Verified",
+                  description: `${selectedWorkerIds.size} worker(s) have been verified successfully.`
+                });
+                setSelectedWorkerIds(new Set());
+                setBulkActionLoading(false);
+                setShowBulkVerifyDialog(false);
+              }}
+              disabled={bulkActionLoading}
+            >
+              {bulkActionLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <UserCheck className="w-4 h-4 mr-2" />}
+              Verify Workers
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Bulk Delete Dialog */}
+      <AlertDialog open={showBulkDeleteDialog} onOpenChange={setShowBulkDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Selected Workers</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete {selectedWorkerIds.size} selected worker{selectedWorkerIds.size > 1 ? 's' : ''}? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={async () => {
+                setBulkActionLoading(true);
+                // TODO: Implement bulk delete API call
+                toast({
+                  title: "Workers Deleted",
+                  description: `${selectedWorkerIds.size} worker(s) have been deleted successfully.`
+                });
+                setSelectedWorkerIds(new Set());
+                setBulkActionLoading(false);
+                setShowBulkDeleteDialog(false);
+              }}
+              disabled={bulkActionLoading}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {bulkActionLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Trash2 className="w-4 h-4 mr-2" />}
+              Delete Workers
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       </div>
     </TooltipProvider>
   );

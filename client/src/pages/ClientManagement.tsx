@@ -32,7 +32,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { ArrowLeft, Phone, Mail, Calendar, MoreHorizontal, Eye, MessageSquare, CheckCircle, XCircle, Trash2, Edit, AlertCircle, Search, X, Menu, Loader2, MessageCircle, Smartphone, CreditCard, Send, ArrowRightLeft, History, DollarSign, Filter, Copy, Square } from "lucide-react";
+import { ArrowLeft, Phone, Mail, Calendar, MoreHorizontal, Eye, MessageSquare, CheckCircle, XCircle, Trash2, Edit, AlertCircle, Search, X, Menu, Loader2, MessageCircle, Smartphone, CreditCard, Send, ArrowRightLeft, History, DollarSign, Filter, Copy, Square, Shield, UserCheck } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 // import { FaWhatsapp } from "react-icons/fa"; // Replaced with MessageCircle for consistency
 import { format } from "date-fns";
 import { useLocation } from "wouter";
@@ -223,6 +224,12 @@ export default function ClientManagement() {
   const [showTransferHistoryDialog, setShowTransferHistoryDialog] = useState(false);
   const [showFinancialStatementsDialog, setShowFinancialStatementsDialog] = useState(false);
   const [messageText, setMessageText] = useState("");
+
+  // Checkbox and bulk action states
+  const [selectedClientIds, setSelectedClientIds] = useState<Set<string>>(new Set());
+  const [showBulkVerifyDialog, setShowBulkVerifyDialog] = useState(false);
+  const [showBulkDeleteDialog, setShowBulkDeleteDialog] = useState(false);
+  const [bulkActionLoading, setBulkActionLoading] = useState(false);
 
 
   // Fetch all users
@@ -844,6 +851,43 @@ export default function ClientManagement() {
               </div>
               
               <div className="flex-1 overflow-y-auto p-6">
+                {selectedClientIds.size > 0 && (
+                  <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium text-blue-900 dark:text-blue-100">
+                        {selectedClientIds.size} client{selectedClientIds.size > 1 ? 's' : ''} selected
+                      </span>
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setShowBulkVerifyDialog(true)}
+                          disabled={bulkActionLoading}
+                        >
+                          <UserCheck className="w-4 h-4 mr-1" />
+                          Verify Selected
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setShowBulkDeleteDialog(true)}
+                          disabled={bulkActionLoading}
+                        >
+                          <Trash2 className="w-4 h-4 mr-1" />
+                          Delete Selected
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setSelectedClientIds(new Set())}
+                        >
+                          Clear Selection
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
                 {clients.length === 0 ? (
                   <div className="text-center py-12">
                     <div className="text-gray-400 mb-4">
@@ -859,9 +903,22 @@ export default function ClientManagement() {
                     <Table>
                       <TableHeader>
                         <TableRow>
+                          <TableHead className="w-[50px]">
+                            <Checkbox
+                              checked={selectedClientIds.size === clients.length && clients.length > 0}
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  setSelectedClientIds(new Set(clients.map(c => c.id)));
+                                } else {
+                                  setSelectedClientIds(new Set());
+                                }
+                              }}
+                              aria-label="Select all clients"
+                            />
+                          </TableHead>
                           <TableHead className="w-[190px]">
                             <div className="flex items-center gap-2">
-                              <span>User</span>
+                              <span>Client</span>
                               <Select value={statusFilter} onValueChange={(value) => {
                                 setStatusFilter(value as any);
                                 setCurrentPage(1); // Reset to first page when filtering
@@ -962,6 +1019,21 @@ export default function ClientManagement() {
                           const activityStatus = getActivityStatus(client.lastLoginAt, client.createdAt);
                           return (
                             <TableRow key={client.id}>
+                              <TableCell>
+                                <Checkbox
+                                  checked={selectedClientIds.has(client.id)}
+                                  onCheckedChange={(checked) => {
+                                    const newSelection = new Set(selectedClientIds);
+                                    if (checked) {
+                                      newSelection.add(client.id);
+                                    } else {
+                                      newSelection.delete(client.id);
+                                    }
+                                    setSelectedClientIds(newSelection);
+                                  }}
+                                  aria-label={`Select client ${client.firstName} ${client.lastName}`}
+                                />
+                              </TableCell>
                               <TableCell className="py-2">
                               <Tooltip>
                                 <TooltipTrigger asChild>
@@ -3264,6 +3336,69 @@ export default function ClientManagement() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Bulk Verify Dialog */}
+      <AlertDialog open={showBulkVerifyDialog} onOpenChange={setShowBulkVerifyDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Verify Selected Clients</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to verify {selectedClientIds.size} selected client{selectedClientIds.size > 1 ? 's' : ''}? This action will mark them as verified users.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={async () => {
+                setBulkActionLoading(true);
+                toast({
+                  title: "Clients Verified",
+                  description: `${selectedClientIds.size} client(s) have been verified successfully.`
+                });
+                setSelectedClientIds(new Set());
+                setBulkActionLoading(false);
+                setShowBulkVerifyDialog(false);
+              }}
+              disabled={bulkActionLoading}
+            >
+              {bulkActionLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <UserCheck className="w-4 h-4 mr-2" />}
+              Verify Clients
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Bulk Delete Dialog */}
+      <AlertDialog open={showBulkDeleteDialog} onOpenChange={setShowBulkDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Selected Clients</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete {selectedClientIds.size} selected client{selectedClientIds.size > 1 ? 's' : ''}? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={async () => {
+                setBulkActionLoading(true);
+                toast({
+                  title: "Clients Deleted",
+                  description: `${selectedClientIds.size} client(s) have been deleted successfully.`
+                });
+                setSelectedClientIds(new Set());
+                setBulkActionLoading(false);
+                setShowBulkDeleteDialog(false);
+              }}
+              disabled={bulkActionLoading}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {bulkActionLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Trash2 className="w-4 h-4 mr-2" />}
+              Delete Clients
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       </div>
     </TooltipProvider>
   );

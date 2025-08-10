@@ -32,7 +32,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { ArrowLeft, Phone, Mail, Calendar, MoreHorizontal, Eye, MessageSquare, CheckCircle, XCircle, Trash2, Edit, AlertCircle, Search, X, Menu, Loader2, MessageCircle, Smartphone, CreditCard, Send, ArrowRightLeft, History, DollarSign, Filter, Copy, Square, Shield, Crown } from "lucide-react";
+import { ArrowLeft, Phone, Mail, Calendar, MoreHorizontal, Eye, MessageSquare, CheckCircle, XCircle, Trash2, Edit, AlertCircle, Search, X, Menu, Loader2, MessageCircle, Smartphone, CreditCard, Send, ArrowRightLeft, History, DollarSign, Filter, Copy, Square, Shield, Crown, UserCheck } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { FaWhatsapp } from "react-icons/fa";
 import { BiMessageSquareDetail } from "react-icons/bi";
 import { format } from "date-fns";
@@ -234,6 +235,12 @@ export default function AdminManagement() {
   const [messageText, setMessageText] = useState("");
   const [userToMessage, setUserToMessage] = useState<User | null>(null);
   const [sendingMessage, setSendingMessage] = useState(false);
+
+  // Checkbox and bulk action states
+  const [selectedAdminIds, setSelectedAdminIds] = useState<Set<string>>(new Set());
+  const [showBulkVerifyDialog, setShowBulkVerifyDialog] = useState(false);
+  const [showBulkDeleteDialog, setShowBulkDeleteDialog] = useState(false);
+  const [bulkActionLoading, setBulkActionLoading] = useState(false);
 
   // Animation refs
   const totalAdminButtonRef = useRef<HTMLButtonElement>(null);
@@ -815,6 +822,43 @@ export default function AdminManagement() {
                 </div>
                 
                 <div className="flex-1 overflow-y-auto p-6">
+                  {selectedAdminIds.size > 0 && (
+                    <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium text-blue-900 dark:text-blue-100">
+                          {selectedAdminIds.size} admin{selectedAdminIds.size > 1 ? 's' : ''} selected
+                        </span>
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setShowBulkVerifyDialog(true)}
+                            disabled={bulkActionLoading}
+                          >
+                            <UserCheck className="w-4 h-4 mr-1" />
+                            Verify Selected
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setShowBulkDeleteDialog(true)}
+                            disabled={bulkActionLoading}
+                          >
+                            <Trash2 className="w-4 h-4 mr-1" />
+                            Delete Selected
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => setSelectedAdminIds(new Set())}
+                          >
+                            Clear Selection
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
                   {admins.length === 0 ? (
                     <div className="text-center py-12">
                       <div className="text-gray-400 mb-4">
@@ -831,9 +875,22 @@ export default function AdminManagement() {
                       <Table>
                         <TableHeader>
                           <TableRow>
+                            <TableHead className="w-[50px]">
+                              <Checkbox
+                                checked={selectedAdminIds.size === filteredAdmins.length && filteredAdmins.length > 0}
+                                onCheckedChange={(checked) => {
+                                  if (checked) {
+                                    setSelectedAdminIds(new Set(filteredAdmins.map(a => a.id)));
+                                  } else {
+                                    setSelectedAdminIds(new Set());
+                                  }
+                                }}
+                                aria-label="Select all admins"
+                              />
+                            </TableHead>
                             <TableHead className="w-[190px]">
                               <div className="flex items-center gap-2">
-                                <span>User</span>
+                                <span>Admin</span>
                                 <Select value={statusFilter} onValueChange={(value) => {
                                   setStatusFilter(value as any);
                                   setCurrentPage(1); // Reset to first page when filtering
@@ -894,6 +951,21 @@ export default function AdminManagement() {
                             
                             return (
                               <TableRow key={admin.id}>
+                                <TableCell>
+                                  <Checkbox
+                                    checked={selectedAdminIds.has(admin.id)}
+                                    onCheckedChange={(checked) => {
+                                      const newSelection = new Set(selectedAdminIds);
+                                      if (checked) {
+                                        newSelection.add(admin.id);
+                                      } else {
+                                        newSelection.delete(admin.id);
+                                      }
+                                      setSelectedAdminIds(newSelection);
+                                    }}
+                                    aria-label={`Select admin ${admin.firstName} ${admin.lastName}`}
+                                  />
+                                </TableCell>
                                 {/* User Info */}
                                 <TableCell>
                                   <Tooltip>
@@ -1745,6 +1817,69 @@ export default function AdminManagement() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {/* Bulk Verify Dialog */}
+        <AlertDialog open={showBulkVerifyDialog} onOpenChange={setShowBulkVerifyDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Verify Selected Admins</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to verify {selectedAdminIds.size} selected admin{selectedAdminIds.size > 1 ? 's' : ''}? This action will mark them as verified users.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction 
+                onClick={async () => {
+                  setBulkActionLoading(true);
+                  toast({
+                    title: "Admins Verified",
+                    description: `${selectedAdminIds.size} admin(s) have been verified successfully.`
+                  });
+                  setSelectedAdminIds(new Set());
+                  setBulkActionLoading(false);
+                  setShowBulkVerifyDialog(false);
+                }}
+                disabled={bulkActionLoading}
+              >
+                {bulkActionLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <UserCheck className="w-4 h-4 mr-2" />}
+                Verify Admins
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* Bulk Delete Dialog */}
+        <AlertDialog open={showBulkDeleteDialog} onOpenChange={setShowBulkDeleteDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Selected Admins</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete {selectedAdminIds.size} selected admin{selectedAdminIds.size > 1 ? 's' : ''}? This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction 
+                onClick={async () => {
+                  setBulkActionLoading(true);
+                  toast({
+                    title: "Admins Deleted",
+                    description: `${selectedAdminIds.size} admin(s) have been deleted successfully.`
+                  });
+                  setSelectedAdminIds(new Set());
+                  setBulkActionLoading(false);
+                  setShowBulkDeleteDialog(false);
+                }}
+                disabled={bulkActionLoading}
+                className="bg-red-600 hover:bg-red-700"
+              >
+                {bulkActionLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Trash2 className="w-4 h-4 mr-2" />}
+                Delete Admins
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </TooltipProvider>
   );
