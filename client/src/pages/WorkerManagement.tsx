@@ -1853,27 +1853,34 @@ export default function WorkerManagement() {
               </div>
               
               <div className="flex-1 overflow-y-auto p-6">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                   {districtsForState.map((district) => (
-                    <Card 
-                      key={district} 
-                      className="cursor-pointer hover:shadow-md transition-shadow"
+                    <Button
+                      key={district}
+                      variant="outline"
                       onClick={() => handleDistrictClick(district)}
+                      disabled={loadingState === district}
+                      className={`h-12 justify-start font-medium hover:bg-blue-50 hover:border-blue-200 dark:hover:bg-blue-900/20 relative pr-10 ${
+                        loadingState === district ? 'opacity-75' : ''
+                      }`}
                     >
-                      <CardContent className="p-4">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <h3 className="font-medium text-gray-900 dark:text-white">{district}</h3>
-                            <p className="text-sm text-gray-500 dark:text-gray-400">
-                              {getWorkerCountForDistrict(district)} workers
-                            </p>
-                          </div>
-                          <Badge variant="secondary">
+                      {loadingState === district ? (
+                        <div className="flex items-center">
+                          <Loader2 className="w-3 h-3 animate-spin mr-2" />
+                          <span className="truncate">Loading...</span>
+                        </div>
+                      ) : (
+                        <>
+                          <span className="truncate">{district}</span>
+                          <Badge 
+                            variant="secondary" 
+                            className="absolute right-2 top-1/2 -translate-y-1/2 h-5 px-2 min-w-[20px] rounded-md flex items-center justify-center text-xs bg-green-500 text-white hover:bg-green-600"
+                          >
                             {getWorkerCountForDistrict(district)}
                           </Badge>
-                        </div>
-                      </CardContent>
-                    </Card>
+                        </>
+                      )}
+                    </Button>
                   ))}
                 </div>
               </div>
