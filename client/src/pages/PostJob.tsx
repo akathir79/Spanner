@@ -362,54 +362,95 @@ const PostJob = () => {
           <CardContent>
             <div className="space-y-4">
               {jobPostings.length === 0 ? (
-                <p className="text-muted-foreground text-center py-8">
-                  No job postings yet. Create your first job posting to get started!
-                </p>
+                <div className="text-center py-12">
+                  <div className="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-full w-20 h-20 mx-auto flex items-center justify-center mb-6">
+                    <Users className="h-10 w-10 text-blue-600" />
+                  </div>
+                  <h3 className="text-xl font-semibold mb-3 text-gray-900">No job postings yet</h3>
+                  <p className="text-gray-600 max-w-md mx-auto">
+                    Create your first job posting to connect with skilled workers in your area.
+                  </p>
+                </div>
               ) : (
                 jobPostings.map((job: any) => (
-                  <div key={job.id} className="border rounded-lg p-4 space-y-2">
+                  <div key={job.id} className="bg-white border border-gray-200 rounded-xl p-6 space-y-4 shadow-sm hover:shadow-lg transition-all duration-300 hover:border-blue-200">
                     <div className="flex items-start justify-between">
-                      <h3 className="font-semibold">{job.title}</h3>
+                      <div className="flex items-start gap-3">
+                        <div className="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg p-2 flex items-center justify-center">
+                          <Users className="h-5 w-5 text-white" />
+                        </div>
+                        <div>
+                          <h3 className="font-semibold text-lg text-gray-900">{job.title}</h3>
+                          <p className="text-sm text-indigo-600 font-medium capitalize mt-1">
+                            {job.serviceCategory}
+                          </p>
+                        </div>
+                      </div>
                       <Badge 
-                        variant={
-                          job.status === "open" ? "default" :
-                          job.status === "in_progress" ? "secondary" :
-                          job.status === "completed" ? "outline" : "destructive"
-                        }
+                        className={`px-3 py-1.5 text-sm font-medium ${
+                          job.status === "open" ? "bg-emerald-100 text-emerald-700 border border-emerald-200" :
+                          job.status === "in_progress" ? "bg-blue-100 text-blue-700 border border-blue-200" :
+                          job.status === "completed" ? "bg-gray-100 text-gray-700 border border-gray-200" : 
+                          "bg-red-100 text-red-700 border border-red-200"
+                        }`}
+                        variant="outline"
                       >
-                        {job.status}
+                        {job.status === "open" ? "Open" :
+                         job.status === "in_progress" ? "In Progress" :
+                         job.status === "completed" ? "Completed" : job.status}
                       </Badge>
                     </div>
                     
-                    <p className="text-sm text-muted-foreground line-clamp-2">
-                      {job.description}
-                    </p>
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <p className="text-gray-700 leading-relaxed">
+                        {job.description}
+                      </p>
+                    </div>
                     
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                      <div className="flex items-center gap-1">
-                        <MapPin className="h-4 w-4" />
-                        {districts.find(d => d.id === job.districtId)?.name}
+                    {job.requirements && job.requirements.length > 0 && (
+                      <div className="space-y-2">
+                        <h4 className="font-medium text-sm text-gray-900 flex items-center gap-2">
+                          <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full"></div>
+                          Requirements:
+                        </h4>
+                        <ul className="space-y-1">
+                          {job.requirements.map((req: string, index: number) => (
+                            <li key={index} className="text-sm text-gray-600 flex items-start bg-blue-50 rounded-lg p-3">
+                              <div className="w-2 h-2 bg-blue-500 rounded-full mr-3 mt-1.5 flex-shrink-0"></div>
+                              {req}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    
+                    <div className="flex items-center gap-4 text-sm flex-wrap">
+                      <div className="flex items-center gap-2 text-gray-600 bg-gray-100 px-3 py-2 rounded-lg">
+                        <MapPin className="h-4 w-4 text-gray-500" />
+                        <span className="font-medium">{job.district || districts.find(d => d.id === job.districtId)?.name}</span>
                       </div>
                       {job.budgetMin && job.budgetMax && (
-                        <div className="flex items-center gap-1">
-                          <DollarSign className="h-4 w-4" />
-                          ₹{job.budgetMin} - ₹{job.budgetMax}
+                        <div className="flex items-center gap-2 text-emerald-700 bg-emerald-50 px-3 py-2 rounded-lg">
+                          <DollarSign className="h-4 w-4 text-emerald-600" />
+                          <span className="font-medium">₹{job.budgetMin} - ₹{job.budgetMax}</span>
                         </div>
                       )}
                       {job.deadline && (
-                        <div className="flex items-center gap-1">
-                          <Calendar className="h-4 w-4" />
-                          {new Date(job.deadline).toLocaleDateString()}
+                        <div className="flex items-center gap-2 text-orange-700 bg-orange-50 px-3 py-2 rounded-lg">
+                          <Calendar className="h-4 w-4 text-orange-600" />
+                          <span className="font-medium">{new Date(job.deadline).toLocaleDateString()}</span>
                         </div>
                       )}
                     </div>
                     
-                    <div className="flex items-center justify-between pt-2">
-                      <span className="text-sm text-muted-foreground">
-                        Posted {new Date(job.createdAt).toLocaleDateString()}
-                      </span>
+                    <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                      <div className="flex items-center gap-2 text-sm text-gray-500">
+                        <Clock className="h-4 w-4" />
+                        <span>Posted {new Date(job.createdAt).toLocaleDateString()}</span>
+                      </div>
                       <div className="flex items-center gap-2">
-                        <Button variant="outline" size="sm">
+                        <Button variant="outline" size="sm" className="bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200 transition-colors">
+                          <Users className="h-4 w-4 mr-1" />
                           View Bids
                         </Button>
                         <AlertDialog open={jobToDelete === job.id} onOpenChange={() => setJobToDelete(null)}>
@@ -417,7 +458,7 @@ const PostJob = () => {
                             <Button 
                               variant="outline" 
                               size="sm" 
-                              className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                              className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 transition-colors"
                               disabled={deletingJobId === job.id}
                               onClick={() => confirmDelete(job.id)}
                             >
