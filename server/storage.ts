@@ -682,18 +682,20 @@ export class DatabaseStorage implements IStorage {
     return db.select().from(users).orderBy(desc(users.createdAt));
   }
 
-  async getUsersWithProfiles(): Promise<(User & { workerProfile?: WorkerProfile })[]> {
+  async getUsersWithProfiles(): Promise<(User & { workerProfile?: WorkerProfile; workerBankDetails?: WorkerBankDetails })[]> {
     const results = await db
       .select()
       .from(users)
       .leftJoin(workerProfiles, eq(users.id, workerProfiles.userId))
+      .leftJoin(workerBankDetails, eq(users.id, workerBankDetails.workerId))
       .orderBy(desc(users.createdAt));
     
     return results.map(result => {
       const user = result.users;
       const mapped = {
         ...user,
-        workerProfile: result.worker_profiles || undefined
+        workerProfile: result.worker_profiles || undefined,
+        workerBankDetails: result.worker_bank_details || undefined
       };
       
 

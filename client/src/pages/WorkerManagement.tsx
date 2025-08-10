@@ -1198,16 +1198,16 @@ export default function WorkerManagement() {
                                 <TableCell>
                                   <div className="space-y-1">
                                     <div className="text-sm text-gray-600 dark:text-gray-400">
-                                      {worker.bankName ? (
+                                      {(worker as any).workerBankDetails ? (
                                         <>
                                           <div className="font-medium text-gray-900 dark:text-white">
-                                            4399
+                                            ****{((worker as any).workerBankDetails.accountNumber || '').slice(-4)}
                                           </div>
                                           <div className="text-xs">
-                                            IFSC: {worker.bankIFSC || "Not provided"}
+                                            IFSC: {(worker as any).workerBankDetails.ifscCode || "Not provided"}
                                           </div>
                                           <div className="text-xs">
-                                            MICR: {worker.bankMICR || "Not provided"}
+                                            MICR: {(worker as any).workerBankDetails.micrCode || "Not provided"}
                                           </div>
                                           <div className="text-xs font-medium">
                                             {worker.bankName}
@@ -1716,25 +1716,25 @@ export default function WorkerManagement() {
                                 <TableCell>
                                   <div className="space-y-1">
                                     <div className="text-sm text-gray-600 dark:text-gray-400">
-                                      {worker.bankName ? (
+                                      {(worker as any).workerBankDetails ? (worker as any).workerBankDetails.bankName : worker.bankName ? (
                                         <>
                                           <div className="font-medium text-gray-900 dark:text-white">
-                                            4399
+                                            ****{((worker as any).workerBankDetails?.accountNumber || worker.bankAccountNumber || '').slice(-4)}
                                           </div>
                                           <div className="text-xs">
-                                            IFSC: {worker.bankIFSC || "Not provided"}
+                                            IFSC: {(worker as any).workerBankDetails?.ifscCode || worker.bankIFSC || "Not provided"}
                                           </div>
                                           <div className="text-xs">
-                                            MICR: {worker.bankMICR || "Not provided"}
+                                            MICR: {(worker as any).workerBankDetails?.micrCode || worker.bankMICR || "Not provided"}
                                           </div>
                                           <div className="text-xs font-medium">
-                                            {worker.bankName}
+                                            {(worker as any).workerBankDetails?.bankName || worker.bankName}
                                           </div>
                                           <div className="text-xs">
-                                            {worker.bankBranch || "Not provided"}
+                                            {(worker as any).workerBankDetails?.branchName || worker.bankBranch || "Not provided"}
                                           </div>
                                           <div className="text-xs text-gray-500">
-                                            PIN: {worker.pincode || "Not provided"}
+                                            Type: {(worker as any).workerBankDetails?.accountType || worker.bankAccountType || "savings"}
                                           </div>
                                         </>
                                       ) : (
