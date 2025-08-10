@@ -3,6 +3,9 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import statesDistrictsData from "@shared/states-districts.json";
 import { z } from "zod";
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
 import { 
   insertUserSchema, 
   insertWorkerProfileSchema, 
@@ -1722,6 +1725,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Setup multer for audio file uploads
+  const audioStorage = multer.diskStorage({
+    destination: function (req, file, cb) {
+      const audioDir = path.join(process.cwd(), 'uploads', 'job-audio');
+      if (!fs.existsSync(audioDir)) {
+        fs.mkdirSync(audioDir, { recursive: true });
+      }
+      cb(null, audioDir);
+    },
+    filename: function (req, file, cb) {
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+      cb(null, 'job-voice-' + uniqueSuffix + path.extname(file.originalname));
+    }
+  });
+
+  const audioUpload = multer({ 
+    storage: audioStorage,
+    limits: {
+      fileSize: 10 * 1024 * 1024 // 10MB limit
+    },
+    fileFilter: (req, file, cb) => {
+      if (file.mimetype.startsWith('audio/')) {
+        cb(null, true);
+      } else {
+        cb(new Error('Only audio files are allowed!') as any, false);
+      }
+    }
+  });
+
   app.post("/api/job-postings", async (req, res) => {
     try {
       console.log("Received job posting data:", req.body);
@@ -1748,6 +1780,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error creating job posting:", error);
       res.status(500).json({ message: "Failed to create job posting" });
+    }
+  });
+
+  // New endpoint for job postings with audio files
+  app.post("/api/job-postings/with-audio", audioUpload.single('audio'), async (req, res) => {
+    try {
+      console.log("Received job posting with audio:", req.body);
+      console.log("Audio file:", req.file);
+      
+      // Parse the job data from form data
+      const jobDataFromForm = JSON.parse(req.body.jobData);
+      
+      // Generate professional job ID using client ID format
+      const jobId = await generateJobId(jobDataFromForm.clientId);
+      
+      // Convert budget numbers to strings for database compatibility
+      const { budgetMin, budgetMax, deadline, districtId, voiceRecordingData, ...rest } = jobDataFromForm;
+      
+      const jobData = {
+        ...rest,
+        id: jobId, // Use the generated professional job ID as the primary key
+        district: districtId, // Map districtId to district field
+        budgetMin: budgetMin !== undefined && budgetMin !== null ? budgetMin.toString() : null,
+        budgetMax: budgetMax !== undefined && budgetMax !== null ? budgetMax.toString() : null,
+        deadline: deadline ? new Date(deadline) : null, // Ensure deadline is properly converted to Date
+        // Add voice recording metadata
+        voiceRecordingData: req.file ? {
+          ...voiceRecordingData,
+          audioFilePath: req.file.path,
+          audioFileName: req.file.filename,
+          audioFileSize: req.file.size,
+          uploadedAt: new Date().toISOString()
+        } : null
+      };
+      
+      console.log("Processed job data with audio for database:", jobData);
+      console.log("Generated Job ID:", jobId);
+      
+      const job = await storage.createJobPosting(jobData);
+      res.status(201).json(job);
+    } catch (error) {
+      console.error("Error creating job posting with audio:", error);
+      res.status(500).json({ message: "Failed to create job posting with audio" });
+    }
+  });
+
+  // Endpoint to serve audio files
+  app.get("/api/job-audio/:filename", (req, res) => {
+    try {
+      const filename = req.params.filename;
+      const audioPath = path.join(process.cwd(), 'uploads', 'job-audio', filename);
+      
+      if (!fs.existsSync(audioPath)) {
+        return res.status(404).json({ message: "Audio file not found" });
+      }
+      
+      res.sendFile(audioPath);
+    } catch (error) {
+      console.error("Error serving audio file:", error);
+      res.status(500).json({ message: "Failed to serve audio file" });
     }
   });
 

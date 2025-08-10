@@ -774,6 +774,7 @@ const VoiceJobPostingForm = ({ onClose }: { onClose?: () => void }) => {
   const [voiceTranscript, setVoiceTranscript] = useState('');
   const [englishTranslation, setEnglishTranslation] = useState('');
   const [detectedLanguage, setDetectedLanguage] = useState('');
+  const [detectedLanguageName, setDetectedLanguageName] = useState('');
   const [userPreferredLanguage, setUserPreferredLanguage] = useState('');
   const [recognition, setRecognition] = useState<any>(null);
   const [recordingTime, setRecordingTime] = useState(0);
@@ -782,6 +783,8 @@ const VoiceJobPostingForm = ({ onClose }: { onClose?: () => void }) => {
   const [missingFields, setMissingFields] = useState<string[]>([]);
   const [followUpQuestion, setFollowUpQuestion] = useState('');
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [originalAudioBlob, setOriginalAudioBlob] = useState<Blob | null>(null);
+  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
   
   const [formData, setFormData] = useState({
     title: "",
@@ -796,17 +799,20 @@ const VoiceJobPostingForm = ({ onClose }: { onClose?: () => void }) => {
     requirements: [] as string[]
   });
 
-  // Enhanced language detection with more Indian languages
+  // Enhanced language detection with comprehensive Indian language support
   const languagePatterns = {
-    tamil: /[\u0B80-\u0BFF]/,
-    hindi: /[\u0900-\u097F]/,
-    malayalam: /[\u0D00-\u0D7F]/,
-    telugu: /[\u0C00-\u0C7F]/,
-    kannada: /[\u0C80-\u0CFF]/,
-    gujarati: /[\u0A80-\u0AFF]/,
-    punjabi: /[\u0A00-\u0A7F]/,
-    bengali: /[\u0980-\u09FF]/,
-    english: /^[a-zA-Z0-9\s.,!?-]+$/
+    tamil: { pattern: /[\u0B80-\u0BFF]/, name: 'தமிழ்', code: 'ta-IN' },
+    hindi: { pattern: /[\u0900-\u097F]/, name: 'हिंदी', code: 'hi-IN' },
+    malayalam: { pattern: /[\u0D00-\u0D7F]/, name: 'മലയാളം', code: 'ml-IN' },
+    telugu: { pattern: /[\u0C00-\u0C7F]/, name: 'తెలుగు', code: 'te-IN' },
+    kannada: { pattern: /[\u0C80-\u0CFF]/, name: 'ಕನ್ನಡ', code: 'kn-IN' },
+    gujarati: { pattern: /[\u0A80-\u0AFF]/, name: 'ગુજરાતી', code: 'gu-IN' },
+    punjabi: { pattern: /[\u0A00-\u0A7F]/, name: 'ਪੰਜਾਬੀ', code: 'pa-IN' },
+    bengali: { pattern: /[\u0980-\u09FF]/, name: 'বাংলা', code: 'bn-IN' },
+    marathi: { pattern: /[\u0900-\u097F]/, name: 'मराठी', code: 'mr-IN' },
+    odia: { pattern: /[\u0B00-\u0B7F]/, name: 'ଓଡ଼ିଆ', code: 'or-IN' },
+    assamese: { pattern: /[\u0980-\u09FF]/, name: 'অসমীয়া', code: 'as-IN' },
+    english: { pattern: /^[a-zA-Z0-9\s.,!?-]+$/, name: 'English', code: 'en-IN' }
   };
 
   // Translation service (mock - in production, use Google Translate API)
@@ -922,39 +928,58 @@ const VoiceJobPostingForm = ({ onClose }: { onClose?: () => void }) => {
     }
   }, [timerInterval]);
 
-  // Enhanced language detection
+  // Smart language detection that identifies ANY language dynamically
   const detectLanguage = (text: string) => {
-    if (languagePatterns.tamil.test(text)) return 'tamil';
-    if (languagePatterns.hindi.test(text)) return 'hindi';
-    if (languagePatterns.malayalam.test(text)) return 'malayalam';
-    if (languagePatterns.telugu.test(text)) return 'telugu';
-    if (languagePatterns.kannada.test(text)) return 'kannada';
-    if (languagePatterns.gujarati.test(text)) return 'gujarati';
-    if (languagePatterns.punjabi.test(text)) return 'punjabi';
-    if (languagePatterns.bengali.test(text)) return 'bengali';
-    if (languagePatterns.english.test(text)) return 'english';
+    // First check for specific script patterns
+    for (const [langKey, langData] of Object.entries(languagePatterns)) {
+      if (langData.pattern.test(text)) {
+        setDetectedLanguageName(langData.name);
+        return langKey;
+      }
+    }
+    
+    // If no specific pattern found, assume it's a local language in Roman script
+    // This handles languages written in English letters but are local languages
+    if (/^[a-zA-Z0-9\s.,!?-]+$/.test(text)) {
+      // Try to detect based on common words if possible
+      const lowerText = text.toLowerCase();
+      
+      // Check for common Malayalam words in Roman script
+      if (/\b(aanu|alle|enna|ente|njan|ningal)\b/.test(lowerText)) {
+        setDetectedLanguageName('Malayalam (Roman)');
+        return 'malayalam';
+      }
+      
+      // Check for common Tamil words in Roman script  
+      if (/\b(enna|epdi|naan|neenga|anga|inga)\b/.test(lowerText)) {
+        setDetectedLanguageName('Tamil (Roman)');
+        return 'tamil';
+      }
+      
+      // Check for common Hindi words in Roman script
+      if (/\b(hai|hain|main|aap|kya|kaise|yahan|wahan)\b/.test(lowerText)) {
+        setDetectedLanguageName('Hindi (Roman)');
+        return 'hindi';
+      }
+      
+      // Default to English if none detected
+      setDetectedLanguageName('English');
+      return 'english';
+    }
+    
+    // For mixed scripts or unknown, try to identify the dominant script
+    setDetectedLanguageName('Mixed/Local Language');
     return 'mixed';
   };
 
-  // Text-to-Speech with language support
+  // Text-to-Speech with dynamic language support
   const speak = (text: string, language: string = 'english') => {
     if ('speechSynthesis' in window) {
       const utterance = new SpeechSynthesisUtterance(text);
       
-      // Set language code for speech synthesis
-      const langCodes: { [key: string]: string } = {
-        english: 'en-IN',
-        tamil: 'ta-IN',
-        hindi: 'hi-IN',
-        malayalam: 'ml-IN',
-        telugu: 'te-IN',
-        kannada: 'kn-IN',
-        gujarati: 'gu-IN',
-        punjabi: 'pa-IN',
-        bengali: 'bn-IN'
-      };
-      
-      utterance.lang = langCodes[language] || 'en-IN';
+      // Use language pattern data for speech synthesis codes
+      const langData = languagePatterns[language as keyof typeof languagePatterns];
+      utterance.lang = langData?.code || 'en-IN';
       utterance.rate = 0.9;
       utterance.pitch = 1;
       
@@ -962,6 +987,39 @@ const VoiceJobPostingForm = ({ onClose }: { onClose?: () => void }) => {
       utterance.onend = () => setIsSpeaking(false);
       
       speechSynthesis.speak(utterance);
+    }
+  };
+
+  // Audio recording for preserving original voice
+  const startAudioRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+      const audioChunks: BlobPart[] = [];
+      
+      recorder.ondataavailable = (event) => {
+        audioChunks.push(event.data);
+      };
+      
+      recorder.onstop = () => {
+        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+        setOriginalAudioBlob(audioBlob);
+      };
+      
+      recorder.start();
+      setMediaRecorder(recorder);
+      
+      return recorder;
+    } catch (error) {
+      console.error('Error starting audio recording:', error);
+      return null;
+    }
+  };
+
+  const stopAudioRecording = () => {
+    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+      mediaRecorder.stop();
+      mediaRecorder.stream.getTracks().forEach(track => track.stop());
     }
   };
 
@@ -982,11 +1040,24 @@ const VoiceJobPostingForm = ({ onClose }: { onClose?: () => void }) => {
     return questions?.[language as keyof typeof questions] || questions?.english || '';
   };
 
-  // Start listening
-  const startListening = () => {
+  // Start listening with audio recording
+  const startListening = async () => {
     if (recognition) {
+      setIsListening(true);
       setVoiceTranscript('');
+      setRecordingTime(0);
       setDetectedLanguage('');
+      setDetectedLanguageName('');
+      
+      // Start audio recording for preserving original voice
+      await startAudioRecording();
+      
+      // Start timer
+      const interval = setInterval(() => {
+        setRecordingTime(prev => prev + 1);
+      }, 1000);
+      setTimerInterval(interval);
+      
       recognition.start();
     } else {
       toast({
@@ -997,7 +1068,7 @@ const VoiceJobPostingForm = ({ onClose }: { onClose?: () => void }) => {
     }
   };
 
-  // Stop listening
+  // Stop listening and audio recording
   const stopListening = () => {
     if (recognition) {
       recognition.stop();
@@ -1007,6 +1078,9 @@ const VoiceJobPostingForm = ({ onClose }: { onClose?: () => void }) => {
       clearInterval(timerInterval);
       setTimerInterval(null);
     }
+    
+    // Stop audio recording
+    stopAudioRecording();
     
     if (voiceTranscript) {
       const lang = detectLanguage(voiceTranscript);
@@ -1293,7 +1367,7 @@ const VoiceJobPostingForm = ({ onClose }: { onClose?: () => void }) => {
             <div className="text-center space-y-4">
               <h3 className="font-semibold text-lg text-orange-800">Choose Your Language</h3>
               <p className="text-sm text-orange-600">
-                I need to ask you about {missingFields.join(', ')}. Which language would you prefer for questions?
+                I detected you spoke in <strong>{detectedLanguageName}</strong>. I need to ask about {missingFields.join(', ')}. Which language would you prefer for questions?
               </p>
               <div className="flex flex-wrap gap-3 justify-center">
                 <Button
@@ -1304,7 +1378,7 @@ const VoiceJobPostingForm = ({ onClose }: { onClose?: () => void }) => {
                   }}
                   className="bg-blue-500 hover:bg-blue-600 text-white"
                 >
-                  English
+                  Continue in English
                 </Button>
                 <Button
                   onClick={() => {
@@ -1314,11 +1388,7 @@ const VoiceJobPostingForm = ({ onClose }: { onClose?: () => void }) => {
                   }}
                   className="bg-green-500 hover:bg-green-600 text-white"
                 >
-                  {detectedLanguage === 'tamil' ? 'தமிழ்' :
-                   detectedLanguage === 'hindi' ? 'हिंदी' :
-                   detectedLanguage === 'malayalam' ? 'മലയാളം' :
-                   detectedLanguage === 'telugu' ? 'తెలుగు' :
-                   `Your Language (${detectedLanguage})`}
+                  Continue in {detectedLanguageName}
                 </Button>
               </div>
             </div>
@@ -1646,7 +1716,7 @@ const JobPostingForm = ({ onClose }: { onClose?: () => void }) => {
     },
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!user?.id || !formData.title || !formData.description || !formData.serviceCategory || !formData.serviceAddress) {
@@ -1674,9 +1744,73 @@ const JobPostingForm = ({ onClose }: { onClose?: () => void }) => {
       budgetMax: formData.budgetMax ? parseFloat(formData.budgetMax) : null,
       deadline: formData.deadline || null,
       requirements: formData.requirements,
+      // Include voice recording metadata
+      voiceRecordingData: originalAudioBlob ? {
+        detectedLanguage: detectedLanguageName,
+        originalTranscript: voiceTranscript,
+        englishTranslation: englishTranslation,
+        hasAudioFile: true
+      } : null
     };
 
-    createJobMutation.mutate(jobData);
+    // If there's an audio file, we should upload it first
+    if (originalAudioBlob) {
+      try {
+        // Create FormData to upload audio file
+        const audioFormData = new FormData();
+        audioFormData.append('audio', originalAudioBlob, `job-voice-${Date.now()}.wav`);
+        audioFormData.append('jobData', JSON.stringify(jobData));
+        
+        // Send with audio file
+        const response = await fetch("/api/job-postings/with-audio", {
+          method: "POST",
+          body: audioFormData,
+        });
+        
+        if (!response.ok) throw new Error('Failed to create job with audio');
+        
+        const result = await response.json();
+        
+        toast({
+          title: "Success",
+          description: "Job posted successfully with voice recording! Workers can now bid on your job.",
+        });
+        
+        queryClient.invalidateQueries({ queryKey: ["/api/job-postings/client", user?.id] });
+        
+        if (onClose) onClose();
+        
+        // Reset form and voice data
+        setFormData({
+          title: "",
+          description: "",
+          serviceCategory: "",
+          serviceAddress: "",
+          state: "",
+          districtId: "",
+          budgetMin: "",
+          budgetMax: "",
+          deadline: "",
+          requirements: [],
+        });
+        setOriginalAudioBlob(null);
+        setVoiceTranscript('');
+        setEnglishTranslation('');
+        setDetectedLanguage('');
+        setDetectedLanguageName('');
+        setNewRequirement("");
+        
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to post job with voice recording. Please try again.",
+          variant: "destructive",
+        });
+      }
+    } else {
+      // Regular job posting without audio
+      createJobMutation.mutate(jobData);
+    }
   };
 
   const addRequirement = () => {
