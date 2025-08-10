@@ -1778,14 +1778,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/job-postings/:id", async (req, res) => {
     try {
       const { id } = req.params;
+      console.log("=== PUT /api/job-postings/:id ===");
+      console.log("Job ID:", id);
+      console.log("Request body:", req.body);
+      
       // Convert budget numbers to strings for database compatibility
       const { budgetMin, budgetMax, ...rest } = req.body;
       const jobData = {
         ...rest,
-        budgetMin: budgetMin !== undefined ? budgetMin?.toString() : undefined,
-        budgetMax: budgetMax !== undefined ? budgetMax?.toString() : undefined,
+        budgetMin: budgetMin !== undefined && budgetMin !== null && budgetMin !== "" ? budgetMin.toString() : null,
+        budgetMax: budgetMax !== undefined && budgetMax !== null && budgetMax !== "" ? budgetMax.toString() : null,
       };
+      
+      console.log("Processed job data for database:", jobData);
+      
       const job = await storage.updateJobPosting(id, jobData);
+      console.log("Updated job result:", job);
+      
       res.json(job);
     } catch (error) {
       console.error("Error updating job posting:", error);
