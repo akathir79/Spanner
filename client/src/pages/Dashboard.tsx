@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
@@ -38,7 +39,20 @@ import {
   DollarSign,
   CreditCard,
   Camera,
-  Home
+  Home,
+  Edit3,
+  Save,
+  Video,
+  Volume2,
+  Play,
+  Pause,
+  Eye,
+  EyeOff,
+  ChevronUp,
+  Mic,
+  MicOff,
+  Upload,
+  FileText
 } from "lucide-react";
 import { useLocation } from "wouter";
 import LocationViewer from "@/components/LocationViewer";
@@ -1414,6 +1428,14 @@ export default function Dashboard() {
   const [isLocationLoading, setIsLocationLoading] = useState(false);
   const [selectedJobPosting, setSelectedJobPosting] = useState<any>(null);
   const [isJobFormOpen, setIsJobFormOpen] = useState(false);
+  // Enhanced job card states
+  const [editingJobId, setEditingJobId] = useState<string | null>(null);
+  const [editingJobData, setEditingJobData] = useState<any>({});
+  const [expandedCardIds, setExpandedCardIds] = useState<Set<string>>(new Set());
+  const [isRecording, setIsRecording] = useState(false);
+  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
+  const [recordedChunks, setRecordedChunks] = useState<Blob[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Fetch user's bookings
   const { data: bookings = [], isLoading: bookingsLoading } = useQuery({
@@ -1717,6 +1739,99 @@ export default function Dashboard() {
       case "completed": return <CheckCircle className="h-4 w-4" />;
       case "cancelled": return <XCircle className="h-4 w-4" />;
       default: return <AlertCircle className="h-4 w-4" />;
+    }
+  };
+
+  // Enhanced job card functions
+  const handleEditJob = (job: any) => {
+    setEditingJobId(job.id);
+    setEditingJobData({
+      title: job.title,
+      description: job.description,
+      budgetMin: job.budgetMin || '',
+      budgetMax: job.budgetMax || '',
+      serviceCategory: job.serviceCategory,
+      requirements: job.requirements || []
+    });
+  };
+
+  const handleSaveJob = async (jobId: string) => {
+    try {
+      await apiRequest("PUT", `/api/job-postings/${jobId}`, editingJobData);
+      setEditingJobId(null);
+      setEditingJobData({});
+      queryClient.invalidateQueries({ queryKey: ["/api/job-postings/client", user?.id] });
+      toast({
+        title: "Job Updated",
+        description: "Your job posting has been updated successfully.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Update Failed",
+        description: error.message || "Failed to update job posting",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingJobId(null);
+    setEditingJobData({});
+  };
+
+  const toggleCardExpanded = (jobId: string) => {
+    const newSet = new Set(expandedCardIds);
+    if (newSet.has(jobId)) {
+      newSet.delete(jobId);
+    } else {
+      newSet.add(jobId);
+    }
+    setExpandedCardIds(newSet);
+  };
+
+  // Media recording functions
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+      
+      recorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          setRecordedChunks(prev => [...prev, event.data]);
+        }
+      };
+
+      recorder.onstop = () => {
+        stream.getTracks().forEach(track => track.stop());
+      };
+
+      recorder.start();
+      setMediaRecorder(recorder);
+      setIsRecording(true);
+    } catch (error) {
+      toast({
+        title: "Recording Failed",
+        description: "Unable to access microphone. Please check permissions.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorder) {
+      mediaRecorder.stop();
+      setIsRecording(false);
+    }
+  };
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>, type: 'image' | 'video') => {
+    const file = event.target.files?.[0];
+    if (file) {
+      // Handle file upload logic here
+      toast({
+        title: `${type} Selected`,
+        description: `${file.name} is ready to upload`,
+      });
     }
   };
 
@@ -2224,77 +2339,235 @@ export default function Dashboard() {
                     </div>
                   ) : (
                     <div className="space-y-4 max-h-[600px] overflow-y-auto">
-                      {jobPostings.map((job: any) => (
-                        <div 
-                          key={job.id} 
-                          className={`border rounded-lg p-4 space-y-3 cursor-pointer transition-all hover:shadow-md ${
-                            selectedJobPosting?.id === job.id ? 'border-primary ring-2 ring-primary/20' : ''
-                          }`}
-                          onClick={() => setSelectedJobPosting(job)}
-                        >
-                          <div className="flex items-start justify-between">
-                            <div className="flex-1">
-                              <h3 className="font-semibold">{job.title}</h3>
-                              <p className="text-sm text-muted-foreground">
-                                {job.serviceCategory} • {job.district}
-                              </p>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <Badge 
-                                className={job.status === "open" ? "bg-green-100 text-green-800" : 
-                                          job.status === "closed" ? "bg-gray-100 text-gray-800" : 
-                                          job.status === "in_progress" ? "bg-blue-100 text-blue-800" :
-                                          job.status === "completed" ? "bg-green-100 text-green-800" :
-                                          "bg-gray-100 text-gray-800"}
-                              >
-                                {job.status}
-                              </Badge>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  deleteJobMutation.mutate(job.id);
-                                }}
-                                disabled={deleteJobMutation.isPending}
-                              >
-                                <X className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </div>
-                          
-                          <p className="text-sm text-muted-foreground line-clamp-2">
-                            {job.description}
-                          </p>
-                          
-                          <div className="flex items-center justify-between text-xs text-muted-foreground">
-                            <span>
-                              Budget: {job.budgetMin && job.budgetMax ? `₹${job.budgetMin} - ₹${job.budgetMax}` : 'Negotiable'}
-                            </span>
-                            <span>
-                              Posted {new Date(job.createdAt).toLocaleDateString()}
-                            </span>
-                          </div>
-                          
-                          {job.requirements && job.requirements.length > 0 && (
-                            <div className="flex flex-wrap gap-1 mt-2">
-                              {job.requirements.slice(0, 2).map((req: string, index: number) => (
-                                <Badge key={index} variant="outline" className="text-xs">
-                                  {req}
-                                </Badge>
-                              ))}
-                              {job.requirements.length > 2 && (
-                                <Badge variant="outline" className="text-xs">
-                                  +{job.requirements.length - 2} more
-                                </Badge>
+                      {jobPostings.map((job: any) => {
+                        const isEditing = editingJobId === job.id;
+                        const isExpanded = expandedCardIds.has(job.id);
+                        const noBids = !jobBids || jobBids.length === 0;
+                        
+                        return (
+                          <Card 
+                            key={job.id} 
+                            className={`transition-all hover:shadow-md ${
+                              selectedJobPosting?.id === job.id ? 'border-primary ring-2 ring-primary/20' : ''
+                            }`}
+                          >
+                            <CardContent className="p-4 space-y-3">
+                              {/* Header with Title and Actions */}
+                              <div className="flex items-start justify-between">
+                                <div className="flex-1">
+                                  {isEditing ? (
+                                    <Input
+                                      value={editingJobData.title || ''}
+                                      onChange={(e) => setEditingJobData(prev => ({...prev, title: e.target.value}))}
+                                      className="font-semibold text-lg"
+                                      placeholder="Job title"
+                                    />
+                                  ) : (
+                                    <h3 className="font-semibold cursor-pointer" onClick={() => setSelectedJobPosting(job)}>
+                                      {job.title}
+                                    </h3>
+                                  )}
+                                  <p className="text-sm text-muted-foreground mt-1">
+                                    {job.serviceCategory} • {job.district}
+                                  </p>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <Badge 
+                                    className={job.status === "open" ? "bg-green-100 text-green-800" : 
+                                              job.status === "closed" ? "bg-gray-100 text-gray-800" : 
+                                              job.status === "in_progress" ? "bg-blue-100 text-blue-800" :
+                                              job.status === "completed" ? "bg-green-100 text-green-800" :
+                                              "bg-gray-100 text-gray-800"}
+                                  >
+                                    {job.status}
+                                  </Badge>
+                                  {!isEditing && (
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-8 w-8 p-0"
+                                      onClick={() => handleEditJob(job)}
+                                    >
+                                      <Edit3 className="h-4 w-4" />
+                                    </Button>
+                                  )}
+                                  {isEditing ? (
+                                    <div className="flex gap-1">
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-8 w-8 p-0 text-green-600"
+                                        onClick={() => handleSaveJob(job.id)}
+                                      >
+                                        <Save className="h-4 w-4" />
+                                      </Button>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-8 w-8 p-0"
+                                        onClick={handleCancelEdit}
+                                      >
+                                        <X className="h-4 w-4" />
+                                      </Button>
+                                    </div>
+                                  ) : (
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                                      onClick={() => deleteJobMutation.mutate(job.id)}
+                                      disabled={deleteJobMutation.isPending}
+                                    >
+                                      <X className="h-4 w-4" />
+                                    </Button>
+                                  )}
+                                </div>
+                              </div>
+                              
+                              {/* Description */}
+                              {isEditing ? (
+                                <Textarea
+                                  value={editingJobData.description || ''}
+                                  onChange={(e) => setEditingJobData(prev => ({...prev, description: e.target.value}))}
+                                  placeholder="Job description"
+                                  rows={3}
+                                />
+                              ) : (
+                                <p className="text-sm text-muted-foreground">
+                                  {job.description}
+                                </p>
                               )}
-                            </div>
-                          )}
-                        </div>
-                      ))}
+                              
+                              {/* Budget Section */}
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs text-muted-foreground">Budget:</span>
+                                  {isEditing ? (
+                                    <div className="flex items-center gap-2">
+                                      <Input
+                                        type="number"
+                                        value={editingJobData.budgetMin || ''}
+                                        onChange={(e) => setEditingJobData(prev => ({...prev, budgetMin: e.target.value}))}
+                                        placeholder="Min"
+                                        className="w-20 h-8"
+                                      />
+                                      <span>-</span>
+                                      <Input
+                                        type="number"
+                                        value={editingJobData.budgetMax || ''}
+                                        onChange={(e) => setEditingJobData(prev => ({...prev, budgetMax: e.target.value}))}
+                                        placeholder="Max"
+                                        className="w-20 h-8"
+                                      />
+                                    </div>
+                                  ) : (
+                                    <span className="text-sm font-medium">
+                                      {job.budgetMin && job.budgetMax ? `₹${job.budgetMin} - ₹${job.budgetMax}` : 'Negotiable'}
+                                    </span>
+                                  )}
+                                  {!isEditing && noBids && job.status === "open" && (
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className="h-6 text-xs"
+                                      onClick={() => handleEditJob(job)}
+                                    >
+                                      Increase Budget
+                                    </Button>
+                                  )}
+                                </div>
+                                <span className="text-xs text-muted-foreground">
+                                  Posted {new Date(job.createdAt).toLocaleDateString()}
+                                </span>
+                              </div>
+
+                              {/* Expandable Service Address Section */}
+                              <Collapsible open={isExpanded} onOpenChange={() => toggleCardExpanded(job.id)}>
+                                <CollapsibleTrigger asChild>
+                                  <Button variant="ghost" className="w-full justify-between p-0 h-auto">
+                                    <span className="text-sm font-medium">Service Address</span>
+                                    {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                                  </Button>
+                                </CollapsibleTrigger>
+                                <CollapsibleContent className="space-y-2">
+                                  <div className="text-sm text-muted-foreground bg-muted/50 p-3 rounded">
+                                    <div className="font-medium">{job.serviceAddress?.area || 'Area not specified'}</div>
+                                    <div>{job.serviceAddress?.district || job.district}, {job.serviceAddress?.state || 'Tamil Nadu'}</div>
+                                    <div>PIN: {job.serviceAddress?.pinCode || 'Not specified'}</div>
+                                  </div>
+                                </CollapsibleContent>
+                              </Collapsible>
+
+                              {/* Media Attachments Section */}
+                              {!isEditing && (
+                                <div className="border-t pt-3">
+                                  <div className="flex items-center justify-between mb-2">
+                                    <span className="text-sm font-medium">Media Attachments</span>
+                                    <div className="flex gap-1">
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="h-8"
+                                        onClick={isRecording ? stopRecording : startRecording}
+                                      >
+                                        {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+                                      </Button>
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="h-8"
+                                        onClick={() => fileInputRef.current?.click()}
+                                      >
+                                        <Camera className="h-4 w-4" />
+                                      </Button>
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="h-8"
+                                        onClick={() => fileInputRef.current?.click()}
+                                      >
+                                        <Video className="h-4 w-4" />
+                                      </Button>
+                                    </div>
+                                  </div>
+                                  {recordedChunks.length > 0 && (
+                                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                      <Volume2 className="h-4 w-4" />
+                                      <span>Voice recording ready</span>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                              
+                              {/* Requirements */}
+                              {job.requirements && job.requirements.length > 0 && (
+                                <div className="flex flex-wrap gap-1">
+                                  {job.requirements.slice(0, 2).map((req: string, index: number) => (
+                                    <Badge key={index} variant="outline" className="text-xs">
+                                      {req}
+                                    </Badge>
+                                  ))}
+                                  {job.requirements.length > 2 && (
+                                    <Badge variant="outline" className="text-xs">
+                                      +{job.requirements.length - 2} more
+                                    </Badge>
+                                  )}
+                                </div>
+                              )}
+                            </CardContent>
+                          </Card>
+                        );
+                      })}
                     </div>
                   )}
+                  {/* Hidden file input for media uploads */}
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*,video/*"
+                    style={{ display: 'none' }}
+                    onChange={(e) => handleFileUpload(e, 'image')}
+                  />
                 </CardContent>
               </Card>
 

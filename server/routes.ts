@@ -1687,6 +1687,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.put("/api/job-postings/:jobId", async (req, res) => {
+    try {
+      const { jobId } = req.params;
+      console.log("Updating job posting:", jobId, req.body);
+      
+      // Convert budget numbers to strings for database compatibility
+      const { budgetMin, budgetMax, deadline, ...rest } = req.body;
+      const updateData = {
+        ...rest,
+        budgetMin: budgetMin !== undefined && budgetMin !== null ? budgetMin.toString() : null,
+        budgetMax: budgetMax !== undefined && budgetMax !== null ? budgetMax.toString() : null,
+        deadline: deadline ? new Date(deadline) : null,
+      };
+      
+      console.log("Processed update data for database:", updateData);
+      
+      const updatedJob = await storage.updateJobPosting(jobId, updateData);
+      res.json(updatedJob);
+    } catch (error) {
+      console.error("Error updating job posting:", error);
+      res.status(500).json({ message: "Failed to update job posting" });
+    }
+  });
+
   app.put("/api/job-postings/:id", async (req, res) => {
     try {
       const { id } = req.params;
