@@ -347,11 +347,11 @@ export default function AdminManagement() {
   }, []);
 
   // Get states from JSON file
-  const states = (statesDistrictsData.states as StateData[]).map(s => s.state).sort();
+  const states = Object.keys(statesDistrictsData.states).sort();
 
   // Get districts for selected state from JSON file
   const districtsForState = selectedState 
-    ? (statesDistrictsData.states as StateData[]).find(s => s.state === selectedState)?.districts || []
+    ? statesDistrictsData.states[selectedState]?.districts || []
     : [];
 
   // Filtered district admins (without pagination)
