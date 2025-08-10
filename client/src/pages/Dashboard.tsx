@@ -1114,205 +1114,276 @@ const JobPostingForm = ({ onClose }: { onClose?: () => void }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="title">Job Title *</Label>
+    <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Header Section */}
+      <div className="space-y-1 pb-2 border-b border-border/40">
+        <h3 className="text-lg font-semibold text-foreground">Job Details</h3>
+        <p className="text-sm text-muted-foreground">Provide clear details to attract the right workers</p>
+      </div>
+
+      {/* Job Title Section */}
+      <div className="space-y-3">
+        <Label htmlFor="title" className="text-sm font-medium text-foreground flex items-center gap-1">
+          <span>Job Title</span>
+          <span className="text-red-500">*</span>
+        </Label>
         <Input
           id="title"
           value={formData.title}
           onChange={(e) => setFormData({ ...formData, title: e.target.value })}
           placeholder="e.g., Fix kitchen plumbing leak"
+          className="h-11 text-base"
           required
         />
       </div>
 
-      <div className="space-y-4">
-        <div className="space-y-2">
-          <Label>Service Type *</Label>
-          <div className="relative">
-            <Popover open={serviceOpen} onOpenChange={setServiceOpen}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  role="combobox"
-                  aria-expanded={serviceOpen}
-                  className="w-full justify-between pr-8"
-                >
-                  {formData.serviceCategory
-                    ? (services as any)?.find((service: any) => service.name === formData.serviceCategory)?.name
-                    : "Select service"}
-                  <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-full p-0">
-                <Command>
-                  <CommandInput placeholder="Search services..." />
-                  <CommandList>
-                    <CommandEmpty>No service found.</CommandEmpty>
-                    <CommandGroup>
-                      {(services as any)?.map((service: any) => (
-                        <CommandItem
-                          key={service.id}
-                          value={service.name}
-                          onSelect={() => {
-                            setFormData(prev => ({ ...prev, serviceCategory: service.name }));
-                            setServiceOpen(false);
-                          }}
-                        >
-                          {service.name}
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
-                  </CommandList>
-                </Command>
-              </PopoverContent>
-            </Popover>
-            {formData.serviceCategory && (
+      {/* Service Selection Section */}
+      <div className="space-y-3">
+        <Label className="text-sm font-medium text-foreground flex items-center gap-1">
+          <span>Service Type</span>
+          <span className="text-red-500">*</span>
+        </Label>
+        <div className="relative">
+          <Popover open={serviceOpen} onOpenChange={setServiceOpen}>
+            <PopoverTrigger asChild>
               <Button
-                variant="ghost"
-                size="sm"
-                className="absolute right-8 top-1/2 -translate-y-1/2 h-6 w-6 p-0 hover:bg-muted"
-                onClick={() => setFormData(prev => ({ ...prev, serviceCategory: "" }))}
+                variant="outline"
+                role="combobox"
+                aria-expanded={serviceOpen}
+                className="w-full justify-between pr-8 h-11 text-base bg-background border-border/50 hover:border-border"
               >
-                <X className="h-3 w-3" />
+                {formData.serviceCategory
+                  ? (services as any)?.find((service: any) => service.name === formData.serviceCategory)?.name
+                  : "Select service"}
+                <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
               </Button>
-            )}
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <Label>Service Address *</Label>
-            <div className="flex gap-2">
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="h-6 px-2 text-xs"
-                onClick={handleLocationFinder}
-                disabled={isLocationLoading}
-              >
-                <MapPinIcon className="h-3 w-3 mr-1" />
-                {isLocationLoading ? "Finding..." : "Use Current Location"}
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="h-6 px-2 text-xs"
-                onClick={() => setFormData(prev => ({ 
-                  ...prev, 
-                  serviceAddress: user?.address ? `${user.address}\n${user.district}, ${user.state || 'Tamil Nadu'}\nPIN: ${user.pincode || ''}`.trim() : '',
-                  state: user?.state || 'Tamil Nadu',
-                  districtId: user?.district || ''
-                }))}
-              >
-                <Home className="h-3 w-3 mr-1" />
-                Use Profile Address
-              </Button>
-            </div>
-          </div>
-          <div className="relative">
-            <Textarea
-              placeholder="Enter complete service address..."
-              value={formData.serviceAddress || ''}
-              onChange={(e) => setFormData(prev => ({ ...prev, serviceAddress: e.target.value }))}
-              className="min-h-[100px] resize-none"
-            />
-            {formData.serviceAddress && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="absolute right-2 top-2 h-6 w-6 p-0 hover:bg-muted"
-                onClick={() => setFormData(prev => ({ ...prev, serviceAddress: "" }))}
-              >
-                <X className="h-3 w-3" />
-              </Button>
-            )}
-          </div>
-          <p className="text-xs text-muted-foreground">
-            Example: House No/Building, Street, Area, City, State, PIN Code
-          </p>
+            </PopoverTrigger>
+            <PopoverContent className="w-full p-0 border-border/50">
+              <Command>
+                <CommandInput placeholder="Search services..." className="h-9" />
+                <CommandList className="max-h-64">
+                  <CommandEmpty>No service found.</CommandEmpty>
+                  <CommandGroup>
+                    {(services as any)?.map((service: any) => (
+                      <CommandItem
+                        key={service.id}
+                        value={service.name}
+                        onSelect={() => {
+                          setFormData(prev => ({ ...prev, serviceCategory: service.name }));
+                          setServiceOpen(false);
+                        }}
+                        className="flex items-center px-3 py-2 hover:bg-muted/50"
+                      >
+                        {service.name}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
+          {formData.serviceCategory && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="absolute right-8 top-1/2 -translate-y-1/2 h-6 w-6 p-0 hover:bg-muted/80"
+              onClick={() => setFormData(prev => ({ ...prev, serviceCategory: "" }))}
+            >
+              <X className="h-3 w-3" />
+            </Button>
+          )}
         </div>
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="description">Job Description *</Label>
+      {/* Service Address Section */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <Label className="text-sm font-medium text-foreground flex items-center gap-1">
+            <span>Service Address</span>
+            <span className="text-red-500">*</span>
+          </Label>
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-7 px-2 text-xs bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200"
+              onClick={handleLocationFinder}
+              disabled={isLocationLoading}
+            >
+              <MapPinIcon className="h-3 w-3 mr-1" />
+              {isLocationLoading ? "Finding..." : "Use Current Location"}
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-7 px-2 text-xs bg-green-50 text-green-700 hover:bg-green-100 border border-green-200"
+              onClick={() => setFormData(prev => ({ 
+                ...prev, 
+                serviceAddress: user?.address ? `${user.address}\n${user.district}, ${user.state || 'Tamil Nadu'}\nPIN: ${user.pincode || ''}`.trim() : '',
+                state: user?.state || 'Tamil Nadu',
+                districtId: user?.district || ''
+              }))}
+            >
+              <Home className="h-3 w-3 mr-1" />
+              Use Profile Address
+            </Button>
+          </div>
+        </div>
+        <div className="relative">
+          <Textarea
+            placeholder="Enter complete service address..."
+            value={formData.serviceAddress || ''}
+            onChange={(e) => setFormData(prev => ({ ...prev, serviceAddress: e.target.value }))}
+            className="min-h-[100px] resize-none text-base bg-background border-border/50"
+          />
+          {formData.serviceAddress && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="absolute right-2 top-2 h-6 w-6 p-0 hover:bg-muted/80"
+              onClick={() => setFormData(prev => ({ ...prev, serviceAddress: "" }))}
+            >
+              <X className="h-3 w-3" />
+            </Button>
+          )}
+        </div>
+        <p className="text-xs text-muted-foreground bg-muted/30 px-3 py-2 rounded-md border border-border/30">
+          <span className="font-medium">Example:</span> House No/Building, Street, Area, City, State, PIN Code
+        </p>
+      </div>
+
+      {/* Job Description Section */}
+      <div className="space-y-3">
+        <Label htmlFor="description" className="text-sm font-medium text-foreground flex items-center gap-1">
+          <span>Job Description</span>
+          <span className="text-red-500">*</span>
+        </Label>
         <Textarea
           id="description"
           value={formData.description}
           onChange={(e) => setFormData({ ...formData, description: e.target.value })}
           placeholder="Describe the work needed..."
-          rows={3}
+          rows={4}
+          className="text-base resize-none bg-background border-border/50"
           required
         />
+        <p className="text-xs text-muted-foreground">Be specific about your requirements to attract the right workers</p>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="budgetMin">Min Budget (₹)</Label>
-          <Input
-            id="budgetMin"
-            type="number"
-            value={formData.budgetMin}
-            onChange={(e) => setFormData({ ...formData, budgetMin: e.target.value })}
-            placeholder="500"
-          />
+      {/* Budget Range Section */}
+      <div className="space-y-3">
+        <div className="flex items-center gap-2">
+          <span className="text-lg">₹</span>
+          <Label className="text-sm font-medium text-foreground">Budget Range</Label>
+          <span className="text-xs text-muted-foreground">(Leave empty if negotiable)</span>
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="budgetMax">Max Budget (₹)</Label>
-          <Input
-            id="budgetMax"
-            type="number"
-            value={formData.budgetMax}
-            onChange={(e) => setFormData({ ...formData, budgetMax: e.target.value })}
-            placeholder="2000"
-          />
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="budgetMin" className="text-sm text-muted-foreground">Minimum Budget (₹)</Label>
+            <Input
+              id="budgetMin"
+              type="number"
+              value={formData.budgetMin}
+              onChange={(e) => setFormData({ ...formData, budgetMin: e.target.value })}
+              placeholder="799"
+              className="h-11 text-base bg-background border-border/50"
+              min="0"
+              step="1"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="budgetMax" className="text-sm text-muted-foreground">Maximum Budget (₹)</Label>
+            <Input
+              id="budgetMax"
+              type="number"
+              value={formData.budgetMax}
+              onChange={(e) => setFormData({ ...formData, budgetMax: e.target.value })}
+              placeholder="999"
+              className="h-11 text-base bg-background border-border/50"
+              min="0"
+              step="1"
+            />
+          </div>
         </div>
+        {formData.budgetMin && formData.budgetMax && (
+          <div className="flex items-center gap-2 p-3 bg-emerald-50 border border-emerald-200 rounded-md">
+            <span className="text-sm font-medium text-emerald-800">Budget Range:</span>
+            <span className="text-sm font-semibold text-emerald-700">₹{formData.budgetMin} - ₹{formData.budgetMax}</span>
+          </div>
+        )}
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="deadline">Deadline (Optional)</Label>
+      {/* Deadline Section */}
+      <div className="space-y-3">
+        <Label htmlFor="deadline" className="text-sm font-medium text-foreground">Completion Deadline</Label>
         <Input
           id="deadline"
           type="date"
           value={formData.deadline}
           onChange={(e) => setFormData({ ...formData, deadline: e.target.value })}
+          className="h-11 text-base bg-background border-border/50"
         />
+        <p className="text-xs text-muted-foreground">When do you need this work completed? (Optional)</p>
       </div>
 
-      <div className="space-y-2">
-        <Label>Requirements (Optional)</Label>
+      {/* Requirements Section */}
+      <div className="space-y-3">
+        <Label className="text-sm font-medium text-foreground">Special Requirements</Label>
         <div className="flex gap-2">
           <Input
             value={newRequirement}
             onChange={(e) => setNewRequirement(e.target.value)}
-            placeholder="Add a requirement..."
+            placeholder="e.g., Bring own tools, materials, weekend availability..."
+            className="h-11 text-base bg-background border-border/50"
             onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addRequirement())}
           />
-          <Button type="button" onClick={addRequirement} size="sm">
+          <Button 
+            type="button" 
+            onClick={addRequirement} 
+            size="sm"
+            className="h-11 px-4 bg-blue-600 hover:bg-blue-700 text-white"
+          >
             Add
           </Button>
         </div>
         {formData.requirements.length > 0 && (
-          <div className="flex flex-wrap gap-2 mt-2">
+          <div className="flex flex-wrap gap-2 mt-3 p-3 bg-muted/30 rounded-md border border-border/30">
             {formData.requirements.map((req, index) => (
               <Badge 
                 key={index} 
                 variant="secondary" 
-                className="cursor-pointer"
+                className="cursor-pointer bg-blue-100 text-blue-800 hover:bg-blue-200 border border-blue-300 px-3 py-1"
                 onClick={() => removeRequirement(index)}
               >
-                {req} ×
+                {req} <X className="ml-1 h-3 w-3" />
               </Badge>
             ))}
           </div>
         )}
+        <p className="text-xs text-muted-foreground">Add any special requirements or preferences for workers</p>
       </div>
 
-      <Button type="submit" className="w-full" disabled={createJobMutation.isPending}>
-        {createJobMutation.isPending ? "Posting..." : "Post Job"}
-      </Button>
+      {/* Submit Section */}
+      <div className="pt-4 border-t border-border/40">
+        <Button 
+          type="submit" 
+          className="w-full h-12 text-base font-semibold bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-md" 
+          disabled={createJobMutation.isPending}
+        >
+          {createJobMutation.isPending ? (
+            <span className="flex items-center gap-2">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+              Posting Job...
+            </span>
+          ) : (
+            "Post Job & Get Bids"
+          )}
+        </Button>
+      </div>
     </form>
   );
 };
@@ -1780,7 +1851,16 @@ export default function Dashboard() {
     if (!editingJob) return;
     
     try {
-      await apiRequest("PUT", `/api/job-postings/${editingJob.id}`, editingJobData);
+      // Ensure budget values are properly converted to numbers
+      const updateData = {
+        ...editingJobData,
+        budgetMin: editingJobData.budgetMin && editingJobData.budgetMin !== '' ? Number(editingJobData.budgetMin) : null,
+        budgetMax: editingJobData.budgetMax && editingJobData.budgetMax !== '' ? Number(editingJobData.budgetMax) : null,
+      };
+      
+      console.log("Frontend sending update data:", updateData);
+      
+      await apiRequest("PUT", `/api/job-postings/${editingJob.id}`, updateData);
       setIsEditModalOpen(false);
       setEditingJob(null);
       setEditingJobData({});
