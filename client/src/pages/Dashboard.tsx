@@ -804,10 +804,30 @@ const VoiceJobPostingForm = ({ onClose, autoStart = false }: { onClose?: () => v
     if (autoStart && currentStep === 'initial') {
       // Welcome message and auto-start recording
       setTimeout(() => {
-        speak("Welcome! I'm here to help you post your job. Please tell me about the work you need done - what service, where, and your budget.", 'english');
-        setTimeout(() => {
-          startListening();
-        }, 4000); // Wait for welcome message to finish
+        const welcomeMessage = "Welcome! I'm here to help you post your job. Please tell me about the work you need done - what service, where, and your budget.";
+        
+        if ('speechSynthesis' in window) {
+          const utterance = new SpeechSynthesisUtterance(welcomeMessage);
+          utterance.lang = 'en-IN';
+          utterance.rate = 0.9;
+          utterance.pitch = 1;
+          
+          utterance.onstart = () => setIsSpeaking(true);
+          utterance.onend = () => {
+            setIsSpeaking(false);
+            // Start recording only after speech completes
+            setTimeout(() => {
+              startListening();
+            }, 1000);
+          };
+          
+          speechSynthesis.speak(utterance);
+        } else {
+          // If no speech synthesis, start recording immediately
+          setTimeout(() => {
+            startListening();
+          }, 1000);
+        }
       }, 500);
     }
   }, [autoStart]);
@@ -1190,11 +1210,28 @@ const VoiceJobPostingForm = ({ onClose, autoStart = false }: { onClose?: () => v
     // Stop audio recording
     stopAudioRecording();
     
-    // Always process audio after recording (even without speech recognition transcript)
+    // Always process audio after recording (even without speech recognition transcript)  
     // The Vakyansh API will handle the actual speech-to-text
     setTimeout(() => {
-      processVoiceInput();
-    }, 1000); // Small delay to ensure audio recording is complete
+      if (audioBlob && audioBlob.size > 0) {
+        console.log('Processing audio blob of size:', audioBlob.size);
+        processVoiceInput();
+      } else {
+        console.log('No audio blob available, waiting...');
+        // Wait a bit more for audio recording to complete
+        setTimeout(() => {
+          if (audioBlob && audioBlob.size > 0) {
+            processVoiceInput();
+          } else {
+            toast({
+              title: "No Audio Recorded",
+              description: "Please try recording again and speak clearly.",
+              variant: "destructive"
+            });
+          }
+        }, 2000);
+      }
+    }, 1500); // Increased delay to ensure audio recording is complete
   };
 
   // Process voice input using Vakyansh API
