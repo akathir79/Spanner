@@ -2334,11 +2334,11 @@ export default function Dashboard() {
               dashboardLayout.layout === 'compact' ? 'grid grid-cols-1 gap-4' :
               'grid grid-cols-1 lg:grid-cols-2 gap-6'
             }`}>
-              {/* Bookings Widget */}
+              {/* Bookings Widget - Full width by default */}
               <Card className={`${
                 isCustomizeMode ? 'border-2 border-dashed border-blue-400 hover:border-blue-600' : ''
               } ${dashboardLayout.widgets.recentBookings?.size === 'small' ? 'col-span-1' : 
-                   dashboardLayout.widgets.recentBookings?.size === 'large' ? 'lg:col-span-2' : ''}`}>
+                   'lg:col-span-2'}`}>
                 <CardHeader>
                   <CardTitle className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
@@ -3139,8 +3139,7 @@ export default function Dashboard() {
               {dashboardLayout.widgets.quickActions?.enabled && (
                 <Card className={`${
                   isCustomizeMode ? 'border-2 border-dashed border-blue-400 hover:border-blue-600' : ''
-                } ${dashboardLayout.widgets.quickActions?.size === 'small' ? 'col-span-1' : 
-                     dashboardLayout.widgets.quickActions?.size === 'large' ? 'lg:col-span-2' : ''}`}>
+                } ${dashboardLayout.widgets.quickActions?.size === 'large' ? 'lg:col-span-2' : 'col-span-1'}`}>
                   <CardHeader>
                     <CardTitle className="flex items-center justify-between">
                       <div className="flex items-center space-x-2">
@@ -3185,8 +3184,7 @@ export default function Dashboard() {
               {dashboardLayout.widgets.statistics?.enabled && bookings && (
                 <Card className={`${
                   isCustomizeMode ? 'border-2 border-dashed border-blue-400 hover:border-blue-600' : ''
-                } ${dashboardLayout.widgets.statistics?.size === 'small' ? 'col-span-1' : 
-                     dashboardLayout.widgets.statistics?.size === 'large' ? 'lg:col-span-2' : ''}`}>
+                } ${dashboardLayout.widgets.statistics?.size === 'large' ? 'lg:col-span-2' : 'col-span-1'}`}>
                   <CardHeader>
                     <CardTitle className="flex items-center justify-between">
                       <div className="flex items-center space-x-2">
