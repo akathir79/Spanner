@@ -74,7 +74,7 @@ Located in `shared/schema.ts`, the database includes:
 - **UI Improvements**: All dropdowns have consistent scrollbar functionality with enhanced visibility (August 4, 2025)
 - **Custom User ID System**: Automatic generation of unique IDs in format STATE-DISTRICT-XXXX-ROLE (e.g., "TAM-CHE-0001-C" for client, "TAM-SAL-0001-W" for worker, "TAM-COI-0001-A" for admin) with sequential numbering per state-district-role combination (August 6, 2025)
 - **User Activity Tracking**: Complete user activity monitoring with registration date/time, last login tracking, and "Member since" display on client dashboard (August 6, 2025)
-- **Smart Voice Job Posting**: Advanced multi-language voice assistant with automatic detection of 8+ Indian languages (Tamil/Hindi/Malayalam/Telugu/Kannada/Gujarati/Punjabi/Bengali/English), real-time translation to English, intelligent field extraction, and smart follow-up questions in user's preferred language when details are missing (August 10, 2025)
+- **Smart Voice Job Posting**: Advanced multi-language voice assistant with automatic detection of 8+ Indian languages (Tamil/Hindi/Malayalam/Telugu/Kannada/Gujarati/Punjabi/Bengali/English), real-time translation to English, intelligent field extraction, and original audio file preservation. Fixed translation issues to ensure all output is in English format (August 10, 2025)
 
 ### User Interfaces
 - **Home Page**: Service discovery with search and filters
