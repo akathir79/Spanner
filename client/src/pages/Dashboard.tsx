@@ -1429,12 +1429,13 @@ export default function Dashboard() {
   const [selectedJobPosting, setSelectedJobPosting] = useState<any>(null);
   const [isJobFormOpen, setIsJobFormOpen] = useState(false);
   // Enhanced job card states
-  const [editingJobId, setEditingJobId] = useState<string | null>(null);
+  const [editingJob, setEditingJob] = useState<any>(null);
   const [editingJobData, setEditingJobData] = useState<any>({});
   const [expandedCardIds, setExpandedCardIds] = useState<Set<string>>(new Set());
   const [isRecording, setIsRecording] = useState(false);
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
   const [recordedChunks, setRecordedChunks] = useState<Blob[]>([]);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Fetch user's bookings
@@ -1744,7 +1745,7 @@ export default function Dashboard() {
 
   // Enhanced job card functions
   const handleEditJob = (job: any) => {
-    setEditingJobId(job.id);
+    setEditingJob(job);
     setEditingJobData({
       title: job.title,
       description: job.description,
@@ -1753,12 +1754,16 @@ export default function Dashboard() {
       serviceCategory: job.serviceCategory,
       requirements: job.requirements || []
     });
+    setIsEditModalOpen(true);
   };
 
-  const handleSaveJob = async (jobId: string) => {
+  const handleSaveJob = async () => {
+    if (!editingJob) return;
+    
     try {
-      await apiRequest("PUT", `/api/job-postings/${jobId}`, editingJobData);
-      setEditingJobId(null);
+      await apiRequest("PUT", `/api/job-postings/${editingJob.id}`, editingJobData);
+      setIsEditModalOpen(false);
+      setEditingJob(null);
       setEditingJobData({});
       queryClient.invalidateQueries({ queryKey: ["/api/job-postings/client", user?.id] });
       toast({
@@ -1775,7 +1780,8 @@ export default function Dashboard() {
   };
 
   const handleCancelEdit = () => {
-    setEditingJobId(null);
+    setIsEditModalOpen(false);
+    setEditingJob(null);
     setEditingJobData({});
   };
 
@@ -2340,7 +2346,6 @@ export default function Dashboard() {
                   ) : (
                     <div className="space-y-4 max-h-[600px] overflow-y-auto">
                       {jobPostings.map((job: any) => {
-                        const isEditing = editingJobId === job.id;
                         const isExpanded = expandedCardIds.has(job.id);
                         const noBids = !jobBids || jobBids.length === 0;
                         
@@ -2355,18 +2360,9 @@ export default function Dashboard() {
                               {/* Header with Title and Actions */}
                               <div className="flex items-start justify-between">
                                 <div className="flex-1">
-                                  {isEditing ? (
-                                    <Input
-                                      value={editingJobData.title || ''}
-                                      onChange={(e) => setEditingJobData(prev => ({...prev, title: e.target.value}))}
-                                      className="font-semibold text-lg"
-                                      placeholder="Job title"
-                                    />
-                                  ) : (
-                                    <h3 className="font-semibold cursor-pointer" onClick={() => setSelectedJobPosting(job)}>
-                                      {job.title}
-                                    </h3>
-                                  )}
+                                  <h3 className="font-semibold cursor-pointer" onClick={() => setSelectedJobPosting(job)}>
+                                    {job.title}
+                                  </h3>
                                   <p className="text-sm text-muted-foreground mt-1">
                                     {job.serviceCategory} • {job.district}
                                   </p>
@@ -2381,91 +2377,39 @@ export default function Dashboard() {
                                   >
                                     {job.status}
                                   </Badge>
-                                  {!isEditing && (
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      className="h-8 w-8 p-0"
-                                      onClick={() => handleEditJob(job)}
-                                    >
-                                      <Edit3 className="h-4 w-4" />
-                                    </Button>
-                                  )}
-                                  {isEditing ? (
-                                    <div className="flex gap-1">
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className="h-8 w-8 p-0 text-green-600"
-                                        onClick={() => handleSaveJob(job.id)}
-                                      >
-                                        <Save className="h-4 w-4" />
-                                      </Button>
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className="h-8 w-8 p-0"
-                                        onClick={handleCancelEdit}
-                                      >
-                                        <X className="h-4 w-4" />
-                                      </Button>
-                                    </div>
-                                  ) : (
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-                                      onClick={() => deleteJobMutation.mutate(job.id)}
-                                      disabled={deleteJobMutation.isPending}
-                                    >
-                                      <X className="h-4 w-4" />
-                                    </Button>
-                                  )}
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-8 w-8 p-0"
+                                    onClick={() => handleEditJob(job)}
+                                  >
+                                    <Edit3 className="h-4 w-4" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                                    onClick={() => deleteJobMutation.mutate(job.id)}
+                                    disabled={deleteJobMutation.isPending}
+                                  >
+                                    <X className="h-4 w-4" />
+                                  </Button>
                                 </div>
                               </div>
                               
                               {/* Description */}
-                              {isEditing ? (
-                                <Textarea
-                                  value={editingJobData.description || ''}
-                                  onChange={(e) => setEditingJobData(prev => ({...prev, description: e.target.value}))}
-                                  placeholder="Job description"
-                                  rows={3}
-                                />
-                              ) : (
-                                <p className="text-sm text-muted-foreground">
-                                  {job.description}
-                                </p>
-                              )}
+                              <p className="text-sm text-muted-foreground">
+                                {job.description}
+                              </p>
                               
                               {/* Budget Section */}
                               <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
                                   <span className="text-xs text-muted-foreground">Budget:</span>
-                                  {isEditing ? (
-                                    <div className="flex items-center gap-2">
-                                      <Input
-                                        type="number"
-                                        value={editingJobData.budgetMin || ''}
-                                        onChange={(e) => setEditingJobData(prev => ({...prev, budgetMin: e.target.value}))}
-                                        placeholder="Min"
-                                        className="w-20 h-8"
-                                      />
-                                      <span>-</span>
-                                      <Input
-                                        type="number"
-                                        value={editingJobData.budgetMax || ''}
-                                        onChange={(e) => setEditingJobData(prev => ({...prev, budgetMax: e.target.value}))}
-                                        placeholder="Max"
-                                        className="w-20 h-8"
-                                      />
-                                    </div>
-                                  ) : (
-                                    <span className="text-sm font-medium">
-                                      {job.budgetMin && job.budgetMax ? `₹${job.budgetMin} - ₹${job.budgetMax}` : 'Negotiable'}
-                                    </span>
-                                  )}
-                                  {!isEditing && noBids && job.status === "open" && (
+                                  <span className="text-sm font-medium">
+                                    {job.budgetMin && job.budgetMax ? `₹${job.budgetMin} - ₹${job.budgetMax}` : 'Negotiable'}
+                                  </span>
+                                  {noBids && job.status === "open" && (
                                     <Button
                                       variant="outline"
                                       size="sm"
@@ -2499,45 +2443,43 @@ export default function Dashboard() {
                               </Collapsible>
 
                               {/* Media Attachments Section */}
-                              {!isEditing && (
-                                <div className="border-t pt-3">
-                                  <div className="flex items-center justify-between mb-2">
-                                    <span className="text-sm font-medium">Media Attachments</span>
-                                    <div className="flex gap-1">
-                                      <Button
-                                        variant="outline"
-                                        size="sm"
-                                        className="h-8"
-                                        onClick={isRecording ? stopRecording : startRecording}
-                                      >
-                                        {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-                                      </Button>
-                                      <Button
-                                        variant="outline"
-                                        size="sm"
-                                        className="h-8"
-                                        onClick={() => fileInputRef.current?.click()}
-                                      >
-                                        <Camera className="h-4 w-4" />
-                                      </Button>
-                                      <Button
-                                        variant="outline"
-                                        size="sm"
-                                        className="h-8"
-                                        onClick={() => fileInputRef.current?.click()}
-                                      >
-                                        <Video className="h-4 w-4" />
-                                      </Button>
-                                    </div>
+                              <div className="border-t pt-3">
+                                <div className="flex items-center justify-between mb-2">
+                                  <span className="text-sm font-medium">Media Attachments</span>
+                                  <div className="flex gap-1">
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className="h-8"
+                                      onClick={isRecording ? stopRecording : startRecording}
+                                    >
+                                      {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+                                    </Button>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className="h-8"
+                                      onClick={() => fileInputRef.current?.click()}
+                                    >
+                                      <Camera className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className="h-8"
+                                      onClick={() => fileInputRef.current?.click()}
+                                    >
+                                      <Video className="h-4 w-4" />
+                                    </Button>
                                   </div>
-                                  {recordedChunks.length > 0 && (
-                                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                      <Volume2 className="h-4 w-4" />
-                                      <span>Voice recording ready</span>
-                                    </div>
-                                  )}
                                 </div>
-                              )}
+                                {recordedChunks.length > 0 && (
+                                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                    <Volume2 className="h-4 w-4" />
+                                    <span>Voice recording ready</span>
+                                  </div>
+                                )}
+                              </div>
                               
                               {/* Requirements */}
                               {job.requirements && job.requirements.length > 0 && (
@@ -2685,6 +2627,93 @@ export default function Dashboard() {
 
         </Tabs>
       </div>
+
+      {/* Job Edit Modal */}
+      <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Job Posting</DialogTitle>
+          </DialogHeader>
+          {editingJob && (
+            <div className="space-y-6">
+              {/* Job Title */}
+              <div className="space-y-2">
+                <Label htmlFor="edit-title">Job Title</Label>
+                <Input
+                  id="edit-title"
+                  value={editingJobData.title || ''}
+                  onChange={(e) => setEditingJobData(prev => ({...prev, title: e.target.value}))}
+                  placeholder="Enter job title"
+                />
+              </div>
+
+              {/* Job Description */}
+              <div className="space-y-2">
+                <Label htmlFor="edit-description">Description</Label>
+                <Textarea
+                  id="edit-description"
+                  value={editingJobData.description || ''}
+                  onChange={(e) => setEditingJobData(prev => ({...prev, description: e.target.value}))}
+                  placeholder="Describe the job requirements"
+                  rows={4}
+                />
+              </div>
+
+              {/* Budget Range */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-budget-min">Minimum Budget (₹)</Label>
+                  <Input
+                    id="edit-budget-min"
+                    type="number"
+                    value={editingJobData.budgetMin || ''}
+                    onChange={(e) => setEditingJobData(prev => ({...prev, budgetMin: e.target.value}))}
+                    placeholder="Enter minimum budget"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-budget-max">Maximum Budget (₹)</Label>
+                  <Input
+                    id="edit-budget-max"
+                    type="number"
+                    value={editingJobData.budgetMax || ''}
+                    onChange={(e) => setEditingJobData(prev => ({...prev, budgetMax: e.target.value}))}
+                    placeholder="Enter maximum budget"
+                  />
+                </div>
+              </div>
+
+              {/* Service Category (Read-only for editing) */}
+              <div className="space-y-2">
+                <Label>Service Category</Label>
+                <div className="p-3 bg-muted/50 rounded border">
+                  {editingJob.serviceCategory}
+                </div>
+              </div>
+
+              {/* Current Service Address (Read-only) */}
+              <div className="space-y-2">
+                <Label>Service Address</Label>
+                <div className="p-3 bg-muted/50 rounded border space-y-1">
+                  <div className="font-medium">{editingJob.serviceAddress?.area || 'Area not specified'}</div>
+                  <div>{editingJob.serviceAddress?.district || editingJob.district}, {editingJob.serviceAddress?.state || 'Tamil Nadu'}</div>
+                  <div>PIN: {editingJob.serviceAddress?.pinCode || 'Not specified'}</div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex justify-end gap-3 pt-4">
+                <Button variant="outline" onClick={handleCancelEdit}>
+                  Cancel
+                </Button>
+                <Button onClick={handleSaveJob}>
+                  Save Changes
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Booking Modal */}
       <Dialog open={isBookingModalOpen} onOpenChange={setIsBookingModalOpen}>
