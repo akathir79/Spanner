@@ -35,6 +35,7 @@ const PostJob = () => {
 
   const [newRequirement, setNewRequirement] = useState("");
   const [deletingJobId, setDeletingJobId] = useState<string | null>(null);
+  const [jobToDelete, setJobToDelete] = useState<string | null>(null);
 
   // Fetch districts and service categories  
   const { data: districtsData } = useQuery({
@@ -137,6 +138,11 @@ const PostJob = () => {
   const handleDeleteJob = (jobId: string) => {
     setDeletingJobId(jobId);
     deleteJobMutation.mutate(jobId);
+    setJobToDelete(null);
+  };
+
+  const confirmDelete = (jobId: string) => {
+    setJobToDelete(jobId);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -406,13 +412,14 @@ const PostJob = () => {
                         <Button variant="outline" size="sm">
                           View Bids
                         </Button>
-                        <AlertDialog>
+                        <AlertDialog open={jobToDelete === job.id} onOpenChange={() => setJobToDelete(null)}>
                           <AlertDialogTrigger asChild>
                             <Button 
                               variant="outline" 
                               size="sm" 
                               className="text-destructive hover:text-destructive hover:bg-destructive/10"
                               disabled={deletingJobId === job.id}
+                              onClick={() => confirmDelete(job.id)}
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
@@ -425,7 +432,7 @@ const PostJob = () => {
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogCancel onClick={() => setJobToDelete(null)}>Cancel</AlertDialogCancel>
                               <AlertDialogAction 
                                 onClick={() => handleDeleteJob(job.id)}
                                 className="bg-destructive hover:bg-destructive/90"
