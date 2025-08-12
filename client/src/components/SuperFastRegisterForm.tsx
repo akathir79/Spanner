@@ -133,20 +133,17 @@ export function SuperFastRegisterForm({ role, onComplete, onBack }: SuperFastReg
   };
 
   return (
-    <div className="space-y-3">
-      {/* Inline Header - saves vertical space */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" onClick={onBack} className="hover:bg-gray-100">
-            <ChevronLeft className="w-4 h-4" />
-          </Button>
-          <div>
-            <h3 className="font-semibold flex items-center gap-2 text-gray-800">
-              <User className="w-4 h-4 text-blue-600" />
-              {role === "client" ? "Client" : "Worker"} Registration
-            </h3>
-            <p className="text-xs text-gray-500">Complete your profile details below</p>
-          </div>
+    <div className="space-y-3 -mt-6">
+      {/* Header integrated with dialog title area */}
+      <div className="flex items-center gap-2 pb-2">
+        <Button variant="ghost" size="sm" onClick={onBack} className="hover:bg-gray-100">
+          <ChevronLeft className="w-4 h-4" />
+        </Button>
+        <div>
+          <h3 className="font-semibold flex items-center gap-1 text-gray-800">
+            {role === "client" ? "Client" : "Worker"} Registration
+          </h3>
+          <p className="text-xs text-gray-500">Complete your profile details below</p>
         </div>
       </div>
 
