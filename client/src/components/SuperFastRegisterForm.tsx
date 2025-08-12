@@ -86,11 +86,6 @@ export function SuperFastRegisterForm({ role, onComplete, onBack, onStepChange, 
   useEffect(() => {
     if (selectedState) {
       fetchDistrictsFromAPI(selectedState);
-      // Clear PIN code when state is manually changed (not during auto-detection)
-      if (!isDetectingLocation && hasAutoDetected) {
-        form.setValue("pincode", "");
-        form.setValue("district", "");
-      }
     } else {
       setApiDistricts([]);
       form.setValue("district", "");
@@ -488,6 +483,10 @@ export function SuperFastRegisterForm({ role, onComplete, onBack, onStepChange, 
                                       field.onChange(district.name);
                                       setDistrictPopoverOpen(false);
                                       setDistrictSearchInput("");
+                                      // Clear PIN code when manually selecting district after auto-detection
+                                      if (hasAutoDetected && !isDetectingLocation) {
+                                        form.setValue("pincode", "");
+                                      }
                                     }}
                                   >
                                     <span className="transition-all duration-150">
@@ -584,8 +583,8 @@ export function SuperFastRegisterForm({ role, onComplete, onBack, onStepChange, 
                                     field.onChange(state.name);
                                     setStatePopoverOpen(false);
                                     setStateSearchInput("");
-                                    // Clear PIN code and district when manually selecting state
-                                    if (hasAutoDetected) {
+                                    // Clear PIN code and district when manually selecting state after auto-detection
+                                    if (hasAutoDetected && !isDetectingLocation) {
                                       form.setValue("pincode", "");
                                       form.setValue("district", "");
                                     }
@@ -610,8 +609,8 @@ export function SuperFastRegisterForm({ role, onComplete, onBack, onStepChange, 
                                     field.onChange(state.name);
                                     setStatePopoverOpen(false);
                                     setStateSearchInput("");
-                                    // Clear PIN code and district when manually selecting state
-                                    if (hasAutoDetected) {
+                                    // Clear PIN code and district when manually selecting state after auto-detection
+                                    if (hasAutoDetected && !isDetectingLocation) {
                                       form.setValue("pincode", "");
                                       form.setValue("district", "");
                                     }
