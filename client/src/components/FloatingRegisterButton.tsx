@@ -51,7 +51,7 @@ export function FloatingRegisterButton({ onRegister }: FloatingRegisterButtonPro
       </div>
       {/* Registration Dialog */}
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="sr-only">Registration</DialogTitle>
             <DialogDescription className="sr-only">

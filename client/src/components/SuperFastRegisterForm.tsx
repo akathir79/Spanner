@@ -133,9 +133,9 @@ export function SuperFastRegisterForm({ role, onComplete, onBack }: SuperFastReg
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Header with styled box */}
-      <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-gray-200 rounded-lg p-4 shadow-sm">
+      <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-gray-200 rounded-lg p-3 shadow-sm">
         <div className="flex items-center gap-2">
           <Button variant="ghost" size="sm" onClick={onBack} className="hover:bg-white/50">
             <ChevronLeft className="w-4 h-4" />
@@ -151,7 +151,7 @@ export function SuperFastRegisterForm({ role, onComplete, onBack }: SuperFastReg
       </div>
 
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
           {/* First Name */}
           <FormField
             control={form.control}
