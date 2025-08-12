@@ -57,6 +57,16 @@
   animation: radar-sweep 2s linear infinite;
 }
 
+/* Login button blinking animation */
+@keyframes login-blink {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
 /* Smooth animations for dropdowns and selections */
 @layer utilities {
   .animate-dropdown-open {
