@@ -46,7 +46,7 @@ export async function generateCustomUserId(userData: UserData): Promise<string> 
   const districtAbbr = districtAbbreviations[district] || district.substring(0, 3).toUpperCase();
   
   // Role suffix
-  const roleSuffix = role === 'client' ? 'C' : role === 'worker' ? 'W' : role === 'admin' ? 'A' : 'S';
+  const roleSuffix = role === 'client' ? 'C' : role === 'worker' ? 'W' : role === 'admin' ? 'RA' : 'SA';
   
   // Create sequence key for this state-district-role combination
   const sequenceKey = `${stateAbbr}-${districtAbbr}-${roleSuffix}`;
@@ -109,7 +109,7 @@ export async function generateCustomUserId(userData: UserData): Promise<string> 
 
 // Helper function to validate custom user ID format
 export function validateCustomUserId(userId: string): boolean {
-  const pattern = /^[A-Z]{3}-[A-Z]{3}-\d{4}-[CWAS]$/;
+  const pattern = /^[A-Z]{3}-[A-Z]{3}-\d{4}-(C|W|RA|SA)$/;
   return pattern.test(userId);
 }
 
@@ -131,8 +131,8 @@ export function parseCustomUserId(userId: string): {
   const roleMap: Record<string, string> = {
     'C': 'client',
     'W': 'worker', 
-    'A': 'admin',
-    'S': 'super_admin'
+    'RA': 'admin',
+    'SA': 'super_admin'
   };
   
   return {

@@ -14,6 +14,7 @@ import Home from "@/pages/Home";
 import Dashboard from "@/pages/Dashboard";
 import WorkerDashboard from "@/pages/WorkerDashboard";
 import AdminDashboard from "@/pages/AdminDashboard";
+import AdminProfile from "@/pages/AdminProfile";
 import ClientManagement from "@/pages/ClientManagement";
 import WorkerManagement from "@/pages/WorkerManagement";
 import AdminManagement from "@/pages/AdminManagement";
@@ -36,6 +37,7 @@ function Router() {
           <Route path="/dashboard" component={Dashboard} />
           <Route path="/worker-dashboard" component={WorkerDashboard} />
           <Route path="/admin-dashboard" component={AdminDashboard} />
+          <Route path="/admin-profile" component={AdminProfile} />
           <Route path="/admin" component={AdminDashboard} />
           <Route path="/admin/clients" component={ClientManagement} />
           <Route path="/admin/workers" component={WorkerManagement} />
