@@ -74,6 +74,7 @@ import { useLocation } from "wouter";
 import LocationViewer from "@/components/LocationViewer";
 import ClientBankDetailsForm from "@/components/ClientBankDetailsForm";
 import { ProfileCompletionAlert } from "@/components/ProfileCompletionAlert";
+import { LoadingScreen } from "@/components/LoadingScreen";
 import statesDistrictsData from "@shared/states-districts.json";
 // Services and districts are now fetched dynamically from database
 
@@ -1542,7 +1543,7 @@ const UserActivityCard = ({ user }: { user: any }) => {
 };
 
 export default function Dashboard() {
-  const { user, isLoading: authLoading, refreshUser } = useAuth();
+  const { user, isLoading: authLoading, isRedirecting, refreshUser } = useAuth();
   const { t } = useLanguage();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -2116,15 +2117,8 @@ export default function Dashboard() {
   }, [authLoading, user, setLocation]);
 
   // Authentication checks - MUST be after all hooks
-  if (authLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading dashboard...</p>
-        </div>
-      </div>
-    );
+  if (authLoading || isRedirecting) {
+    return <LoadingScreen message="Loading your dashboard..." />;
   }
 
   if (!user || user.role !== "client") {

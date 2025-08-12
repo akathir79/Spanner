@@ -60,6 +60,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsLoading(false);
   }, []);
 
+  // Reset redirecting state when location changes
+  useEffect(() => {
+    if (isRedirecting) {
+      // Reset redirecting state after a delay when user is set and we've navigated
+      const timer = setTimeout(() => {
+        setIsRedirecting(false);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [isRedirecting, user]);
+
   const login = (userData: User) => {
     setUser(userData);
     localStorage.setItem("user", JSON.stringify(userData));
@@ -77,12 +88,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } else if (userRole === "client") {
         setLocation("/dashboard");
       }
-      
-      // Reset redirecting state after navigation
-      setTimeout(() => {
-        setIsRedirecting(false);
-      }, 100);
-    }, 300); // Small delay to show loading state
+    }, 500); // Increased delay to show loading state
   };
 
   const logout = () => {
