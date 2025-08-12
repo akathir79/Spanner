@@ -1641,6 +1641,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Direct endpoint to check and fix a specific worker's status
+  app.post("/api/admin/fix-worker-status/:workerId", async (req, res) => {
+    try {
+      const { workerId } = req.params;
+      
+      // Get the worker details
+      const worker = await storage.getUser(workerId);
+      
+      if (!worker) {
+        return res.status(404).json({ error: "Worker not found" });
+      }
+      
+      console.log(`Current worker status for ${workerId}:`, {
+        id: worker.id,
+        firstName: worker.firstName,
+        role: worker.role,
+        status: worker.status,
+        isVerified: worker.isVerified
+      });
+      
+      // If worker is verified but status is not approved, fix it
+      if (worker.isVerified && worker.status !== "approved") {
+        await storage.updateUser(workerId, { 
+          status: "approved" 
+        });
+        console.log(`Fixed status for worker ${workerId} to approved`);
+        return res.json({ 
+          message: "Worker status fixed to approved",
+          previousStatus: worker.status,
+          newStatus: "approved"
+        });
+      } else if (!worker.isVerified) {
+        // If not verified, set both verified and approved
+        await storage.updateUser(workerId, { 
+          isVerified: true,
+          status: "approved" 
+        });
+        console.log(`Set worker ${workerId} as verified and approved`);
+        return res.json({ 
+          message: "Worker set as verified and approved",
+          previousStatus: worker.status,
+          newStatus: "approved"
+        });
+      }
+      
+      return res.json({ 
+        message: "Worker already has correct status",
+        currentStatus: worker.status,
+        isVerified: worker.isVerified
+      });
+    } catch (error) {
+      console.error("Error fixing worker status:", error);
+      res.status(500).json({ error: "Failed to fix worker status" });
+    }
+  });
+
   // User suspension endpoint
   app.put("/api/admin/suspend-user/:userId", async (req, res) => {
     try {
