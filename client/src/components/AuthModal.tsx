@@ -34,6 +34,9 @@ const clientSignupSchema = z.object({
   lastName: z.string().min(1, "Last name is required"),
   mobile: z.string().min(10, "Mobile number must be at least 10 digits"),
   email: z.string().email("Invalid email address").optional(),
+  houseNumber: z.string().optional(),
+  streetName: z.string().optional(),
+  areaName: z.string().optional(),
   districtId: z.string().min(1, "District is required"),
   address: z.string().min(5, "Address is required"),
   state: z.string().min(1, "State is required"),
@@ -56,6 +59,9 @@ const workerSignupSchema = z.object({
   serviceAreas: z.array(z.string()).optional(),
   serviceAllAreas: z.boolean().default(false),
   skills: z.array(z.string()).min(1, "Add at least one skill"),
+  houseNumber: z.string().optional(),
+  streetName: z.string().optional(),
+  areaName: z.string().optional(),
   address: z.string().min(5, "Address is required"),
   pincode: z.string().length(6, "Pincode must be 6 digits"),  
   districtId: z.string().min(1, "District is required"),
@@ -142,6 +148,9 @@ export function AuthModal({ isOpen, onClose, mode, initialTab, onSwitchToSignup 
       lastName: "",
       mobile: "",
       email: "",
+      houseNumber: "",
+      streetName: "",
+      areaName: "",
       districtId: "",
       address: "",
       state: "",
@@ -167,6 +176,9 @@ export function AuthModal({ isOpen, onClose, mode, initialTab, onSwitchToSignup 
       serviceAreas: [] as string[],
       serviceAllAreas: false,
       skills: [] as string[],
+      houseNumber: "",
+      streetName: "",
+      areaName: "",
       address: "",
       pincode: "",
       districtId: "",
@@ -514,11 +526,16 @@ export function AuthModal({ isOpen, onClose, mode, initialTab, onSwitchToSignup 
                                    locationData.town ||
                                    locationData.village;
             
+            // Extract address components
+            const houseNumber = locationData.house_number || '';
+            const streetName = locationData.road || '';
+            const areaName = locationData.village || locationData.suburb || locationData.neighbourhood || '';
+            
             // Build a more accurate address with better locality detection
             const addressParts = [
-              locationData.house_number,
-              locationData.road,
-              locationData.village || locationData.suburb || locationData.neighbourhood,
+              houseNumber,
+              streetName,
+              areaName,
               locationData.city || locationData.town,
               locationData.county
             ].filter(part => part && part.trim() !== '');
@@ -595,19 +612,18 @@ export function AuthModal({ isOpen, onClose, mode, initialTab, onSwitchToSignup 
             }
             
             // Update form with detected data
-            if (detectedAddress) {
-              if (formType === "client") {
-                clientForm.setValue("address", detectedAddress);
-              } else {
-                workerForm.setValue("address", detectedAddress);
-              }
-            }
-            if (detectedPincode) {
-              if (formType === "client") {
-                clientForm.setValue("pincode", detectedPincode);
-              } else {
-                workerForm.setValue("pincode", detectedPincode);
-              }
+            if (formType === "client") {
+              if (houseNumber) clientForm.setValue("houseNumber", houseNumber);
+              if (streetName) clientForm.setValue("streetName", streetName);
+              if (areaName) clientForm.setValue("areaName", areaName);
+              if (detectedAddress) clientForm.setValue("address", detectedAddress);
+              if (detectedPincode) clientForm.setValue("pincode", detectedPincode);
+            } else {
+              if (houseNumber) workerForm.setValue("houseNumber", houseNumber);
+              if (streetName) workerForm.setValue("streetName", streetName);
+              if (areaName) workerForm.setValue("areaName", areaName);
+              if (detectedAddress) workerForm.setValue("address", detectedAddress);
+              if (detectedPincode) workerForm.setValue("pincode", detectedPincode);
             }
             // Detect state from location data
             const detectedState = detectStateFromLocation(locationData);
@@ -1509,30 +1525,90 @@ export function AuthModal({ isOpen, onClose, mode, initialTab, onSwitchToSignup 
                 </div>
 
                 <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <Label htmlFor="address">Full Address</Label>
+                  <div className="flex items-center justify-between mb-2">
+                    <Label className="flex items-center gap-1">
+                      <MapPin className="h-3 w-3" />
+                      Your Location
+                    </Label>
                     <Button
                       type="button"
                       variant="ghost"
                       size="sm"
-                      className="h-6 px-2 text-xs"
+                      className="h-7 px-3 text-xs bg-gradient-to-r from-blue-50 to-purple-50 hover:from-blue-100 hover:to-purple-100 dark:from-blue-900/20 dark:to-purple-900/20 dark:hover:from-blue-900/30 dark:hover:to-purple-900/30 transition-all duration-200"
                       onClick={() => handleLocationDetection("client")}
                       disabled={isLocationLoading}
                     >
-                      <MapPin className="h-3 w-3 mr-1" />
-                      {isLocationLoading ? "Finding..." : "Use Location"}
+                      <div className="flex items-center gap-1">
+                        {isLocationLoading ? (
+                          <>
+                            <div className="relative">
+                              <div className="w-3 h-3 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                              <div className="absolute inset-0 w-3 h-3 border-2 border-purple-600 border-t-transparent rounded-full animate-spin animation-delay-75" />
+                            </div>
+                            <span>Detecting...</span>
+                          </>
+                        ) : (
+                          <>
+                            <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                              <circle cx="12" cy="12" r="3" strokeWidth="2"/>
+                              <circle cx="12" cy="12" r="8" strokeWidth="1.5" opacity="0.5"/>
+                              <circle cx="12" cy="12" r="11" strokeWidth="1" opacity="0.3"/>
+                            </svg>
+                            <span>{clientForm.watch("houseNumber") || clientForm.watch("streetName") || clientForm.watch("areaName") ? "Re-Detect" : "Auto-Detect"}</span>
+                          </>
+                        )}
+                      </div>
                     </Button>
                   </div>
-                  <Input
-                    id="address"
-                    placeholder="House/Building number, Street, Area"
-                    {...clientForm.register("address")}
-                  />
-                  {clientForm.formState.errors.address && (
-                    <p className="text-sm text-destructive mt-1">
-                      {clientForm.formState.errors.address.message}
-                    </p>
-                  )}
+
+                  {/* House Number */}
+                  <div className="mb-3">
+                    <Label htmlFor="houseNumber" className="text-xs">House Number</Label>
+                    <Input
+                      id="houseNumber"
+                      placeholder="House/Flat/Building No."
+                      {...clientForm.register("houseNumber")}
+                      className="text-sm"
+                    />
+                  </div>
+
+                  {/* Street Name */}
+                  <div className="mb-3">
+                    <Label htmlFor="streetName" className="text-xs">Street Name</Label>
+                    <Input
+                      id="streetName"
+                      placeholder="Street/Road Name"
+                      {...clientForm.register("streetName")}
+                      className="text-sm"
+                    />
+                  </div>
+
+                  {/* Area Name */}
+                  <div className="mb-3">
+                    <Label htmlFor="areaName" className="text-xs">Area Name</Label>
+                    <Input
+                      id="areaName"
+                      placeholder="Area/Locality Name"
+                      {...clientForm.register("areaName")}
+                      className="text-sm"
+                    />
+                  </div>
+
+                  {/* Full Address */}
+                  <div>
+                    <Label htmlFor="address" className="text-xs">Full Address</Label>
+                    <Input
+                      id="address"
+                      placeholder="Complete address"
+                      {...clientForm.register("address")}
+                      className="text-sm"
+                    />
+                    {clientForm.formState.errors.address && (
+                      <p className="text-sm text-destructive mt-1">
+                        {clientForm.formState.errors.address.message}
+                      </p>
+                    )}
+                  </div>
                 </div>
 
                 <div>
@@ -2324,30 +2400,90 @@ export function AuthModal({ isOpen, onClose, mode, initialTab, onSwitchToSignup 
                 </div>
 
                 <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <Label htmlFor="workerAddress">Work Address/Location</Label>
+                  <div className="flex items-center justify-between mb-2">
+                    <Label className="flex items-center gap-1">
+                      <MapPin className="h-3 w-3" />
+                      Your Location
+                    </Label>
                     <Button
                       type="button"
                       variant="ghost"
                       size="sm"
-                      className="h-6 px-2 text-xs"
+                      className="h-7 px-3 text-xs bg-gradient-to-r from-blue-50 to-purple-50 hover:from-blue-100 hover:to-purple-100 dark:from-blue-900/20 dark:to-purple-900/20 dark:hover:from-blue-900/30 dark:hover:to-purple-900/30 transition-all duration-200"
                       onClick={() => handleLocationDetection("worker")}
                       disabled={isLocationLoading}
                     >
-                      <MapPin className="h-3 w-3 mr-1" />
-                      {isLocationLoading ? "Finding..." : "Use Location"}
+                      <div className="flex items-center gap-1">
+                        {isLocationLoading ? (
+                          <>
+                            <div className="relative">
+                              <div className="w-3 h-3 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                              <div className="absolute inset-0 w-3 h-3 border-2 border-purple-600 border-t-transparent rounded-full animate-spin animation-delay-75" />
+                            </div>
+                            <span>Detecting...</span>
+                          </>
+                        ) : (
+                          <>
+                            <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                              <circle cx="12" cy="12" r="3" strokeWidth="2"/>
+                              <circle cx="12" cy="12" r="8" strokeWidth="1.5" opacity="0.5"/>
+                              <circle cx="12" cy="12" r="11" strokeWidth="1" opacity="0.3"/>
+                            </svg>
+                            <span>{workerForm.watch("houseNumber") || workerForm.watch("streetName") || workerForm.watch("areaName") ? "Re-Detect" : "Auto-Detect"}</span>
+                          </>
+                        )}
+                      </div>
                     </Button>
                   </div>
-                  <Input
-                    id="workerAddress"
-                    placeholder="House/Building number, Street, Area"
-                    {...workerForm.register("address")}
-                  />
-                  {workerForm.formState.errors.address && (
-                    <p className="text-sm text-destructive mt-1">
-                      {workerForm.formState.errors.address.message}
-                    </p>
-                  )}
+
+                  {/* House Number */}
+                  <div className="mb-3">
+                    <Label htmlFor="workerHouseNumber" className="text-xs">House Number</Label>
+                    <Input
+                      id="workerHouseNumber"
+                      placeholder="House/Flat/Building No."
+                      {...workerForm.register("houseNumber")}
+                      className="text-sm"
+                    />
+                  </div>
+
+                  {/* Street Name */}
+                  <div className="mb-3">
+                    <Label htmlFor="workerStreetName" className="text-xs">Street Name</Label>
+                    <Input
+                      id="workerStreetName"
+                      placeholder="Street/Road Name"
+                      {...workerForm.register("streetName")}
+                      className="text-sm"
+                    />
+                  </div>
+
+                  {/* Area Name */}
+                  <div className="mb-3">
+                    <Label htmlFor="workerAreaName" className="text-xs">Area Name</Label>
+                    <Input
+                      id="workerAreaName"
+                      placeholder="Area/Locality Name"
+                      {...workerForm.register("areaName")}
+                      className="text-sm"
+                    />
+                  </div>
+
+                  {/* Full Address */}
+                  <div>
+                    <Label htmlFor="workerAddress" className="text-xs">Full Address</Label>
+                    <Input
+                      id="workerAddress"
+                      placeholder="Complete address"
+                      {...workerForm.register("address")}
+                      className="text-sm"
+                    />
+                    {workerForm.formState.errors.address && (
+                      <p className="text-sm text-destructive mt-1">
+                        {workerForm.formState.errors.address.message}
+                      </p>
+                    )}
+                  </div>
                 </div>
 
                 <div>
