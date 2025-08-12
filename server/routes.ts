@@ -626,9 +626,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
             lastName: user.lastName,
             role: user.role,
             district: user.district,
-            address: user.address,
+            houseNumber: user.houseNumber,
+            streetName: user.streetName,
+            areaName: user.areaName,
             state: user.state,
             pincode: user.pincode,
+            fullAddress: user.fullAddress,
           }
         });
       } else if (role === "worker") {

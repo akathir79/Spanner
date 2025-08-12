@@ -27,9 +27,12 @@ export const users = pgTable("users", {
   role: text("role").notNull().default("client"), // client, worker, admin, super_admin
   profilePicture: text("profile_picture"), // Base64 encoded image
   district: text("district"), // District name stored as text since API-based
-  address: text("address"), // Physical address
+  houseNumber: text("house_number"), // House/flat/building number
+  streetName: text("street_name"), // Street/road name
+  areaName: text("area_name"), // Area/locality name
   pincode: text("pincode"), // Area pincode
   state: text("state"), // State name
+  fullAddress: text("full_address"), // Complete formatted address for display
   // Bank details for clients (added to dashboard only, not registration)
   bankAccountNumber: text("bank_account_number"),
   bankIFSC: text("bank_ifsc"),

@@ -26,7 +26,9 @@ import { ChevronLeft, MapPin, Edit3, User } from "lucide-react";
 const fastClientSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
   mobile: z.string().min(10, "Valid mobile number is required"),
-  address: z.string().min(1, "Address is required"),
+  houseNumber: z.string().min(1, "House number is required"),
+  streetName: z.string().min(1, "Street name is required"),
+  areaName: z.string().min(1, "Area name is required"),
   district: z.string().min(1, "District is required"),
   state: z.string().min(1, "State is required"),
   pincode: z.string().min(6, "Valid PIN code is required"),
@@ -58,7 +60,9 @@ export function SuperFastRegisterForm({ role, onComplete, onBack, onStepChange, 
     defaultValues: {
       firstName: "",
       mobile: "",
-      address: "Narasothipatti, Salem West",
+      houseNumber: "No. 123",
+      streetName: "Main Street",
+      areaName: "Narasothipatti, Salem West",
       district: "Salem",
       state: "Tamil Nadu",
       pincode: "636004",
@@ -79,7 +83,8 @@ export function SuperFastRegisterForm({ role, onComplete, onBack, onStepChange, 
     try {
       const location = await LocationService.getCurrentLocation();
       if (location) {
-        form.setValue("address", location.address);
+        // Parse the address into components
+        form.setValue("areaName", location.address);
         form.setValue("district", location.district);
         form.setValue("state", location.state);
         form.setValue("pincode", location.pincode);
@@ -110,6 +115,7 @@ export function SuperFastRegisterForm({ role, onComplete, onBack, onStepChange, 
           role,
           lastName: "UPDATE_REQUIRED", // Mark for update
           email: "", // Will be requested in dashboard
+          fullAddress: `${data.houseNumber}, ${data.streetName}, ${data.areaName}`, // Combine for full address
         }),
       });
       if (!response.ok) throw new Error(await response.text());
@@ -233,15 +239,45 @@ export function SuperFastRegisterForm({ role, onComplete, onBack, onStepChange, 
               </Button>
             </div>
 
-            {/* Address */}
+            {/* House Number */}
             <FormField
               control={form.control}
-              name="address"
+              name="houseNumber"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-xs">Address</FormLabel>
+                  <FormLabel className="text-xs">House Number</FormLabel>
                   <FormControl>
-                    <Input placeholder="Your full address" {...field} className="text-sm" />
+                    <Input placeholder="House/Flat/Building No." {...field} className="text-sm" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Street Name */}
+            <FormField
+              control={form.control}
+              name="streetName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-xs">Street Name</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Street/Road Name" {...field} className="text-sm" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Area Name */}
+            <FormField
+              control={form.control}
+              name="areaName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-xs">Area Name</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Area/Locality Name" {...field} className="text-sm" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
