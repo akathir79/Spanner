@@ -23,7 +23,8 @@ import {
   User,
   Edit3,
   Save,
-  X
+  X,
+  MapPin
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
