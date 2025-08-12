@@ -465,7 +465,9 @@ export class DatabaseStorage implements IStorage {
         email: users.email,
         profilePicture: users.profilePicture,
         status: users.status,
-        address: users.address,
+        houseNumber: users.houseNumber,
+        streetName: users.streetName,
+        areaName: users.areaName,
         pincode: users.pincode,
         district: users.district, // District name stored as text
         createdAt: users.createdAt,

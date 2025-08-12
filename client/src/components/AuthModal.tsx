@@ -101,6 +101,7 @@ export function AuthModal({ isOpen, onClose, mode, initialTab, onSwitchToSignup 
   const [workerStatePopoverOpen, setWorkerStatePopoverOpen] = useState(false);
   const [stateSearchInput, setStateSearchInput] = useState("");
   const [workerStateSearchInput, setWorkerStateSearchInput] = useState("");
+  const [workerDistrictSearchInput, setWorkerDistrictSearchInput] = useState("");
   const [selectedDistrictForAreas, setSelectedDistrictForAreas] = useState<string>("");
   const [areasPopoverOpen, setAreasPopoverOpen] = useState(false);
   const [homeDistrictPopoverOpen, setHomeDistrictPopoverOpen] = useState(false);
@@ -1593,121 +1594,13 @@ export function AuthModal({ isOpen, onClose, mode, initialTab, onSwitchToSignup 
                       className="text-sm"
                     />
                   </div>
+                </div>
 
-                  {/* Full Address */}
+                {/* District and PIN Code in grid */}
+                <div className="grid grid-cols-2 gap-3">
+                  {/* District */}
                   <div>
-                    <Label htmlFor="address" className="text-xs">Full Address</Label>
-                    <Input
-                      id="address"
-                      placeholder="Complete address"
-                      {...clientForm.register("address")}
-                      className="text-sm"
-                    />
-                    {clientForm.formState.errors.address && (
-                      <p className="text-sm text-destructive mt-1">
-                        {clientForm.formState.errors.address.message}
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                <div>
-                  <Label htmlFor="state">State</Label>
-                  <Popover open={statePopoverOpen} onOpenChange={setStatePopoverOpen}>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        role="combobox"
-                        aria-expanded={statePopoverOpen}
-                        className="w-full justify-between"
-                      >
-                        {clientForm.watch("state") 
-                          ? INDIAN_STATES_AND_UTS.find(state => state.name === clientForm.watch("state"))?.name
-                          : "Select your state"}
-                        <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-full p-0 animate-dropdown-open">
-                      <Command>
-                        <CommandInput 
-                          placeholder="Search states..." 
-                          value={stateSearchInput}
-                          onValueChange={setStateSearchInput}
-                          className="transition-all duration-200"
-                        />
-                        <CommandEmpty>No state found.</CommandEmpty>
-                        <CommandList className="max-h-40 overflow-y-auto dropdown-scrollbar">
-                          <CommandGroup heading="States">
-                            {INDIAN_STATES_AND_UTS
-                              .filter(state => state.type === "state")
-                              .filter(state => 
-                                state.name.toLowerCase().includes(stateSearchInput.toLowerCase())
-                              )
-                              .map((state, index) => (
-                                <CommandItem
-                                  key={state.id}
-                                  className="transition-all duration-150 hover:bg-accent/80 data-[selected=true]:bg-accent animate-district-load"
-                                  style={{ animationDelay: `${index * 15}ms` }}
-                                  onSelect={() => {
-                                    const item = document.querySelector(`[data-value="${state.name}"]`);
-                                    if (item) {
-                                      item.classList.add('animate-selection-highlight');
-                                    }
-                                    setTimeout(() => {
-                                      clientForm.setValue("state", state.name);
-                                      // Clear district when state changes
-                                      clientForm.setValue("districtId", "");
-                                      setStatePopoverOpen(false);
-                                      setStateSearchInput("");
-                                    }, 80);
-                                  }}
-                                >
-                                  <span className="transition-all duration-150">{state.name}</span>
-                                </CommandItem>
-                              ))}
-                          </CommandGroup>
-                          <CommandGroup heading="Union Territories">
-                            {INDIAN_STATES_AND_UTS
-                              .filter(state => state.type === "ut")
-                              .filter(state => 
-                                state.name.toLowerCase().includes(stateSearchInput.toLowerCase())
-                              )
-                              .map((state, index) => (
-                                <CommandItem
-                                  key={state.id}
-                                  className="transition-all duration-150 hover:bg-accent/80 data-[selected=true]:bg-accent animate-district-load"
-                                  style={{ animationDelay: `${(INDIAN_STATES_AND_UTS.filter(item => item.type === 'state').length + index) * 15}ms` }}
-                                  onSelect={() => {
-                                    const item = document.querySelector(`[data-value="${state.name}"]`);
-                                    if (item) {
-                                      item.classList.add('animate-selection-highlight');
-                                    }
-                                    setTimeout(() => {
-                                      clientForm.setValue("state", state.name);
-                                      // Clear district when state changes
-                                      clientForm.setValue("districtId", "");
-                                      setStatePopoverOpen(false);
-                                      setStateSearchInput("");
-                                    }, 80);
-                                  }}
-                                >
-                                  <span className="transition-all duration-150">{state.name}</span>
-                                </CommandItem>
-                              ))}
-                          </CommandGroup>
-                        </CommandList>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
-                  {clientForm.formState.errors.state && (
-                    <p className="text-sm text-destructive mt-1">
-                      {clientForm.formState.errors.state.message}
-                    </p>
-                  )}
-                </div>
-
-                <div>
-                  <Label htmlFor="clientDistrict">District</Label>
+                    <Label htmlFor="clientDistrict" className="text-xs">District</Label>
                   <Popover open={clientDistrictPopoverOpen} onOpenChange={setClientDistrictPopoverOpen}>
                     <PopoverTrigger asChild>
                       <Button
@@ -1775,10 +1668,11 @@ export function AuthModal({ isOpen, onClose, mode, initialTab, onSwitchToSignup 
                       {clientForm.formState.errors.districtId.message}
                     </p>
                   )}
-                </div>
+                  </div>
 
-                <div>
-                  <Label htmlFor="pincode">Pincode</Label>
+                  {/* PIN Code */}
+                  <div>
+                    <Label htmlFor="pincode" className="text-xs">PIN Code</Label>
                   <Input
                     id="pincode"
                     placeholder="6-digit pincode"
@@ -1788,6 +1682,105 @@ export function AuthModal({ isOpen, onClose, mode, initialTab, onSwitchToSignup 
                   {clientForm.formState.errors.pincode && (
                     <p className="text-sm text-destructive mt-1">
                       {clientForm.formState.errors.pincode.message}
+                    </p>
+                  )}
+                  </div>
+                </div>
+
+                {/* State field */}
+                <div>
+                  <Label htmlFor="state">State</Label>
+                  <Popover open={statePopoverOpen} onOpenChange={setStatePopoverOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={statePopoverOpen}
+                        className="w-full justify-between"
+                      >
+                        {clientForm.watch("state") 
+                          ? INDIAN_STATES_AND_UTS.find(state => state.name === clientForm.watch("state"))?.name
+                          : "Select your state"}
+                        <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-full p-0 animate-dropdown-open">
+                      <Command>
+                        <CommandInput 
+                          placeholder="Search states..." 
+                          value={stateSearchInput}
+                          onValueChange={setStateSearchInput}
+                          className="transition-all duration-200"
+                        />
+                        <CommandEmpty>No state found.</CommandEmpty>
+                        <CommandList className="max-h-40 overflow-y-auto dropdown-scrollbar">
+                          <CommandGroup heading="States">
+                            {INDIAN_STATES_AND_UTS
+                              .filter(state => state.type === "state")
+                              .filter(state => 
+                                state.name.toLowerCase().includes(stateSearchInput.toLowerCase())
+                              )
+                              .map((state, index) => (
+                                <CommandItem
+                                  key={state.id}
+                                  className="transition-all duration-150 hover:bg-accent/80 data-[selected=true]:bg-accent animate-district-load"
+                                  style={{ animationDelay: `${index * 15}ms` }}
+                                  onSelect={() => {
+                                    const item = document.querySelector(`[data-value="${state.name}"]`);
+                                    if (item) {
+                                      item.classList.add('animate-selection-highlight');
+                                    }
+                                    setTimeout(() => {
+                                      clientForm.setValue("state", state.name);
+                                      // Clear district and pincode when state changes
+                                      clientForm.setValue("districtId", "");
+                                      clientForm.setValue("pincode", "");
+                                      setStatePopoverOpen(false);
+                                      setStateSearchInput("");
+                                    }, 80);
+                                  }}
+                                >
+                                  <span className="transition-all duration-150">{state.name}</span>
+                                </CommandItem>
+                              ))}
+                          </CommandGroup>
+                          <CommandGroup heading="Union Territories">
+                            {INDIAN_STATES_AND_UTS
+                              .filter(state => state.type === "ut")
+                              .filter(state => 
+                                state.name.toLowerCase().includes(stateSearchInput.toLowerCase())
+                              )
+                              .map((state, index) => (
+                                <CommandItem
+                                  key={state.id}
+                                  className="transition-all duration-150 hover:bg-accent/80 data-[selected=true]:bg-accent animate-district-load"
+                                  style={{ animationDelay: `${(INDIAN_STATES_AND_UTS.filter(item => item.type === 'state').length + index) * 15}ms` }}
+                                  onSelect={() => {
+                                    const item = document.querySelector(`[data-value="${state.name}"]`);
+                                    if (item) {
+                                      item.classList.add('animate-selection-highlight');
+                                    }
+                                    setTimeout(() => {
+                                      clientForm.setValue("state", state.name);
+                                      // Clear district and pincode when state changes
+                                      clientForm.setValue("districtId", "");
+                                      clientForm.setValue("pincode", "");
+                                      setStatePopoverOpen(false);
+                                      setStateSearchInput("");
+                                    }, 80);
+                                  }}
+                                >
+                                  <span className="transition-all duration-150">{state.name}</span>
+                                </CommandItem>
+                              ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                  {clientForm.formState.errors.state && (
+                    <p className="text-sm text-destructive mt-1">
+                      {clientForm.formState.errors.state.message}
                     </p>
                   )}
                 </div>
@@ -2468,24 +2461,100 @@ export function AuthModal({ isOpen, onClose, mode, initialTab, onSwitchToSignup 
                       className="text-sm"
                     />
                   </div>
+                </div>
 
-                  {/* Full Address */}
+                {/* District and PIN Code in grid */}
+                <div className="grid grid-cols-2 gap-3">
+                  {/* District */}
                   <div>
-                    <Label htmlFor="workerAddress" className="text-xs">Full Address</Label>
+                    <Label htmlFor="workerDistrict" className="text-xs">District</Label>
+                    <Popover open={homeDistrictPopoverOpen} onOpenChange={setHomeDistrictPopoverOpen}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          aria-expanded={homeDistrictPopoverOpen}
+                          className="w-full justify-between"
+                          disabled={!workerForm.watch("state") || isWorkerLoadingDistricts}
+                        >
+                          {workerForm.watch("districtId") 
+                            ? workerApiDistricts?.find((d: any) => d.id === workerForm.watch("districtId"))?.name || "Select district"
+                            : isWorkerLoadingDistricts
+                            ? "Loading districts..."
+                            : !workerForm.watch("state")
+                            ? "Select state first"
+                            : "Select district"}
+                          <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-full p-0 animate-dropdown-open">
+                        <Command>
+                          <CommandInput 
+                            placeholder="Search districts..." 
+                            value={workerDistrictSearchInput}
+                            onValueChange={setWorkerDistrictSearchInput}
+                            className="transition-all duration-200"
+                          />
+                          <CommandEmpty>No district found.</CommandEmpty>
+                          <CommandList className="max-h-40 overflow-y-auto dropdown-scrollbar">
+                            <CommandGroup>
+                              {workerApiDistricts
+                                .filter(district => 
+                                  district.name.toLowerCase().includes(workerDistrictSearchInput.toLowerCase())
+                                )
+                                .map((district, index) => (
+                                  <CommandItem
+                                    key={district.id}
+                                    className="transition-all duration-150 hover:bg-accent/80 data-[selected=true]:bg-accent animate-district-load"
+                                    style={{ animationDelay: `${index * 20}ms` }}
+                                    onSelect={() => {
+                                      const item = document.querySelector(`[data-value="${district.name}"]`);
+                                      if (item) {
+                                        item.classList.add('animate-selection-highlight');
+                                      }
+                                      setTimeout(() => {
+                                        workerForm.setValue("districtId", district.id);
+                                        setHomeDistrictPopoverOpen(false);
+                                        setWorkerDistrictSearchInput("");
+                                      }, 80);
+                                    }}
+                                  >
+                                    <span className="transition-all duration-150">
+                                      {district.name}
+                                    </span>
+                                  </CommandItem>
+                                ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+                    {workerForm.formState.errors.districtId && (
+                      <p className="text-sm text-destructive mt-1">
+                        {workerForm.formState.errors.districtId.message}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* PIN Code */}
+                  <div>
+                    <Label htmlFor="workerPincode" className="text-xs">PIN Code</Label>
                     <Input
-                      id="workerAddress"
-                      placeholder="Complete address"
-                      {...workerForm.register("address")}
+                      id="workerPincode"
+                      placeholder="6-digit pincode"
+                      maxLength={6}
+                      {...workerForm.register("pincode")}
                       className="text-sm"
                     />
-                    {workerForm.formState.errors.address && (
+                    {workerForm.formState.errors.pincode && (
                       <p className="text-sm text-destructive mt-1">
-                        {workerForm.formState.errors.address.message}
+                        {workerForm.formState.errors.pincode.message}
                       </p>
                     )}
                   </div>
                 </div>
 
+                {/* State field */}
                 <div>
                   <Label htmlFor="workerState">State</Label>
                   <Popover open={workerStatePopoverOpen} onOpenChange={setWorkerStatePopoverOpen}>
@@ -2530,8 +2599,9 @@ export function AuthModal({ isOpen, onClose, mode, initialTab, onSwitchToSignup 
                                     }
                                     setTimeout(() => {
                                       workerForm.setValue("state", state.name);
-                                      // Clear district when state changes
+                                      // Clear district and pincode when state changes
                                       workerForm.setValue("districtId", "");
+                                      workerForm.setValue("pincode", "");
                                       setWorkerStatePopoverOpen(false);
                                       setWorkerStateSearchInput("");
                                     }, 80);
@@ -2559,8 +2629,9 @@ export function AuthModal({ isOpen, onClose, mode, initialTab, onSwitchToSignup 
                                     }
                                     setTimeout(() => {
                                       workerForm.setValue("state", state.name);
-                                      // Clear district when state changes
+                                      // Clear district and pincode when state changes
                                       workerForm.setValue("districtId", "");
+                                      workerForm.setValue("pincode", "");
                                       setWorkerStatePopoverOpen(false);
                                       setWorkerStateSearchInput("");
                                     }, 80);
@@ -2688,82 +2759,6 @@ export function AuthModal({ isOpen, onClose, mode, initialTab, onSwitchToSignup 
                       {workerForm.formState.errors.serviceDistricts.message}
                     </p>
                   )}
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="workerPincode">Pincode</Label>
-                    <Input
-                      id="workerPincode"
-                      placeholder="6-digit pincode"
-                      maxLength={6}
-                      {...workerForm.register("pincode")}
-                    />
-                    {workerForm.formState.errors.pincode && (
-                      <p className="text-sm text-destructive mt-1">
-                        {workerForm.formState.errors.pincode.message}
-                      </p>
-                    )}
-                  </div>
-                  <div>
-                    <Label htmlFor="workerDistrict">District</Label>
-                    <Popover open={homeDistrictPopoverOpen} onOpenChange={setHomeDistrictPopoverOpen}>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          role="combobox"
-                          aria-expanded={homeDistrictPopoverOpen}
-                          className="w-full justify-between"
-                          disabled={!workerForm.watch("state")}
-                        >
-                          {workerForm.watch("districtId") 
-                            ? workerApiDistricts?.find((d: any) => d.id === workerForm.watch("districtId"))?.name || "Select District"
-                            : (!workerForm.watch("state") ? "Select state first" : "Select District")
-                          }
-                          <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-full p-0">
-                        <Command>
-                          <CommandInput placeholder="Search districts..." />
-                          <CommandList>
-                            <CommandEmpty>No district found.</CommandEmpty>
-                            <CommandGroup>
-                              {isWorkerLoadingDistricts ? (
-                                <CommandItem disabled>Loading districts...</CommandItem>
-                              ) : workerApiDistricts.length > 0 ? (
-                                workerApiDistricts.map((district: any) => (
-                                  <CommandItem
-                                    key={district.id}
-                                    value={district.name}
-                                    onSelect={() => {
-                                      workerForm.setValue("districtId", district.id);
-                                      setHomeDistrictPopoverOpen(false);
-                                    }}
-                                  >
-                                    <div className="flex flex-col">
-                                      <span className="font-medium">{district.name}</span>
-
-                                    </div>
-                                  </CommandItem>
-                                ))
-                              ) : (
-                                <CommandItem disabled>No districts found</CommandItem>
-                              )}
-                            </CommandGroup>
-                          </CommandList>
-                        </Command>
-                      </PopoverContent>
-                    </Popover>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Your home district. Use "Use Location" button above to auto-detect.
-                    </p>
-                    {workerForm.formState.errors.districtId && (
-                      <p className="text-sm text-destructive mt-1">
-                        {workerForm.formState.errors.districtId.message}
-                      </p>
-                    )}
-                  </div>
                 </div>
 
                 <div>
