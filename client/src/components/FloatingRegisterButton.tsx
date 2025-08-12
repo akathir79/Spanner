@@ -54,10 +54,6 @@ export function FloatingRegisterButton({ onRegister }: FloatingRegisterButtonPro
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <UserPlus className="w-5 h-5 text-blue-600" />
-              Create Your Account
-            </DialogTitle>
             <DialogDescription>
               Choose your role to get started with SPANNER.
             </DialogDescription>
