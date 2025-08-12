@@ -2117,8 +2117,13 @@ export default function Dashboard() {
   }, [authLoading, user, setLocation]);
 
   // Authentication checks - MUST be after all hooks
-  if (authLoading || isRedirecting) {
+  if (authLoading) {
     return <LoadingScreen message="Loading your dashboard..." />;
+  }
+
+  // Only show redirecting screen if we're actually on home page
+  if (isRedirecting && window.location.pathname === '/') {
+    return <LoadingScreen message="Redirecting to your dashboard..." />;
   }
 
   if (!user || user.role !== "client") {
@@ -2126,7 +2131,7 @@ export default function Dashboard() {
     return null;
   }
 
-  console.log("Dashboard: Rendering dashboard for user", user.id, user.role);
+  console.log("Dashboard: Rendering dashboard for user", user.id, user.role, "isRedirecting:", isRedirecting);
   console.log("Dashboard: Current pathname:", window.location.pathname);
 
   // Removed Layout Settings Panel

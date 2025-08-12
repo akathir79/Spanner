@@ -62,14 +62,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Reset redirecting state when location changes
   useEffect(() => {
-    if (isRedirecting) {
-      // Reset redirecting state after navigation completes
-      const timer = setTimeout(() => {
+    if (isRedirecting && user) {
+      // Reset redirecting state immediately when user exists and we're not on home page
+      if (window.location.pathname !== '/') {
         setIsRedirecting(false);
-      }, 800);
-      return () => clearTimeout(timer);
+        console.log("Auth: Reset isRedirecting because we're on", window.location.pathname);
+      }
     }
-  }, [isRedirecting]);
+  }, [isRedirecting, user]);
 
   const login = (userData: User) => {
     setUser(userData);
@@ -95,7 +95,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setTimeout(() => {
         setIsRedirecting(false);
         console.log("Auth: Redirect completed, isRedirecting set to false");
-      }, 100);
+      }, 50);
     }, 200);
   };
 
