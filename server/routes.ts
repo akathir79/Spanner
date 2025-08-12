@@ -888,6 +888,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "User not found" });
       }
       
+      // Debug log to check status values
+      console.log(`Worker profile requested for ${userId}:`, {
+        id: user.id,
+        firstName: user.firstName,
+        status: user.status,
+        isVerified: user.isVerified,
+        role: user.role
+      });
+      
       // Get worker profile
       const workerProfile = await storage.getWorkerProfile(userId);
       
@@ -1645,6 +1654,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/admin/fix-worker-status/:workerId", async (req, res) => {
     try {
       const { workerId } = req.params;
+      const { force } = req.body || {};
       
       // Get the worker details
       const worker = await storage.getUser(workerId);
@@ -1661,6 +1671,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
         isVerified: worker.isVerified
       });
       
+      // Force update if requested
+      if (force) {
+        await storage.updateUser(workerId, { 
+          isVerified: true,
+          status: "approved" 
+        });
+        console.log(`Force updated worker ${workerId} to verified and approved`);
+        
+        // Verify the update
+        const updatedWorker = await storage.getUser(workerId);
+        console.log(`After force update:`, {
+          id: updatedWorker?.id,
+          status: updatedWorker?.status,
+          isVerified: updatedWorker?.isVerified
+        });
+        
+        return res.json({ 
+          message: "Worker force updated to verified and approved",
+          previousStatus: worker.status,
+          newStatus: updatedWorker?.status,
+          isVerified: updatedWorker?.isVerified
+        });
+      }
+      
       // If worker is verified but status is not approved, fix it
       if (worker.isVerified && worker.status !== "approved") {
         await storage.updateUser(workerId, { 
@@ -1672,8 +1706,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           previousStatus: worker.status,
           newStatus: "approved"
         });
-      } else if (!worker.isVerified) {
-        // If not verified, set both verified and approved
+      } else if (!worker.isVerified || worker.status !== "approved") {
+        // If not verified or not approved, set both
         await storage.updateUser(workerId, { 
           isVerified: true,
           status: "approved" 
