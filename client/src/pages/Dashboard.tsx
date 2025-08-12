@@ -2122,8 +2122,11 @@ export default function Dashboard() {
   }
 
   if (!user || user.role !== "client") {
+    console.log("Dashboard: User check failed", { user: user?.id, role: user?.role });
     return null;
   }
+
+  console.log("Dashboard: Rendering dashboard for user", user.id, user.role);
 
   // Removed Layout Settings Panel
 
@@ -2131,8 +2134,8 @@ export default function Dashboard() {
     <div className="min-h-screen bg-muted/30 pt-20 pb-8">{/* Removed customization features */}
       <div className="container mx-auto px-4">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">
-            Welcome back, {user.firstName}! <span className="text-lg font-medium text-primary">({user.id})</span>
+          <h1 className="text-3xl font-bold mb-2 text-primary">
+            Welcome back, {user.firstName}! <span className="text-lg font-medium text-secondary">({user.id})</span>
           </h1>
           <p className="text-muted-foreground">
             Manage your bookings and find trusted workers for your service needs.
