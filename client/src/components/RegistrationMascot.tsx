@@ -286,30 +286,29 @@ export function RegistrationMascot({
   if (!isVisible) return null;
 
   return (
-    <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0, y: 50, scale: 0.8 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={{ opacity: 0, y: 50, scale: 0.8 }}
-        className="fixed bottom-4 right-4 z-[9999] pointer-events-auto"
-        style={{ zIndex: 9999 }}
-      >
+    <div
+      className="fixed bottom-4 right-4 z-[9999] pointer-events-auto bg-white border-2 border-blue-300 rounded-lg shadow-2xl"
+      style={{ 
+        zIndex: 9999, 
+        position: 'fixed',
+        bottom: '16px',
+        right: '16px',
+        width: '320px',
+        minHeight: '200px'
+      }}
+    >
         {isMinimized ? (
-          <motion.div
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.95 }}
-          >
+          <div>
             <Button
               onClick={() => setIsMinimized(false)}
               className="rounded-full p-3 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 shadow-lg"
             >
               <MascotCharacter />
             </Button>
-          </motion.div>
+          </div>
         ) : (
-          <Card className="w-80 shadow-xl border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-purple-50">
-            <CardContent className="p-4">
-              <div className="flex items-start gap-3">
+          <div className="w-full p-4">
+            <div className="flex items-start gap-3">
                 <div className="flex-shrink-0">
                   <MascotCharacter />
                 </div>
@@ -343,32 +342,21 @@ export function RegistrationMascot({
                     </div>
                   </div>
                   
-                  <AnimatePresence mode="wait">
+                  <div>
                     {currentMessage && (
-                      <motion.div
-                        key={currentMessage.id}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        transition={{ duration: 0.3 }}
-                      >
+                      <div>
                         <p className="text-sm text-gray-700 leading-relaxed">
                           {currentMessage.text}
                         </p>
                         
                         {currentMessage.type === "success" && (
-                          <motion.div
-                            initial={{ scale: 0 }}
-                            animate={{ scale: 1 }}
-                            transition={{ delay: 0.5, type: "spring", stiffness: 200 }}
-                            className="mt-3 flex justify-center"
-                          >
+                          <div className="mt-3 flex justify-center">
                             <div className="text-2xl">🎉</div>
-                          </motion.div>
+                          </div>
                         )}
-                      </motion.div>
+                      </div>
                     )}
-                  </AnimatePresence>
+                  </div>
                   
                   {/* Progress indicator */}
                   <div className="mt-3 flex gap-1">
@@ -386,11 +374,9 @@ export function RegistrationMascot({
                   </div>
                 </div>
               </div>
-            </CardContent>
-          </Card>
+            </div>
         )}
-      </motion.div>
-    </AnimatePresence>
+      </div>
   );
 }
 
