@@ -8,24 +8,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery } from "@tanstack/react-query";
-// Mock location service for now
-const LocationService = {
-  getCurrentLocation: async () => {
-    return {
-      address: "Narasothipatti, Salem West",
-      district: "Salem", 
-      state: "Tamil Nadu",
-      pincode: "636004"
-    };
-  }
-};
-import { ChevronLeft, MapPin, Edit3, User } from "lucide-react";
+
+import { ChevronLeft, MapPin, User } from "lucide-react";
 // Removed unused import
 
 // Super fast registration schema
 const fastClientSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
-  mobile: z.string().min(10, "Valid mobile number is required"),
+  mobile: z.string().length(10, "Mobile number must be exactly 10 digits").regex(/^\d+$/, "Mobile number must contain only digits"),
   houseNumber: z.string().min(1, "House number is required"),
   streetName: z.string().min(1, "Street name is required"),
   areaName: z.string().min(1, "Area name is required"),
@@ -50,7 +40,6 @@ interface SuperFastRegisterFormProps {
 }
 
 export function SuperFastRegisterForm({ role, onComplete, onBack, onStepChange, onError }: SuperFastRegisterFormProps) {
-  const [isDetectingLocation, setIsDetectingLocation] = useState(false);
   const { toast } = useToast();
 
   const schema = role === "client" ? fastClientSchema : fastWorkerSchema;
@@ -60,12 +49,12 @@ export function SuperFastRegisterForm({ role, onComplete, onBack, onStepChange, 
     defaultValues: {
       firstName: "",
       mobile: "",
-      houseNumber: "No. 123",
-      streetName: "Main Street",
-      areaName: "Narasothipatti, Salem West",
-      district: "Salem",
-      state: "Tamil Nadu",
-      pincode: "636004",
+      houseNumber: "",
+      streetName: "",
+      areaName: "",
+      district: "",
+      state: "",
+      pincode: "",
       ...(role === "worker" && { primaryService: "" }),
     },
   });
@@ -76,33 +65,7 @@ export function SuperFastRegisterForm({ role, onComplete, onBack, onStepChange, 
     enabled: role === "worker",
   });
 
-  // Location detection
-  const detectLocation = async () => {
-    setIsDetectingLocation(true);
-    onStepChange?.("location");
-    try {
-      const location = await LocationService.getCurrentLocation();
-      if (location) {
-        // Parse the address into components
-        form.setValue("areaName", location.address);
-        form.setValue("district", location.district);
-        form.setValue("state", location.state);
-        form.setValue("pincode", location.pincode);
-        toast({
-          title: "Location detected!",
-          description: "Your address has been automatically filled.",
-        });
-      }
-    } catch (error) {
-      toast({
-        title: "Location detection failed",
-        description: "Please enter your address manually.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsDetectingLocation(false);
-    }
-  };
+
 
   const registerMutation = useMutation({
     mutationFn: async (data: FastClientData | FastWorkerData) => {
@@ -206,11 +169,11 @@ export function SuperFastRegisterForm({ role, onComplete, onBack, onStepChange, 
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {(services || []).map((service: any) => (
+                      {Array.isArray(services) ? services.map((service: any) => (
                         <SelectItem key={service.id} value={service.name}>
                           {service.name}
                         </SelectItem>
-                      ))}
+                      )) : []}
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -221,22 +184,9 @@ export function SuperFastRegisterForm({ role, onComplete, onBack, onStepChange, 
 
           {/* Location Section */}
           <div className="space-y-1.5 p-2.5 bg-gray-50 rounded-lg">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <MapPin className="w-4 h-4 text-blue-500" />
-                <span className="font-medium text-sm">Your Location</span>
-              </div>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={detectLocation}
-                disabled={isDetectingLocation}
-                className="flex items-center gap-1"
-              >
-                <Edit3 className="w-3 h-3" />
-                {isDetectingLocation ? "Detecting..." : "Auto-Detect"}
-              </Button>
+            <div className="flex items-center gap-2">
+              <MapPin className="w-4 h-4 text-blue-500" />
+              <span className="font-medium text-sm">Your Location</span>
             </div>
 
             {/* House Number */}
