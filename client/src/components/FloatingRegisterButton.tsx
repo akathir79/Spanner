@@ -71,7 +71,7 @@ export function FloatingRegisterButton({ onRegister }: FloatingRegisterButtonPro
 
                 <Button
                   variant="outline"
-                  className="h-24 flex flex-col gap-2 hover:bg-green-50 hover:border-green-300 transition-all duration-200"
+                  className="h-24 flex flex-col gap-2 hover:bg-green-50 hover:border-green-300 transition-all duration-200 bg-[#e3e1bf]"
                   onClick={() => handleRoleSelect("worker")}
                 >
                   <Wrench className="w-8 h-8 text-green-600" />
