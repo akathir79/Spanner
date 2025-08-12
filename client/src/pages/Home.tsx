@@ -618,7 +618,10 @@ export default function Home() {
                 India's Most Trusted Urban Services Platform
               </h1>
               <p className="text-xl mb-8 text-blue-100">
-                Connect with verified skilled workers across all states and districts of India. From plumbing to electrical work, find the right professional for your needs with transparent pricing and secure booking.
+                Discover seamless access to verified and skilled professionals across every state and district in India. Whether you need plumbing, electrical, carpentry, or appliance repair services, our platform connects you with certified experts tailored to your requirements. Enjoy transparent pricing, secure online booking, and reliable service delivery — all designed to make urban living simpler, safer, and more efficient.
+              </p>
+              <p className="text-lg mb-8 text-blue-200 font-medium">
+                Trusted by thousands, we're redefining home and workplace maintenance with professionalism, accountability, and peace of mind.
               </p>
               
               <div className="flex flex-wrap gap-6 mb-8">
