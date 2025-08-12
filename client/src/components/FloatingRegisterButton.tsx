@@ -30,11 +30,7 @@ export function FloatingRegisterButton({ onRegister }: FloatingRegisterButtonPro
   return (
     <>
       {/* Compact Navbar Register Button */}
-      <div className="relative">
-        {/* Thunder Effect Ring - Smaller for navbar */}
-        <div className="absolute -inset-1 bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 rounded-full animate-spin opacity-75 blur-sm"></div>
-        <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 rounded-full animate-ping opacity-50"></div>
-        
+      <div className="relative">        
         {/* Main Compact Button */}
         <Button
           onClick={() => setIsOpen(true)}
