@@ -55,11 +55,11 @@ export function FloatingRegisterButton({ onRegister }: FloatingRegisterButtonPro
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Zap className="w-5 h-5 text-yellow-500 animate-pulse" />
-              Super Fast Registration
+              <UserPlus className="w-5 h-5 text-blue-600" />
+              Create Your Account
             </DialogTitle>
             <DialogDescription>
-              Join SPANNER in seconds! Choose your role to get started.
+              Choose your role to get started with SPANNER.
             </DialogDescription>
           </DialogHeader>
 

@@ -19,7 +19,7 @@ const LocationService = {
     };
   }
 };
-import { ChevronLeft, MapPin, Edit3, Zap } from "lucide-react";
+import { ChevronLeft, MapPin, Edit3, User } from "lucide-react";
 // Removed unused import
 
 // Super fast registration schema
@@ -141,10 +141,10 @@ export function SuperFastRegisterForm({ role, onComplete, onBack }: SuperFastReg
         </Button>
         <div>
           <h3 className="font-semibold flex items-center gap-2">
-            <Zap className="w-4 h-4 text-yellow-500" />
-            {role === "client" ? "Client" : "Worker"} Quick Registration
+            <User className="w-4 h-4 text-blue-600" />
+            {role === "client" ? "Client" : "Worker"} Registration
           </h3>
-          <p className="text-xs text-gray-500">Just the essentials - complete profile later!</p>
+          <p className="text-xs text-gray-500">Complete your profile details below</p>
         </div>
       </div>
 
@@ -301,16 +301,15 @@ export function SuperFastRegisterForm({ role, onComplete, onBack }: SuperFastReg
               "Creating Account..."
             ) : (
               <>
-                <Zap className="w-4 h-4 mr-2" />
-                Create Account Instantly
+                <User className="w-4 h-4 mr-2" />
+                Create Account
               </>
             )}
           </Button>
 
           {/* Note */}
           <p className="text-xs text-gray-500 text-center">
-            Don't worry! You can complete your full profile after logging in.
-            We'll remind you what's missing in your dashboard.
+            Complete your full profile after registration to access all features.
           </p>
         </form>
       </Form>
