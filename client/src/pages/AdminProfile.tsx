@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/hooks/useAuth";
@@ -25,7 +26,8 @@ import {
   CheckCircle,
   Lock,
   Globe,
-  Activity
+  Activity,
+  Search
 } from "lucide-react";
 
 const AdminProfile = () => {
@@ -49,9 +51,11 @@ const AdminProfile = () => {
     bankAccountHolderName: user?.bankAccountHolderName || '',
     bankIFSC: user?.bankIFSC || '',
     bankName: user?.bankName || '',
-    bankBranch: user?.bankBranch || ''
+    bankBranch: user?.bankBranch || '',
+    bankAddress: user?.bankAddress || ''
   });
   const [isDetecting, setIsDetecting] = useState(false);
+  const [isSearchingIFSC, setIsSearchingIFSC] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
@@ -146,6 +150,71 @@ const AdminProfile = () => {
     );
   };
 
+  // Handle IFSC lookup - same as worker registration
+  const handleIFSCLookup = async () => {
+    if (!editData.bankIFSC || editData.bankIFSC.length !== 11) {
+      toast({
+        title: "Invalid IFSC",
+        description: "Please enter a valid 11-character IFSC code",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsSearchingIFSC(true);
+    try {
+      const response = await fetch(`https://ifsc.razorpay.com/${editData.bankIFSC.toUpperCase()}`);
+      
+      if (!response.ok) {
+        if (response.status === 404) {
+          throw new Error('IFSC code not found');
+        }
+        throw new Error(`API Error: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      // Format the address properly from the API response
+      const addressParts = [data.ADDRESS];
+      if (data.CITY && data.CITY !== data.CENTRE) {
+        addressParts.push(data.CITY);
+      }
+      if (data.STATE) {
+        addressParts.push(data.STATE);
+      }
+      
+      // Update form with bank details
+      setEditData(prev => ({
+        ...prev,
+        bankName: data.BANK,
+        bankBranch: data.BRANCH,
+        bankAddress: addressParts.join(', ')
+      }));
+      
+      toast({
+        title: "Bank Details Found",
+        description: `${data.BANK} - ${data.BRANCH}, ${data.CITY}`,
+      });
+    } catch (error: any) {
+      const errorMessage = error.message || 'Unknown error occurred';
+      
+      if (errorMessage.includes('IFSC code not found')) {
+        toast({
+          title: "IFSC Not Found",
+          description: "The IFSC code you entered is not valid. Please verify and try again.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Connection Error",
+          description: "Unable to fetch bank details at the moment. Please try again or enter manually.",
+          variant: "destructive",
+        });
+      }
+    }
+    setIsSearchingIFSC(false);
+  };
+
   const handleSave = async () => {
     if (!user) return;
     try {
@@ -173,18 +242,19 @@ const AdminProfile = () => {
   const isSuper = user.role === "super_admin";
 
   return (
-    <div className="container mx-auto p-6 max-w-6xl">
-      {/* Back Button */}
-      <Button
-        variant="ghost"
-        onClick={() => setLocation("/admin-dashboard")}
-        className="mb-4"
-      >
-        <ArrowLeft className="h-4 w-4 mr-2" />
-        Back to Dashboard
-      </Button>
+    <div className="min-h-screen bg-muted/30 pt-20 pb-8">
+      <div className="container mx-auto px-4 max-w-6xl">
+        {/* Back Button */}
+        <Button
+          variant="ghost"
+          onClick={() => setLocation("/admin-dashboard")}
+          className="mb-4"
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back to Dashboard
+        </Button>
 
-      <Card>
+        <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center space-x-2">
@@ -460,11 +530,24 @@ const AdminProfile = () => {
                   <div>
                     <Label className="text-sm text-muted-foreground">IFSC Code</Label>
                     {isEditing ? (
-                      <Input
-                        placeholder="IFSC Code"
-                        value={editData.bankIFSC}
-                        onChange={(e) => setEditData(prev => ({ ...prev, bankIFSC: e.target.value }))}
-                      />
+                      <div className="flex gap-2">
+                        <Input
+                          placeholder="IFSC Code"
+                          value={editData.bankIFSC}
+                          onChange={(e) => setEditData(prev => ({ ...prev, bankIFSC: e.target.value.toUpperCase() }))}
+                          className="flex-1"
+                        />
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          onClick={handleIFSCLookup}
+                          disabled={isSearchingIFSC || editData.bankIFSC.length !== 11}
+                        >
+                          <Search className="h-4 w-4 mr-1" />
+                          {isSearchingIFSC ? "Searching..." : "Search"}
+                        </Button>
+                      </div>
                     ) : (
                       <p className="font-medium p-2 bg-muted rounded border">{user?.bankIFSC || "Not specified"}</p>
                     )}
@@ -491,6 +574,19 @@ const AdminProfile = () => {
                       />
                     ) : (
                       <p className="font-medium p-2 bg-muted rounded border">{user?.bankBranch || "Not specified"}</p>
+                    )}
+                  </div>
+                  <div>
+                    <Label className="text-sm text-muted-foreground">Bank Address</Label>
+                    {isEditing ? (
+                      <Textarea
+                        placeholder="Bank Address"
+                        value={editData.bankAddress}
+                        onChange={(e) => setEditData(prev => ({ ...prev, bankAddress: e.target.value }))}
+                        rows={2}
+                      />
+                    ) : (
+                      <p className="font-medium p-2 bg-muted rounded border">{user?.bankAddress || "Not specified"}</p>
                     )}
                   </div>
                 </div>
@@ -586,6 +682,7 @@ const AdminProfile = () => {
           </div>
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 };
