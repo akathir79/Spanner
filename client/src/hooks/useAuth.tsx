@@ -26,7 +26,6 @@ interface User {
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
-  isRedirecting: boolean;
   isAuthenticated: boolean;
   login: (userData: User) => void;
   logout: () => void;
@@ -34,7 +33,6 @@ interface AuthContextType {
   verifyOtp: (mobile: string, otp: string, purpose: string) => Promise<User | null>;
   signupClient: (data: any) => Promise<{ success: boolean; user?: User; error?: string }>;
   signupWorker: (data: any) => Promise<{ user: User } | null>;
-  refreshUser: () => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -42,7 +40,6 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isRedirecting, setIsRedirecting] = useState(false);
   const [, setLocation] = useLocation();
 
   useEffect(() => {
@@ -60,43 +57,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsLoading(false);
   }, []);
 
-  // Reset redirecting state when location changes
-  useEffect(() => {
-    if (isRedirecting && user) {
-      // Reset redirecting state immediately when user exists and we're not on home page
-      if (window.location.pathname !== '/') {
-        setIsRedirecting(false);
-        console.log("Auth: Reset isRedirecting because we're on", window.location.pathname);
-      }
-    }
-  }, [isRedirecting, user]);
-
   const login = (userData: User) => {
     setUser(userData);
     localStorage.setItem("user", JSON.stringify(userData));
-    
-    // Set redirecting state to show loading screen during navigation
-    setIsRedirecting(true);
-    
-    // Redirect based on role with immediate navigation
-    setTimeout(() => {
-      const userRole = userData.role;
-      console.log("Auth: Redirecting user", userData.id, "with role", userRole);
-      
-      if (userRole === "admin" || userRole === "super_admin") {
-        setLocation("/admin-dashboard");
-      } else if (userRole === "worker") {
-        setLocation("/worker-dashboard");
-      } else if (userRole === "client") {
-        setLocation("/dashboard");
-      }
-      
-      // Force reset redirecting state after navigation
-      setTimeout(() => {
-        setIsRedirecting(false);
-        console.log("Auth: Redirect completed, isRedirecting set to false");
-      }, 50);
-    }, 200);
   };
 
   const logout = () => {
@@ -213,7 +176,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const value = {
     user,
     isLoading,
-    isRedirecting,
     isAuthenticated: !!user,
     login,
     logout,

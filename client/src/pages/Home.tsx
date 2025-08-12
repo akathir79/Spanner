@@ -21,7 +21,6 @@ import { WorkerCard } from "@/components/WorkerCard";
 import { useLanguage } from "@/components/LanguageProvider";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { LoadingScreen } from "@/components/LoadingScreen";
 import { Search, CheckCircle, Shield, Clock, Users, MapPin, Star, Handshake, ChevronDown, X, MapPinIcon } from "lucide-react";
 import { VoiceInput } from "@/components/VoiceInput";
 import { VoiceAssistant } from "@/components/VoiceAssistant";
@@ -198,7 +197,7 @@ const testimonials = [
 
 export default function Home() {
   const { t } = useLanguage();
-  const { user, isLoading: authLoading, isRedirecting } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const [searchForm, setSearchForm] = useState({
@@ -589,20 +588,23 @@ export default function Home() {
     // Filter workers by district
   };
 
-  // Show loading screen during authentication or redirection
-  if (authLoading) {
-    return <LoadingScreen message="Initializing SPANNER..." />;
-  }
+  // Authentication redirect logic in useEffect to avoid render warnings
+  useEffect(() => {
+    if (user && window.location.pathname === '/') {
+      const userRole = user.role;
+      if (userRole === "admin" || userRole === "super_admin") {
+        setLocation("/admin-dashboard");
+      } else if (userRole === "worker") {
+        setLocation("/worker-dashboard");
+      } else if (userRole === "client") {
+        setLocation("/dashboard");
+      }
+    }
+  }, [user, setLocation]);
 
-  // Show loading screen only for redirecting state or when user exists but we're still on home page
-  if (isRedirecting) {
-    return <LoadingScreen message="Redirecting to your dashboard..." />;
-  }
-  
-  // If user exists and we're on home page, redirect immediately without showing content
+  // Authentication checks - MUST be after all hooks
   if (user && window.location.pathname === '/') {
-    // This will be handled by the auth login function
-    return null;
+    return null; // Will redirect via useEffect
   }
 
   return (

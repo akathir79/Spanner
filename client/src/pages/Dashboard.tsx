@@ -74,7 +74,6 @@ import { useLocation } from "wouter";
 import LocationViewer from "@/components/LocationViewer";
 import ClientBankDetailsForm from "@/components/ClientBankDetailsForm";
 import { ProfileCompletionAlert } from "@/components/ProfileCompletionAlert";
-import { LoadingScreen } from "@/components/LoadingScreen";
 import statesDistrictsData from "@shared/states-districts.json";
 // Services and districts are now fetched dynamically from database
 
@@ -1543,7 +1542,7 @@ const UserActivityCard = ({ user }: { user: any }) => {
 };
 
 export default function Dashboard() {
-  const { user, isLoading: authLoading, isRedirecting, refreshUser } = useAuth();
+  const { user, isLoading: authLoading, refreshUser } = useAuth();
   const { t } = useLanguage();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -2118,25 +2117,24 @@ export default function Dashboard() {
 
   // Authentication checks - MUST be after all hooks
   if (authLoading) {
-    return <LoadingScreen message="Loading your dashboard..." />;
-  }
-
-  // Only show redirecting screen if we're actually on home page
-  if (isRedirecting && window.location.pathname === '/') {
-    return <LoadingScreen message="Redirecting to your dashboard..." />;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading dashboard...</p>
+        </div>
+      </div>
+    );
   }
 
   if (!user || user.role !== "client") {
-    console.log("Dashboard: User check failed", { user: user?.id, role: user?.role });
     return null;
   }
-
-
 
   // Removed Layout Settings Panel
 
   return (
-    <div className="min-h-screen bg-muted/30 pt-20 pb-8">
+    <div className="min-h-screen bg-muted/30 pt-20 pb-8">{/* Removed customization features */}
       <div className="container mx-auto px-4">
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">
