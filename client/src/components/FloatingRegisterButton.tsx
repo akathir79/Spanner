@@ -29,31 +29,29 @@ export function FloatingRegisterButton({ onRegister }: FloatingRegisterButtonPro
 
   return (
     <>
-      {/* Floating Thunder Register Button */}
-      <div className="fixed bottom-6 right-6 z-50">
-        <div className="relative">
-          {/* Thunder Effect Ring */}
-          <div className="absolute -inset-2 bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 rounded-full animate-spin opacity-75 blur-sm"></div>
-          <div className="absolute -inset-1 bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 rounded-full animate-ping opacity-50"></div>
+      {/* Compact Navbar Register Button */}
+      <div className="relative">
+        {/* Thunder Effect Ring - Smaller for navbar */}
+        <div className="absolute -inset-1 bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 rounded-full animate-spin opacity-75 blur-sm"></div>
+        <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 rounded-full animate-ping opacity-50"></div>
+        
+        {/* Main Compact Button */}
+        <Button
+          onClick={() => setIsOpen(true)}
+          size="sm"
+          className="relative bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white shadow-lg rounded-full px-3 py-2 transform transition-all duration-300 hover:scale-105 animate-pulse"
+        >
+          <Zap className="w-4 h-4 mr-1.5 animate-bounce" />
+          <span className="font-semibold text-sm">Quick Join</span>
           
-          {/* Main Button */}
-          <Button
-            onClick={() => setIsOpen(true)}
-            size="lg"
-            className="relative bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white shadow-2xl rounded-full p-4 transform transition-all duration-300 hover:scale-110 animate-pulse"
-          >
-            <Zap className="w-6 h-6 mr-2 animate-bounce" />
-            <span className="font-bold text-lg">Quick Join</span>
-            
-            {/* Thunder Flash Effect */}
-            <div className="absolute inset-0 bg-white opacity-0 rounded-full animate-flash pointer-events-none"></div>
-          </Button>
-          
-          {/* Floating Badge */}
-          <Badge className="absolute -top-2 -right-2 bg-red-500 text-white animate-bounce">
-            Fast!
-          </Badge>
-        </div>
+          {/* Thunder Flash Effect */}
+          <div className="absolute inset-0 bg-white opacity-0 rounded-full animate-flash pointer-events-none"></div>
+        </Button>
+        
+        {/* Compact Badge */}
+        <Badge className="absolute -top-1 -right-1 bg-red-500 text-white animate-bounce text-xs px-1.5 py-0.5">
+          Fast!
+        </Badge>
       </div>
 
       {/* Registration Dialog */}

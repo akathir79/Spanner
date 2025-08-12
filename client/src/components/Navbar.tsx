@@ -10,6 +10,7 @@ import { useState, useEffect } from "react";
 import { Menu, Moon, Sun, Wrench, User, LogOut, Settings, History } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { NotificationBell } from "./NotificationBell";
+import { FloatingRegisterButton } from "./FloatingRegisterButton";
 
 export function Navbar() {
   const [location] = useLocation();
@@ -68,7 +69,10 @@ export function Navbar() {
               <span className="text-xl font-bold text-primary">SPANNER</span>
             </Link>
 
-            {/* Desktop Navigation - Removed for cleaner UI */}
+            {/* Desktop Navigation - Quick Join Button */}
+            <div className="hidden md:flex items-center justify-center flex-1">
+              <FloatingRegisterButton />
+            </div>
 
             {/* Controls */}
             <div className="flex items-center space-x-4">
