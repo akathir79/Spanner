@@ -24,7 +24,10 @@ const fastClientSchema = z.object({
   areaName: z.string().min(1, "Area name is required"),
   district: z.string().min(1, "District is required"),
   state: z.string().min(1, "State is required"),
-  pincode: z.string().min(6, "Valid PIN code is required"),
+  pincode: z.string()
+    .min(6, "PIN code must be 6 digits")
+    .max(6, "PIN code must be 6 digits")
+    .regex(/^\d{6}$/, "PIN code must contain exactly 6 digits"),
 });
 
 const fastWorkerSchema = fastClientSchema.extend({
@@ -83,6 +86,11 @@ export function SuperFastRegisterForm({ role, onComplete, onBack, onStepChange, 
   useEffect(() => {
     if (selectedState) {
       fetchDistrictsFromAPI(selectedState);
+      // Clear PIN code when state is manually changed (not during auto-detection)
+      if (!isDetectingLocation && hasAutoDetected) {
+        form.setValue("pincode", "");
+        form.setValue("district", "");
+      }
     } else {
       setApiDistricts([]);
       form.setValue("district", "");
@@ -510,7 +518,17 @@ export function SuperFastRegisterForm({ role, onComplete, onBack, onStepChange, 
                   <FormItem>
                     <FormLabel className="text-xs">PIN Code</FormLabel>
                     <FormControl>
-                      <Input placeholder="PIN Code" {...field} className="text-sm" />
+                      <Input 
+                        placeholder="6-digit PIN" 
+                        {...field} 
+                        className="text-sm"
+                        maxLength={6}
+                        onChange={(e) => {
+                          // Only allow digits
+                          const value = e.target.value.replace(/\D/g, '');
+                          field.onChange(value);
+                        }}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -566,6 +584,11 @@ export function SuperFastRegisterForm({ role, onComplete, onBack, onStepChange, 
                                     field.onChange(state.name);
                                     setStatePopoverOpen(false);
                                     setStateSearchInput("");
+                                    // Clear PIN code and district when manually selecting state
+                                    if (hasAutoDetected) {
+                                      form.setValue("pincode", "");
+                                      form.setValue("district", "");
+                                    }
                                   }}
                                 >
                                   <span className="transition-all duration-150">{state.name}</span>
@@ -587,6 +610,11 @@ export function SuperFastRegisterForm({ role, onComplete, onBack, onStepChange, 
                                     field.onChange(state.name);
                                     setStatePopoverOpen(false);
                                     setStateSearchInput("");
+                                    // Clear PIN code and district when manually selecting state
+                                    if (hasAutoDetected) {
+                                      form.setValue("pincode", "");
+                                      form.setValue("district", "");
+                                    }
                                   }}
                                 >
                                   <span className="transition-all duration-150">{state.name}</span>
