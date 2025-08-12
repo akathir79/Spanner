@@ -290,8 +290,9 @@ export function RegistrationMascot({
     <div 
       style={{
         position: 'fixed',
-        bottom: '80px',
-        right: '20px',
+        top: '50%',
+        left: '20px',
+        transform: 'translateY(-50%)',
         zIndex: 9999999,
         width: '280px',
         backgroundColor: '#ffffff',
@@ -300,8 +301,7 @@ export function RegistrationMascot({
         boxShadow: '0 10px 25px rgba(0,0,0,0.5)',
         padding: '16px',
         opacity: 1,
-        pointerEvents: 'auto',
-        transform: 'translateZ(0)'
+        pointerEvents: 'auto'
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
