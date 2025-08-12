@@ -78,9 +78,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Set redirecting state to show loading screen during navigation
     setIsRedirecting(true);
     
-    // Redirect based on role with smooth transition
+    // Redirect based on role with immediate navigation
     setTimeout(() => {
       const userRole = userData.role;
+      console.log("Auth: Redirecting user", userData.id, "with role", userRole);
+      
       if (userRole === "admin" || userRole === "super_admin") {
         setLocation("/admin-dashboard");
       } else if (userRole === "worker") {
@@ -92,8 +94,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Force reset redirecting state after navigation
       setTimeout(() => {
         setIsRedirecting(false);
-      }, 200);
-    }, 300);
+        console.log("Auth: Redirect completed, isRedirecting set to false");
+      }, 100);
+    }, 200);
   };
 
   const logout = () => {

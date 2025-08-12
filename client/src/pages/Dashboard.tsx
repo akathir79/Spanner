@@ -2127,18 +2127,19 @@ export default function Dashboard() {
   }
 
   console.log("Dashboard: Rendering dashboard for user", user.id, user.role);
+  console.log("Dashboard: Current pathname:", window.location.pathname);
 
   // Removed Layout Settings Panel
 
   return (
-    <div className="min-h-screen bg-muted/30 pt-20 pb-8">{/* Removed customization features */}
+    <div className="min-h-screen bg-white pt-20 pb-8">
       <div className="container mx-auto px-4">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2 text-primary">
-            Welcome back, {user.firstName}! <span className="text-lg font-medium text-secondary">({user.id})</span>
+        <div className="mb-8 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <h1 className="text-4xl font-bold mb-2 text-blue-600">
+            🎉 Welcome back, {user.firstName}! <span className="text-lg font-medium text-blue-800">({user.id})</span>
           </h1>
-          <p className="text-muted-foreground">
-            Manage your bookings and find trusted workers for your service needs.
+          <p className="text-blue-700 text-lg">
+            ✅ Dashboard loaded successfully! Manage your bookings and find trusted workers for your service needs.
           </p>
         </div>
 
