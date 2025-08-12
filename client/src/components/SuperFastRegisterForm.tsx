@@ -9,7 +9,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery } from "@tanstack/react-query";
 
-import { ChevronLeft, MapPin, User } from "lucide-react";
+import { ChevronLeft, MapPin, User, Edit3 } from "lucide-react";
 // Removed unused import
 
 // Super fast registration schema
@@ -40,6 +40,7 @@ interface SuperFastRegisterFormProps {
 }
 
 export function SuperFastRegisterForm({ role, onComplete, onBack, onStepChange, onError }: SuperFastRegisterFormProps) {
+  const [isDetectingLocation, setIsDetectingLocation] = useState(false);
   const { toast } = useToast();
 
   const schema = role === "client" ? fastClientSchema : fastWorkerSchema;
@@ -65,6 +66,76 @@ export function SuperFastRegisterForm({ role, onComplete, onBack, onStepChange, 
     enabled: role === "worker",
   });
 
+  // Real-time GPS location detection
+  const detectLocation = async () => {
+    setIsDetectingLocation(true);
+    onStepChange?.("location");
+    
+    try {
+      // Get GPS coordinates
+      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+        if (!navigator.geolocation) {
+          reject(new Error("Geolocation is not supported by this browser"));
+          return;
+        }
+        
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 60000
+        });
+      });
+
+      const { latitude, longitude } = position.coords;
+      
+      // Use Nominatim (OpenStreetMap) for reverse geocoding (free service)
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`
+      );
+      
+      if (!response.ok) {
+        throw new Error("Failed to get location details");
+      }
+      
+      const data = await response.json();
+      
+      if (data && data.address) {
+        const address = data.address;
+        
+        // Extract address components from Nominatim response
+        const houseNumber = address.house_number || "";
+        const street = address.road || address.street || "";
+        const area = address.suburb || address.neighbourhood || address.village || address.town || "";
+        const district = address.state_district || address.county || "";
+        const state = address.state || "";
+        const pincode = address.postcode || "";
+        
+        // Fill the form with detected location
+        if (houseNumber) form.setValue("houseNumber", houseNumber);
+        if (street) form.setValue("streetName", street);
+        if (area) form.setValue("areaName", area);
+        if (district) form.setValue("district", district);
+        if (state) form.setValue("state", state);
+        if (pincode) form.setValue("pincode", pincode);
+        
+        toast({
+          title: "Location detected!",
+          description: "Your address has been automatically filled using GPS.",
+        });
+      } else {
+        throw new Error("No address found for your location");
+      }
+    } catch (error) {
+      console.error("Location detection error:", error);
+      toast({
+        title: "Location detection failed",
+        description: "Please enter your address manually. Make sure location access is enabled.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDetectingLocation(false);
+    }
+  };
 
 
   const registerMutation = useMutation({
@@ -184,9 +255,22 @@ export function SuperFastRegisterForm({ role, onComplete, onBack, onStepChange, 
 
           {/* Location Section */}
           <div className="space-y-1.5 p-2.5 bg-gray-50 rounded-lg">
-            <div className="flex items-center gap-2">
-              <MapPin className="w-4 h-4 text-blue-500" />
-              <span className="font-medium text-sm">Your Location</span>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <MapPin className="w-4 h-4 text-blue-500" />
+                <span className="font-medium text-sm">Your Location</span>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={detectLocation}
+                disabled={isDetectingLocation}
+                className="flex items-center gap-1"
+              >
+                <Edit3 className="w-3 h-3" />
+                {isDetectingLocation ? "Detecting..." : "Auto-Detect"}
+              </Button>
             </div>
 
             {/* House Number */}
