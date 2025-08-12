@@ -36,76 +36,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
-// Simple Admin Profile Card Component that links to profile page
-const AdminProfileCard = ({ user, stats }: { user: any, stats: any }) => {
-  const [, setLocation] = useLocation();
-  const isSuper = user?.role === "super_admin";
-
-  return (
-    <Card 
-      className="cursor-pointer hover:shadow-lg transition-shadow"
-      onClick={() => setLocation("/admin-profile")}
-    >
-      <CardHeader>
-        <CardTitle className="flex items-center space-x-2">
-          <Shield className="h-5 w-5" />
-          <span>{isSuper ? "Super Admin" : "Admin"} Profile</span>
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          <div className="flex items-center space-x-4">
-            <Avatar className="h-16 w-16">
-              <AvatarImage src={user?.profilePicture} alt={user?.firstName} />
-              <AvatarFallback className={`text-lg ${isSuper ? 'bg-red-100 text-red-600' : 'bg-purple-100 text-purple-600'}`}>
-                {user?.firstName?.[0]}{user?.lastName?.[0]}
-              </AvatarFallback>
-            </Avatar>
-            <div>
-              <h3 className="text-lg font-semibold">{user?.firstName} {user?.lastName}</h3>
-              <p className="text-sm text-muted-foreground">
-                {isSuper ? "Super Administrator" : "Administrator"}
-              </p>
-              <p className="text-xs text-muted-foreground mt-1">ID: {user?.id}</p>
-            </div>
-          </div>
-          
-          <Separator />
-          
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div>
-              <p className="text-muted-foreground">Mobile</p>
-              <p className="font-medium">{user?.mobile}</p>
-            </div>
-            <div>
-              <p className="text-muted-foreground">Email</p>
-              <p className="font-medium">{user?.email || "Not provided"}</p>
-            </div>
-            <div>
-              <p className="text-muted-foreground">District</p>
-              <p className="font-medium">{user?.district || "All Districts"}</p>
-            </div>
-            <div>
-              <p className="text-muted-foreground">State</p>
-              <p className="font-medium">{user?.state || "Tamil Nadu"}</p>
-            </div>
-          </div>
-          
-          <div className="flex items-center justify-between pt-2">
-            <Badge className={`${isSuper ? 'bg-red-100 text-red-800' : 'bg-purple-100 text-purple-800'}`}>
-              <CheckCircle className="h-3 w-3 mr-1" />
-              {isSuper ? "Full System Access" : "Admin Access"}
-            </Badge>
-            <Button size="sm" variant="ghost">
-              View Full Profile →
-            </Button>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-};
-
 export default function AdminDashboard() {
   const { user } = useAuth();
   const [, setLocation] = useLocation();
@@ -175,7 +105,7 @@ export default function AdminDashboard() {
               {user.role === "super_admin" ? "Super Admin" : "Admin"}
             </Badge>
             <Badge variant="outline">
-              {user.districtName || "All Districts"}
+              {user.district || "All Districts"}
             </Badge>
           </div>
         </div>
@@ -271,12 +201,9 @@ export default function AdminDashboard() {
           
           {/* Platform Settings - Only for Super Admin */}
           {user?.role === "super_admin" && (
-            <Card 
-              className="cursor-pointer transition-all hover:shadow-md border-2 hover:border-gray-200"
-              onClick={() => setLocation("/admin/settings")}
-            >
+            <Card className="transition-all hover:shadow-md border-2 hover:border-gray-200">
               <CardContent className="p-6">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between mb-4">
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">Platform Settings</p>
                     <p className="text-2xl font-bold text-gray-600">Active</p>
@@ -284,21 +211,52 @@ export default function AdminDashboard() {
                   </div>
                   <Settings className="h-8 w-8 text-gray-600" />
                 </div>
+                <div className="flex gap-2">
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    className="flex-1"
+                    onClick={() => setLocation("/admin-profile")}
+                  >
+                    <User className="h-4 w-4 mr-2" />
+                    Profile
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    className="flex-1"
+                    onClick={() => setLocation("/admin/settings")}
+                  >
+                    <Settings className="h-4 w-4 mr-2" />
+                    Settings
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           )}
           
           {/* Regular admin sees a different card */}
           {user?.role !== "super_admin" && (
-            <Card className="opacity-50">
+            <Card className="transition-all hover:shadow-md border-2 hover:border-gray-200">
               <CardContent className="p-6">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between mb-4">
                   <div>
-                    <p className="text-sm font-medium text-muted-foreground">Platform Settings</p>
-                    <p className="text-2xl font-bold text-gray-400">Restricted</p>
-                    <p className="text-xs text-muted-foreground">Super admin only</p>
+                    <p className="text-sm font-medium text-muted-foreground">Admin Management</p>
+                    <p className="text-2xl font-bold text-purple-600">Active</p>
+                    <p className="text-xs text-muted-foreground">Admin tools</p>
                   </div>
-                  <Settings className="h-8 w-8 text-gray-400" />
+                  <Shield className="h-8 w-8 text-purple-600" />
+                </div>
+                <div className="flex gap-2">
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    className="flex-1"
+                    onClick={() => setLocation("/admin-profile")}
+                  >
+                    <User className="h-4 w-4 mr-2" />
+                    Profile
+                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -472,8 +430,7 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
 
-        {/* Admin Profile Section with Edit Functionality */}
-        <AdminProfileCard user={user} stats={stats} />
+
       </div>
     </div>
   );

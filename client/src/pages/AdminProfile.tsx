@@ -29,7 +29,7 @@ import {
 } from "lucide-react";
 
 const AdminProfile = () => {
-  const { user, refreshUser } = useAuth();
+  const { user } = useAuth();
   const [, setLocation] = useLocation();
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState({
@@ -43,8 +43,13 @@ const AdminProfile = () => {
     state: user?.state || '',
     pincode: user?.pincode || '',
     fullAddress: user?.fullAddress || '',
-    department: user?.department || '',
-    profilePicture: user?.profilePicture || ''
+    department: '', // This field doesn't exist in User type, just for admin display
+    profilePicture: user?.profilePicture || '',
+    bankAccountNumber: user?.bankAccountNumber || '',
+    bankAccountHolderName: user?.bankAccountHolderName || '',
+    bankIFSC: user?.bankIFSC || '',
+    bankName: user?.bankName || '',
+    bankBranch: user?.bankBranch || ''
   });
   const [isDetecting, setIsDetecting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -142,6 +147,7 @@ const AdminProfile = () => {
   };
 
   const handleSave = async () => {
+    if (!user) return;
     try {
       const response = await apiRequest("PUT", `/api/users/${user.id}`, editData);
       if (response.ok) {
@@ -150,7 +156,8 @@ const AdminProfile = () => {
           description: "Your admin profile has been updated successfully!"
         });
         setIsEditing(false);
-        refreshUser();
+        // Refresh user data
+        window.location.reload();
       }
     } catch (error) {
       toast({
@@ -413,6 +420,77 @@ const AdminProfile = () => {
                       />
                     ) : (
                       <p className="font-medium p-2 bg-muted rounded border">{user.pincode || "Not specified"}</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Bank Details Section */}
+              <Separator className="my-4" />
+              <div className="space-y-4">
+                <h4 className="font-semibold flex items-center gap-2">
+                  <Building className="h-4 w-4" />
+                  Bank Details
+                </h4>
+                <div className="space-y-3">
+                  <div>
+                    <Label className="text-sm text-muted-foreground">Account Number</Label>
+                    {isEditing ? (
+                      <Input
+                        placeholder="Account Number"
+                        value={editData.bankAccountNumber}
+                        onChange={(e) => setEditData(prev => ({ ...prev, bankAccountNumber: e.target.value }))}
+                      />
+                    ) : (
+                      <p className="font-medium p-2 bg-muted rounded border">{user.bankAccountNumber || "Not specified"}</p>
+                    )}
+                  </div>
+                  <div>
+                    <Label className="text-sm text-muted-foreground">Account Holder Name</Label>
+                    {isEditing ? (
+                      <Input
+                        placeholder="Account Holder Name"
+                        value={editData.bankAccountHolderName}
+                        onChange={(e) => setEditData(prev => ({ ...prev, bankAccountHolderName: e.target.value }))}
+                      />
+                    ) : (
+                      <p className="font-medium p-2 bg-muted rounded border">{user?.bankAccountHolderName || "Not specified"}</p>
+                    )}
+                  </div>
+                  <div>
+                    <Label className="text-sm text-muted-foreground">IFSC Code</Label>
+                    {isEditing ? (
+                      <Input
+                        placeholder="IFSC Code"
+                        value={editData.bankIFSC}
+                        onChange={(e) => setEditData(prev => ({ ...prev, bankIFSC: e.target.value }))}
+                      />
+                    ) : (
+                      <p className="font-medium p-2 bg-muted rounded border">{user?.bankIFSC || "Not specified"}</p>
+                    )}
+                  </div>
+                  <div>
+                    <Label className="text-sm text-muted-foreground">Bank Name</Label>
+                    {isEditing ? (
+                      <Input
+                        placeholder="Bank Name"
+                        value={editData.bankName}
+                        onChange={(e) => setEditData(prev => ({ ...prev, bankName: e.target.value }))}
+                      />
+                    ) : (
+                      <p className="font-medium p-2 bg-muted rounded border">{user.bankName || "Not specified"}</p>
+                    )}
+                  </div>
+                  <div>
+                    <Label className="text-sm text-muted-foreground">Branch Name</Label>
+                    {isEditing ? (
+                      <Input
+                        placeholder="Branch Name"
+                        value={editData.bankBranch}
+                        onChange={(e) => setEditData(prev => ({ ...prev, bankBranch: e.target.value }))}
+                      />
+                    ) : (
+                      <p className="font-medium p-2 bg-muted rounded border">{user?.bankBranch || "Not specified"}</p>
                     )}
                   </div>
                 </div>
