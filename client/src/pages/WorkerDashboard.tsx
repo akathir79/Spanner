@@ -38,13 +38,433 @@ import {
   Plus,
   FileText,
   Filter,
-  Ban
+  Ban,
+  Edit3,
+  Save,
+  X,
+  User
 } from "lucide-react";
+import { Input } from "@/components/ui/input";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import LocationTracker from "@/components/LocationTracker";
 import BankDetailsModal from "@/components/BankDetailsModal";
 import { format } from "date-fns";
+
+// Worker Profile Card Component with Edit functionality
+const WorkerProfileCard = ({ user, refreshUser }: { user: any, refreshUser: () => void }) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editData, setEditData] = useState({
+    firstName: user?.firstName || '',
+    lastName: user?.lastName || '',
+    email: user?.email || '',
+    houseNumber: user?.houseNumber || '',
+    streetName: user?.streetName || '',
+    areaName: user?.areaName || '',
+    district: user?.district || '',
+    state: user?.state || '',
+    pincode: user?.pincode || '',
+    fullAddress: user?.fullAddress || '',
+    aadhaarNumber: user?.aadhaarNumber || '',
+    panNumber: user?.panNumber || '',
+    experience: user?.experience || '',
+    hourlyRate: user?.hourlyRate || ''
+  });
+  const [isDetecting, setIsDetecting] = useState(false);
+  const [showAadhaar, setShowAadhaar] = useState(false);
+  const { toast } = useToast();
+
+  // Auto-detect location
+  const handleDetectLocation = async () => {
+    setIsDetecting(true);
+    
+    if (!navigator.geolocation) {
+      toast({
+        title: "Location Error",
+        description: "Geolocation is not supported by your browser",
+        variant: "destructive"
+      });
+      setIsDetecting(false);
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const { latitude, longitude } = position.coords;
+          
+          // Using Nominatim API for reverse geocoding
+          const response = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1`
+          );
+          
+          if (!response.ok) throw new Error('Failed to fetch location details');
+          
+          const data = await response.json();
+          const address = data.address || {};
+          
+          setEditData(prev => ({
+            ...prev,
+            houseNumber: address.house_number || '',
+            streetName: address.road || address.street || '',
+            areaName: address.neighbourhood || address.suburb || address.village || '',
+            district: address.state_district || address.county || '',
+            state: address.state || '',
+            pincode: address.postcode || ''
+          }));
+          
+          toast({
+            title: "Location Detected",
+            description: "Your location has been auto-filled successfully!"
+          });
+        } catch (error) {
+          console.error('Error detecting location:', error);
+          toast({
+            title: "Detection Failed",
+            description: "Could not detect your location. Please enter manually.",
+            variant: "destructive"
+          });
+        } finally {
+          setIsDetecting(false);
+        }
+      },
+      (error) => {
+        console.error('Geolocation error:', error);
+        toast({
+          title: "Location Access Denied",
+          description: "Please enable location access and try again.",
+          variant: "destructive"
+        });
+        setIsDetecting(false);
+      }
+    );
+  };
+
+  const handleSave = async () => {
+    try {
+      const response = await apiRequest("PUT", `/api/users/${user.id}`, editData);
+      if (response.ok) {
+        toast({
+          title: "Profile Updated",
+          description: "Your professional profile has been updated successfully!"
+        });
+        setIsEditing(false);
+        refreshUser();
+      }
+    } catch (error) {
+      toast({
+        title: "Update Failed",
+        description: "Could not update profile. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Mask Aadhaar for privacy
+  const maskAadhaar = (aadhaar: string) => {
+    if (!aadhaar) return "Not provided";
+    return `XXXX-XXXX-${aadhaar.slice(-4)}`;
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center space-x-2">
+            <User className="h-5 w-5" />
+            <span>Professional Profile</span>
+          </CardTitle>
+          <div className="flex gap-2">
+            {isEditing ? (
+              <>
+                <Button size="sm" variant="outline" onClick={() => setIsEditing(false)}>
+                  <X className="h-4 w-4 mr-1" />
+                  Cancel
+                </Button>
+                <Button size="sm" onClick={handleSave}>
+                  <Save className="h-4 w-4 mr-1" />
+                  Save
+                </Button>
+              </>
+            ) : (
+              <Button size="sm" variant="outline" onClick={() => setIsEditing(true)}>
+                <Edit3 className="h-4 w-4 mr-1" />
+                Edit
+              </Button>
+            )}
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-6">
+          {/* Profile Picture */}
+          <div className="flex items-center space-x-4">
+            <Avatar className="h-20 w-20">
+              <AvatarImage src={user.profilePicture} alt={user.firstName} />
+              <AvatarFallback className="text-xl bg-green-100 text-green-600">
+                {user.firstName?.[0]}{user.lastName?.[0]}
+              </AvatarFallback>
+            </Avatar>
+            <div>
+              <h3 className="text-lg font-semibold">{user.firstName} {user.lastName}</h3>
+              <p className="text-sm text-muted-foreground">Service Professional</p>
+              <p className="text-xs text-muted-foreground mt-1">ID: {user.id}</p>
+              {user.isVerified && (
+                <Badge className="mt-2 bg-green-100 text-green-800">
+                  <CheckCircle className="h-3 w-3 mr-1" />
+                  Verified
+                </Badge>
+              )}
+            </div>
+          </div>
+
+          <Separator />
+
+          {/* Basic Information */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label className="text-sm text-muted-foreground">First Name</Label>
+              {isEditing ? (
+                <Input
+                  value={editData.firstName}
+                  onChange={(e) => setEditData(prev => ({ ...prev, firstName: e.target.value }))}
+                />
+              ) : (
+                <p className="font-medium p-2 bg-muted rounded border">{user.firstName}</p>
+              )}
+            </div>
+            <div>
+              <Label className="text-sm text-muted-foreground">Last Name</Label>
+              {isEditing ? (
+                <Input
+                  value={editData.lastName}
+                  onChange={(e) => setEditData(prev => ({ ...prev, lastName: e.target.value }))}
+                />
+              ) : (
+                <p className="font-medium p-2 bg-muted rounded border">{user.lastName}</p>
+              )}
+            </div>
+            <div>
+              <Label className="text-sm text-muted-foreground">Mobile Number</Label>
+              <p className="font-medium p-2 bg-muted rounded border">{user.mobile}</p>
+            </div>
+            <div>
+              <Label className="text-sm text-muted-foreground">Email Address</Label>
+              {isEditing ? (
+                <Input
+                  type="email"
+                  value={editData.email}
+                  onChange={(e) => setEditData(prev => ({ ...prev, email: e.target.value }))}
+                />
+              ) : (
+                <p className="font-medium p-2 bg-muted rounded border">{user.email || "Not provided"}</p>
+              )}
+            </div>
+          </div>
+
+          {/* Professional Information */}
+          <div className="space-y-4">
+            <h4 className="font-semibold flex items-center gap-2">
+              <Briefcase className="h-4 w-4" />
+              Professional Details
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label className="text-sm text-muted-foreground">Aadhaar Number</Label>
+                <div className="flex items-center gap-2">
+                  {isEditing ? (
+                    <Input
+                      type={showAadhaar ? "text" : "password"}
+                      placeholder="12-digit Aadhaar"
+                      maxLength={12}
+                      value={editData.aadhaarNumber}
+                      onChange={(e) => setEditData(prev => ({ ...prev, aadhaarNumber: e.target.value }))}
+                    />
+                  ) : (
+                    <p className="font-medium p-2 bg-muted rounded border flex-1">
+                      {showAadhaar ? (user.aadhaarNumber || "Not provided") : maskAadhaar(user.aadhaarNumber)}
+                    </p>
+                  )}
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setShowAadhaar(!showAadhaar)}
+                  >
+                    {showAadhaar ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </Button>
+                </div>
+              </div>
+              <div>
+                <Label className="text-sm text-muted-foreground">PAN Card</Label>
+                {isEditing ? (
+                  <Input
+                    placeholder="PAN Number"
+                    maxLength={10}
+                    value={editData.panNumber}
+                    onChange={(e) => setEditData(prev => ({ ...prev, panNumber: e.target.value.toUpperCase() }))}
+                  />
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <p className="font-medium p-2 bg-muted rounded border flex-1">
+                      {user.panNumber || "Not provided"}
+                    </p>
+                    {!user.panNumber && (
+                      <Button size="sm" variant="outline">
+                        <Plus className="h-4 w-4 mr-1" />
+                        Add PAN
+                      </Button>
+                    )}
+                  </div>
+                )}
+              </div>
+              <div>
+                <Label className="text-sm text-muted-foreground">Experience (Years)</Label>
+                {isEditing ? (
+                  <Input
+                    type="number"
+                    min="0"
+                    value={editData.experience}
+                    onChange={(e) => setEditData(prev => ({ ...prev, experience: e.target.value }))}
+                  />
+                ) : (
+                  <p className="font-medium p-2 bg-muted rounded border">
+                    {user.experience ? `${user.experience} years` : "Not specified"}
+                  </p>
+                )}
+              </div>
+              <div>
+                <Label className="text-sm text-muted-foreground">Hourly Rate</Label>
+                {isEditing ? (
+                  <Input
+                    type="number"
+                    min="0"
+                    placeholder="₹ per hour"
+                    value={editData.hourlyRate}
+                    onChange={(e) => setEditData(prev => ({ ...prev, hourlyRate: e.target.value }))}
+                  />
+                ) : (
+                  <p className="font-medium p-2 bg-muted rounded border">
+                    {user.hourlyRate ? `₹${user.hourlyRate}/hr` : "Not specified"}
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Location Information */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h4 className="font-semibold flex items-center gap-2">
+                <MapPin className="h-4 w-4" />
+                Service Location
+              </h4>
+              {isEditing && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleDetectLocation}
+                  disabled={isDetecting}
+                  className="flex items-center gap-2"
+                >
+                  <MapPin className="h-4 w-4" />
+                  {isDetecting ? "Detecting..." : "Auto Detect"}
+                </Button>
+              )}
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label className="text-sm text-muted-foreground">House/Shop Number</Label>
+                {isEditing ? (
+                  <Input
+                    placeholder="House/Shop/Building No."
+                    value={editData.houseNumber}
+                    onChange={(e) => setEditData(prev => ({ ...prev, houseNumber: e.target.value }))}
+                  />
+                ) : (
+                  <p className="font-medium p-2 bg-muted rounded border">
+                    {user.houseNumber || "Not specified"}
+                  </p>
+                )}
+              </div>
+              <div>
+                <Label className="text-sm text-muted-foreground">Street Name</Label>
+                {isEditing ? (
+                  <Input
+                    placeholder="Street/Road Name"
+                    value={editData.streetName}
+                    onChange={(e) => setEditData(prev => ({ ...prev, streetName: e.target.value }))}
+                  />
+                ) : (
+                  <p className="font-medium p-2 bg-muted rounded border">
+                    {user.streetName || "Not specified"}
+                  </p>
+                )}
+              </div>
+              <div>
+                <Label className="text-sm text-muted-foreground">Area/Locality</Label>
+                {isEditing ? (
+                  <Input
+                    placeholder="Area/Locality Name"
+                    value={editData.areaName}
+                    onChange={(e) => setEditData(prev => ({ ...prev, areaName: e.target.value }))}
+                  />
+                ) : (
+                  <p className="font-medium p-2 bg-muted rounded border">
+                    {user.areaName || "Not specified"}
+                  </p>
+                )}
+              </div>
+              <div>
+                <Label className="text-sm text-muted-foreground">District</Label>
+                {isEditing ? (
+                  <Input
+                    placeholder="District"
+                    value={editData.district}
+                    onChange={(e) => setEditData(prev => ({ ...prev, district: e.target.value }))}
+                  />
+                ) : (
+                  <p className="font-medium p-2 bg-muted rounded border">
+                    {user.district || "Not specified"}
+                  </p>
+                )}
+              </div>
+              <div>
+                <Label className="text-sm text-muted-foreground">State</Label>
+                {isEditing ? (
+                  <Input
+                    placeholder="State"
+                    value={editData.state}
+                    onChange={(e) => setEditData(prev => ({ ...prev, state: e.target.value }))}
+                  />
+                ) : (
+                  <p className="font-medium p-2 bg-muted rounded border">
+                    {user.state || "Not specified"}
+                  </p>
+                )}
+              </div>
+              <div>
+                <Label className="text-sm text-muted-foreground">PIN Code</Label>
+                {isEditing ? (
+                  <Input
+                    placeholder="6-digit PIN"
+                    maxLength={6}
+                    value={editData.pincode}
+                    onChange={(e) => setEditData(prev => ({ ...prev, pincode: e.target.value }))}
+                  />
+                ) : (
+                  <p className="font-medium p-2 bg-muted rounded border">
+                    {user.pincode || "Not specified"}
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
 
 // Types
 type WorkerBankDetails = {
@@ -466,6 +886,11 @@ export default function WorkerDashboard() {
       }
     }
   }, [user, authLoading, setLocation]);
+
+  // Helper function to refresh user data
+  const refreshUser = () => {
+    queryClient.invalidateQueries({ queryKey: ["/api/user/refresh"] });
+  };
 
   // Helper functions
   const handleRejoinRequest = () => {
@@ -1038,116 +1463,8 @@ export default function WorkerDashboard() {
           {/* Profile Tab - Worker Specific with Professional Details */}
           <TabsContent value="profile" className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Worker Professional Profile */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <Users className="h-5 w-5" />
-                    <span>Professional Profile</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-6">
-                    {/* Profile Header */}
-                    <div className="flex items-center space-x-4">
-                      <Avatar className="h-20 w-20">
-                        <AvatarImage src={user.profilePicture} alt={user.firstName} />
-                        <AvatarFallback className="text-xl bg-green-100 text-green-600">
-                          {user.firstName?.[0]}{user.lastName?.[0]}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <h3 className="text-lg font-semibold">{user.firstName} {user.lastName}</h3>
-                        <p className="text-sm text-muted-foreground">Professional Worker</p>
-                        <p className="text-xs text-muted-foreground mt-1">ID: {user.id}</p>
-                        <div className="flex items-center gap-2 mt-2">
-                          <Badge className="bg-blue-100 text-blue-800">
-                            {workerProfile?.workerProfile?.primaryService || "Service Worker"}
-                          </Badge>
-                          <div className="flex items-center gap-1">
-                            <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                            <span className="text-xs font-medium">{workerProfile?.workerProfile?.rating || "0.0"}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <Separator />
-
-                    {/* Professional Information */}
-                    <div className="space-y-4">
-                      <h4 className="font-semibold flex items-center gap-2">
-                        <Briefcase className="h-4 w-4" />
-                        Professional Details
-                      </h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <Label className="text-sm text-muted-foreground">Primary Service</Label>
-                          <p className="font-medium p-2 bg-muted rounded border">
-                            {workerProfile?.workerProfile?.primaryService || "Not specified"}
-                          </p>
-                        </div>
-                        <div>
-                          <Label className="text-sm text-muted-foreground">Experience</Label>
-                          <p className="font-medium p-2 bg-muted rounded border">
-                            {workerProfile?.workerProfile?.experienceYears || "0"} years
-                          </p>
-                        </div>
-                        <div>
-                          <Label className="text-sm text-muted-foreground">Hourly Rate</Label>
-                          <p className="font-medium p-2 bg-muted rounded border">
-                            ₹{workerProfile?.workerProfile?.hourlyRate || "0"}/hour
-                          </p>
-                        </div>
-                        <div>
-                          <Label className="text-sm text-muted-foreground">Total Jobs</Label>
-                          <p className="font-medium p-2 bg-muted rounded border">
-                            {workerProfile?.workerProfile?.totalJobs || "0"} completed
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Skills */}
-                    {workerProfile?.workerProfile?.skills && workerProfile.workerProfile.skills.length > 0 && (
-                      <div className="space-y-3">
-                        <h4 className="font-semibold flex items-center gap-2">
-                          <Settings className="h-4 w-4" />
-                          Skills & Expertise
-                        </h4>
-                        <div className="flex flex-wrap gap-2">
-                          {workerProfile.workerProfile.skills.map((skill: string, index: number) => (
-                            <Badge key={index} variant="secondary">
-                              {skill}
-                            </Badge>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Service Areas */}
-                    <div className="space-y-3">
-                      <h4 className="font-semibold flex items-center gap-2">
-                        <MapPin className="h-4 w-4" />
-                        Service Coverage
-                      </h4>
-                      <div className="flex flex-wrap gap-2">
-                        {workerProfile?.workerProfile?.serviceAllAreas ? (
-                          <Badge className="bg-green-100 text-green-800">
-                            All Areas in District
-                          </Badge>
-                        ) : (
-                          workerProfile?.workerProfile?.serviceAreaNames?.map((area: string, index: number) => (
-                            <Badge key={index} variant="outline">
-                              {area}
-                            </Badge>
-                          )) || <span className="text-sm text-muted-foreground">No areas specified</span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              {/* Worker Professional Profile with Edit Functionality */}
+              <WorkerProfileCard user={user} refreshUser={refreshUser} />
 
               {/* Worker Identity & Documents */}
               <Card>

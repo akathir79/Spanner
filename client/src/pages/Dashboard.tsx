@@ -81,6 +81,333 @@ import { ProfileCompletionAlert } from "@/components/ProfileCompletionAlert";
 import statesDistrictsData from "@shared/states-districts.json";
 // Services and districts are now fetched dynamically from database
 
+// Client Profile Card Component with Edit functionality
+const ClientProfileCard = ({ user, refreshUser }: { user: any, refreshUser: () => void }) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editData, setEditData] = useState({
+    firstName: user?.firstName || '',
+    lastName: user?.lastName || '',
+    email: user?.email || '',
+    houseNumber: user?.houseNumber || '',
+    streetName: user?.streetName || '',
+    areaName: user?.areaName || '',
+    district: user?.district || '',
+    state: user?.state || '',
+    pincode: user?.pincode || '',
+    fullAddress: user?.fullAddress || ''
+  });
+  const [isDetecting, setIsDetecting] = useState(false);
+  const { toast } = useToast();
+
+  // Auto-detect location
+  const handleDetectLocation = async () => {
+    setIsDetecting(true);
+    
+    if (!navigator.geolocation) {
+      toast({
+        title: "Location Error",
+        description: "Geolocation is not supported by your browser",
+        variant: "destructive"
+      });
+      setIsDetecting(false);
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const { latitude, longitude } = position.coords;
+          
+          // Using Nominatim API for reverse geocoding
+          const response = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1`
+          );
+          
+          if (!response.ok) throw new Error('Failed to fetch location details');
+          
+          const data = await response.json();
+          const address = data.address || {};
+          
+          setEditData(prev => ({
+            ...prev,
+            houseNumber: address.house_number || '',
+            streetName: address.road || address.street || '',
+            areaName: address.neighbourhood || address.suburb || address.village || '',
+            district: address.state_district || address.county || '',
+            state: address.state || '',
+            pincode: address.postcode || ''
+          }));
+          
+          toast({
+            title: "Location Detected",
+            description: "Your location has been auto-filled successfully!"
+          });
+        } catch (error) {
+          console.error('Error detecting location:', error);
+          toast({
+            title: "Detection Failed",
+            description: "Could not detect your location. Please enter manually.",
+            variant: "destructive"
+          });
+        } finally {
+          setIsDetecting(false);
+        }
+      },
+      (error) => {
+        console.error('Geolocation error:', error);
+        toast({
+          title: "Location Access Denied",
+          description: "Please enable location access and try again.",
+          variant: "destructive"
+        });
+        setIsDetecting(false);
+      }
+    );
+  };
+
+  const handleSave = async () => {
+    try {
+      const response = await apiRequest("PUT", `/api/users/${user.id}`, editData);
+      if (response.ok) {
+        toast({
+          title: "Profile Updated",
+          description: "Your profile has been updated successfully!"
+        });
+        setIsEditing(false);
+        refreshUser();
+      }
+    } catch (error) {
+      toast({
+        title: "Update Failed",
+        description: "Could not update profile. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center space-x-2">
+            <User className="h-5 w-5" />
+            <span>Client Profile</span>
+          </CardTitle>
+          <div className="flex gap-2">
+            {isEditing ? (
+              <>
+                <Button size="sm" variant="outline" onClick={() => setIsEditing(false)}>
+                  <X className="h-4 w-4 mr-1" />
+                  Cancel
+                </Button>
+                <Button size="sm" onClick={handleSave}>
+                  <Save className="h-4 w-4 mr-1" />
+                  Save
+                </Button>
+              </>
+            ) : (
+              <Button size="sm" variant="outline" onClick={() => setIsEditing(true)}>
+                <Edit3 className="h-4 w-4 mr-1" />
+                Edit
+              </Button>
+            )}
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-6">
+          {/* Profile Picture */}
+          <div className="flex items-center space-x-4">
+            <Avatar className="h-20 w-20">
+              <AvatarImage src={user.profilePicture} alt={user.firstName} />
+              <AvatarFallback className="text-xl bg-blue-100 text-blue-600">
+                {user.firstName?.[0]}{user.lastName?.[0]}
+              </AvatarFallback>
+            </Avatar>
+            <div>
+              <h3 className="text-lg font-semibold">{user.firstName} {user.lastName}</h3>
+              <p className="text-sm text-muted-foreground">Client Account</p>
+              <p className="text-xs text-muted-foreground mt-1">ID: {user.id}</p>
+            </div>
+          </div>
+
+          <Separator />
+
+          {/* Basic Information */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label className="text-sm text-muted-foreground">First Name</Label>
+              {isEditing ? (
+                <Input
+                  value={editData.firstName}
+                  onChange={(e) => setEditData(prev => ({ ...prev, firstName: e.target.value }))}
+                />
+              ) : (
+                <p className="font-medium p-2 bg-muted rounded border">{user.firstName}</p>
+              )}
+            </div>
+            <div>
+              <Label className="text-sm text-muted-foreground">Last Name</Label>
+              {isEditing ? (
+                <Input
+                  value={editData.lastName}
+                  onChange={(e) => setEditData(prev => ({ ...prev, lastName: e.target.value }))}
+                />
+              ) : (
+                <p className="font-medium p-2 bg-muted rounded border">{user.lastName}</p>
+              )}
+            </div>
+            <div>
+              <Label className="text-sm text-muted-foreground">Mobile Number</Label>
+              <p className="font-medium p-2 bg-muted rounded border">{user.mobile}</p>
+            </div>
+            <div>
+              <Label className="text-sm text-muted-foreground">Email Address</Label>
+              {isEditing ? (
+                <Input
+                  type="email"
+                  value={editData.email}
+                  onChange={(e) => setEditData(prev => ({ ...prev, email: e.target.value }))}
+                />
+              ) : (
+                <p className="font-medium p-2 bg-muted rounded border">{user.email || "Not provided"}</p>
+              )}
+            </div>
+          </div>
+
+          {/* Location Information */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h4 className="font-semibold flex items-center gap-2">
+                <MapPin className="h-4 w-4" />
+                Location Details
+              </h4>
+              {isEditing && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleDetectLocation}
+                  disabled={isDetecting}
+                  className="flex items-center gap-2"
+                >
+                  <MapPin className="h-4 w-4" />
+                  {isDetecting ? "Detecting..." : "Auto Detect"}
+                </Button>
+              )}
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label className="text-sm text-muted-foreground">House Number</Label>
+                {isEditing ? (
+                  <Input
+                    placeholder="House/Flat/Building No."
+                    value={editData.houseNumber}
+                    onChange={(e) => setEditData(prev => ({ ...prev, houseNumber: e.target.value }))}
+                  />
+                ) : (
+                  <p className="font-medium p-2 bg-muted rounded border">
+                    {user.houseNumber || "Not specified"}
+                  </p>
+                )}
+              </div>
+              <div>
+                <Label className="text-sm text-muted-foreground">Street Name</Label>
+                {isEditing ? (
+                  <Input
+                    placeholder="Street/Road Name"
+                    value={editData.streetName}
+                    onChange={(e) => setEditData(prev => ({ ...prev, streetName: e.target.value }))}
+                  />
+                ) : (
+                  <p className="font-medium p-2 bg-muted rounded border">
+                    {user.streetName || "Not specified"}
+                  </p>
+                )}
+              </div>
+              <div>
+                <Label className="text-sm text-muted-foreground">Area/Locality</Label>
+                {isEditing ? (
+                  <Input
+                    placeholder="Area/Locality Name"
+                    value={editData.areaName}
+                    onChange={(e) => setEditData(prev => ({ ...prev, areaName: e.target.value }))}
+                  />
+                ) : (
+                  <p className="font-medium p-2 bg-muted rounded border">
+                    {user.areaName || "Not specified"}
+                  </p>
+                )}
+              </div>
+              <div>
+                <Label className="text-sm text-muted-foreground">District</Label>
+                {isEditing ? (
+                  <Input
+                    placeholder="District"
+                    value={editData.district}
+                    onChange={(e) => setEditData(prev => ({ ...prev, district: e.target.value }))}
+                  />
+                ) : (
+                  <p className="font-medium p-2 bg-muted rounded border">
+                    {user.district || "Not specified"}
+                  </p>
+                )}
+              </div>
+              <div>
+                <Label className="text-sm text-muted-foreground">State</Label>
+                {isEditing ? (
+                  <Input
+                    placeholder="State"
+                    value={editData.state}
+                    onChange={(e) => setEditData(prev => ({ ...prev, state: e.target.value }))}
+                  />
+                ) : (
+                  <p className="font-medium p-2 bg-muted rounded border">
+                    {user.state || "Not specified"}
+                  </p>
+                )}
+              </div>
+              <div>
+                <Label className="text-sm text-muted-foreground">PIN Code</Label>
+                {isEditing ? (
+                  <Input
+                    placeholder="6-digit PIN"
+                    maxLength={6}
+                    value={editData.pincode}
+                    onChange={(e) => setEditData(prev => ({ ...prev, pincode: e.target.value }))}
+                  />
+                ) : (
+                  <p className="font-medium p-2 bg-muted rounded border">
+                    {user.pincode || "Not specified"}
+                  </p>
+                )}
+              </div>
+            </div>
+            
+            {(user.fullAddress || isEditing) && (
+              <div>
+                <Label className="text-sm text-muted-foreground">Complete Address</Label>
+                {isEditing ? (
+                  <Textarea
+                    placeholder="Enter complete address"
+                    rows={3}
+                    value={editData.fullAddress}
+                    onChange={(e) => setEditData(prev => ({ ...prev, fullAddress: e.target.value }))}
+                  />
+                ) : (
+                  <p className="font-medium p-3 bg-muted rounded border whitespace-pre-line">
+                    {user.fullAddress}
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
 // Bank Info interface for IFSC API
 interface BankInfo {
   BANK: string;
@@ -2565,86 +2892,7 @@ export default function Dashboard() {
           <TabsContent value="profile" className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Client Profile Card - Basic Information */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <User className="h-5 w-5" />
-                    <span>Client Profile</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-6">
-                    {/* Profile Picture */}
-                    <div className="flex items-center space-x-4">
-                      <Avatar className="h-20 w-20">
-                        <AvatarImage src={user.profilePicture} alt={user.firstName} />
-                        <AvatarFallback className="text-xl bg-blue-100 text-blue-600">
-                          {user.firstName?.[0]}{user.lastName?.[0]}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <h3 className="text-lg font-semibold">{user.firstName} {user.lastName}</h3>
-                        <p className="text-sm text-muted-foreground">Client Account</p>
-                        <p className="text-xs text-muted-foreground mt-1">ID: {user.id}</p>
-                      </div>
-                    </div>
-
-                    <Separator />
-
-                    {/* Basic Information */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <Label className="text-sm text-muted-foreground">First Name</Label>
-                        <p className="font-medium p-2 bg-muted rounded border">{user.firstName}</p>
-                      </div>
-                      <div>
-                        <Label className="text-sm text-muted-foreground">Last Name</Label>
-                        <p className="font-medium p-2 bg-muted rounded border">{user.lastName}</p>
-                      </div>
-                      <div>
-                        <Label className="text-sm text-muted-foreground">Mobile Number</Label>
-                        <p className="font-medium p-2 bg-muted rounded border">{user.mobile}</p>
-                      </div>
-                      <div>
-                        <Label className="text-sm text-muted-foreground">Email Address</Label>
-                        <p className="font-medium p-2 bg-muted rounded border">{user.email || "Not provided"}</p>
-                      </div>
-                    </div>
-
-                    {/* Location Information */}
-                    <div className="space-y-4">
-                      <h4 className="font-semibold flex items-center gap-2">
-                        <MapPin className="h-4 w-4" />
-                        Location Details
-                      </h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <Label className="text-sm text-muted-foreground">State</Label>
-                          <p className="font-medium p-2 bg-muted rounded border">{user.state || "Not specified"}</p>
-                        </div>
-                        <div>
-                          <Label className="text-sm text-muted-foreground">District</Label>
-                          <p className="font-medium p-2 bg-muted rounded border">{user.district || "Not specified"}</p>
-                        </div>
-                        <div>
-                          <Label className="text-sm text-muted-foreground">Area</Label>
-                          <p className="font-medium p-2 bg-muted rounded border">{user.areaName || "Not specified"}</p>
-                        </div>
-                        <div>
-                          <Label className="text-sm text-muted-foreground">PIN Code</Label>
-                          <p className="font-medium p-2 bg-muted rounded border">{user.pincode || "Not specified"}</p>
-                        </div>
-                      </div>
-                      {user.fullAddress && (
-                        <div>
-                          <Label className="text-sm text-muted-foreground">Full Address</Label>
-                          <p className="font-medium p-3 bg-muted rounded border whitespace-pre-line">{user.fullAddress}</p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              <ClientProfileCard user={user} refreshUser={refreshUser} />
 
               {/* Client Preferences & Settings */}
               <Card>
