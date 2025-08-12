@@ -52,13 +52,8 @@ export function FloatingRegisterButton({ onRegister }: FloatingRegisterButtonPro
       {/* Registration Dialog */}
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
-          <DialogHeader className="pb-2">
-            <DialogTitle className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <User className="w-4 h-4 text-blue-600" />
-                <span>Registration</span>
-              </div>
-            </DialogTitle>
+          <DialogHeader>
+            <DialogTitle className="sr-only">Registration</DialogTitle>
             <DialogDescription className="sr-only">
               Choose your registration type
             </DialogDescription>
