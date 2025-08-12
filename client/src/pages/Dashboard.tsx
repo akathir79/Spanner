@@ -2137,14 +2137,35 @@ export default function Dashboard() {
   // Removed Layout Settings Panel
 
   return (
-    <div className="min-h-screen bg-white pt-20 pb-8">
-      <div className="container mx-auto px-4">
-        <div className="mb-8 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-          <h1 className="text-4xl font-bold mb-2 text-blue-600">
-            🎉 Welcome back, {user.firstName}! <span className="text-lg font-medium text-blue-800">({user.id})</span>
+    <div className="min-h-screen bg-white pt-20 pb-8" style={{ zIndex: 10, position: 'relative' }}>
+      <div className="container mx-auto px-4" style={{ minHeight: '500px' }}>
+        <div className="mb-8 p-6 bg-blue-100 border-2 border-blue-400 rounded-lg shadow-lg" style={{ 
+          display: 'block',
+          visibility: 'visible',
+          opacity: 1,
+          zIndex: 20,
+          position: 'relative',
+          backgroundColor: '#dbeafe',
+          border: '3px solid #3b82f6'
+        }}>
+          <h1 className="text-5xl font-bold mb-4 text-blue-700" style={{ 
+            color: '#1d4ed8',
+            fontSize: '3rem',
+            fontWeight: 'bold'
+          }}>
+            DASHBOARD LOADED: Welcome back, {user.firstName}! 
           </h1>
-          <p className="text-blue-700 text-lg">
-            ✅ Dashboard loaded successfully! Manage your bookings and find trusted workers for your service needs.
+          <p className="text-2xl font-semibold text-blue-800" style={{ 
+            color: '#1e40af',
+            fontSize: '1.5rem'
+          }}>
+            User ID: {user.id} | Role: {user.role}
+          </p>
+          <p className="text-xl text-blue-700 mt-2" style={{ 
+            color: '#1d4ed8',
+            fontSize: '1.25rem'
+          }}>
+            Dashboard is working! You can manage your bookings and find trusted workers.
           </p>
         </div>
 
