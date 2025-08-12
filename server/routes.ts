@@ -1173,13 +1173,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/admin/location-counts", async (req, res) => {
     try {
-      const data = statesDistrictsData as { states: Array<{ state: string; districts: string[] }> };
-      const stateCount = data.states.length;
+      // Safely handle the states-districts.json structure
+      const data = statesDistrictsData;
+      
+      if (!data || !data.states) {
+        console.error("Invalid states-districts data structure:", data);
+        return res.status(500).json({ message: "Invalid location data" });
+      }
+      
+      const stateNames = Object.keys(data.states);
+      const stateCount = stateNames.length;
       let districtCount = 0;
       
-      data.states.forEach(stateObj => {
-        districtCount += stateObj.districts.length;
-      });
+      // Count districts across all states
+      for (const stateName of stateNames) {
+        const state = data.states[stateName];
+        if (state && state.districts && Array.isArray(state.districts)) {
+          districtCount += state.districts.length;
+        }
+      }
       
       res.json({
         states: stateCount,
@@ -1204,25 +1216,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/admin/service-counts", async (req, res) => {
     try {
-      const data = statesDistrictsData as { states: Array<{ state: string; districts: string[]; serviceTypes: string[] }> };
-      let totalServices = 0;
-      let statesWithServices = 0;
-      const uniqueServices = new Set<string>();
+      // Get service categories from database
+      const serviceCategories = await storage.getAllServiceCategories();
       
-      data.states.forEach(stateObj => {
-        if (stateObj.serviceTypes && stateObj.serviceTypes.length > 0) {
-          statesWithServices++;
-          stateObj.serviceTypes.forEach(service => {
-            uniqueServices.add(service.toLowerCase().trim());
-          });
-          totalServices += stateObj.serviceTypes.length;
+      // Get workers with profiles to calculate skill-based services
+      const workersWithProfiles = await storage.getAllWorkersWithProfiles();
+      const allSkills = new Set<string>();
+      
+      for (const worker of workersWithProfiles) {
+        if (worker.workerProfile && worker.workerProfile.skills && Array.isArray(worker.workerProfile.skills)) {
+          for (const skill of worker.workerProfile.skills) {
+            if (typeof skill === 'string') {
+              allSkills.add(skill.toLowerCase().trim());
+            }
+          }
         }
-      });
+      }
+      
+      // Calculate states with services based on worker presence
+      const statesWithServices = new Set(
+        workersWithProfiles
+          .map((worker: any) => worker.state)
+          .filter((state: any) => state && typeof state === 'string')
+      ).size;
       
       res.json({
-        uniqueServices: uniqueServices.size,
-        totalServices: totalServices,
-        statesWithServices: statesWithServices
+        uniqueServices: serviceCategories.length,
+        totalServices: serviceCategories.length + allSkills.size,
+        statesWithServices: statesWithServices || Object.keys(statesDistrictsData.states).length
       });
     } catch (error) {
       console.error("Get service counts error:", error);
