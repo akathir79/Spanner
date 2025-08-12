@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { UserPlus, Zap, User, Wrench } from "lucide-react";
 import { SuperFastRegisterForm } from "./SuperFastRegisterForm";
 import { RegistrationMascot, useRegistrationMascot } from "./RegistrationMascot";
+import { FlyingLoginButton } from "./FlyingLoginButton";
 
 interface FloatingRegisterButtonProps {
   onRegister?: () => void;
@@ -13,6 +14,7 @@ interface FloatingRegisterButtonProps {
 export function FloatingRegisterButton({ onRegister }: FloatingRegisterButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedRole, setSelectedRole] = useState<"client" | "worker" | null>(null);
+  const [showFlyingLogin, setShowFlyingLogin] = useState(false);
   const { mascotStep, mascotVisible, hasErrors, updateStep, showError, hideMascot } = useRegistrationMascot();
   
   // Debug logging for mascot
@@ -41,7 +43,18 @@ export function FloatingRegisterButton({ onRegister }: FloatingRegisterButtonPro
     setTimeout(() => {
       onRegister?.();
       handleClose();
+      // Show flying login button after registration completes
+      setShowFlyingLogin(true);
     }, 2000);
+  };
+
+  const handleFlyingLoginClick = () => {
+    setShowFlyingLogin(false);
+    // Open login modal by triggering the navbar login
+    const loginButton = document.querySelector('[data-login-trigger]');
+    if (loginButton instanceof HTMLElement) {
+      loginButton.click();
+    }
   };
 
   return (
@@ -126,6 +139,13 @@ export function FloatingRegisterButton({ onRegister }: FloatingRegisterButtonPro
           isVisible={true}
         />
       )}
+
+      {/* Flying Login Button - Shows after registration */}
+      <FlyingLoginButton
+        show={showFlyingLogin}
+        onComplete={() => setShowFlyingLogin(false)}
+        onLoginClick={handleFlyingLoginClick}
+      />
     </>
   );
 }

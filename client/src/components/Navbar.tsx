@@ -142,6 +142,7 @@ export function Navbar() {
                     variant="ghost"
                     size="sm"
                     onClick={() => setShowLoginModal(true)}
+                    data-login-trigger
                   >
                     Login
                   </Button>
