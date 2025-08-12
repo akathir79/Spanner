@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
@@ -14,6 +14,9 @@ export function FloatingRegisterButton({ onRegister }: FloatingRegisterButtonPro
   const [isOpen, setIsOpen] = useState(false);
   const [selectedRole, setSelectedRole] = useState<"client" | "worker" | null>(null);
   const { mascotStep, mascotVisible, hasErrors, updateStep, showError, hideMascot } = useRegistrationMascot();
+  
+  // Debug logging for mascot
+  console.log("Mascot Debug:", { isOpen, mascotStep, mascotVisible, hasErrors, selectedRole });
 
   const handleRoleSelect = (role: "client" | "worker") => {
     setSelectedRole(role);
@@ -25,6 +28,13 @@ export function FloatingRegisterButton({ onRegister }: FloatingRegisterButtonPro
     setSelectedRole(null);
     updateStep("role-selection");
   };
+
+  // Initialize mascot when dialog opens
+  useEffect(() => {
+    if (isOpen && !selectedRole) {
+      updateStep("role-selection");
+    }
+  }, [isOpen, selectedRole, updateStep]);
 
   const handleRegisterComplete = () => {
     updateStep("completion");
@@ -106,14 +116,14 @@ export function FloatingRegisterButton({ onRegister }: FloatingRegisterButtonPro
         </DialogContent>
       </Dialog>
 
-      {/* Registration Mascot */}
+      {/* Registration Mascot - Always show when dialog is open */}
       {isOpen && (
         <RegistrationMascot
           currentStep={mascotStep}
           userRole={selectedRole || undefined}
           hasErrors={hasErrors}
           onClose={hideMascot}
-          isVisible={mascotVisible}
+          isVisible={true}
         />
       )}
     </>

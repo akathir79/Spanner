@@ -135,6 +135,9 @@ export function RegistrationMascot({
   const [isMinimized, setIsMinimized] = useState(false);
   const [hasShownWelcome, setHasShownWelcome] = useState(false);
 
+  // Debug logging
+  console.log("RegistrationMascot render:", { currentStep, userRole, hasErrors, isVisible });
+
   // Mascot SVG character
   const MascotCharacter = () => (
     <motion.div
@@ -259,20 +262,13 @@ export function RegistrationMascot({
 
     const stepMessages = mascotMessages[currentStep];
     if (stepMessages && stepMessages.length > 0) {
-      // Show welcome message only once
-      if (currentStep === "role-selection" && !hasShownWelcome) {
-        setCurrentMessage(stepMessages[0]);
-        setHasShownWelcome(true);
-        setMessageIndex(0);
-      } else {
-        // Cycle through messages for the current step
-        const index = messageIndex % stepMessages.length;
-        setCurrentMessage(stepMessages[index]);
-      }
+      // Always show the first message for the current step
+      setCurrentMessage(stepMessages[0]);
+      setMessageIndex(0);
     }
-  }, [currentStep, hasErrors, isVisible, messageIndex, hasShownWelcome]);
+  }, [currentStep, hasErrors, isVisible]);
 
-  // Auto-advance messages
+  // Auto-advance messages (simplified)
   useEffect(() => {
     if (!currentMessage || isMinimized) return;
 
@@ -280,14 +276,9 @@ export function RegistrationMascot({
       const stepMessages = mascotMessages[currentStep];
       if (stepMessages && messageIndex < stepMessages.length - 1) {
         setMessageIndex(prev => prev + 1);
-      } else if (Math.random() < 0.3) {
-        // Occasionally show encouragement
-        const randomEncouragement = encouragementMessages[
-          Math.floor(Math.random() * encouragementMessages.length)
-        ];
-        setCurrentMessage(randomEncouragement);
+        setCurrentMessage(stepMessages[messageIndex + 1]);
       }
-    }, 4000);
+    }, 5000);
 
     return () => clearTimeout(timer);
   }, [currentMessage, currentStep, messageIndex, isMinimized]);
@@ -300,7 +291,8 @@ export function RegistrationMascot({
         initial={{ opacity: 0, y: 50, scale: 0.8 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: 50, scale: 0.8 }}
-        className="fixed bottom-4 right-4 z-50"
+        className="fixed bottom-4 right-4 z-[9999] pointer-events-auto"
+        style={{ zIndex: 9999 }}
       >
         {isMinimized ? (
           <motion.div
