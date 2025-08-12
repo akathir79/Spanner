@@ -209,7 +209,7 @@ export function SuperFastRegisterForm({ role, onComplete, onBack }: SuperFastReg
           )}
 
           {/* Location Section */}
-          <div className="space-y-3 p-4 bg-gray-50 rounded-lg">
+          <div className="space-y-2 p-3 bg-gray-50 rounded-lg">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <MapPin className="w-4 h-4 text-blue-500" />
