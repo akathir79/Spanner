@@ -285,98 +285,68 @@ export function RegistrationMascot({
 
   if (!isVisible) return null;
 
+  // Super simple, guaranteed visible version
   return (
-    <div
-      className="fixed bottom-4 right-4 z-[9999] pointer-events-auto bg-white border-2 border-blue-300 rounded-lg shadow-2xl"
-      style={{ 
-        zIndex: 9999, 
+    <div 
+      style={{
         position: 'fixed',
-        bottom: '16px',
-        right: '16px',
-        width: '320px',
-        minHeight: '200px'
+        bottom: '20px',
+        right: '20px',
+        zIndex: 999999,
+        width: '300px',
+        backgroundColor: '#ffffff',
+        border: '3px solid #3b82f6',
+        borderRadius: '12px',
+        boxShadow: '0 10px 25px rgba(0,0,0,0.3)',
+        padding: '16px'
       }}
     >
-        {isMinimized ? (
-          <div>
-            <Button
-              onClick={() => setIsMinimized(false)}
-              className="rounded-full p-3 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 shadow-lg"
-            >
-              <MascotCharacter />
-            </Button>
-          </div>
-        ) : (
-          <div className="w-full p-4">
-            <div className="flex items-start gap-3">
-                <div className="flex-shrink-0">
-                  <MascotCharacter />
-                </div>
-                
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <span className="font-semibold text-gray-800">Sparky</span>
-                      {currentMessage && getMessageIcon(currentMessage.type)}
-                    </div>
-                    
-                    <div className="flex gap-1">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setIsMinimized(true)}
-                        className="h-6 w-6 p-0 hover:bg-gray-200"
-                      >
-                        <ChevronRight className="w-3 h-3" />
-                      </Button>
-                      {onClose && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={onClose}
-                          className="h-6 w-6 p-0 hover:bg-gray-200"
-                        >
-                          <X className="w-3 h-3" />
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                  
-                  <div>
-                    {currentMessage && (
-                      <div>
-                        <p className="text-sm text-gray-700 leading-relaxed">
-                          {currentMessage.text}
-                        </p>
-                        
-                        {currentMessage.type === "success" && (
-                          <div className="mt-3 flex justify-center">
-                            <div className="text-2xl">🎉</div>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                  
-                  {/* Progress indicator */}
-                  <div className="mt-3 flex gap-1">
-                    {["role-selection", "personal-info", "contact-info", "location", "completion"].map((step, index) => {
-                      const stepIndex = ["role-selection", "personal-info", "contact-info", "location", "completion"].indexOf(currentStep);
-                      return (
-                        <div
-                          key={step}
-                          className={`h-1 rounded-full flex-1 transition-colors duration-300 ${
-                            index <= stepIndex ? "bg-blue-500" : "bg-gray-200"
-                          }`}
-                        />
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-            </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+        <div style={{ fontSize: '24px' }}>🔧</div>
+        <h3 style={{ margin: 0, color: '#1f2937', fontSize: '16px', fontWeight: 'bold' }}>
+          Hi! I'm Sparky 
+        </h3>
+        {onClose && (
+          <button 
+            onClick={onClose}
+            style={{
+              marginLeft: 'auto',
+              background: 'none',
+              border: 'none',
+              fontSize: '18px',
+              cursor: 'pointer',
+              color: '#6b7280'
+            }}
+          >
+            ×
+          </button>
         )}
       </div>
+      
+      <div style={{ marginBottom: '12px' }}>
+        <p style={{ margin: 0, fontSize: '14px', color: '#374151', lineHeight: '1.4' }}>
+          {currentMessage ? currentMessage.text : "Welcome to SPANNER! I'm here to guide you through registration. Let's get started! 🚀"}
+        </p>
+      </div>
+      
+      {/* Simple progress bar */}
+      <div style={{ display: 'flex', gap: '4px' }}>
+        {["role-selection", "personal-info", "contact-info", "location", "completion"].map((step, index) => {
+          const stepIndex = ["role-selection", "personal-info", "contact-info", "location", "completion"].indexOf(currentStep);
+          return (
+            <div
+              key={step}
+              style={{
+                height: '4px',
+                flex: 1,
+                borderRadius: '2px',
+                backgroundColor: index <= stepIndex ? '#3b82f6' : '#e5e7eb'
+              }}
+            />
+          );
+        })}
+      </div>
+    </div>
   );
 }
 
