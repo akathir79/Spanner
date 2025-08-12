@@ -594,8 +594,15 @@ export default function Home() {
     return <LoadingScreen message="Initializing SPANNER..." />;
   }
 
-  if (isRedirecting || (user && window.location.pathname === '/')) {
+  // Show loading screen only for redirecting state or when user exists but we're still on home page
+  if (isRedirecting) {
     return <LoadingScreen message="Redirecting to your dashboard..." />;
+  }
+  
+  // If user exists and we're on home page, redirect immediately without showing content
+  if (user && window.location.pathname === '/') {
+    // This will be handled by the auth login function
+    return null;
   }
 
   return (
