@@ -1601,11 +1601,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/admin/verify-user/:userId", async (req, res) => {
     try {
       const { userId } = req.params;
-      await storage.updateUser(userId, { isVerified: true });
+      // Update both isVerified and status to approved when verifying a worker
+      await storage.updateUser(userId, { 
+        isVerified: true,
+        status: "approved" 
+      });
       res.json({ message: "User verified successfully" });
     } catch (error) {
       console.error("Error verifying user:", error);
       res.status(500).json({ error: "Failed to verify user" });
+    }
+  });
+
+  // One-time fix endpoint to correct status for already verified workers
+  app.post("/api/admin/fix-verified-workers-status", async (req, res) => {
+    try {
+      // Get all workers with their profiles
+      const allWorkers = await storage.getAllWorkersWithProfiles();
+      let fixedCount = 0;
+      
+      // Update status for verified workers who have incorrect status
+      for (const worker of allWorkers) {
+        if (worker.isVerified && worker.status !== "approved") {
+          await storage.updateUser(worker.id, { 
+            status: "approved" 
+          });
+          fixedCount++;
+          console.log(`Fixed status for verified worker: ${worker.id} (${worker.firstName})`);
+        }
+      }
+      
+      res.json({ 
+        message: `Fixed status for ${fixedCount} verified workers`,
+        fixedCount 
+      });
+    } catch (error) {
+      console.error("Error fixing verified workers status:", error);
+      res.status(500).json({ error: "Failed to fix verified workers status" });
     }
   });
 
