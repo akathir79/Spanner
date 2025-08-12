@@ -9,7 +9,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery } from "@tanstack/react-query";
 
-import { ChevronLeft, MapPin, User, Edit3, Loader2 } from "lucide-react";
+import { ChevronLeft, MapPin, User, Satellite, Radio } from "lucide-react";
 // Removed unused import
 
 // Super fast registration schema
@@ -286,21 +286,19 @@ export function SuperFastRegisterForm({ role, onComplete, onBack, onStepChange, 
                 size="sm"
                 onClick={() => detectLocation(false)}
                 disabled={isDetectingLocation}
-                className={`flex items-center gap-1 transition-all duration-500 ${
+                className={`flex items-center gap-1.5 transition-all duration-300 ${
                   isDetectingLocation 
-                    ? "location-detecting bg-gradient-to-r from-blue-50 to-cyan-50 border-blue-400 text-blue-700 shadow-xl scale-105 animate-pulse" 
-                    : "hover:bg-blue-50 hover:border-blue-300 hover:shadow-md hover:scale-102"
+                    ? "location-detecting" 
+                    : "hover:shadow-md hover:-translate-y-0.5"
                 }`}
               >
                 {isDetectingLocation ? (
-                  <Loader2 className="w-3 h-3 animate-spin text-blue-600" />
+                  <Radio className="w-4 h-4 location-radar" />
                 ) : (
-                  <Edit3 className="w-3 h-3 transition-transform duration-300 hover:scale-110" />
+                  <Satellite className="w-4 h-4" />
                 )}
-                <span className={`font-medium transition-all duration-300 ${
-                  isDetectingLocation ? "text-blue-700" : ""
-                }`}>
-                  {isDetectingLocation ? "🌍 Detecting..." : hasAutoDetected ? "🔄 Re-Detect" : "📍 Auto-Detect"}
+                <span className="font-medium">
+                  {isDetectingLocation ? "Detecting" : hasAutoDetected ? "Re-Detect" : "Auto-Detect"}
                 </span>
               </Button>
             </div>
