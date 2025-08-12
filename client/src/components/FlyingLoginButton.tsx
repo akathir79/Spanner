@@ -23,10 +23,10 @@ export function FlyingLoginButton({ show, onComplete, onLoginClick }: FlyingLogi
       setIsVisible(true);
       window.addEventListener("mousemove", handleMouseMove);
       
-      // Auto-hide after 10 seconds
+      // Auto-hide after 20 seconds
       const timer = setTimeout(() => {
         handleClose();
-      }, 10000);
+      }, 20000);
       
       return () => {
         window.removeEventListener("mousemove", handleMouseMove);
@@ -79,7 +79,7 @@ export function FlyingLoginButton({ show, onComplete, onLoginClick }: FlyingLogi
             mass: 1,
             duration: 0.8
           }}
-          className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[100000]"
+          className="fixed top-[65%] left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[100000]"
         >
           <div className="relative">
             {/* Close button */}
