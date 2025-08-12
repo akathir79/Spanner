@@ -49,7 +49,6 @@ export function FloatingRegisterButton({ onRegister }: FloatingRegisterButtonPro
           Fast!
         </Badge>
       </div>
-
       {/* Registration Dialog */}
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent className="sm:max-w-md">
@@ -67,7 +66,7 @@ export function FloatingRegisterButton({ onRegister }: FloatingRegisterButtonPro
                 >
                   <User className="w-8 h-8 text-blue-600" />
                   <span className="font-semibold">I Need Services</span>
-                  <span className="text-xs text-gray-500">Register as Client</span>
+                  <span className="text-xs text-[#b40bbf]">Register as Client</span>
                 </Button>
 
                 <Button
@@ -90,8 +89,6 @@ export function FloatingRegisterButton({ onRegister }: FloatingRegisterButtonPro
           )}
         </DialogContent>
       </Dialog>
-
-
     </>
   );
 }
