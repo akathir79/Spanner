@@ -30,7 +30,7 @@ function Router() {
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar />
-      <main className="flex-1" style={{ minHeight: '600px', backgroundColor: 'white' }}>
+      <main className="flex-1">
         <Switch>
           <Route path="/" component={Home} />
           <Route path="/dashboard" component={Dashboard} />
