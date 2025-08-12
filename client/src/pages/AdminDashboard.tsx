@@ -12,8 +12,20 @@ import {
   CheckCircle,
   Clock,
   UserCheck,
-  UserX
+  UserX,
+  Shield,
+  Building,
+  Mail,
+  Phone,
+  Activity,
+  Lock,
+  Globe,
+  User
 } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 
 export default function AdminDashboard() {
   const { user } = useAuth();
@@ -372,6 +384,322 @@ export default function AdminDashboard() {
                   </div>
                 </CardContent>
               </Card>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Admin Profile Section - Unique for Admin/Super Admin */}
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <User className="h-5 w-5" />
+              <span>{user.role === "super_admin" ? "Super Admin" : "Admin"} Profile</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              {/* Admin Identity Section */}
+              <div className="space-y-6">
+                <div className="flex items-center space-x-4">
+                  <Avatar className="h-20 w-20">
+                    <AvatarImage src={user.profilePicture} alt={user.firstName} />
+                    <AvatarFallback className="text-xl bg-purple-100 text-purple-600">
+                      {user.firstName?.[0]}{user.lastName?.[0]}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <h3 className="text-lg font-semibold">{user.firstName} {user.lastName}</h3>
+                    <p className="text-sm text-muted-foreground">
+                      {user.role === "super_admin" ? "Super Administrator" : "Administrator"}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">ID: {user.id}</p>
+                  </div>
+                </div>
+
+                <Separator />
+
+                <div className="space-y-4">
+                  <h4 className="font-semibold flex items-center gap-2">
+                    <Shield className="h-4 w-4" />
+                    Administrative Details
+                  </h4>
+                  <div className="space-y-3">
+                    <div>
+                      <Label className="text-sm text-muted-foreground">Role Level</Label>
+                      <p className="font-medium p-2 bg-muted rounded border">
+                        {user.role === "super_admin" ? "Super Administrator" : "Regional Administrator"}
+                      </p>
+                    </div>
+                    <div>
+                      <Label className="text-sm text-muted-foreground">Department</Label>
+                      <p className="font-medium p-2 bg-muted rounded border">
+                        {user.role === "super_admin" ? "System Administration" : "Operations Management"}
+                      </p>
+                    </div>
+                    <div>
+                      <Label className="text-sm text-muted-foreground">Assigned District</Label>
+                      <p className="font-medium p-2 bg-muted rounded border">
+                        {user.districtName || "All Districts"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <h4 className="font-semibold flex items-center gap-2">
+                    <Phone className="h-4 w-4" />
+                    Contact Information
+                  </h4>
+                  <div className="space-y-3">
+                    <div>
+                      <Label className="text-sm text-muted-foreground">Mobile</Label>
+                      <p className="font-medium p-2 bg-muted rounded border">{user.mobile}</p>
+                    </div>
+                    <div>
+                      <Label className="text-sm text-muted-foreground">Email</Label>
+                      <p className="font-medium p-2 bg-muted rounded border">{user.email || "Not provided"}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* System Access & Permissions */}
+              <div className="space-y-6">
+                <div className="space-y-4">
+                  <h4 className="font-semibold flex items-center gap-2">
+                    <Lock className="h-4 w-4" />
+                    System Access Level
+                  </h4>
+                  <div className="space-y-3">
+                    {user.role === "super_admin" ? (
+                      <>
+                        <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200">
+                          <span className="text-sm">Full System Access</span>
+                          <Badge className="bg-green-100 text-green-800">
+                            <CheckCircle className="h-3 w-3 mr-1" />
+                            Granted
+                          </Badge>
+                        </div>
+                        <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200">
+                          <span className="text-sm">User Management</span>
+                          <Badge className="bg-green-100 text-green-800">
+                            <CheckCircle className="h-3 w-3 mr-1" />
+                            Granted
+                          </Badge>
+                        </div>
+                        <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200">
+                          <span className="text-sm">Admin Creation</span>
+                          <Badge className="bg-green-100 text-green-800">
+                            <CheckCircle className="h-3 w-3 mr-1" />
+                            Granted
+                          </Badge>
+                        </div>
+                        <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200">
+                          <span className="text-sm">Database Management</span>
+                          <Badge className="bg-green-100 text-green-800">
+                            <CheckCircle className="h-3 w-3 mr-1" />
+                            Granted
+                          </Badge>
+                        </div>
+                        <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200">
+                          <span className="text-sm">Financial Reports</span>
+                          <Badge className="bg-green-100 text-green-800">
+                            <CheckCircle className="h-3 w-3 mr-1" />
+                            Granted
+                          </Badge>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200">
+                          <span className="text-sm">District Management</span>
+                          <Badge className="bg-green-100 text-green-800">
+                            <CheckCircle className="h-3 w-3 mr-1" />
+                            Granted
+                          </Badge>
+                        </div>
+                        <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200">
+                          <span className="text-sm">Worker Verification</span>
+                          <Badge className="bg-green-100 text-green-800">
+                            <CheckCircle className="h-3 w-3 mr-1" />
+                            Granted
+                          </Badge>
+                        </div>
+                        <div className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                          <span className="text-sm">User Management</span>
+                          <Badge className="bg-yellow-100 text-yellow-800">Limited</Badge>
+                        </div>
+                        <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
+                          <span className="text-sm">Admin Creation</span>
+                          <Badge variant="outline">
+                            <UserX className="h-3 w-3 mr-1" />
+                            Restricted
+                          </Badge>
+                        </div>
+                        <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
+                          <span className="text-sm">Database Management</span>
+                          <Badge variant="outline">
+                            <UserX className="h-3 w-3 mr-1" />
+                            Restricted
+                          </Badge>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                <Separator />
+
+                <div className="space-y-4">
+                  <h4 className="font-semibold flex items-center gap-2">
+                    <Building className="h-4 w-4" />
+                    Administrative Scope
+                  </h4>
+                  <div className="space-y-2">
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <Label className="text-xs text-muted-foreground">State Coverage</Label>
+                        <p className="text-sm font-medium">
+                          {user.role === "super_admin" ? "All India" : user.state || "Tamil Nadu"}
+                        </p>
+                      </div>
+                      <div>
+                        <Label className="text-xs text-muted-foreground">Districts</Label>
+                        <p className="text-sm font-medium">
+                          {user.role === "super_admin" ? "38 Districts" : "1 District"}
+                        </p>
+                      </div>
+                      <div>
+                        <Label className="text-xs text-muted-foreground">Users Managed</Label>
+                        <p className="text-sm font-medium">{stats.totalUsers}</p>
+                      </div>
+                      <div>
+                        <Label className="text-xs text-muted-foreground">Active Since</Label>
+                        <p className="text-sm font-medium">
+                          {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : "N/A"}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Activity & Responsibilities */}
+              <div className="space-y-6">
+                <div className="space-y-4">
+                  <h4 className="font-semibold flex items-center gap-2">
+                    <Activity className="h-4 w-4" />
+                    Recent Activity
+                  </h4>
+                  <div className="space-y-3">
+                    <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-sm font-medium">Worker Verifications</span>
+                        <Badge variant="secondary" className="text-xs">Today</Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {stats.pendingVerifications} pending verifications
+                      </p>
+                    </div>
+                    <div className="p-3 bg-green-50 rounded-lg border border-green-200">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-sm font-medium">Platform Overview</span>
+                        <Badge variant="secondary" className="text-xs">Active</Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {stats.totalBookings} total bookings managed
+                      </p>
+                    </div>
+                    <div className="p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-sm font-medium">User Support</span>
+                        <Badge variant="secondary" className="text-xs">Ongoing</Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {stats.totalClients} clients, {stats.totalWorkers} workers
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <Separator />
+
+                <div className="space-y-4">
+                  <h4 className="font-semibold flex items-center gap-2">
+                    <Globe className="h-4 w-4" />
+                    Key Responsibilities
+                  </h4>
+                  <div className="space-y-2">
+                    {user.role === "super_admin" ? (
+                      <ul className="space-y-2 text-sm">
+                        <li className="flex items-start gap-2">
+                          <CheckCircle className="h-4 w-4 text-green-600 mt-0.5" />
+                          <span>Overall platform management and security</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <CheckCircle className="h-4 w-4 text-green-600 mt-0.5" />
+                          <span>Create and manage admin accounts</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <CheckCircle className="h-4 w-4 text-green-600 mt-0.5" />
+                          <span>System configuration and settings</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <CheckCircle className="h-4 w-4 text-green-600 mt-0.5" />
+                          <span>Financial oversight and reporting</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <CheckCircle className="h-4 w-4 text-green-600 mt-0.5" />
+                          <span>Database maintenance and backups</span>
+                        </li>
+                      </ul>
+                    ) : (
+                      <ul className="space-y-2 text-sm">
+                        <li className="flex items-start gap-2">
+                          <CheckCircle className="h-4 w-4 text-green-600 mt-0.5" />
+                          <span>District-level user management</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <CheckCircle className="h-4 w-4 text-green-600 mt-0.5" />
+                          <span>Worker verification and approval</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <CheckCircle className="h-4 w-4 text-green-600 mt-0.5" />
+                          <span>Monitor booking activities</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <CheckCircle className="h-4 w-4 text-green-600 mt-0.5" />
+                          <span>Handle user complaints and issues</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <CheckCircle className="h-4 w-4 text-green-600 mt-0.5" />
+                          <span>Generate district reports</span>
+                        </li>
+                      </ul>
+                    )}
+                  </div>
+                </div>
+
+                {/* Quick Actions for Super Admin */}
+                {user.role === "super_admin" && (
+                  <>
+                    <Separator />
+                    <div className="space-y-3">
+                      <h4 className="font-semibold">Quick Actions</h4>
+                      <div className="grid grid-cols-2 gap-2">
+                        <Button size="sm" variant="outline">
+                          <UserCheck className="h-4 w-4 mr-1" />
+                          Create Admin
+                        </Button>
+                        <Button size="sm" variant="outline">
+                          <Settings className="h-4 w-4 mr-1" />
+                          Settings
+                        </Button>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
           </CardContent>
         </Card>

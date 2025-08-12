@@ -1035,132 +1035,304 @@ export default function WorkerDashboard() {
             <WorkerJobsTab user={user} />
           </TabsContent>
 
-          {/* Profile Tab */}
+          {/* Profile Tab - Worker Specific with Professional Details */}
           <TabsContent value="profile" className="space-y-6">
-            {/* Profile Overview */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Users className="h-5 w-5" />
-                  <span>Worker Profile</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                  {/* Profile Image and Basic Info */}
-                  <div className="lg:col-span-1">
-                    <div className="text-center space-y-4">
-                      <Avatar className="h-24 w-24 mx-auto">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Worker Professional Profile */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <Users className="h-5 w-5" />
+                    <span>Professional Profile</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-6">
+                    {/* Profile Header */}
+                    <div className="flex items-center space-x-4">
+                      <Avatar className="h-20 w-20">
                         <AvatarImage src={user.profilePicture} alt={user.firstName} />
-                        <AvatarFallback className="text-lg">
+                        <AvatarFallback className="text-xl bg-green-100 text-green-600">
                           {user.firstName?.[0]}{user.lastName?.[0]}
                         </AvatarFallback>
                       </Avatar>
                       <div>
                         <h3 className="text-lg font-semibold">{user.firstName} {user.lastName}</h3>
-                        <p className="text-sm text-muted-foreground">{user.mobile}</p>
-                        <p className="text-sm text-muted-foreground">{user.email}</p>
-                        <p className="text-xs text-muted-foreground mt-2">
-                          ID: {user?.id || "Not available"}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Profile Details */}
-                  <div className="lg:col-span-2">
-                    <div className="space-y-6">
-                      <div>
-                        <Label className="text-sm text-muted-foreground">Verification Status</Label>
-                        <div className="flex flex-wrap gap-2 mt-2">
-                          {isWorkerApproved ? (
-                            <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100">
-                              <CheckCircle className="h-3 w-3 mr-1" />
-                              Approved
-                            </Badge>
-                          ) : (
-                            <Badge variant="outline">
-                              <AlertCircle className="h-3 w-3 mr-1" />
-                              Pending Approval
-                            </Badge>
-                          )}
-                          {workerProfile?.workerProfile?.isDocumentVerified ? (
-                            <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100">
-                              <CheckCircle className="h-3 w-3 mr-1" />
-                              Documents Verified
-                            </Badge>
-                          ) : (
-                            <Badge variant="outline">
-                              <AlertCircle className="h-3 w-3 mr-1" />
-                              Documents Pending
-                            </Badge>
-                          )}
-                          {workerProfile?.workerProfile?.isAadhaarVerified ? (
-                            <Badge className="bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-100">
-                              <CheckCircle className="h-3 w-3 mr-1" />
-                              Aadhaar Verified
-                            </Badge>
-                          ) : (
-                            <Badge variant="outline">
-                              <AlertCircle className="h-3 w-3 mr-1" />
-                              Aadhaar Pending
-                            </Badge>
-                          )}
-                          {workerProfile?.workerProfile?.isBackgroundVerified ? (
-                            <Badge className="bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-100">
-                              <CheckCircle className="h-3 w-3 mr-1" />
-                              Background Verified
-                            </Badge>
-                          ) : (
-                            <Badge variant="outline">
-                              <AlertCircle className="h-3 w-3 mr-1" />
-                              Background Pending
-                            </Badge>
-                          )}
-                        </div>
-                      </div>
-                      {workerProfile?.workerProfile?.skills && workerProfile.workerProfile.skills.length > 0 && (
-                        <div>
-                          <Label className="text-sm text-muted-foreground">Skills</Label>
-                          <div className="flex flex-wrap gap-2 mt-1">
-                            {(workerProfile.workerProfile.skills || []).map((skill: string, index: number) => (
-                              <Badge key={index} variant="outline" className="text-xs">
-                                {skill}
-                              </Badge>
-                            ))}
+                        <p className="text-sm text-muted-foreground">Professional Worker</p>
+                        <p className="text-xs text-muted-foreground mt-1">ID: {user.id}</p>
+                        <div className="flex items-center gap-2 mt-2">
+                          <Badge className="bg-blue-100 text-blue-800">
+                            {workerProfile?.workerProfile?.primaryService || "Service Worker"}
+                          </Badge>
+                          <div className="flex items-center gap-1">
+                            <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                            <span className="text-xs font-medium">{workerProfile?.workerProfile?.rating || "0.0"}</span>
                           </div>
                         </div>
-                      )}
-                      <div>
-                        <Label className="text-sm text-muted-foreground">Service Areas</Label>
-                        <div className="flex flex-wrap gap-2 mt-1">
-                          {workerProfile?.workerProfile?.serviceAllAreas ? (
-                            <Badge variant="secondary" className="text-xs bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100">
-                              All Areas
+                      </div>
+                    </div>
+
+                    <Separator />
+
+                    {/* Professional Information */}
+                    <div className="space-y-4">
+                      <h4 className="font-semibold flex items-center gap-2">
+                        <Briefcase className="h-4 w-4" />
+                        Professional Details
+                      </h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label className="text-sm text-muted-foreground">Primary Service</Label>
+                          <p className="font-medium p-2 bg-muted rounded border">
+                            {workerProfile?.workerProfile?.primaryService || "Not specified"}
+                          </p>
+                        </div>
+                        <div>
+                          <Label className="text-sm text-muted-foreground">Experience</Label>
+                          <p className="font-medium p-2 bg-muted rounded border">
+                            {workerProfile?.workerProfile?.experienceYears || "0"} years
+                          </p>
+                        </div>
+                        <div>
+                          <Label className="text-sm text-muted-foreground">Hourly Rate</Label>
+                          <p className="font-medium p-2 bg-muted rounded border">
+                            ₹{workerProfile?.workerProfile?.hourlyRate || "0"}/hour
+                          </p>
+                        </div>
+                        <div>
+                          <Label className="text-sm text-muted-foreground">Total Jobs</Label>
+                          <p className="font-medium p-2 bg-muted rounded border">
+                            {workerProfile?.workerProfile?.totalJobs || "0"} completed
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Skills */}
+                    {workerProfile?.workerProfile?.skills && workerProfile.workerProfile.skills.length > 0 && (
+                      <div className="space-y-3">
+                        <h4 className="font-semibold flex items-center gap-2">
+                          <Settings className="h-4 w-4" />
+                          Skills & Expertise
+                        </h4>
+                        <div className="flex flex-wrap gap-2">
+                          {workerProfile.workerProfile.skills.map((skill: string, index: number) => (
+                            <Badge key={index} variant="secondary">
+                              {skill}
                             </Badge>
-                          ) : (
-                            workerProfile?.workerProfile?.serviceAreaNames && workerProfile.workerProfile.serviceAreaNames.length > 0 ? (
-                              workerProfile.workerProfile.serviceAreaNames.map((areaName: string, index: number) => (
-                                <Badge key={index} variant="secondary" className="text-xs">
-                                  {areaName}
-                                </Badge>
-                              ))
-                            ) : (
-                              <Badge variant="outline" className="text-xs">
-                                No specific areas selected
-                              </Badge>
-                            )
-                          )}
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Service Areas */}
+                    <div className="space-y-3">
+                      <h4 className="font-semibold flex items-center gap-2">
+                        <MapPin className="h-4 w-4" />
+                        Service Coverage
+                      </h4>
+                      <div className="flex flex-wrap gap-2">
+                        {workerProfile?.workerProfile?.serviceAllAreas ? (
+                          <Badge className="bg-green-100 text-green-800">
+                            All Areas in District
+                          </Badge>
+                        ) : (
+                          workerProfile?.workerProfile?.serviceAreaNames?.map((area: string, index: number) => (
+                            <Badge key={index} variant="outline">
+                              {area}
+                            </Badge>
+                          )) || <span className="text-sm text-muted-foreground">No areas specified</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Worker Identity & Documents */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <FileText className="h-5 w-5" />
+                    <span>Identity & Documents</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-6">
+                    {/* Verification Status */}
+                    <div className="space-y-3">
+                      <h4 className="font-semibold">Verification Status</h4>
+                      <div className="grid grid-cols-2 gap-3">
+                        {isWorkerApproved ? (
+                          <Badge className="justify-center py-2 bg-green-100 text-green-800">
+                            <CheckCircle className="h-3 w-3 mr-1" />
+                            Approved
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="justify-center py-2">
+                            <AlertCircle className="h-3 w-3 mr-1" />
+                            Pending
+                          </Badge>
+                        )}
+                        {workerProfile?.workerProfile?.aadhaarVerified ? (
+                          <Badge className="justify-center py-2 bg-purple-100 text-purple-800">
+                            <CheckCircle className="h-3 w-3 mr-1" />
+                            Aadhaar Verified
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="justify-center py-2">
+                            <AlertCircle className="h-3 w-3 mr-1" />
+                            Aadhaar Pending
+                          </Badge>
+                        )}
+                        {workerProfile?.workerProfile?.isBackgroundVerified ? (
+                          <Badge className="justify-center py-2 bg-blue-100 text-blue-800">
+                            <CheckCircle className="h-3 w-3 mr-1" />
+                            Background Clear
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="justify-center py-2">
+                            <AlertCircle className="h-3 w-3 mr-1" />
+                            Background Pending
+                          </Badge>
+                        )}
+                        <Badge variant="outline" className="justify-center py-2">
+                          <AlertCircle className="h-3 w-3 mr-1" />
+                          PAN Pending
+                        </Badge>
+                      </div>
+                    </div>
+
+                    <Separator />
+
+                    {/* Identity Documents */}
+                    <div className="space-y-4">
+                      <h4 className="font-semibold flex items-center gap-2">
+                        <CreditCard className="h-4 w-4" />
+                        Identity Documents
+                      </h4>
+                      <div className="space-y-3">
+                        <div>
+                          <Label className="text-sm text-muted-foreground">Aadhaar Number</Label>
+                          <div className="flex items-center gap-2 mt-1">
+                            <p className="font-medium p-2 bg-muted rounded border flex-1">
+                              {workerProfile?.workerProfile?.aadhaarNumber ? 
+                                `XXXX-XXXX-${workerProfile.workerProfile.aadhaarNumber.slice(-4)}` : 
+                                "Not provided"}
+                            </p>
+                            {workerProfile?.workerProfile?.aadhaarVerified && (
+                              <CheckCircle className="h-4 w-4 text-green-600" />
+                            )}
+                          </div>
+                        </div>
+                        <div>
+                          <Label className="text-sm text-muted-foreground">PAN Card Number</Label>
+                          <div className="flex items-center gap-2 mt-1">
+                            <p className="font-medium p-2 bg-muted rounded border flex-1">
+                              Not provided
+                            </p>
+                            <Button size="sm" variant="outline">
+                              Add PAN
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <Separator />
+
+                    {/* Contact Information */}
+                    <div className="space-y-4">
+                      <h4 className="font-semibold flex items-center gap-2">
+                        <Phone className="h-4 w-4" />
+                        Contact Information
+                      </h4>
+                      <div className="space-y-3">
+                        <div>
+                          <Label className="text-sm text-muted-foreground">Mobile Number</Label>
+                          <p className="font-medium p-2 bg-muted rounded border">{user.mobile}</p>
+                        </div>
+                        <div>
+                          <Label className="text-sm text-muted-foreground">Email Address</Label>
+                          <p className="font-medium p-2 bg-muted rounded border">{user.email || "Not provided"}</p>
+                        </div>
+                        <div>
+                          <Label className="text-sm text-muted-foreground">Work Address</Label>
+                          <p className="font-medium p-3 bg-muted rounded border whitespace-pre-line">
+                            {user.fullAddress || `${user.areaName || ""}\n${user.district || ""}, ${user.state || ""}\n${user.pincode || ""}`}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Work History */}
+                    <div className="space-y-3">
+                      <h4 className="font-semibold flex items-center gap-2">
+                        <Clock className="h-4 w-4" />
+                        Work History
+                      </h4>
+                      <div className="grid grid-cols-2 gap-3 text-sm">
+                        <div>
+                          <Label className="text-xs text-muted-foreground">Total Earnings</Label>
+                          <p className="font-semibold text-green-600">₹{stats.totalEarnings.toLocaleString()}</p>
+                        </div>
+                        <div>
+                          <Label className="text-xs text-muted-foreground">Jobs Completed</Label>
+                          <p className="font-semibold">{stats.completedBookings}</p>
+                        </div>
+                        <div>
+                          <Label className="text-xs text-muted-foreground">Member Since</Label>
+                          <p className="font-medium">{user.createdAt ? format(new Date(user.createdAt), "MMM yyyy") : "N/A"}</p>
+                        </div>
+                        <div>
+                          <Label className="text-xs text-muted-foreground">Last Active</Label>
+                          <p className="font-medium">Today</p>
                         </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
 
-            {/* Bank Details Section */}
-            <BankDetailsCard user={user} />
+              {/* Bank Details Section - Important for Workers */}
+              <BankDetailsCard user={user} />
+
+              {/* Worker Statistics */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <BarChart3 className="h-5 w-5" />
+                    <span>Performance Metrics</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                        <DollarSign className="h-8 w-8 text-blue-600 mx-auto mb-2" />
+                        <p className="text-2xl font-bold">₹{stats.totalEarnings.toLocaleString()}</p>
+                        <p className="text-sm text-muted-foreground">Total Earnings</p>
+                      </div>
+                      <div className="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                        <Briefcase className="h-8 w-8 text-green-600 mx-auto mb-2" />
+                        <p className="text-2xl font-bold">{stats.totalBookings}</p>
+                        <p className="text-sm text-muted-foreground">Total Bookings</p>
+                      </div>
+                      <div className="text-center p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
+                        <Star className="h-8 w-8 text-yellow-600 mx-auto mb-2" />
+                        <p className="text-2xl font-bold">{stats.rating.toFixed(1)}</p>
+                        <p className="text-sm text-muted-foreground">Average Rating</p>
+                      </div>
+                      <div className="text-center p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+                        <TrendingUp className="h-8 w-8 text-purple-600 mx-auto mb-2" />
+                        <p className="text-2xl font-bold">{stats.completedBookings}</p>
+                        <p className="text-sm text-muted-foreground">Completed Jobs</p>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
 
           {/* Settings Tab */}

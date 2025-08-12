@@ -11,6 +11,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Separator } from "@/components/ui/separator";
+import { Switch } from "@/components/ui/switch";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -68,7 +70,9 @@ import {
   Move,
   Zap,
   BarChart,
-  Paperclip
+  Paperclip,
+  Bell,
+  UserCheck
 } from "lucide-react";
 import { useLocation } from "wouter";
 import LocationViewer from "@/components/LocationViewer";
@@ -2557,35 +2561,199 @@ export default function Dashboard() {
             </Card>
           </TabsContent>
 
-          {/* Profile Tab */}
+          {/* Profile Tab - Client Specific */}
           <TabsContent value="profile" className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Client Details Section */}
-              <ProfileDetailsCard
-                user={user}
-                onUpdate={() => {
-                  // Invalidate all user-related queries to force refresh
-                  queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-                  queryClient.invalidateQueries({ queryKey: ["/api/user"] });
-                  // Force re-render by updating the user data from auth context
-                  refreshUser();
-                }}
-              />
+              {/* Client Profile Card - Basic Information */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <User className="h-5 w-5" />
+                    <span>Client Profile</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-6">
+                    {/* Profile Picture */}
+                    <div className="flex items-center space-x-4">
+                      <Avatar className="h-20 w-20">
+                        <AvatarImage src={user.profilePicture} alt={user.firstName} />
+                        <AvatarFallback className="text-xl bg-blue-100 text-blue-600">
+                          {user.firstName?.[0]}{user.lastName?.[0]}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <h3 className="text-lg font-semibold">{user.firstName} {user.lastName}</h3>
+                        <p className="text-sm text-muted-foreground">Client Account</p>
+                        <p className="text-xs text-muted-foreground mt-1">ID: {user.id}</p>
+                      </div>
+                    </div>
 
-              {/* User Activity & Membership Section */}
-              <UserActivityCard user={user} />
+                    <Separator />
 
-              {/* Bank Details Section */}
+                    {/* Basic Information */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label className="text-sm text-muted-foreground">First Name</Label>
+                        <p className="font-medium p-2 bg-muted rounded border">{user.firstName}</p>
+                      </div>
+                      <div>
+                        <Label className="text-sm text-muted-foreground">Last Name</Label>
+                        <p className="font-medium p-2 bg-muted rounded border">{user.lastName}</p>
+                      </div>
+                      <div>
+                        <Label className="text-sm text-muted-foreground">Mobile Number</Label>
+                        <p className="font-medium p-2 bg-muted rounded border">{user.mobile}</p>
+                      </div>
+                      <div>
+                        <Label className="text-sm text-muted-foreground">Email Address</Label>
+                        <p className="font-medium p-2 bg-muted rounded border">{user.email || "Not provided"}</p>
+                      </div>
+                    </div>
+
+                    {/* Location Information */}
+                    <div className="space-y-4">
+                      <h4 className="font-semibold flex items-center gap-2">
+                        <MapPin className="h-4 w-4" />
+                        Location Details
+                      </h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label className="text-sm text-muted-foreground">State</Label>
+                          <p className="font-medium p-2 bg-muted rounded border">{user.state || "Not specified"}</p>
+                        </div>
+                        <div>
+                          <Label className="text-sm text-muted-foreground">District</Label>
+                          <p className="font-medium p-2 bg-muted rounded border">{user.district || "Not specified"}</p>
+                        </div>
+                        <div>
+                          <Label className="text-sm text-muted-foreground">Area</Label>
+                          <p className="font-medium p-2 bg-muted rounded border">{user.areaName || "Not specified"}</p>
+                        </div>
+                        <div>
+                          <Label className="text-sm text-muted-foreground">PIN Code</Label>
+                          <p className="font-medium p-2 bg-muted rounded border">{user.pincode || "Not specified"}</p>
+                        </div>
+                      </div>
+                      {user.fullAddress && (
+                        <div>
+                          <Label className="text-sm text-muted-foreground">Full Address</Label>
+                          <p className="font-medium p-3 bg-muted rounded border whitespace-pre-line">{user.fullAddress}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Client Preferences & Settings */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <Settings className="h-5 w-5" />
+                    <span>Preferences & Settings</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-6">
+                    {/* Communication Preferences */}
+                    <div className="space-y-4">
+                      <h4 className="font-semibold flex items-center gap-2">
+                        <Bell className="h-4 w-4" />
+                        Communication Preferences
+                      </h4>
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <Label className="text-sm">Booking Notifications</Label>
+                            <p className="text-xs text-muted-foreground">Get notified about booking updates</p>
+                          </div>
+                          <Switch defaultChecked />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <Label className="text-sm">Worker Responses</Label>
+                            <p className="text-xs text-muted-foreground">Notifications when workers respond</p>
+                          </div>
+                          <Switch defaultChecked />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <Label className="text-sm">Promotional Updates</Label>
+                            <p className="text-xs text-muted-foreground">Receive offers and updates</p>
+                          </div>
+                          <Switch />
+                        </div>
+                      </div>
+                    </div>
+
+                    <Separator />
+
+                    {/* Service Preferences */}
+                    <div className="space-y-4">
+                      <h4 className="font-semibold flex items-center gap-2">
+                        <Briefcase className="h-4 w-4" />
+                        Service Preferences
+                      </h4>
+                      <div className="space-y-3">
+                        <div>
+                          <Label className="text-sm text-muted-foreground">Preferred Service Types</Label>
+                          <div className="flex flex-wrap gap-2 mt-2">
+                            <Badge variant="secondary">Plumbing</Badge>
+                            <Badge variant="secondary">Electrical</Badge>
+                            <Badge variant="secondary">Painting</Badge>
+                          </div>
+                        </div>
+                        <div>
+                          <Label className="text-sm text-muted-foreground">Preferred Time Slots</Label>
+                          <p className="text-sm p-2 bg-muted rounded border mt-1">Morning (9 AM - 12 PM)</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <Separator />
+
+                    {/* Account Information */}
+                    <div className="space-y-4">
+                      <h4 className="font-semibold flex items-center gap-2">
+                        <UserCheck className="h-4 w-4" />
+                        Account Information
+                      </h4>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label className="text-sm text-muted-foreground">Account Status</Label>
+                          <Badge className="bg-green-100 text-green-800 mt-1">Active</Badge>
+                        </div>
+                        <div>
+                          <Label className="text-sm text-muted-foreground">Member Since</Label>
+                          <p className="text-sm mt-1">{user.createdAt ? new Date(user.createdAt).toLocaleDateString() : "N/A"}</p>
+                        </div>
+                        <div>
+                          <Label className="text-sm text-muted-foreground">Total Bookings</Label>
+                          <p className="text-sm font-semibold mt-1">{bookings?.length || 0}</p>
+                        </div>
+                        <div>
+                          <Label className="text-sm text-muted-foreground">Last Login</Label>
+                          <p className="text-sm mt-1">{user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleDateString() : "Today"}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Bank Details Section - Optional for Clients */}
               <BankDetailsCard
                 user={user}
                 onUpdate={() => {
-                  // Invalidate all user-related queries to force refresh
                   queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
                   queryClient.invalidateQueries({ queryKey: ["/api/user"] });
-                  // Force re-render by updating the user data from auth context
                   refreshUser();
                 }}
               />
+
+              {/* User Activity Card */}
+              <UserActivityCard user={user} />
             </div>
           </TabsContent>
 
