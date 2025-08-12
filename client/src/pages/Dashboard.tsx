@@ -94,10 +94,37 @@ const ClientProfileCard = ({ user, refreshUser }: { user: any, refreshUser: () =
     district: user?.district || '',
     state: user?.state || '',
     pincode: user?.pincode || '',
-    fullAddress: user?.fullAddress || ''
+    fullAddress: user?.fullAddress || '',
+    profilePicture: user?.profilePicture || ''
   });
   const [isDetecting, setIsDetecting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+
+  // Handle profile picture upload
+  const handleProfilePictureChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+        toast({
+          title: "File too large",
+          description: "Please select an image under 5MB",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setEditData(prev => ({ ...prev, profilePicture: reader.result as string }));
+        toast({
+          title: "Image selected",
+          description: "Your new profile picture will be saved when you click Save"
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   // Auto-detect location
   const handleDetectLocation = async () => {
@@ -218,12 +245,35 @@ const ClientProfileCard = ({ user, refreshUser }: { user: any, refreshUser: () =
         <div className="space-y-6">
           {/* Profile Picture */}
           <div className="flex items-center space-x-4">
-            <Avatar className="h-20 w-20">
-              <AvatarImage src={user.profilePicture} alt={user.firstName} />
-              <AvatarFallback className="text-xl bg-blue-100 text-blue-600">
-                {user.firstName?.[0]}{user.lastName?.[0]}
-              </AvatarFallback>
-            </Avatar>
+            <div className="relative">
+              <Avatar className="h-20 w-20">
+                <AvatarImage 
+                  src={isEditing ? editData.profilePicture : user.profilePicture} 
+                  alt={user.firstName} 
+                />
+                <AvatarFallback className="text-xl bg-blue-100 text-blue-600">
+                  {user.firstName?.[0]}{user.lastName?.[0]}
+                </AvatarFallback>
+              </Avatar>
+              {isEditing && (
+                <>
+                  <Button
+                    size="sm"
+                    className="absolute bottom-0 right-0 h-8 w-8 rounded-full p-0"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <Camera className="h-4 w-4" />
+                  </Button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleProfilePictureChange}
+                  />
+                </>
+              )}
+            </div>
             <div>
               <h3 className="text-lg font-semibold">{user.firstName} {user.lastName}</h3>
               <p className="text-sm text-muted-foreground">Client Account</p>
