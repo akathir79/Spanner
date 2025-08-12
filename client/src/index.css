@@ -63,6 +63,16 @@
     min-width: 280px !important;
     width: 280px !important;
   }
+  
+  /* Thunder flash animation for floating button */
+  @keyframes flash {
+    0%, 100% { opacity: 0; }
+    50% { opacity: 0.3; }
+  }
+  
+  .animate-flash {
+    animation: flash 2s infinite;
+  }
 }
 
 @keyframes dropdown-open {

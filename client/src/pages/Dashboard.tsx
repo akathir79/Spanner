@@ -73,6 +73,7 @@ import {
 import { useLocation } from "wouter";
 import LocationViewer from "@/components/LocationViewer";
 import ClientBankDetailsForm from "@/components/ClientBankDetailsForm";
+import { ProfileCompletionAlert } from "@/components/ProfileCompletionAlert";
 import statesDistrictsData from "@shared/states-districts.json";
 // Services and districts are now fetched dynamically from database
 

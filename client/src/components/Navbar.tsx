@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useState, useEffect } from "react";
 import { Menu, Moon, Sun, Wrench, User, LogOut, Settings, History } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import { NotificationBell } from "./NotificationBell";
 
 export function Navbar() {
   const [location] = useLocation();
@@ -85,6 +86,9 @@ export function Navbar() {
               {/* Auth Buttons */}
               {user ? (
                 <div className="flex items-center space-x-3">
+                  {/* Notification Bell */}
+                  <NotificationBell />
+                  
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" className="h-auto p-2 hover:bg-muted hidden md:flex items-center space-x-2">

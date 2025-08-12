@@ -601,6 +601,87 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Fast registration for both client and worker
+  app.post("/api/auth/register", async (req, res) => {
+    try {
+      const { role, ...userData } = req.body;
+      
+      // Check if user already exists
+      const existingUser = await storage.getUserByMobile(userData.mobile);
+      if (existingUser) {
+        return res.status(400).json({ message: "User already exists with this mobile number" });
+      }
+      
+      if (role === "client") {
+        const clientData = clientSignupSchema.parse({ role, ...userData });
+        const user = await storage.createUser(clientData);
+        
+        res.json({
+          message: "Client registered successfully",
+          user: {
+            id: user.id,
+            mobile: user.mobile,
+            email: user.email,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            role: user.role,
+            district: user.district,
+            address: user.address,
+            state: user.state,
+            pincode: user.pincode,
+          }
+        });
+      } else if (role === "worker") {
+        // For fast worker registration, create minimal profile
+        const workerData = {
+          ...userData,
+          role: "worker",
+          aadhaarNumber: "000000000000", // Placeholder - will be updated later
+          experienceYears: 1,
+          hourlyRate: 0,
+          serviceDistricts: [userData.district],
+          skills: [userData.primaryService],
+        };
+        
+        const parsedData = workerSignupSchema.parse(workerData);
+        const user = await storage.createUser(parsedData);
+        
+        // Create worker profile
+        const workerProfile = await storage.createWorkerProfile({
+          userId: user.id,
+          aadhaarNumber: "000000000000", // Placeholder
+          primaryService: userData.primaryService,
+          experienceYears: 1,
+          hourlyRate: 0,
+          serviceDistricts: [userData.district],
+          skills: [userData.primaryService],
+          bio: "Profile to be updated",
+        });
+        
+        res.json({
+          message: "Worker registered successfully",
+          user: {
+            id: user.id,
+            mobile: user.mobile,
+            email: user.email,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            role: user.role,
+            district: user.district,
+            address: user.address,
+            state: user.state,
+            pincode: user.pincode,
+          }
+        });
+      } else {
+        return res.status(400).json({ message: "Invalid role specified" });
+      }
+    } catch (error) {
+      console.error("Fast registration error:", error);
+      res.status(400).json({ message: "Registration failed", error: error instanceof Error ? error.message : "Unknown error" });
+    }
+  });
+
   // Client signup
   app.post("/api/auth/signup/client", async (req, res) => {
     try {

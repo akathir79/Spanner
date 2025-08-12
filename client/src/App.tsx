@@ -8,6 +8,7 @@ import { LanguageProvider } from "@/components/LanguageProvider";
 import { AuthProvider } from "@/hooks/useAuth";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import { FloatingRegisterButton } from "@/components/FloatingRegisterButton";
 import Home from "@/pages/Home";
 
 import Dashboard from "@/pages/Dashboard";
@@ -52,6 +53,9 @@ function Router() {
           <Route path="/service-history" component={ServiceHistory} />
           <Route component={NotFound} />
         </Switch>
+        
+        {/* Floating Register Button */}
+        <FloatingRegisterButton />
       </main>
       <Footer />
     </div>
