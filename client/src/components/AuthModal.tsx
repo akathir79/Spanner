@@ -122,6 +122,8 @@ export function AuthModal({ isOpen, onClose, mode, initialTab, onSwitchToSignup 
   const [workerMobileAvailability, setWorkerMobileAvailability] = useState<"checking" | "available" | "not-available" | "">("");
   const [workerEmailAvailability, setWorkerEmailAvailability] = useState<"checking" | "available" | "not-available" | "">("");
   const [workerAadhaarAvailability, setWorkerAadhaarAvailability] = useState<"checking" | "available" | "not-available" | "">("");
+  const [hasAutoDetectedClient, setHasAutoDetectedClient] = useState(false);
+  const [hasAutoDetectedWorker, setHasAutoDetectedWorker] = useState(false);
   
   const { loginWithOtp, verifyOtp, signupClient, signupWorker, isLoading } = useAuth();
   const { t } = useLanguage();
@@ -486,13 +488,15 @@ export function AuthModal({ isOpen, onClose, mode, initialTab, onSwitchToSignup 
 
 
 
-  const handleLocationDetection = async (formType: "client" | "worker") => {
+  const handleLocationDetection = async (formType: "client" | "worker", isAutomatic: boolean = false) => {
     if (!navigator.geolocation) {
-      toast({
-        title: "Location not supported",
-        description: "Your browser doesn't support location detection",
-        variant: "destructive",
-      });
+      if (!isAutomatic) {
+        toast({
+          title: "Location not supported",
+          description: "Your browser doesn't support location detection",
+          variant: "destructive",
+        });
+      }
       return;
     }
 
@@ -733,10 +737,12 @@ export function AuthModal({ isOpen, onClose, mode, initialTab, onSwitchToSignup 
               }
             }
             
-            toast({
-              title: "Location detected",
-              description: "Address, state, and pincode detected. District will be set automatically.",
-            });
+            if (!isAutomatic) {
+              toast({
+                title: "Location detected",
+                description: "Address, state, and pincode detected. District will be set automatically.",
+              });
+            }
             
             console.log('Location detection results:', {
               detectedLocation,
@@ -749,11 +755,13 @@ export function AuthModal({ isOpen, onClose, mode, initialTab, onSwitchToSignup 
           }
         } catch (error) {
           console.error('Error getting location:', error);
-          toast({
-            title: "Location detection failed",
-            description: "Please enter address manually",
-            variant: "destructive",
-          });
+          if (!isAutomatic) {
+            toast({
+              title: "Location detection failed",
+              description: "Please enter address manually",
+              variant: "destructive",
+            });
+          }
         } finally {
           setIsLocationLoading(false);
         }
@@ -774,11 +782,13 @@ export function AuthModal({ isOpen, onClose, mode, initialTab, onSwitchToSignup 
             break;
         }
         
-        toast({
-          title: "Location access required",
-          description: errorMessage,
-          variant: "destructive",
-        });
+        if (!isAutomatic) {
+          toast({
+            title: "Location access required",
+            description: errorMessage,
+            variant: "destructive",
+          });
+        }
         setIsLocationLoading(false);
       },
       {
@@ -1030,8 +1040,38 @@ export function AuthModal({ isOpen, onClose, mode, initialTab, onSwitchToSignup 
   useEffect(() => {
     if (isOpen) {
       resetModal();
+      setHasAutoDetectedClient(false);
+      setHasAutoDetectedWorker(false);
     }
   }, [isOpen]);
+
+  // Auto-detect location when client form opens (exactly like Quick Join form)
+  useEffect(() => {
+    if (isOpen && mode === "signup" && signupType === "client" && !hasAutoDetectedClient) {
+      // Start auto-detection after a short delay to allow form to render
+      const timer = setTimeout(() => {
+        console.log("Auto-detecting location for client form...");
+        handleLocationDetection("client", true); // Pass true for automatic detection
+        setHasAutoDetectedClient(true);
+      }, 1000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen, mode, signupType, hasAutoDetectedClient]);
+
+  // Auto-detect location when worker form opens (exactly like Quick Join form)
+  useEffect(() => {
+    if (isOpen && mode === "signup" && signupType === "worker" && !hasAutoDetectedWorker) {
+      // Start auto-detection after a short delay to allow form to render
+      const timer = setTimeout(() => {
+        console.log("Auto-detecting location for worker form...");
+        handleLocationDetection("worker", true); // Pass true for automatic detection
+        setHasAutoDetectedWorker(true);
+      }, 1000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen, mode, signupType, hasAutoDetectedWorker]);
 
   // Availability checking function
   const checkAvailability = async (mobile: string, email: string, aadhaarNumber: string, role: string, formType: "client" | "worker") => {
