@@ -8,8 +8,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { INDIAN_STATES_AND_UTS } from "@shared/constants";
 
-import { ChevronLeft, MapPin, User, Satellite, Radio } from "lucide-react";
+import { ChevronLeft, MapPin, User, Satellite, Radio, ChevronDown } from "lucide-react";
 // Removed unused import
 
 // Super fast registration schema
@@ -42,6 +45,12 @@ interface SuperFastRegisterFormProps {
 export function SuperFastRegisterForm({ role, onComplete, onBack, onStepChange, onError }: SuperFastRegisterFormProps) {
   const [isDetectingLocation, setIsDetectingLocation] = useState(false);
   const [hasAutoDetected, setHasAutoDetected] = useState(false);
+  const [statePopoverOpen, setStatePopoverOpen] = useState(false);
+  const [stateSearchInput, setStateSearchInput] = useState("");
+  const [districtPopoverOpen, setDistrictPopoverOpen] = useState(false);
+  const [districtSearchInput, setDistrictSearchInput] = useState("");
+  const [apiDistricts, setApiDistricts] = useState<Array<{id: string, name: string, tamilName?: string}>>([]);
+  const [isLoadingDistricts, setIsLoadingDistricts] = useState(false);
   const { toast } = useToast();
 
   const schema = role === "client" ? fastClientSchema : fastWorkerSchema;
@@ -66,6 +75,61 @@ export function SuperFastRegisterForm({ role, onComplete, onBack, onStepChange, 
     queryKey: ["/api/services"],
     enabled: role === "worker",
   });
+
+  // Watch for state changes
+  const selectedState = form.watch("state");
+
+  // Load districts when state changes
+  useEffect(() => {
+    if (selectedState) {
+      fetchDistrictsFromAPI(selectedState);
+    } else {
+      setApiDistricts([]);
+      form.setValue("district", "");
+    }
+  }, [selectedState]);
+
+  // Fetch districts from API
+  const fetchDistrictsFromAPI = async (stateName: string) => {
+    setIsLoadingDistricts(true);
+    try {
+      const response = await fetch(`/api/districts/${encodeURIComponent(stateName)}`);
+      if (response.ok) {
+        const districtsData = await response.json();
+        if (Array.isArray(districtsData) && districtsData.length > 0) {
+          setApiDistricts(districtsData);
+          console.log(`SuperFastRegisterForm: Loaded ${districtsData.length} districts from API for ${stateName}`);
+          return;
+        }
+      }
+      // Fallback to static data if API fails
+      const districts = getFallbackDistricts(stateName);
+      setApiDistricts(districts);
+    } catch (error) {
+      console.error("Error loading districts:", error);
+      const districts = getFallbackDistricts(stateName);
+      setApiDistricts(districts);
+    } finally {
+      setIsLoadingDistricts(false);
+    }
+  };
+
+  // Fallback districts function
+  const getFallbackDistricts = (stateName: string): Array<{id: string, name: string, tamilName?: string}> => {
+    const majorDistricts: Record<string, string[]> = {
+      "Tamil Nadu": ["Chennai", "Coimbatore", "Salem", "Madurai", "Tiruchirappalli", "Tirunelveli", "Erode", "Vellore"],
+      "Karnataka": ["Bangalore Urban", "Mysore", "Hubli", "Mangalore", "Belgaum"],
+      "Maharashtra": ["Mumbai", "Pune", "Nashik", "Nagpur", "Aurangabad"],
+      // Add more states as needed
+    };
+    
+    const districtNames = majorDistricts[stateName] || [];
+    return districtNames.map(name => ({
+      id: name.toLowerCase().replace(/\s+/g, ''),
+      name: name,
+      tamilName: stateName === "Tamil Nadu" ? name : undefined
+    }));
+  };
 
   // Real-time GPS location detection
   const detectLocation = async (isAutomatic = false) => {
@@ -117,9 +181,22 @@ export function SuperFastRegisterForm({ role, onComplete, onBack, onStepChange, 
         if (houseNumber) form.setValue("houseNumber", houseNumber);
         if (street) form.setValue("streetName", street);
         if (area) form.setValue("areaName", area);
-        if (district) form.setValue("district", district);
-        if (state) form.setValue("state", state);
         if (pincode) form.setValue("pincode", pincode);
+        
+        // Set state first to trigger district loading
+        if (state) {
+          form.setValue("state", state);
+          
+          // Wait a bit for districts to load, then set district
+          setTimeout(async () => {
+            // Districts should be loaded by now through the useEffect
+            if (district) {
+              // Try to find matching district from the loaded districts
+              const normalizedDistrict = district.replace(/\s+district$/i, "").trim();
+              form.setValue("district", normalizedDistrict);
+            }
+          }, 500);
+        }
         
         if (!isAutomatic) {
           toast({
@@ -356,9 +433,70 @@ export function SuperFastRegisterForm({ role, onComplete, onBack, onStepChange, 
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-xs">District</FormLabel>
-                    <FormControl>
-                      <Input placeholder="District" {...field} className="text-sm" />
-                    </FormControl>
+                    <Popover open={districtPopoverOpen} onOpenChange={setDistrictPopoverOpen}>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant="outline"
+                            role="combobox"
+                            aria-expanded={districtPopoverOpen}
+                            className="w-full justify-between text-sm font-normal"
+                            disabled={!selectedState || isLoadingDistricts}
+                          >
+                            {!selectedState ? (
+                              <span className="text-muted-foreground">Select state first</span>
+                            ) : isLoadingDistricts ? (
+                              <span className="text-muted-foreground">Loading districts...</span>
+                            ) : field.value ? (
+                              apiDistricts.find(d => d.name === field.value)?.name || field.value
+                            ) : (
+                              <span className="text-muted-foreground">Select district</span>
+                            )}
+                            <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-full p-0 animate-dropdown-open">
+                        <Command>
+                          <CommandInput 
+                            placeholder="Search districts..." 
+                            value={districtSearchInput}
+                            onValueChange={setDistrictSearchInput}
+                            className="transition-all duration-200"
+                          />
+                          <CommandEmpty>No district found.</CommandEmpty>
+                          <CommandList className="max-h-40 overflow-y-auto dropdown-scrollbar">
+                            <CommandGroup>
+                              {apiDistricts
+                                .filter(district => 
+                                  district.name.toLowerCase().includes(districtSearchInput.toLowerCase())
+                                )
+                                .map((district, index) => (
+                                  <CommandItem
+                                    key={district.id}
+                                    className="transition-all duration-150 hover:bg-accent/80 data-[selected=true]:bg-accent animate-district-load"
+                                    style={{ animationDelay: `${index * 15}ms` }}
+                                    onSelect={() => {
+                                      field.onChange(district.name);
+                                      setDistrictPopoverOpen(false);
+                                      setDistrictSearchInput("");
+                                    }}
+                                  >
+                                    <span className="transition-all duration-150">
+                                      {district.name}
+                                      {district.tamilName && district.tamilName !== district.name && (
+                                        <span className="ml-2 text-xs text-muted-foreground">
+                                          ({district.tamilName})
+                                        </span>
+                                      )}
+                                    </span>
+                                  </CommandItem>
+                                ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -387,9 +525,78 @@ export function SuperFastRegisterForm({ role, onComplete, onBack, onStepChange, 
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-xs">State</FormLabel>
-                  <FormControl>
-                    <Input placeholder="State" {...field} className="text-sm" />
-                  </FormControl>
+                  <Popover open={statePopoverOpen} onOpenChange={setStatePopoverOpen}>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          aria-expanded={statePopoverOpen}
+                          className="w-full justify-between text-sm font-normal"
+                        >
+                          {field.value 
+                            ? INDIAN_STATES_AND_UTS.find(state => state.name === field.value)?.name
+                            : "Select your state"}
+                          <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-full p-0 animate-dropdown-open">
+                      <Command>
+                        <CommandInput 
+                          placeholder="Search states..." 
+                          value={stateSearchInput}
+                          onValueChange={setStateSearchInput}
+                          className="transition-all duration-200"
+                        />
+                        <CommandEmpty>No state found.</CommandEmpty>
+                        <CommandList className="max-h-40 overflow-y-auto dropdown-scrollbar">
+                          <CommandGroup heading="States">
+                            {INDIAN_STATES_AND_UTS
+                              .filter(state => state.type === "state")
+                              .filter(state => 
+                                state.name.toLowerCase().includes(stateSearchInput.toLowerCase())
+                              )
+                              .map((state, index) => (
+                                <CommandItem
+                                  key={state.id}
+                                  className="transition-all duration-150 hover:bg-accent/80 data-[selected=true]:bg-accent animate-district-load"
+                                  style={{ animationDelay: `${index * 15}ms` }}
+                                  onSelect={() => {
+                                    field.onChange(state.name);
+                                    setStatePopoverOpen(false);
+                                    setStateSearchInput("");
+                                  }}
+                                >
+                                  <span className="transition-all duration-150">{state.name}</span>
+                                </CommandItem>
+                              ))}
+                          </CommandGroup>
+                          <CommandGroup heading="Union Territories">
+                            {INDIAN_STATES_AND_UTS
+                              .filter(state => state.type === "ut")
+                              .filter(state => 
+                                state.name.toLowerCase().includes(stateSearchInput.toLowerCase())
+                              )
+                              .map((state, index) => (
+                                <CommandItem
+                                  key={state.id}
+                                  className="transition-all duration-150 hover:bg-accent/80 data-[selected=true]:bg-accent animate-district-load"
+                                  style={{ animationDelay: `${(INDIAN_STATES_AND_UTS.filter(item => item.type === 'state').length + index) * 15}ms` }}
+                                  onSelect={() => {
+                                    field.onChange(state.name);
+                                    setStatePopoverOpen(false);
+                                    setStateSearchInput("");
+                                  }}
+                                >
+                                  <span className="transition-all duration-150">{state.name}</span>
+                                </CommandItem>
+                              ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
                   <FormMessage />
                 </FormItem>
               )}
