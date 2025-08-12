@@ -583,10 +583,11 @@ export function SuperFastRegisterForm({ role, onComplete, onBack, onStepChange, 
                                     field.onChange(state.name);
                                     setStatePopoverOpen(false);
                                     setStateSearchInput("");
-                                    // Clear PIN code and district when manually selecting state after auto-detection
+                                    // Clear PIN code, district and area name when manually selecting state after auto-detection
                                     if (hasAutoDetected && !isDetectingLocation) {
                                       form.setValue("pincode", "");
                                       form.setValue("district", "");
+                                      form.setValue("areaName", "");
                                     }
                                   }}
                                 >
@@ -609,10 +610,11 @@ export function SuperFastRegisterForm({ role, onComplete, onBack, onStepChange, 
                                     field.onChange(state.name);
                                     setStatePopoverOpen(false);
                                     setStateSearchInput("");
-                                    // Clear PIN code and district when manually selecting state after auto-detection
+                                    // Clear PIN code, district and area name when manually selecting state after auto-detection
                                     if (hasAutoDetected && !isDetectingLocation) {
                                       form.setValue("pincode", "");
                                       form.setValue("district", "");
+                                      form.setValue("areaName", "");
                                     }
                                   }}
                                 >

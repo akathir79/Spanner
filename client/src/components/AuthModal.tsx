@@ -1772,9 +1772,10 @@ export function AuthModal({ isOpen, onClose, mode, initialTab, onSwitchToSignup 
                                     }
                                     setTimeout(() => {
                                       clientForm.setValue("state", state.name);
-                                      // Clear district and pincode when state changes
+                                      // Clear district, pincode and area name when state changes
                                       clientForm.setValue("districtId", "");
                                       clientForm.setValue("pincode", "");
+                                      clientForm.setValue("areaName", "");
                                       setStatePopoverOpen(false);
                                       setStateSearchInput("");
                                     }, 80);
@@ -1802,9 +1803,10 @@ export function AuthModal({ isOpen, onClose, mode, initialTab, onSwitchToSignup 
                                     }
                                     setTimeout(() => {
                                       clientForm.setValue("state", state.name);
-                                      // Clear district and pincode when state changes
+                                      // Clear district, pincode and area name when state changes
                                       clientForm.setValue("districtId", "");
                                       clientForm.setValue("pincode", "");
+                                      clientForm.setValue("areaName", "");
                                       setStatePopoverOpen(false);
                                       setStateSearchInput("");
                                     }, 80);
@@ -2639,9 +2641,10 @@ export function AuthModal({ isOpen, onClose, mode, initialTab, onSwitchToSignup 
                                     }
                                     setTimeout(() => {
                                       workerForm.setValue("state", state.name);
-                                      // Clear district and pincode when state changes
+                                      // Clear district, pincode and area name when state changes
                                       workerForm.setValue("districtId", "");
                                       workerForm.setValue("pincode", "");
+                                      workerForm.setValue("areaName", "");
                                       setWorkerStatePopoverOpen(false);
                                       setWorkerStateSearchInput("");
                                     }, 80);
@@ -2669,9 +2672,10 @@ export function AuthModal({ isOpen, onClose, mode, initialTab, onSwitchToSignup 
                                     }
                                     setTimeout(() => {
                                       workerForm.setValue("state", state.name);
-                                      // Clear district and pincode when state changes
+                                      // Clear district, pincode and area name when state changes
                                       workerForm.setValue("districtId", "");
                                       workerForm.setValue("pincode", "");
+                                      workerForm.setValue("areaName", "");
                                       setWorkerStatePopoverOpen(false);
                                       setWorkerStateSearchInput("");
                                     }, 80);
