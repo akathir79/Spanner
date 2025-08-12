@@ -73,6 +73,25 @@
   .animate-flash {
     animation: flash 2s infinite;
   }
+
+  /* Prevent white flash by setting consistent background */
+  html, body, #root {
+    background-color: hsl(var(--background));
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Smooth transitions for page loads */
+  .page-enter {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  
+  .page-enter-active {
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 300ms, transform 300ms;
+  }
 }
 
 @keyframes dropdown-open {

@@ -21,6 +21,7 @@ import { WorkerCard } from "@/components/WorkerCard";
 import { useLanguage } from "@/components/LanguageProvider";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { LoadingScreen } from "@/components/LoadingScreen";
 import { Search, CheckCircle, Shield, Clock, Users, MapPin, Star, Handshake, ChevronDown, X, MapPinIcon } from "lucide-react";
 import { VoiceInput } from "@/components/VoiceInput";
 import { VoiceAssistant } from "@/components/VoiceAssistant";
@@ -197,7 +198,7 @@ const testimonials = [
 
 export default function Home() {
   const { t } = useLanguage();
-  const { user, isLoading: authLoading } = useAuth();
+  const { user, isLoading: authLoading, isRedirecting } = useAuth();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const [searchForm, setSearchForm] = useState({
@@ -588,23 +589,13 @@ export default function Home() {
     // Filter workers by district
   };
 
-  // Authentication redirect logic in useEffect to avoid render warnings
-  useEffect(() => {
-    if (user && window.location.pathname === '/') {
-      const userRole = user.role;
-      if (userRole === "admin" || userRole === "super_admin") {
-        setLocation("/admin-dashboard");
-      } else if (userRole === "worker") {
-        setLocation("/worker-dashboard");
-      } else if (userRole === "client") {
-        setLocation("/dashboard");
-      }
-    }
-  }, [user, setLocation]);
+  // Show loading screen during authentication or redirection
+  if (authLoading) {
+    return <LoadingScreen message="Initializing SPANNER..." />;
+  }
 
-  // Authentication checks - MUST be after all hooks
-  if (user && window.location.pathname === '/') {
-    return null; // Will redirect via useEffect
+  if (isRedirecting || (user && window.location.pathname === '/')) {
+    return <LoadingScreen message="Redirecting to your dashboard..." />;
   }
 
   return (

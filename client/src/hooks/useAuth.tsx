@@ -26,6 +26,7 @@ interface User {
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
+  isRedirecting: boolean;
   isAuthenticated: boolean;
   login: (userData: User) => void;
   logout: () => void;
@@ -33,6 +34,7 @@ interface AuthContextType {
   verifyOtp: (mobile: string, otp: string, purpose: string) => Promise<User | null>;
   signupClient: (data: any) => Promise<{ success: boolean; user?: User; error?: string }>;
   signupWorker: (data: any) => Promise<{ user: User } | null>;
+  refreshUser: () => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -40,6 +42,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRedirecting, setIsRedirecting] = useState(false);
   const [, setLocation] = useLocation();
 
   useEffect(() => {
@@ -60,6 +63,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = (userData: User) => {
     setUser(userData);
     localStorage.setItem("user", JSON.stringify(userData));
+    
+    // Set redirecting state to show loading screen during navigation
+    setIsRedirecting(true);
+    
+    // Redirect based on role with smooth transition
+    setTimeout(() => {
+      const userRole = userData.role;
+      if (userRole === "admin" || userRole === "super_admin") {
+        setLocation("/admin-dashboard");
+      } else if (userRole === "worker") {
+        setLocation("/worker-dashboard");
+      } else if (userRole === "client") {
+        setLocation("/dashboard");
+      }
+      
+      // Reset redirecting state after navigation
+      setTimeout(() => {
+        setIsRedirecting(false);
+      }, 100);
+    }, 300); // Small delay to show loading state
   };
 
   const logout = () => {
@@ -176,6 +199,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const value = {
     user,
     isLoading,
+    isRedirecting,
     isAuthenticated: !!user,
     login,
     logout,
