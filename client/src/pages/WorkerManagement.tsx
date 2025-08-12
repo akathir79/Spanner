@@ -889,19 +889,8 @@ export default function WorkerManagement() {
                   </div>
                 )}
                 
-                {clients.length === 0 ? (
-                  <div className="text-center py-12">
-                    <div className="text-gray-400 mb-4">
-                      <svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
-                      </svg>
-                    </div>
-                    <p className="text-gray-500 dark:text-gray-400 text-lg">No clients registered yet</p>
-                    <p className="text-gray-400 dark:text-gray-500 text-sm mt-1">Worker registrations will appear here</p>
-                  </div>
-                ) : (
-                  <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-                    <Table>
+                <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                  <Table>
                       <TableHeader>
                         <TableRow>
                           <TableHead className="w-[50px]">
@@ -1041,7 +1030,23 @@ export default function WorkerManagement() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {clients.map((worker) => {
+                        {clients.length === 0 ? (
+                          <TableRow>
+                            <TableCell colSpan={7} className="text-center py-12">
+                              <div className="text-gray-400 mb-4">
+                                <svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+                                </svg>
+                              </div>
+                              <p className="text-gray-500 dark:text-gray-400 text-lg">No workers found</p>
+                              <p className="text-gray-400 dark:text-gray-500 text-sm mt-1">
+                                {searchQuery || statusFilter !== "all" 
+                                  ? "Try adjusting your filters or search criteria"
+                                  : "Worker registrations will appear here"}
+                              </p>
+                            </TableCell>
+                          </TableRow>
+                        ) : clients.map((worker) => {
                           const activityStatus = getActivityStatus(worker.lastLoginAt, worker.createdAt);
                           return (
                             <TableRow key={worker.id}>
@@ -1892,7 +1897,6 @@ export default function WorkerManagement() {
                       </TableBody>
                     </Table>
                   </div>
-                )}
                 
                 {/* Pagination Controls */}
                 {filteredWorkers.length > 0 && (

@@ -860,20 +860,8 @@ export default function AdminManagement() {
                     </div>
                   )}
                   
-                  {admins.length === 0 ? (
-                    <div className="text-center py-12">
-                      <div className="text-gray-400 mb-4">
-                        <div className="flex items-center justify-center space-x-2">
-                          <Shield className="w-12 h-12" />
-                          <Crown className="w-8 h-8 text-yellow-500" />
-                        </div>
-                      </div>
-                      <p className="text-gray-500 dark:text-gray-400 text-lg">No administrators found</p>
-                      <p className="text-gray-400 dark:text-gray-500 text-sm mt-1">Administrator accounts will appear here</p>
-                    </div>
-                  ) : (
-                    <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-                      <Table>
+                  <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                    <Table>
                         <TableHeader>
                           <TableRow>
                             <TableHead className="w-[50px]">
@@ -971,7 +959,24 @@ export default function AdminManagement() {
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {admins.map((admin) => {
+                          {admins.length === 0 ? (
+                            <TableRow>
+                              <TableCell colSpan={6} className="text-center py-12">
+                                <div className="text-gray-400 mb-4">
+                                  <div className="flex items-center justify-center space-x-2">
+                                    <Shield className="w-12 h-12" />
+                                    <Crown className="w-8 h-8 text-yellow-500" />
+                                  </div>
+                                </div>
+                                <p className="text-gray-500 dark:text-gray-400 text-lg">No administrators found</p>
+                                <p className="text-gray-400 dark:text-gray-500 text-sm mt-1">
+                                  {searchQuery || statusFilter !== "all"
+                                    ? "Try adjusting your filters or search criteria"
+                                    : "Administrator accounts will appear here"}
+                                </p>
+                              </TableCell>
+                            </TableRow>
+                          ) : admins.map((admin) => {
                             const activityStatus = getActivityStatus(admin.lastLoginAt, admin.createdAt);
                             
                             return (
@@ -1221,7 +1226,6 @@ export default function AdminManagement() {
                         </TableBody>
                       </Table>
                     </div>
-                  )}
 
                   {/* Pagination */}
                   {totalPages > 1 && (
