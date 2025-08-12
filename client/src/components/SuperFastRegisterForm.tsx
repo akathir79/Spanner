@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -41,6 +41,7 @@ interface SuperFastRegisterFormProps {
 
 export function SuperFastRegisterForm({ role, onComplete, onBack, onStepChange, onError }: SuperFastRegisterFormProps) {
   const [isDetectingLocation, setIsDetectingLocation] = useState(false);
+  const [hasAutoDetected, setHasAutoDetected] = useState(false);
   const { toast } = useToast();
 
   const schema = role === "client" ? fastClientSchema : fastWorkerSchema;
@@ -67,9 +68,11 @@ export function SuperFastRegisterForm({ role, onComplete, onBack, onStepChange, 
   });
 
   // Real-time GPS location detection
-  const detectLocation = async () => {
+  const detectLocation = async (isAutomatic = false) => {
     setIsDetectingLocation(true);
-    onStepChange?.("location");
+    if (!isAutomatic) {
+      onStepChange?.("location");
+    }
     
     try {
       // Get GPS coordinates
@@ -118,24 +121,41 @@ export function SuperFastRegisterForm({ role, onComplete, onBack, onStepChange, 
         if (state) form.setValue("state", state);
         if (pincode) form.setValue("pincode", pincode);
         
-        toast({
-          title: "Location detected!",
-          description: "Your address has been automatically filled using GPS.",
-        });
+        if (!isAutomatic) {
+          toast({
+            title: "Location detected!",
+            description: "Your address has been automatically filled using GPS.",
+          });
+        }
+        setHasAutoDetected(true);
       } else {
         throw new Error("No address found for your location");
       }
     } catch (error) {
       console.error("Location detection error:", error);
-      toast({
-        title: "Location detection failed",
-        description: "Please enter your address manually. Make sure location access is enabled.",
-        variant: "destructive",
-      });
+      if (!isAutomatic) {
+        toast({
+          title: "Location detection failed",
+          description: "Please enter your address manually. Make sure location access is enabled.",
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsDetectingLocation(false);
     }
   };
+
+  // Auto-detect location when form loads
+  useEffect(() => {
+    if (!hasAutoDetected) {
+      // Start auto-detection after a short delay to allow form to render
+      const timer = setTimeout(() => {
+        detectLocation(true);
+      }, 1000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [hasAutoDetected]);
 
 
   const registerMutation = useMutation({
@@ -264,12 +284,12 @@ export function SuperFastRegisterForm({ role, onComplete, onBack, onStepChange, 
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={detectLocation}
+                onClick={() => detectLocation(false)}
                 disabled={isDetectingLocation}
                 className="flex items-center gap-1"
               >
                 <Edit3 className="w-3 h-3" />
-                {isDetectingLocation ? "Detecting..." : "Auto-Detect"}
+                {isDetectingLocation ? "Detecting..." : hasAutoDetected ? "Re-Detect" : "Auto-Detect"}
               </Button>
             </div>
 
