@@ -76,7 +76,7 @@ export function FloatingRegisterButton({ onRegister }: FloatingRegisterButtonPro
                 >
                   <Wrench className="w-8 h-8 text-green-600" />
                   <span className="font-semibold">I Provide Services</span>
-                  <span className="text-xs text-gray-500">Register as Worker</span>
+                  <span className="text-xs text-[#e6025b]">Register as Worker</span>
                 </Button>
               </div>
             </div>
