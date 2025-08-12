@@ -11,6 +11,7 @@ import { Menu, Moon, Sun, Wrench, User, LogOut, Settings, History } from "lucide
 import { useQuery } from "@tanstack/react-query";
 import { NotificationBell } from "./NotificationBell";
 import { FloatingRegisterButton } from "./FloatingRegisterButton";
+import { AvatarGenerator } from "./AvatarGenerator";
 
 export function Navbar() {
   const [location] = useLocation();
@@ -124,6 +125,9 @@ export function Navbar() {
                         <History className="mr-2 h-4 w-4" />
                         Service History
                       </DropdownMenuItem>
+                      <div className="px-1 py-1">
+                        <AvatarGenerator />
+                      </div>
                       <DropdownMenuItem onClick={logout} className="cursor-pointer">
                         <LogOut className="mr-2 h-4 w-4" />
                         Logout
@@ -133,6 +137,7 @@ export function Navbar() {
                 </div>
               ) : (
                 <div className="hidden md:flex items-center space-x-2">
+                  <AvatarGenerator />
                   <Button
                     variant="ghost"
                     size="sm"

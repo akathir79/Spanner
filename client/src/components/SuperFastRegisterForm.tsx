@@ -43,9 +43,11 @@ interface SuperFastRegisterFormProps {
   role: "client" | "worker";
   onComplete: () => void;
   onBack: () => void;
+  onStepChange?: (step: "role-selection" | "personal-info" | "contact-info" | "location" | "completion") => void;
+  onError?: () => void;
 }
 
-export function SuperFastRegisterForm({ role, onComplete, onBack }: SuperFastRegisterFormProps) {
+export function SuperFastRegisterForm({ role, onComplete, onBack, onStepChange, onError }: SuperFastRegisterFormProps) {
   const [isDetectingLocation, setIsDetectingLocation] = useState(false);
   const { toast } = useToast();
 
@@ -73,6 +75,7 @@ export function SuperFastRegisterForm({ role, onComplete, onBack }: SuperFastReg
   // Location detection
   const detectLocation = async () => {
     setIsDetectingLocation(true);
+    onStepChange?.("location");
     try {
       const location = await LocationService.getCurrentLocation();
       if (location) {
@@ -120,6 +123,7 @@ export function SuperFastRegisterForm({ role, onComplete, onBack }: SuperFastReg
       onComplete();
     },
     onError: (error: any) => {
+      onError?.();
       toast({
         title: "Registration failed",
         description: error.message || "Please try again.",
@@ -129,6 +133,7 @@ export function SuperFastRegisterForm({ role, onComplete, onBack }: SuperFastReg
   });
 
   const onSubmit = (data: FastClientData | FastWorkerData) => {
+    onStepChange?.("contact-info");
     registerMutation.mutate(data);
   };
 

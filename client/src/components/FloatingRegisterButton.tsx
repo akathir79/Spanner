@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Badge } from "@/components/ui/badge";
 import { UserPlus, Zap, User, Wrench } from "lucide-react";
 import { SuperFastRegisterForm } from "./SuperFastRegisterForm";
+import { RegistrationMascot, useRegistrationMascot } from "./RegistrationMascot";
 
 interface FloatingRegisterButtonProps {
   onRegister?: () => void;
@@ -12,19 +13,25 @@ interface FloatingRegisterButtonProps {
 export function FloatingRegisterButton({ onRegister }: FloatingRegisterButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedRole, setSelectedRole] = useState<"client" | "worker" | null>(null);
+  const { mascotStep, mascotVisible, hasErrors, updateStep, showError, hideMascot } = useRegistrationMascot();
 
   const handleRoleSelect = (role: "client" | "worker") => {
     setSelectedRole(role);
+    updateStep("personal-info");
   };
 
   const handleClose = () => {
     setIsOpen(false);
     setSelectedRole(null);
+    updateStep("role-selection");
   };
 
   const handleRegisterComplete = () => {
-    onRegister?.();
-    handleClose();
+    updateStep("completion");
+    setTimeout(() => {
+      onRegister?.();
+      handleClose();
+    }, 2000);
   };
 
   return (
@@ -88,11 +95,27 @@ export function FloatingRegisterButton({ onRegister }: FloatingRegisterButtonPro
             <SuperFastRegisterForm
               role={selectedRole}
               onComplete={handleRegisterComplete}
-              onBack={() => setSelectedRole(null)}
+              onBack={() => {
+                setSelectedRole(null);
+                updateStep("role-selection");
+              }}
+              onStepChange={updateStep}
+              onError={showError}
             />
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Registration Mascot */}
+      {isOpen && (
+        <RegistrationMascot
+          currentStep={mascotStep}
+          userRole={selectedRole || undefined}
+          hasErrors={hasErrors}
+          onClose={hideMascot}
+          isVisible={mascotVisible}
+        />
+      )}
     </>
   );
 }
