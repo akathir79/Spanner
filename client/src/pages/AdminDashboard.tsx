@@ -67,10 +67,7 @@ export default function AdminDashboard() {
   // Handle advertisement toggle change
   const handleAdToggle = async (enabled: boolean) => {
     try {
-      await apiRequest('/api/settings/advertisement-toggle', {
-        method: 'PUT',
-        body: JSON.stringify({ enabled }),
-      });
+      await apiRequest('PUT', '/api/settings/advertisement-toggle', { enabled });
       setAdsEnabled(enabled);
       // Invalidate advertisement queries to refresh
       queryClient.invalidateQueries({ queryKey: ['/api/advertisements'] });
