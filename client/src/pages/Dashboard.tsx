@@ -2643,73 +2643,30 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* Service Highlights */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              <Card className="border-blue-200 dark:border-blue-800">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="bg-blue-100 dark:bg-blue-900/30 rounded-lg p-2">
-                      <TrendingUp className="h-5 w-5 text-blue-600" />
-                    </div>
-                    <div>
-                      <p className="text-2xl font-bold text-blue-600">5,000+</p>
-                      <p className="text-xs text-muted-foreground">Verified Workers</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="border-purple-200 dark:border-purple-800">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="bg-purple-100 dark:bg-purple-900/30 rounded-lg p-2">
-                      <Star className="h-5 w-5 text-purple-600" />
-                    </div>
-                    <div>
-                      <p className="text-2xl font-bold text-purple-600">4.8/5</p>
-                      <p className="text-xs text-muted-foreground">Average Rating</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="border-green-200 dark:border-green-800">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="bg-green-100 dark:bg-green-900/30 rounded-lg p-2">
-                      <CheckCircle className="h-5 w-5 text-green-600" />
-                    </div>
-                    <div>
-                      <p className="text-2xl font-bold text-green-600">24/7</p>
-                      <p className="text-xs text-muted-foreground">Service Available</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+            {/* Post New Job Button */}
+            <div className="flex justify-center mt-4">
+              <Dialog open={isJobFormOpen} onOpenChange={setIsJobFormOpen}>
+                <DialogTrigger asChild>
+                  <Button size="lg" className="w-full md:w-auto px-8">
+                    <Plus className="h-5 w-5 mr-2" />
+                    Post a New Job
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>Post a New Job</DialogTitle>
+                    <p className="text-muted-foreground">
+                      Get competitive bids from qualified workers across India
+                    </p>
+                  </DialogHeader>
+                  <JobPostingForm onClose={() => setIsJobFormOpen(false)} />
+                </DialogContent>
+              </Dialog>
             </div>
           </div>
         </div>
 
-        {/* Post a New Job Button */}
-        <div className="mb-6">
-          <Dialog open={isJobFormOpen} onOpenChange={setIsJobFormOpen}>
-            <DialogTrigger asChild>
-              <Button size="lg" className="w-full sm:w-auto">
-                <Plus className="h-5 w-5 mr-2" />
-                Post a New Job
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>Post a New Job</DialogTitle>
-                <p className="text-muted-foreground">
-                  Get competitive bids from qualified workers across Tamil Nadu
-                </p>
-              </DialogHeader>
-              <JobPostingForm onClose={() => setIsJobFormOpen(false)} />
-            </DialogContent>
-          </Dialog>
-        </div>
+
 
         <Tabs defaultValue="bookings" className="space-y-6">
           <TabsList className="grid w-full grid-cols-5 bg-muted">
