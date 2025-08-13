@@ -80,6 +80,7 @@ Located in `shared/schema.ts`, the database includes:
 - **Client Dashboard**: Booking management and service requests
 - **Worker Dashboard**: Job management, earnings tracking, and availability control
 - **Admin Dashboard**: Platform oversight, user management, and analytics
+- **UPDATE_REQUIRED Styling**: Text displayed in red color (text-red-500) with reduced font size (text-xs) across all dashboards for better visual clarity (August 13, 2025)
 
 ### Language Support
 - English-only interface for India-wide coverage

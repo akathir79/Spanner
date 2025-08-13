@@ -275,7 +275,14 @@ const ClientProfileCard = ({ user, refreshUser }: { user: any, refreshUser: () =
               )}
             </div>
             <div>
-              <h3 className="text-lg font-semibold">{user.firstName} {user.lastName}</h3>
+              <h3 className="text-lg font-semibold">
+                {user.firstName}{" "}
+                {user.lastName === "UPDATE_REQUIRED" ? (
+                  <span className="text-red-500 text-xs">UPDATE_REQUIRED</span>
+                ) : (
+                  user.lastName
+                )}
+              </h3>
               <p className="text-sm text-muted-foreground">Client Account</p>
               <p className="text-xs text-muted-foreground mt-1">ID: {user.id}</p>
             </div>
@@ -304,7 +311,13 @@ const ClientProfileCard = ({ user, refreshUser }: { user: any, refreshUser: () =
                   onChange={(e) => setEditData(prev => ({ ...prev, lastName: e.target.value }))}
                 />
               ) : (
-                <p className="font-medium p-2 bg-muted rounded border">{user.lastName}</p>
+                <p className="font-medium p-2 bg-muted rounded border">
+                  {user.lastName === "UPDATE_REQUIRED" ? (
+                    <span className="text-red-500 text-xs">UPDATE_REQUIRED</span>
+                  ) : (
+                    user.lastName
+                  )}
+                </p>
               )}
             </div>
             <div>

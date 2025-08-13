@@ -317,7 +317,14 @@ const AdminProfile = () => {
                   )}
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold">{user.firstName} {user.lastName}</h3>
+                  <h3 className="text-lg font-semibold">
+                    {user.firstName}{" "}
+                    {user.lastName === "UPDATE_REQUIRED" ? (
+                      <span className="text-red-500 text-xs">UPDATE_REQUIRED</span>
+                    ) : (
+                      user.lastName
+                    )}
+                  </h3>
                   <p className="text-sm text-muted-foreground">
                     {isSuper ? "Super Administrator" : "Administrator"}
                   </p>
@@ -352,7 +359,13 @@ const AdminProfile = () => {
                         onChange={(e) => setEditData(prev => ({ ...prev, lastName: e.target.value }))}
                       />
                     ) : (
-                      <p className="font-medium p-2 bg-muted rounded border">{user.lastName}</p>
+                      <p className="font-medium p-2 bg-muted rounded border">
+                        {user.lastName === "UPDATE_REQUIRED" ? (
+                          <span className="text-red-500 text-xs">UPDATE_REQUIRED</span>
+                        ) : (
+                          user.lastName
+                        )}
+                      </p>
                     )}
                   </div>
                   <div>
