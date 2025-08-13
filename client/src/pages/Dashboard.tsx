@@ -72,7 +72,10 @@ import {
   BarChart,
   Paperclip,
   Bell,
-  UserCheck
+  UserCheck,
+  Wallet,
+  Gift,
+  Percent
 } from "lucide-react";
 import { useLocation } from "wouter";
 import LocationViewer from "@/components/LocationViewer";
@@ -2530,13 +2533,161 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-muted/30 pt-20 pb-8">{/* Removed customization features */}
       <div className="container mx-auto px-4">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">
-            Welcome back, {user.firstName}! <span className="text-lg font-medium text-primary">({user.id})</span>
-          </h1>
-          <p className="text-muted-foreground">
-            Manage your bookings and find trusted workers for your service needs.
-          </p>
+        {/* Wallet Card and Promotional Section */}
+        <div className="mb-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Wallet Card - Left Side */}
+          <Card className="lg:col-span-1 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border-green-200 dark:border-green-800">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                  <Wallet className="h-5 w-5 text-green-600" />
+                  <span>My Wallet</span>
+                </CardTitle>
+                <Badge variant="outline" className="bg-green-100 text-green-700 border-green-300">
+                  Active
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Balance Display */}
+              <div className="bg-white dark:bg-gray-900 rounded-lg p-4 text-center">
+                <p className="text-sm text-muted-foreground mb-1">Available Balance</p>
+                <div className="flex items-center justify-center gap-1">
+                  <IndianRupee className="h-8 w-8 text-green-600" />
+                  <span className="text-3xl font-bold text-green-600">2,450.00</span>
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Last updated: {new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                </p>
+              </div>
+              
+              {/* Action Buttons */}
+              <div className="grid grid-cols-1 gap-2">
+                <Button className="w-full bg-green-600 hover:bg-green-700 text-white">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Money
+                </Button>
+                <Button variant="outline" className="w-full border-red-300 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20">
+                  <CreditCard className="h-4 w-4 mr-2" />
+                  Withdraw Money
+                </Button>
+                <Button variant="outline" className="w-full bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border-purple-300 text-purple-700 hover:from-purple-100 hover:to-pink-100">
+                  <Gift className="h-4 w-4 mr-2" />
+                  Grab Coupon
+                </Button>
+              </div>
+
+              {/* Quick Stats */}
+              <div className="grid grid-cols-2 gap-2 pt-2 border-t">
+                <div className="text-center">
+                  <p className="text-xs text-muted-foreground">This Month</p>
+                  <p className="text-sm font-semibold text-green-600">+₹5,230</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-xs text-muted-foreground">Pending</p>
+                  <p className="text-sm font-semibold text-orange-600">₹1,200</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Promotional Content - Right Side */}
+          <div className="lg:col-span-2 space-y-4">
+            {/* Welcome Message */}
+            <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg p-6 text-white">
+              <h2 className="text-2xl font-bold mb-2">
+                Welcome back, {user.firstName}! 
+                <span className="text-sm font-normal ml-2 opacity-90">({user.id})</span>
+              </h2>
+              <p className="text-white/90 mb-4">
+                Your trusted platform for all service needs across India
+              </p>
+              
+              {/* Promotional Offers */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                {/* Offer 1 */}
+                <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
+                  <div className="flex items-start gap-3">
+                    <div className="bg-yellow-400 text-black rounded-full p-2">
+                      <Percent className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-white">New Year Special!</h3>
+                      <p className="text-sm text-white/80 mt-1">
+                        Get 20% off on your first booking of 2025
+                      </p>
+                      <Button variant="secondary" size="sm" className="mt-2 text-xs">
+                        Claim Now
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Offer 2 */}
+                <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
+                  <div className="flex items-start gap-3">
+                    <div className="bg-green-400 text-black rounded-full p-2">
+                      <Zap className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-white">Refer & Earn</h3>
+                      <p className="text-sm text-white/80 mt-1">
+                        Earn ₹100 for every friend who books a service
+                      </p>
+                      <Button variant="secondary" size="sm" className="mt-2 text-xs">
+                        Start Referring
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Service Highlights */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <Card className="border-blue-200 dark:border-blue-800">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="bg-blue-100 dark:bg-blue-900/30 rounded-lg p-2">
+                      <TrendingUp className="h-5 w-5 text-blue-600" />
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold text-blue-600">5,000+</p>
+                      <p className="text-xs text-muted-foreground">Verified Workers</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="border-purple-200 dark:border-purple-800">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="bg-purple-100 dark:bg-purple-900/30 rounded-lg p-2">
+                      <Star className="h-5 w-5 text-purple-600" />
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold text-purple-600">4.8/5</p>
+                      <p className="text-xs text-muted-foreground">Average Rating</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="border-green-200 dark:border-green-800">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="bg-green-100 dark:bg-green-900/30 rounded-lg p-2">
+                      <CheckCircle className="h-5 w-5 text-green-600" />
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold text-green-600">24/7</p>
+                      <p className="text-xs text-muted-foreground">Service Available</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
         </div>
 
         {/* Post a New Job Button */}
