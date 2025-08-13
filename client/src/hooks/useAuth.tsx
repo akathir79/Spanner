@@ -11,9 +11,13 @@ interface User {
   role: string;
   profilePicture?: string;
   address?: string;
+  houseNumber?: string;
+  streetName?: string;
+  areaName?: string;
   state?: string;
   district?: string;
   pincode?: string;
+  fullAddress?: string;
   bankAccountNumber?: string;
   bankIFSC?: string;
   bankAccountHolderName?: string;
