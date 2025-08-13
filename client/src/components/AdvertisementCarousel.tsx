@@ -151,7 +151,7 @@ export default function AdvertisementCarousel({ targetAudience }: AdvertisementC
 
   return (
     <div 
-      className="relative w-full"
+      className="relative w-full group"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
@@ -252,7 +252,7 @@ export default function AdvertisementCarousel({ targetAudience }: AdvertisementC
           <Button
             variant="ghost"
             size="icon"
-            className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/20 backdrop-blur-sm hover:bg-white/30 z-10"
+            className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/20 backdrop-blur-sm hover:bg-white/30 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
             onClick={handlePrevious}
           >
             <ChevronLeft className="h-4 w-4" style={{ color: currentAd.textColor || "#ffffff" }} />
@@ -260,7 +260,7 @@ export default function AdvertisementCarousel({ targetAudience }: AdvertisementC
           <Button
             variant="ghost"
             size="icon"
-            className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/20 backdrop-blur-sm hover:bg-white/30 z-10"
+            className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/20 backdrop-blur-sm hover:bg-white/30 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
             onClick={handleNext}
           >
             <ChevronRight className="h-4 w-4" style={{ color: currentAd.textColor || "#ffffff" }} />
