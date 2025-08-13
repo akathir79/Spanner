@@ -2535,7 +2535,7 @@ export default function Dashboard() {
     <div className="min-h-screen bg-muted/30 pt-20 pb-8">{/* Removed customization features */}
       <div className="container mx-auto px-4">
         {/* Wallet Card and Promotional Section */}
-        <div className="mb-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="mb-8 grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Wallet Card - Left Side */}
           <Card className="lg:col-span-1 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border-green-200 dark:border-green-800">
             <CardHeader className="pb-3">
@@ -2593,7 +2593,7 @@ export default function Dashboard() {
           </Card>
 
           {/* Advertisement and Actions - Right Side */}
-          <div className="lg:col-span-2 space-y-4">
+          <div className="lg:col-span-3 space-y-4">
             {/* Advertisement Carousel */}
             <AdvertisementCarousel targetAudience="client" />
 
