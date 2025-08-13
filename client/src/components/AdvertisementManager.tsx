@@ -56,7 +56,7 @@ export default function AdvertisementManager() {
 
   // Create advertisement
   const createMutation = useMutation({
-    mutationFn: (data: any) => apiRequest("/api/advertisements", "POST", data),
+    mutationFn: (data: any) => apiRequest("POST", "/api/advertisements", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/advertisements"] });
       toast({
@@ -78,7 +78,7 @@ export default function AdvertisementManager() {
   // Update advertisement
   const updateMutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: any }) => 
-      apiRequest(`/api/advertisements/${id}`, "PUT", data),
+      apiRequest("PUT", `/api/advertisements/${id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/advertisements"] });
       toast({
@@ -99,7 +99,7 @@ export default function AdvertisementManager() {
 
   // Delete advertisement
   const deleteMutation = useMutation({
-    mutationFn: (id: string) => apiRequest(`/api/advertisements/${id}`, "DELETE"),
+    mutationFn: (id: string) => apiRequest("DELETE", `/api/advertisements/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/advertisements"] });
       toast({
