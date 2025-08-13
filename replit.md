@@ -81,7 +81,7 @@ Located in `shared/schema.ts`, the database includes:
 - **Worker Dashboard**: Job management, earnings tracking, and availability control
 - **Admin Dashboard**: Platform oversight, user management, analytics, and advertisement management
 - **UPDATE_REQUIRED Styling**: Text displayed in red color (text-red-500) with reduced font size (text-xs) across all dashboards for better visual clarity (August 13, 2025)
-- **Advertisement System**: Sliding carousel advertisements with admin management, image upload, targeted audience display for clients and workers, and global toggle to enable/disable all ads (August 13, 2025)
+- **Advertisement System**: Advanced sliding carousel advertisements with admin management, image upload, targeted audience display for clients and workers, global toggle to enable/disable all ads, dynamic sizing based on image dimensions with min/max constraints (200px-400px), and multiple display modes (text-only, image-only, mixed) (August 13, 2025)
 
 ### Language Support
 - English-only interface for India-wide coverage
