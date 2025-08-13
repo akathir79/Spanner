@@ -265,23 +265,20 @@ export default function AdvertisementManager() {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex justify-between items-center">
-          <CardTitle>Advertisement Management</CardTitle>
-          <div className="flex gap-2">
-            {advertisements.length === 0 && (
-              <Button variant="outline" onClick={createSampleAds}>
-                Generate Sample Ads
-              </Button>
-            )}
-            <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-              <DialogTrigger asChild>
-                <Button onClick={() => { resetForm(); setEditingAd(null); }}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Create Advertisement
-                </Button>
-              </DialogTrigger>
+    <div>
+      <div className="flex justify-end items-center mb-4 gap-2">
+        {advertisements.length === 0 && (
+          <Button variant="outline" onClick={createSampleAds}>
+            Generate Sample Ads
+          </Button>
+        )}
+        <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+          <DialogTrigger asChild>
+            <Button onClick={() => { resetForm(); setEditingAd(null); }}>
+              <Plus className="h-4 w-4 mr-2" />
+              Create Advertisement
+            </Button>
+          </DialogTrigger>
               <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>
@@ -439,12 +436,10 @@ export default function AdvertisementManager() {
                 </div>
               </form>
             </DialogContent>
-            </Dialog>
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
+        </Dialog>
+      </div>
+      
+      <div className="space-y-4">
           {advertisements.length === 0 ? (
             <p className="text-center text-muted-foreground py-8">
               No advertisements created yet
@@ -505,8 +500,7 @@ export default function AdvertisementManager() {
               </div>
             ))
           )}
-        </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
