@@ -115,7 +115,7 @@ export function Navbar() {
                               user.lastName
                             )}
                           </span>
-                          <span className="text-xs text-muted-foreground">
+                          <span className="text-xs text-green-700 dark:text-green-600 font-medium">
                             {user.id}
                           </span>
                         </div>
