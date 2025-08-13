@@ -14,7 +14,7 @@ import { Plus, Edit, Trash, Image as ImageIcon, Eye, EyeOff } from "lucide-react
 
 interface Advertisement {
   id: string;
-  title: string;
+  title?: string;
   description?: string;
   image?: string;
   targetAudience: string;
@@ -26,6 +26,7 @@ interface Advertisement {
   priority: number;
   startDate?: string;
   endDate?: string;
+  displayMode?: 'text' | 'image-only' | 'mixed';
   createdAt: string;
   updatedAt: string;
 }
@@ -46,7 +47,8 @@ export default function AdvertisementManager() {
     isActive: true,
     priority: 0,
     startDate: "",
-    endDate: ""
+    endDate: "",
+    displayMode: "mixed" as 'text' | 'image-only' | 'mixed'
   });
 
   // Fetch advertisements
@@ -129,7 +131,8 @@ export default function AdvertisementManager() {
       isActive: true,
       priority: 0,
       startDate: "",
-      endDate: ""
+      endDate: "",
+      displayMode: "mixed"
     });
   };
 
@@ -156,7 +159,7 @@ export default function AdvertisementManager() {
   const handleEdit = (ad: Advertisement) => {
     setEditingAd(ad);
     setFormData({
-      title: ad.title,
+      title: ad.title || "",
       description: ad.description || "",
       image: ad.image || "",
       targetAudience: ad.targetAudience,
@@ -167,7 +170,8 @@ export default function AdvertisementManager() {
       isActive: ad.isActive,
       priority: ad.priority,
       startDate: ad.startDate ? new Date(ad.startDate).toISOString().split('T')[0] : "",
-      endDate: ad.endDate ? new Date(ad.endDate).toISOString().split('T')[0] : ""
+      endDate: ad.endDate ? new Date(ad.endDate).toISOString().split('T')[0] : "",
+      displayMode: ad.displayMode || "mixed"
     });
     setIsCreateOpen(true);
   };
@@ -288,13 +292,20 @@ export default function AdvertisementManager() {
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="title">Title</Label>
-                    <Input
-                      id="title"
-                      value={formData.title}
-                      onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                      required
-                    />
+                    <Label htmlFor="displayMode">Display Mode</Label>
+                    <Select
+                      value={formData.displayMode}
+                      onValueChange={(value: 'text' | 'image-only' | 'mixed') => setFormData({ ...formData, displayMode: value })}
+                    >
+                      <SelectTrigger id="displayMode">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="text">Text Only</SelectItem>
+                        <SelectItem value="image-only">Image Only</SelectItem>
+                        <SelectItem value="mixed">Text + Image</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div>
                     <Label htmlFor="targetAudience">Target Audience</Label>
@@ -313,36 +324,56 @@ export default function AdvertisementManager() {
                   </div>
                 </div>
 
-                <div>
-                  <Label htmlFor="description">Description</Label>
-                  <Textarea
-                    id="description"
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    rows={3}
-                  />
-                </div>
+                {formData.displayMode !== 'image-only' && (
+                  <>
+                    <div>
+                      <Label htmlFor="title">Title {formData.displayMode === 'text' && '(Required)'}</Label>
+                      <Input
+                        id="title"
+                        value={formData.title}
+                        onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                        required={formData.displayMode === 'text'}
+                        placeholder="Enter advertisement title"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="description">Description</Label>
+                      <Textarea
+                        id="description"
+                        value={formData.description}
+                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                        rows={3}
+                        placeholder="Enter advertisement description (optional)"
+                      />
+                    </div>
+                  </>
+                )}
 
-                <div>
-                  <Label htmlFor="image">Advertisement Image</Label>
-                  <div className="space-y-2">
-                    <Input
-                      id="image"
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageUpload}
-                    />
-                    {formData.image && (
-                      <div className="mt-2">
-                        <img 
-                          src={formData.image} 
-                          alt="Preview" 
-                          className="w-full h-32 object-cover rounded"
-                        />
-                      </div>
-                    )}
+                {(formData.displayMode === 'image-only' || formData.displayMode === 'mixed') && (
+                  <div>
+                    <Label htmlFor="image">
+                      Advertisement Image {formData.displayMode === 'image-only' && '(Required)'}
+                    </Label>
+                    <div className="space-y-2">
+                      <Input
+                        id="image"
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        required={formData.displayMode === 'image-only'}
+                      />
+                      {formData.image && (
+                        <div className="mt-2">
+                          <img 
+                            src={formData.image} 
+                            alt="Preview" 
+                            className="w-full h-32 object-cover rounded"
+                          />
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
+                )}
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>

@@ -6,7 +6,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface Advertisement {
   id: string;
-  title: string;
+  title?: string;
   description?: string;
   image?: string;
   targetAudience: string;
@@ -18,6 +18,7 @@ interface Advertisement {
   priority: number;
   startDate?: string;
   endDate?: string;
+  displayMode?: 'text' | 'image-only' | 'mixed';
 }
 
 interface AdvertisementCarouselProps {
@@ -117,7 +118,76 @@ export default function AdvertisementCarousel({ targetAudience }: AdvertisementC
   }
 
   const currentAd = advertisements[currentIndex];
+  const displayMode = currentAd.displayMode || 'mixed';
 
+  // Render image-only advertisement
+  if (displayMode === 'image-only' && currentAd.image) {
+    return (
+      <div 
+        className="relative w-full group"
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+      >
+        <Card className={`w-full overflow-hidden transition-all duration-500 ${
+          isTransitioning ? 'opacity-0 scale-95' : 'opacity-100 scale-100'
+        }`}>
+          <div className="relative w-full h-48">
+            <img 
+              src={currentAd.image} 
+              alt={currentAd.title || "Advertisement"}
+              className="w-full h-full object-cover"
+            />
+            {/* Optional overlay button */}
+            {currentAd.link && currentAd.buttonText && (
+              <div className="absolute bottom-4 left-4">
+                <Button
+                  onClick={() => window.open(currentAd.link, '_blank')}
+                  className="bg-white/90 text-gray-900 hover:bg-white shadow-lg"
+                >
+                  {currentAd.buttonText}
+                </Button>
+              </div>
+            )}
+          </div>
+        </Card>
+
+        {/* Navigation for image-only mode */}
+        {advertisements.length > 1 && (
+          <>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/20 backdrop-blur-sm hover:bg-white/30 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+              onClick={handlePrevious}
+            >
+              <ChevronLeft className="h-4 w-4 text-white" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/20 backdrop-blur-sm hover:bg-white/30 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+              onClick={handleNext}
+            >
+              <ChevronRight className="h-4 w-4 text-white" />
+            </Button>
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+              {advertisements.map((_: Advertisement, index: number) => (
+                <button
+                  key={index}
+                  onClick={() => handleDotClick(index)}
+                  className={`h-2 w-2 rounded-full transition-all duration-300 ${
+                    index === currentIndex ? "bg-white" : "bg-white/50 hover:bg-white/70"
+                  }`}
+                />
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+    );
+  }
+
+  // Render text-only or mixed mode advertisement
   return (
     <div 
       className="relative w-full group"
@@ -136,12 +206,14 @@ export default function AdvertisementCarousel({ targetAudience }: AdvertisementC
           <div className="flex items-center justify-between gap-6">
             {/* Left content */}
             <div className="flex-1">
-              <h3 
-                className="text-2xl font-bold mb-2"
-                style={{ color: currentAd.textColor || "#ffffff" }}
-              >
-                {currentAd.title}
-              </h3>
+              {currentAd.title && (
+                <h3 
+                  className="text-2xl font-bold mb-2"
+                  style={{ color: currentAd.textColor || "#ffffff" }}
+                >
+                  {currentAd.title}
+                </h3>
+              )}
               {currentAd.description && (
                 <p 
                   className="mb-4 opacity-90"
@@ -164,51 +236,14 @@ export default function AdvertisementCarousel({ targetAudience }: AdvertisementC
               )}
             </div>
 
-            {/* Right content - Image or promotional cards */}
-            {currentAd.image ? (
+            {/* Right content - Image if in mixed mode */}
+            {displayMode === 'mixed' && currentAd.image && (
               <div className="w-1/3">
                 <img 
                   src={currentAd.image} 
-                  alt={currentAd.title}
+                  alt={currentAd.title || "Advertisement"}
                   className="w-full h-32 object-cover rounded-lg"
                 />
-              </div>
-            ) : (
-              <div className="flex gap-4">
-                <Card className="bg-white/20 backdrop-blur-sm border-white/30">
-                  <CardContent className="p-4">
-                    <div className="text-center">
-                      <div className="text-3xl mb-1">🎉</div>
-                      <h4 
-                        className="font-semibold text-sm"
-                        style={{ color: currentAd.textColor || "#ffffff" }}
-                      >
-                        Special Offer!
-                      </h4>
-                      <p 
-                        className="text-xs mt-1 opacity-80"
-                        style={{ color: currentAd.textColor || "#ffffff" }}
-                      >
-                        Limited time only
-                      </p>
-                      {currentAd.link && (
-                        <Button 
-                          size="sm" 
-                          className="mt-2"
-                          onClick={() => window.open(currentAd.link, '_blank')}
-                          style={{
-                            backgroundColor: currentAd.textColor || "#ffffff",
-                            color: currentAd.backgroundColor?.includes('gradient') 
-                              ? "#764ba2" 
-                              : currentAd.backgroundColor || "#764ba2"
-                          }}
-                        >
-                          Claim Now
-                        </Button>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
               </div>
             )}
           </div>

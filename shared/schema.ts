@@ -224,7 +224,7 @@ export const locationEvents = pgTable("location_events", {
 // Advertisements
 export const advertisements = pgTable("advertisements", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  title: text("title").notNull(),
+  title: text("title"),
   description: text("description"),
   image: text("image"), // Base64 encoded image
   targetAudience: text("target_audience").notNull(), // 'client' or 'worker'
@@ -232,6 +232,7 @@ export const advertisements = pgTable("advertisements", {
   buttonText: text("button_text"), // Text for CTA button
   backgroundColor: text("background_color"), // Gradient or color
   textColor: text("text_color"),
+  displayMode: text("display_mode").default("mixed"), // 'text', 'image-only', or 'mixed'
   isActive: boolean("is_active").default(true),
   priority: integer("priority").default(0), // Higher priority shows first
   startDate: timestamp("start_date"),
