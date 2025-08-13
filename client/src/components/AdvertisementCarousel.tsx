@@ -112,60 +112,8 @@ export default function AdvertisementCarousel({ targetAudience }: AdvertisementC
   }
 
   if (advertisements.length === 0) {
-    // Default promotional content when no ads are available
-    return (
-      <Card 
-        className="w-full overflow-hidden"
-        style={{
-          background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-        }}
-      >
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between">
-            <div className="flex-1">
-              <h3 className="text-2xl font-bold text-white mb-2">
-                Welcome to SPANNER!
-              </h3>
-              <p className="text-white/90 mb-4">
-                Your trusted platform for all service needs across India
-              </p>
-            </div>
-            <div className="flex gap-4">
-              <Card className="bg-white/20 backdrop-blur-sm border-white/30">
-                <CardContent className="p-4">
-                  <div className="text-center">
-                    <div className="text-3xl mb-1">🎉</div>
-                    <h4 className="font-semibold text-white text-sm">New Year Special!</h4>
-                    <p className="text-white/80 text-xs mt-1">Get 20% off on your first booking of 2025</p>
-                    <Button 
-                      size="sm" 
-                      className="mt-2 bg-white text-purple-700 hover:bg-white/90"
-                    >
-                      Claim Now
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card className="bg-white/20 backdrop-blur-sm border-white/30">
-                <CardContent className="p-4">
-                  <div className="text-center">
-                    <div className="text-3xl mb-1">💰</div>
-                    <h4 className="font-semibold text-white text-sm">Refer & Earn</h4>
-                    <p className="text-white/80 text-xs mt-1">Earn ₹100 for every friend who books a service</p>
-                    <Button 
-                      size="sm" 
-                      className="mt-2 bg-white text-purple-700 hover:bg-white/90"
-                    >
-                      Start Referring
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    );
+    // Return nothing when no ads are available
+    return null;
   }
 
   const currentAd = advertisements[currentIndex];
