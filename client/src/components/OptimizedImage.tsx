@@ -87,41 +87,47 @@ export function OptimizedImage({
       setIsLoading(true);
       setHasError(false);
 
-      try {
-        // Determine optimal compression settings
-        const defaultCompression = {
-          maxWidth: 1200,
-          maxHeight: 800,
-          quality: 0.8,
-          format: (supportsWebP() ? 'webp' : 'jpeg') as 'jpeg' | 'webp' | 'png',
-          ...compression
-        };
+      // For data URLs, try to compress
+      if (src.startsWith('data:')) {
+        try {
+          // Determine optimal compression settings
+          const defaultCompression = {
+            maxWidth: 1200,
+            maxHeight: 800,
+            quality: 0.8,
+            format: (supportsWebP() ? 'webp' : 'jpeg') as 'jpeg' | 'webp' | 'png',
+            ...compression
+          };
 
-        // Compress the image
-        const compressedSrc = await compressImage(src, defaultCompression);
-        
-        // Calculate compression stats
-        if (compressedSrc !== src) {
-          const originalSize = estimateImageSize(src);
-          const compressedSize = estimateImageSize(compressedSrc);
-          const reduction = Math.round(((originalSize - compressedSize) / originalSize) * 100);
+          // Compress the image
+          const compressedSrc = await compressImage(src, defaultCompression);
           
-          setCompressionStats({
-            original: formatFileSize(originalSize),
-            compressed: formatFileSize(compressedSize),
-            reduction
-          });
+          // Calculate compression stats
+          if (compressedSrc !== src) {
+            const originalSize = estimateImageSize(src);
+            const compressedSize = estimateImageSize(compressedSrc);
+            const reduction = Math.round(((originalSize - compressedSize) / originalSize) * 100);
+            
+            setCompressionStats({
+              original: formatFileSize(originalSize),
+              compressed: formatFileSize(compressedSize),
+              reduction
+            });
 
-          onCompressionComplete?.(
-            formatFileSize(originalSize),
-            formatFileSize(compressedSize)
-          );
+            onCompressionComplete?.(
+              formatFileSize(originalSize),
+              formatFileSize(compressedSize)
+            );
+          }
+
+          setImageSrc(compressedSrc);
+        } catch (error) {
+          console.warn('Image compression failed:', error);
+          setImageSrc(src); // Fall back to original
         }
-
-        setImageSrc(compressedSrc);
-      } catch (error) {
-        console.warn('Image compression failed:', error);
-        setImageSrc(src); // Fall back to original
+      } else {
+        // For regular URLs, use them directly without compression
+        setImageSrc(src);
       }
     };
 
@@ -204,11 +210,11 @@ export function OptimizedImage({
         </div>
       )}
 
-      {/* Optimized image */}
-      {imageSrc && !hasError && (
+      {/* Optimized image - Always render to trigger load events */}
+      {!hasError && (
         <img
           ref={imgRef}
-          src={imageSrc}
+          src={imageSrc || src}
           alt={alt}
           className={`transition-all duration-500 ${
             isLoading ? 'opacity-0 blur-sm' : 'opacity-100 blur-0'
@@ -232,20 +238,3 @@ export function OptimizedImage({
   );
 }
 
-// Hook for batch image optimization
-export function useBatchImageOptimization() {
-  const { compressImage } = useImageCompression();
-
-  const optimizeImages = async (
-    imageUrls: string[],
-    compression?: OptimizedImageProps['compression']
-  ): Promise<string[]> => {
-    const promises = imageUrls.map(url => 
-      compressImage(url, compression).catch(() => url)
-    );
-    
-    return Promise.all(promises);
-  };
-
-  return { optimizeImages };
-}
