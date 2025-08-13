@@ -79,8 +79,9 @@ Located in `shared/schema.ts`, the database includes:
 - **Home Page**: Service discovery with search and filters
 - **Client Dashboard**: Booking management and service requests
 - **Worker Dashboard**: Job management, earnings tracking, and availability control
-- **Admin Dashboard**: Platform oversight, user management, and analytics
+- **Admin Dashboard**: Platform oversight, user management, analytics, and advertisement management
 - **UPDATE_REQUIRED Styling**: Text displayed in red color (text-red-500) with reduced font size (text-xs) across all dashboards for better visual clarity (August 13, 2025)
+- **Advertisement System**: Sliding carousel advertisements with admin management, image upload, and targeted audience display for clients and workers (August 13, 2025)
 
 ### Language Support
 - English-only interface for India-wide coverage

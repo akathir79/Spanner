@@ -1226,14 +1226,27 @@ export class DatabaseStorage implements IStorage {
 
   // Advertisement methods
   async createAdvertisement(ad: InsertAdvertisement): Promise<Advertisement> {
-    const [created] = await db.insert(advertisements).values(ad).returning();
+    // Convert date strings to Date objects if they exist
+    const adData = {
+      ...ad,
+      startDate: ad.startDate ? new Date(ad.startDate) : null,
+      endDate: ad.endDate ? new Date(ad.endDate) : null,
+    };
+    const [created] = await db.insert(advertisements).values(adData).returning();
     return created;
   }
 
   async updateAdvertisement(id: string, updates: Partial<Advertisement>): Promise<Advertisement | undefined> {
+    // Convert date strings to Date objects if they exist
+    const updateData = {
+      ...updates,
+      startDate: updates.startDate ? new Date(updates.startDate) : updates.startDate,
+      endDate: updates.endDate ? new Date(updates.endDate) : updates.endDate,
+      updatedAt: new Date()
+    };
     const [updated] = await db
       .update(advertisements)
-      .set({ ...updates, updatedAt: new Date() })
+      .set(updateData)
       .where(eq(advertisements.id, id))
       .returning();
     return updated || undefined;

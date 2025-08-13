@@ -818,7 +818,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/advertisements/active/:targetAudience", async (req, res) => {
     try {
       const { targetAudience } = req.params;
-      const advertisements = await storage.getActiveAdvertisementsByAudience(targetAudience);
+      const advertisements = await storage.getActiveAdvertisementsByType(targetAudience);
       res.json(advertisements);
     } catch (error) {
       console.error("Get active advertisements error:", error);
