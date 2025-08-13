@@ -1305,22 +1305,15 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getActiveAdvertisementsByType(targetAudience: string): Promise<Advertisement[]> {
-    const now = new Date();
+    // Simply get all active advertisements for the target audience
+    // Date filtering can be added back later if needed
     return db
       .select()
       .from(advertisements)
       .where(
         and(
           eq(advertisements.targetAudience, targetAudience),
-          eq(advertisements.isActive, true),
-          or(
-            sql`${advertisements.startDate} IS NULL`,
-            sql`${advertisements.startDate} <= ${now}`
-          ),
-          or(
-            sql`${advertisements.endDate} IS NULL`,
-            sql`${advertisements.endDate} >= ${now}`
-          )
+          eq(advertisements.isActive, true)
         )
       )
       .orderBy(desc(advertisements.priority));
