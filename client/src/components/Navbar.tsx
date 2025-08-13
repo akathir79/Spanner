@@ -108,7 +108,12 @@ export function Navbar() {
                         </Avatar>
                         <div className="flex flex-col items-start">
                           <span className="text-sm font-medium">
-                            {user.firstName} {user.lastName}
+                            {user.firstName}{" "}
+                            {user.lastName === "UPDATE_REQUIRED" ? (
+                              <span className="text-red-500 text-xs">UPDATE_REQUIRED</span>
+                            ) : (
+                              user.lastName
+                            )}
                           </span>
                           <span className="text-xs text-muted-foreground">
                             {user.id}
