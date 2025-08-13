@@ -2,6 +2,16 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Advertisement carousel progress animation */
+@keyframes progress {
+  from {
+    width: 0%;
+  }
+  to {
+    width: 100%;
+  }
+}
+
 /* Custom animations for location detection */
 @keyframes radar-sweep {
   0% {

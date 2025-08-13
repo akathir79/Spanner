@@ -31,6 +31,7 @@ export default function AdvertisementCarousel({ targetAudience }: AdvertisementC
   // Fetch active advertisements for the target audience
   const { data: advertisements = [], isLoading } = useQuery({
     queryKey: [`/api/advertisements/active/${targetAudience}`],
+    refetchInterval: 30000, // Refresh every 30 seconds to get latest ads
   });
 
   // Auto-slide functionality
@@ -139,6 +140,14 @@ export default function AdvertisementCarousel({ targetAudience }: AdvertisementC
   }
 
   const currentAd = advertisements[currentIndex];
+  const [isTransitioning, setIsTransitioning] = useState(false);
+
+  // Add transition effect when index changes
+  useEffect(() => {
+    setIsTransitioning(true);
+    const timer = setTimeout(() => setIsTransitioning(false), 300);
+    return () => clearTimeout(timer);
+  }, [currentIndex]);
 
   return (
     <div 
@@ -147,7 +156,9 @@ export default function AdvertisementCarousel({ targetAudience }: AdvertisementC
       onMouseLeave={handleMouseLeave}
     >
       <Card 
-        className="w-full overflow-hidden transition-all duration-500"
+        className={`w-full overflow-hidden transition-all duration-500 ${
+          isTransitioning ? 'opacity-0 scale-95' : 'opacity-100 scale-100'
+        }`}
         style={{
           background: currentAd.backgroundColor || "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
         }}
@@ -241,7 +252,7 @@ export default function AdvertisementCarousel({ targetAudience }: AdvertisementC
           <Button
             variant="ghost"
             size="icon"
-            className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/20 backdrop-blur-sm hover:bg-white/30"
+            className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/20 backdrop-blur-sm hover:bg-white/30 z-10"
             onClick={handlePrevious}
           >
             <ChevronLeft className="h-4 w-4" style={{ color: currentAd.textColor || "#ffffff" }} />
@@ -249,24 +260,41 @@ export default function AdvertisementCarousel({ targetAudience }: AdvertisementC
           <Button
             variant="ghost"
             size="icon"
-            className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/20 backdrop-blur-sm hover:bg-white/30"
+            className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/20 backdrop-blur-sm hover:bg-white/30 z-10"
             onClick={handleNext}
           >
             <ChevronRight className="h-4 w-4" style={{ color: currentAd.textColor || "#ffffff" }} />
           </Button>
 
-          {/* Dots indicator */}
+          {/* Ad counter */}
+          <div 
+            className="absolute top-4 right-4 px-3 py-1 bg-black/20 backdrop-blur-sm rounded-full text-xs font-medium"
+            style={{ color: currentAd.textColor || "#ffffff" }}
+          >
+            {currentIndex + 1} / {advertisements.length}
+          </div>
+
+          {/* Dots indicator with progress bar */}
           <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
             {advertisements.map((_: Advertisement, index: number) => (
               <button
                 key={index}
                 onClick={() => handleDotClick(index)}
-                className={`w-2 h-2 rounded-full transition-all ${
+                className={`relative h-2 rounded-full transition-all duration-300 overflow-hidden ${
                   index === currentIndex 
-                    ? "w-8 bg-white" 
-                    : "bg-white/50 hover:bg-white/70"
+                    ? "w-12 bg-white/30" 
+                    : "w-2 bg-white/50 hover:bg-white/70"
                 }`}
-              />
+              >
+                {index === currentIndex && isAutoPlaying && (
+                  <div 
+                    className="absolute inset-0 bg-white animate-progress"
+                    style={{
+                      animation: 'progress 5s linear forwards'
+                    }}
+                  />
+                )}
+              </button>
             ))}
           </div>
         </>
