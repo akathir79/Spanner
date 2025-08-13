@@ -49,6 +49,7 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import LocationTracker from "@/components/LocationTracker";
 import BankDetailsModal from "@/components/BankDetailsModal";
+import AdvertisementCarousel from "@/components/AdvertisementCarousel";
 import { format } from "date-fns";
 
 // Worker Profile Card Component with Edit functionality
@@ -1353,6 +1354,11 @@ export default function WorkerDashboard() {
               </div>
             </CardContent>
           </Card>
+        </div>
+
+        {/* Advertisement Carousel */}
+        <div className="mb-8">
+          <AdvertisementCarousel targetAudience="worker" />
         </div>
 
         {/* Main Content Tabs */}

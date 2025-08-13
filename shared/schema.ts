@@ -221,6 +221,26 @@ export const locationEvents = pgTable("location_events", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// Advertisements
+export const advertisements = pgTable("advertisements", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  title: text("title").notNull(),
+  description: text("description"),
+  image: text("image"), // Base64 encoded image
+  targetAudience: text("target_audience").notNull(), // 'client' or 'worker'
+  link: text("link"), // Optional link for the ad
+  buttonText: text("button_text"), // Text for CTA button
+  backgroundColor: text("background_color"), // Gradient or color
+  textColor: text("text_color"),
+  isActive: boolean("is_active").default(true),
+  priority: integer("priority").default(0), // Higher priority shows first
+  startDate: timestamp("start_date"),
+  endDate: timestamp("end_date"),
+  createdBy: varchar("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 // Worker Bank Details
 export const workerBankDetails = pgTable("worker_bank_details", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -552,6 +572,12 @@ export const insertWorkerBankDetailsSchema = createInsertSchema(workerBankDetail
   micrCode: z.string().optional(),
 });
 
+export const insertAdvertisementSchema = createInsertSchema(advertisements).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 export const insertPaymentSchema = createInsertSchema(payments).omit({
   id: true,
   createdAt: true,
@@ -609,6 +635,8 @@ export type TransferHistory = typeof transferHistory.$inferSelect;
 export type InsertTransferHistory = z.infer<typeof insertTransferHistorySchema>;
 export type FinancialStatement = typeof financialStatements.$inferSelect;
 export type InsertFinancialStatement = z.infer<typeof insertFinancialStatementSchema>;
+export type Advertisement = typeof advertisements.$inferSelect;
+export type InsertAdvertisement = z.infer<typeof insertAdvertisementSchema>;
 
 // Message relations
 export const messagesRelations = relations(messages, ({ one, many }) => ({

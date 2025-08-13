@@ -1,0 +1,435 @@
+import { useState } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { Plus, Edit, Trash, Image as ImageIcon, Eye, EyeOff } from "lucide-react";
+
+interface Advertisement {
+  id: string;
+  title: string;
+  description?: string;
+  image?: string;
+  targetAudience: string;
+  link?: string;
+  buttonText?: string;
+  backgroundColor?: string;
+  textColor?: string;
+  isActive: boolean;
+  priority: number;
+  startDate?: string;
+  endDate?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export default function AdvertisementManager() {
+  const { toast } = useToast();
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [editingAd, setEditingAd] = useState<Advertisement | null>(null);
+  const [formData, setFormData] = useState({
+    title: "",
+    description: "",
+    image: "",
+    targetAudience: "client",
+    link: "",
+    buttonText: "Learn More",
+    backgroundColor: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+    textColor: "#ffffff",
+    isActive: true,
+    priority: 0,
+    startDate: "",
+    endDate: ""
+  });
+
+  // Fetch advertisements
+  const { data: advertisements = [], isLoading } = useQuery({
+    queryKey: ["/api/advertisements"],
+  });
+
+  // Create advertisement
+  const createMutation = useMutation({
+    mutationFn: (data: any) => apiRequest("/api/advertisements", "POST", data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/advertisements"] });
+      toast({
+        title: "Success",
+        description: "Advertisement created successfully",
+      });
+      setIsCreateOpen(false);
+      resetForm();
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to create advertisement",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Update advertisement
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: any }) => 
+      apiRequest(`/api/advertisements/${id}`, "PUT", data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/advertisements"] });
+      toast({
+        title: "Success",
+        description: "Advertisement updated successfully",
+      });
+      setEditingAd(null);
+      resetForm();
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update advertisement",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Delete advertisement
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => apiRequest(`/api/advertisements/${id}`, "DELETE"),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/advertisements"] });
+      toast({
+        title: "Success",
+        description: "Advertisement deleted successfully",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to delete advertisement",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const resetForm = () => {
+    setFormData({
+      title: "",
+      description: "",
+      image: "",
+      targetAudience: "client",
+      link: "",
+      buttonText: "Learn More",
+      backgroundColor: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+      textColor: "#ffffff",
+      isActive: true,
+      priority: 0,
+      startDate: "",
+      endDate: ""
+    });
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData({ ...formData, image: reader.result as string });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (editingAd) {
+      updateMutation.mutate({ id: editingAd.id, data: formData });
+    } else {
+      createMutation.mutate(formData);
+    }
+  };
+
+  const handleEdit = (ad: Advertisement) => {
+    setEditingAd(ad);
+    setFormData({
+      title: ad.title,
+      description: ad.description || "",
+      image: ad.image || "",
+      targetAudience: ad.targetAudience,
+      link: ad.link || "",
+      buttonText: ad.buttonText || "Learn More",
+      backgroundColor: ad.backgroundColor || "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+      textColor: ad.textColor || "#ffffff",
+      isActive: ad.isActive,
+      priority: ad.priority,
+      startDate: ad.startDate ? new Date(ad.startDate).toISOString().split('T')[0] : "",
+      endDate: ad.endDate ? new Date(ad.endDate).toISOString().split('T')[0] : ""
+    });
+    setIsCreateOpen(true);
+  };
+
+  const handleToggleActive = (ad: Advertisement) => {
+    updateMutation.mutate({ 
+      id: ad.id, 
+      data: { isActive: !ad.isActive }
+    });
+  };
+
+  const gradientOptions = [
+    { value: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)", label: "Purple Gradient" },
+    { value: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)", label: "Pink Gradient" },
+    { value: "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)", label: "Blue Gradient" },
+    { value: "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)", label: "Green Gradient" },
+    { value: "linear-gradient(135deg, #fa709a 0%, #fee140 100%)", label: "Sunset Gradient" },
+    { value: "linear-gradient(135deg, #30cfd0 0%, #330867 100%)", label: "Ocean Gradient" },
+    { value: "#ffffff", label: "White" },
+    { value: "#000000", label: "Black" },
+  ];
+
+  if (isLoading) {
+    return <div>Loading advertisements...</div>;
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex justify-between items-center">
+          <CardTitle>Advertisement Management</CardTitle>
+          <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+            <DialogTrigger asChild>
+              <Button onClick={() => { resetForm(); setEditingAd(null); }}>
+                <Plus className="h-4 w-4 mr-2" />
+                Create Advertisement
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>
+                  {editingAd ? "Edit Advertisement" : "Create New Advertisement"}
+                </DialogTitle>
+              </DialogHeader>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="title">Title</Label>
+                    <Input
+                      id="title"
+                      value={formData.title}
+                      onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="targetAudience">Target Audience</Label>
+                    <Select
+                      value={formData.targetAudience}
+                      onValueChange={(value) => setFormData({ ...formData, targetAudience: value })}
+                    >
+                      <SelectTrigger id="targetAudience">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="client">Clients</SelectItem>
+                        <SelectItem value="worker">Workers</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="description">Description</Label>
+                  <Textarea
+                    id="description"
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    rows={3}
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="image">Advertisement Image</Label>
+                  <div className="space-y-2">
+                    <Input
+                      id="image"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                    />
+                    {formData.image && (
+                      <div className="mt-2">
+                        <img 
+                          src={formData.image} 
+                          alt="Preview" 
+                          className="w-full h-32 object-cover rounded"
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="link">Link (optional)</Label>
+                    <Input
+                      id="link"
+                      type="url"
+                      value={formData.link}
+                      onChange={(e) => setFormData({ ...formData, link: e.target.value })}
+                      placeholder="https://example.com"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="buttonText">Button Text</Label>
+                    <Input
+                      id="buttonText"
+                      value={formData.buttonText}
+                      onChange={(e) => setFormData({ ...formData, buttonText: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="backgroundColor">Background</Label>
+                    <Select
+                      value={formData.backgroundColor}
+                      onValueChange={(value) => setFormData({ ...formData, backgroundColor: value })}
+                    >
+                      <SelectTrigger id="backgroundColor">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {gradientOptions.map(option => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="textColor">Text Color</Label>
+                    <Input
+                      id="textColor"
+                      type="color"
+                      value={formData.textColor}
+                      onChange={(e) => setFormData({ ...formData, textColor: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <Label htmlFor="priority">Priority</Label>
+                    <Input
+                      id="priority"
+                      type="number"
+                      value={formData.priority}
+                      onChange={(e) => setFormData({ ...formData, priority: parseInt(e.target.value) })}
+                      min="0"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="startDate">Start Date</Label>
+                    <Input
+                      id="startDate"
+                      type="date"
+                      value={formData.startDate}
+                      onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="endDate">End Date</Label>
+                    <Input
+                      id="endDate"
+                      type="date"
+                      value={formData.endDate}
+                      onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <div className="flex justify-end space-x-2">
+                  <Button type="button" variant="outline" onClick={() => setIsCreateOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button type="submit">
+                    {editingAd ? "Update" : "Create"}
+                  </Button>
+                </div>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          {advertisements.length === 0 ? (
+            <p className="text-center text-muted-foreground py-8">
+              No advertisements created yet
+            </p>
+          ) : (
+            advertisements.map((ad: Advertisement) => (
+              <div
+                key={ad.id}
+                className="flex items-center justify-between p-4 border rounded-lg"
+              >
+                <div className="flex items-center space-x-4">
+                  {ad.image && (
+                    <img
+                      src={ad.image}
+                      alt={ad.title}
+                      className="w-16 h-16 object-cover rounded"
+                    />
+                  )}
+                  <div>
+                    <h3 className="font-semibold">{ad.title}</h3>
+                    <p className="text-sm text-muted-foreground">{ad.description}</p>
+                    <div className="flex items-center space-x-2 mt-1">
+                      <Badge variant={ad.targetAudience === "client" ? "default" : "secondary"}>
+                        {ad.targetAudience}
+                      </Badge>
+                      <Badge variant={ad.isActive ? "success" : "outline"}>
+                        {ad.isActive ? "Active" : "Inactive"}
+                      </Badge>
+                      <span className="text-xs text-muted-foreground">
+                        Priority: {ad.priority}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => handleToggleActive(ad)}
+                  >
+                    {ad.isActive ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => handleEdit(ad)}
+                  >
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => deleteMutation.mutate(ad.id)}
+                  >
+                    <Trash className="h-4 w-4 text-red-500" />
+                  </Button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}

@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
 import { useLocation } from "wouter";
+import AdvertisementManager from "@/components/AdvertisementManager";
 import { 
   Users,
   Calendar,
@@ -25,7 +26,8 @@ import {
   Save,
   X,
   MapPin,
-  Camera
+  Camera,
+  Megaphone
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -430,6 +432,10 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
 
+        {/* Advertisement Management Section */}
+        <div className="mt-8">
+          <AdvertisementManager />
+        </div>
 
       </div>
     </div>

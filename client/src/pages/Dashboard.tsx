@@ -81,6 +81,7 @@ import { useLocation } from "wouter";
 import LocationViewer from "@/components/LocationViewer";
 import ClientBankDetailsForm from "@/components/ClientBankDetailsForm";
 import { ProfileCompletionAlert } from "@/components/ProfileCompletionAlert";
+import AdvertisementCarousel from "@/components/AdvertisementCarousel";
 import statesDistrictsData from "@shared/states-districts.json";
 // Services and districts are now fetched dynamically from database
 
@@ -2591,57 +2592,10 @@ export default function Dashboard() {
             </CardContent>
           </Card>
 
-          {/* Promotional Content - Right Side */}
+          {/* Advertisement and Actions - Right Side */}
           <div className="lg:col-span-2 space-y-4">
-            {/* Welcome Message */}
-            <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg p-6 text-white">
-              <h2 className="text-2xl font-bold mb-2">
-                Welcome back, {user.firstName}! 
-                <span className="text-sm font-normal ml-2 opacity-90">({user.id})</span>
-              </h2>
-              <p className="text-white/90 mb-4">
-                Your trusted platform for all service needs across India
-              </p>
-              
-              {/* Promotional Offers */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                {/* Offer 1 */}
-                <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
-                  <div className="flex items-start gap-3">
-                    <div className="bg-yellow-400 text-black rounded-full p-2">
-                      <Percent className="h-4 w-4" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-white">New Year Special!</h3>
-                      <p className="text-sm text-white/80 mt-1">
-                        Get 20% off on your first booking of 2025
-                      </p>
-                      <Button variant="secondary" size="sm" className="mt-2 text-xs">
-                        Claim Now
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Offer 2 */}
-                <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
-                  <div className="flex items-start gap-3">
-                    <div className="bg-green-400 text-black rounded-full p-2">
-                      <Zap className="h-4 w-4" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-white">Refer & Earn</h3>
-                      <p className="text-sm text-white/80 mt-1">
-                        Earn ₹100 for every friend who books a service
-                      </p>
-                      <Button variant="secondary" size="sm" className="mt-2 text-xs">
-                        Start Referring
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+            {/* Advertisement Carousel */}
+            <AdvertisementCarousel targetAudience="client" />
 
             {/* Post New Job Button */}
             <div className="flex justify-center mt-4">

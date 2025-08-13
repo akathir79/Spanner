@@ -16,7 +16,8 @@ import {
   insertWorkerBankDetailsSchema,
   insertPaymentSchema,
   insertMessageSchema,
-  insertTransferHistorySchema
+  insertTransferHistorySchema,
+  insertAdvertisementSchema
 } from "@shared/schema";
 
 // Validation schemas
@@ -801,6 +802,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Districts and areas now handled via API - database routes removed
   
+  // Advertisement endpoints
+  // Get all advertisements (for admin)
+  app.get("/api/advertisements", async (req, res) => {
+    try {
+      const advertisements = await storage.getAllAdvertisements();
+      res.json(advertisements);
+    } catch (error) {
+      console.error("Get advertisements error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Get active advertisements by target audience
+  app.get("/api/advertisements/active/:targetAudience", async (req, res) => {
+    try {
+      const { targetAudience } = req.params;
+      const advertisements = await storage.getActiveAdvertisementsByAudience(targetAudience);
+      res.json(advertisements);
+    } catch (error) {
+      console.error("Get active advertisements error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Create advertisement
+  app.post("/api/advertisements", async (req, res) => {
+    try {
+      const newAdvertisement = await storage.createAdvertisement(req.body);
+      res.status(201).json(newAdvertisement);
+    } catch (error) {
+      console.error("Create advertisement error:", error);
+      res.status(500).json({ message: "Failed to create advertisement" });
+    }
+  });
+
+  // Update advertisement
+  app.put("/api/advertisements/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updatedAdvertisement = await storage.updateAdvertisement(id, req.body);
+      res.json(updatedAdvertisement);
+    } catch (error) {
+      console.error("Update advertisement error:", error);
+      res.status(500).json({ message: "Failed to update advertisement" });
+    }
+  });
+
+  // Delete advertisement
+  app.delete("/api/advertisements/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteAdvertisement(id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Delete advertisement error:", error);
+      res.status(500).json({ message: "Failed to delete advertisement" });
+    }
+  });
+
   // Get service categories
   app.get("/api/services", async (req, res) => {
     try {
@@ -2877,6 +2937,88 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error fetching districts:', error);
       res.status(500).json({ message: 'Failed to fetch districts' });
+    }
+  });
+
+  // Advertisement management endpoints
+  
+  // Get all advertisements (admin)
+  app.get('/api/advertisements', async (req, res) => {
+    try {
+      const ads = await storage.getAllAdvertisements();
+      res.json(ads);
+    } catch (error) {
+      console.error('Error fetching advertisements:', error);
+      res.status(500).json({ message: 'Failed to fetch advertisements' });
+    }
+  });
+
+  // Get active advertisements by type
+  app.get('/api/advertisements/active/:targetAudience', async (req, res) => {
+    try {
+      const { targetAudience } = req.params;
+      const ads = await storage.getActiveAdvertisementsByType(targetAudience);
+      res.json(ads);
+    } catch (error) {
+      console.error('Error fetching active advertisements:', error);
+      res.status(500).json({ message: 'Failed to fetch active advertisements' });
+    }
+  });
+
+  // Get advertisement by ID
+  app.get('/api/advertisements/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const ad = await storage.getAdvertisementById(id);
+      if (!ad) {
+        return res.status(404).json({ message: 'Advertisement not found' });
+      }
+      res.json(ad);
+    } catch (error) {
+      console.error('Error fetching advertisement:', error);
+      res.status(500).json({ message: 'Failed to fetch advertisement' });
+    }
+  });
+
+  // Create advertisement (admin only)
+  app.post('/api/advertisements', async (req, res) => {
+    try {
+      const validatedData = insertAdvertisementSchema.parse(req.body);
+      const ad = await storage.createAdvertisement(validatedData);
+      res.status(201).json(ad);
+    } catch (error) {
+      console.error('Error creating advertisement:', error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: 'Invalid data', errors: error.errors });
+      }
+      res.status(500).json({ message: 'Failed to create advertisement' });
+    }
+  });
+
+  // Update advertisement (admin only)
+  app.put('/api/advertisements/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const ad = await storage.updateAdvertisement(id, req.body);
+      if (!ad) {
+        return res.status(404).json({ message: 'Advertisement not found' });
+      }
+      res.json(ad);
+    } catch (error) {
+      console.error('Error updating advertisement:', error);
+      res.status(500).json({ message: 'Failed to update advertisement' });
+    }
+  });
+
+  // Delete advertisement (admin only)
+  app.delete('/api/advertisements/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteAdvertisement(id);
+      res.status(200).json({ message: 'Advertisement deleted successfully' });
+    } catch (error) {
+      console.error('Error deleting advertisement:', error);
+      res.status(500).json({ message: 'Failed to delete advertisement' });
     }
   });
 

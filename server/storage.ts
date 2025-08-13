@@ -49,7 +49,10 @@ import {
   type TransferHistory,
   type InsertTransferHistory,
   type FinancialStatement,
-  type InsertFinancialStatement
+  type InsertFinancialStatement,
+  advertisements,
+  type Advertisement,
+  type InsertAdvertisement
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, sql, desc, ilike, inArray, or } from "drizzle-orm";
@@ -173,6 +176,14 @@ export interface IStorage {
   getFinancialStatementsByClient(clientId: string): Promise<FinancialStatement[]>;
   createOrUpdateFinancialStatement(clientId: string, year: number, updates: Partial<FinancialStatement>): Promise<FinancialStatement>;
   getFinancialStatementByClientAndYear(clientId: string, year: number): Promise<FinancialStatement | undefined>;
+  
+  // Advertisements
+  createAdvertisement(ad: InsertAdvertisement): Promise<Advertisement>;
+  updateAdvertisement(id: string, updates: Partial<Advertisement>): Promise<Advertisement | undefined>;
+  deleteAdvertisement(id: string): Promise<void>;
+  getAdvertisementById(id: string): Promise<Advertisement | undefined>;
+  getActiveAdvertisementsByType(targetAudience: string): Promise<Advertisement[]>;
+  getAllAdvertisements(): Promise<Advertisement[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1211,6 +1222,56 @@ export class DatabaseStorage implements IStorage {
         .returning();
       return created;
     }
+  }
+
+  // Advertisement methods
+  async createAdvertisement(ad: InsertAdvertisement): Promise<Advertisement> {
+    const [created] = await db.insert(advertisements).values(ad).returning();
+    return created;
+  }
+
+  async updateAdvertisement(id: string, updates: Partial<Advertisement>): Promise<Advertisement | undefined> {
+    const [updated] = await db
+      .update(advertisements)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(advertisements.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async deleteAdvertisement(id: string): Promise<void> {
+    await db.delete(advertisements).where(eq(advertisements.id, id));
+  }
+
+  async getAdvertisementById(id: string): Promise<Advertisement | undefined> {
+    const [ad] = await db.select().from(advertisements).where(eq(advertisements.id, id));
+    return ad || undefined;
+  }
+
+  async getActiveAdvertisementsByType(targetAudience: string): Promise<Advertisement[]> {
+    const now = new Date();
+    return db
+      .select()
+      .from(advertisements)
+      .where(
+        and(
+          eq(advertisements.targetAudience, targetAudience),
+          eq(advertisements.isActive, true),
+          or(
+            sql`${advertisements.startDate} IS NULL`,
+            sql`${advertisements.startDate} <= ${now}`
+          ),
+          or(
+            sql`${advertisements.endDate} IS NULL`,
+            sql`${advertisements.endDate} >= ${now}`
+          )
+        )
+      )
+      .orderBy(desc(advertisements.priority));
+  }
+
+  async getAllAdvertisements(): Promise<Advertisement[]> {
+    return db.select().from(advertisements).orderBy(desc(advertisements.createdAt));
   }
 }
 
