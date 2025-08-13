@@ -27,6 +27,7 @@ interface AdvertisementCarouselProps {
 export default function AdvertisementCarousel({ targetAudience }: AdvertisementCarouselProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
+  const [isTransitioning, setIsTransitioning] = useState(false);
 
   // Fetch active advertisements for the target audience
   const { data: advertisements = [], isLoading } = useQuery({
@@ -140,7 +141,6 @@ export default function AdvertisementCarousel({ targetAudience }: AdvertisementC
   }
 
   const currentAd = advertisements[currentIndex];
-  const [isTransitioning, setIsTransitioning] = useState(false);
 
   // Add transition effect when index changes
   useEffect(() => {
