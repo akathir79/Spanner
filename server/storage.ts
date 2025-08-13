@@ -1227,23 +1227,66 @@ export class DatabaseStorage implements IStorage {
   // Advertisement methods
   async createAdvertisement(ad: InsertAdvertisement): Promise<Advertisement> {
     // Convert date strings to Date objects if they exist
+    // Handle DD/MM/YYYY format
+    const parseDate = (dateStr: any): Date | null => {
+      if (!dateStr || dateStr === '') return null;
+      
+      // If it's already a Date object, return it
+      if (dateStr instanceof Date) return dateStr;
+      
+      // Handle DD/MM/YYYY format
+      if (typeof dateStr === 'string' && dateStr.includes('/')) {
+        const [day, month, year] = dateStr.split('/');
+        if (day && month && year) {
+          return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+        }
+      }
+      
+      // Try standard date parsing
+      const parsed = new Date(dateStr);
+      return isNaN(parsed.getTime()) ? null : parsed;
+    };
+
     const adData = {
       ...ad,
-      startDate: ad.startDate ? new Date(ad.startDate) : null,
-      endDate: ad.endDate ? new Date(ad.endDate) : null,
+      startDate: parseDate(ad.startDate),
+      endDate: parseDate(ad.endDate),
     };
+    
     const [created] = await db.insert(advertisements).values(adData).returning();
     return created;
   }
 
   async updateAdvertisement(id: string, updates: Partial<Advertisement>): Promise<Advertisement | undefined> {
     // Convert date strings to Date objects if they exist
+    // Handle DD/MM/YYYY format
+    const parseDate = (dateStr: any): Date | null | undefined => {
+      if (dateStr === undefined) return undefined; // Keep undefined as is
+      if (!dateStr || dateStr === '') return null;
+      
+      // If it's already a Date object, return it
+      if (dateStr instanceof Date) return dateStr;
+      
+      // Handle DD/MM/YYYY format
+      if (typeof dateStr === 'string' && dateStr.includes('/')) {
+        const [day, month, year] = dateStr.split('/');
+        if (day && month && year) {
+          return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+        }
+      }
+      
+      // Try standard date parsing
+      const parsed = new Date(dateStr);
+      return isNaN(parsed.getTime()) ? null : parsed;
+    };
+
     const updateData = {
       ...updates,
-      startDate: updates.startDate ? new Date(updates.startDate) : updates.startDate,
-      endDate: updates.endDate ? new Date(updates.endDate) : updates.endDate,
+      startDate: parseDate(updates.startDate),
+      endDate: parseDate(updates.endDate),
       updatedAt: new Date()
     };
+    
     const [updated] = await db
       .update(advertisements)
       .set(updateData)

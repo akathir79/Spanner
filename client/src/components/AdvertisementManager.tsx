@@ -186,9 +186,79 @@ export default function AdvertisementManager() {
     { value: "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)", label: "Green Gradient" },
     { value: "linear-gradient(135deg, #fa709a 0%, #fee140 100%)", label: "Sunset Gradient" },
     { value: "linear-gradient(135deg, #30cfd0 0%, #330867 100%)", label: "Ocean Gradient" },
+    { value: "linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)", label: "Soft Pink" },
+    { value: "linear-gradient(135deg, #fbc2eb 0%, #a6c1ee 100%)", label: "Pastel Dream" },
+    { value: "linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)", label: "Warm Peach" },
+    { value: "linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)", label: "Cotton Candy" },
+    { value: "linear-gradient(135deg, #d299c2 0%, #fef9d7 100%)", label: "Lavender" },
+    { value: "linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%)", label: "Sky Blue" },
     { value: "#ffffff", label: "White" },
     { value: "#000000", label: "Black" },
+    { value: "#f3f4f6", label: "Light Gray" },
+    { value: "#1f2937", label: "Dark Gray" },
   ];
+  
+  // Sample advertisement templates
+  const sampleAds = {
+    client: [
+      {
+        title: "Get Quality Service Today!",
+        description: "Connect with verified professionals in your area. Fast, reliable, and affordable services.",
+        targetAudience: "client",
+        buttonText: "Find Workers",
+        backgroundColor: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+        textColor: "#ffffff",
+        link: "/search",
+        priority: 1
+      },
+      {
+        title: "Special Discount - 20% Off",
+        description: "Book your first service and get 20% off! Limited time offer for new customers.",
+        targetAudience: "client",
+        buttonText: "Claim Offer",
+        backgroundColor: "linear-gradient(135deg, #fa709a 0%, #fee140 100%)",
+        textColor: "#ffffff",
+        link: "/offers",
+        priority: 2
+      }
+    ],
+    worker: [
+      {
+        title: "Grow Your Business",
+        description: "Join thousands of skilled workers earning more with SPANNER. Get more jobs in your area.",
+        targetAudience: "worker",
+        buttonText: "View Jobs",
+        backgroundColor: "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)",
+        textColor: "#ffffff",
+        link: "/jobs",
+        priority: 1
+      },
+      {
+        title: "Premium Membership Benefits",
+        description: "Upgrade to premium and get priority in job listings, advanced analytics, and more!",
+        targetAudience: "worker",
+        buttonText: "Upgrade Now",
+        backgroundColor: "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
+        textColor: "#ffffff",
+        link: "/premium",
+        priority: 2
+      }
+    ]
+  };
+  
+  const createSampleAds = () => {
+    const samples = [...sampleAds.client, ...sampleAds.worker];
+    samples.forEach((sample, index) => {
+      setTimeout(() => {
+        createMutation.mutate({
+          ...sample,
+          isActive: true,
+          startDate: new Date().toISOString().split('T')[0],
+          endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+        });
+      }, index * 500); // Stagger creation to avoid overwhelming the server
+    });
+  };
 
   if (isLoading) {
     return <div>Loading advertisements...</div>;
@@ -199,14 +269,20 @@ export default function AdvertisementManager() {
       <CardHeader>
         <div className="flex justify-between items-center">
           <CardTitle>Advertisement Management</CardTitle>
-          <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-            <DialogTrigger asChild>
-              <Button onClick={() => { resetForm(); setEditingAd(null); }}>
-                <Plus className="h-4 w-4 mr-2" />
-                Create Advertisement
+          <div className="flex gap-2">
+            {advertisements.length === 0 && (
+              <Button variant="outline" onClick={createSampleAds}>
+                Generate Sample Ads
               </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            )}
+            <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+              <DialogTrigger asChild>
+                <Button onClick={() => { resetForm(); setEditingAd(null); }}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create Advertisement
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>
                   {editingAd ? "Edit Advertisement" : "Create New Advertisement"}
@@ -363,7 +439,8 @@ export default function AdvertisementManager() {
                 </div>
               </form>
             </DialogContent>
-          </Dialog>
+            </Dialog>
+          </div>
         </div>
       </CardHeader>
       <CardContent>
