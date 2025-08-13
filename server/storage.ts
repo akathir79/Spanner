@@ -52,7 +52,10 @@ import {
   type InsertFinancialStatement,
   advertisements,
   type Advertisement,
-  type InsertAdvertisement
+  type InsertAdvertisement,
+  settings,
+  type Settings,
+  type InsertSettings
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, sql, desc, ilike, inArray, or } from "drizzle-orm";
@@ -184,6 +187,10 @@ export interface IStorage {
   getAdvertisementById(id: string): Promise<Advertisement | undefined>;
   getActiveAdvertisementsByType(targetAudience: string): Promise<Advertisement[]>;
   getAllAdvertisements(): Promise<Advertisement[]>;
+  
+  // Settings
+  getSetting(key: string): Promise<string | null>;
+  setSetting(key: string, value: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1321,6 +1328,22 @@ export class DatabaseStorage implements IStorage {
 
   async getAllAdvertisements(): Promise<Advertisement[]> {
     return db.select().from(advertisements).orderBy(desc(advertisements.createdAt));
+  }
+
+  // Settings methods
+  async getSetting(key: string): Promise<string | null> {
+    const [setting] = await db.select().from(settings).where(eq(settings.key, key));
+    return setting?.value || null;
+  }
+
+  async setSetting(key: string, value: string): Promise<void> {
+    await db
+      .insert(settings)
+      .values({ key, value })
+      .onConflictDoUpdate({
+        target: settings.key,
+        set: { value, updatedAt: new Date() }
+      });
   }
 }
 

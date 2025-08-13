@@ -667,3 +667,18 @@ export const insertMessageSchema = createInsertSchema(messages).omit({
 
 export type Message = typeof messages.$inferSelect;
 export type InsertMessage = z.infer<typeof insertMessageSchema>;
+
+// Settings table for global configuration
+export const settings = pgTable("settings", {
+  key: text("key").primaryKey(),
+  value: text("value").notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Settings schemas
+export const insertSettingsSchema = createInsertSchema(settings).omit({
+  updatedAt: true,
+});
+
+export type Settings = typeof settings.$inferSelect;
+export type InsertSettings = z.infer<typeof insertSettingsSchema>;

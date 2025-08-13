@@ -1,10 +1,11 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
 import { useLocation } from "wouter";
 import AdvertisementManager from "@/components/AdvertisementManager";
+import { Switch } from "@/components/ui/switch";
 import { 
   Users,
   Calendar,
@@ -41,10 +42,52 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 export default function AdminDashboard() {
   const { user } = useAuth();
   const [, setLocation] = useLocation();
+  const { toast } = useToast();
+  const [adsEnabled, setAdsEnabled] = useState(true);
 
   // Helper function to refresh user data
   const refreshUser = () => {
     queryClient.invalidateQueries({ queryKey: ["/api/user/refresh"] });
+  };
+
+  // Fetch advertisement toggle state
+  useEffect(() => {
+    const fetchAdToggle = async () => {
+      try {
+        const response = await fetch('/api/settings/advertisement-toggle');
+        const data = await response.json();
+        setAdsEnabled(data.enabled);
+      } catch (error) {
+        console.error('Error fetching advertisement toggle:', error);
+      }
+    };
+    fetchAdToggle();
+  }, []);
+
+  // Handle advertisement toggle change
+  const handleAdToggle = async (enabled: boolean) => {
+    try {
+      await apiRequest('/api/settings/advertisement-toggle', {
+        method: 'PUT',
+        body: JSON.stringify({ enabled }),
+      });
+      setAdsEnabled(enabled);
+      // Invalidate advertisement queries to refresh
+      queryClient.invalidateQueries({ queryKey: ['/api/advertisements'] });
+      toast({
+        title: enabled ? "Advertisements Enabled" : "Advertisements Disabled",
+        description: enabled 
+          ? "Advertisements will now be displayed to users." 
+          : "All advertisements have been disabled.",
+      });
+    } catch (error) {
+      console.error('Error updating advertisement toggle:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update advertisement settings",
+        variant: "destructive",
+      });
+    }
   };
 
   // Fetch data
@@ -434,7 +477,38 @@ export default function AdminDashboard() {
 
         {/* Advertisement Management Section */}
         <div className="mt-8">
-          <AdvertisementManager />
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center space-x-2">
+                  <Megaphone className="h-5 w-5" />
+                  <span>Advertisement Management</span>
+                </CardTitle>
+                <div className="flex items-center space-x-3">
+                  <Label htmlFor="ads-toggle" className="text-sm font-medium">
+                    {adsEnabled ? "Ads Enabled" : "Ads Disabled"}
+                  </Label>
+                  <Switch
+                    id="ads-toggle"
+                    checked={adsEnabled}
+                    onCheckedChange={handleAdToggle}
+                    className={adsEnabled ? "" : "bg-gray-200"}
+                  />
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {adsEnabled ? (
+                <AdvertisementManager />
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Megaphone className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p className="text-lg font-medium mb-2">Advertisements are currently disabled</p>
+                  <p className="text-sm">Toggle the switch above to enable advertisement display across the platform.</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
 
       </div>

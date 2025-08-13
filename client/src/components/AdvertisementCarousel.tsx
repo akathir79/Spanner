@@ -28,11 +28,27 @@ export default function AdvertisementCarousel({ targetAudience }: AdvertisementC
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [adsEnabled, setAdsEnabled] = useState(true);
+
+  // Fetch global advertisement toggle state
+  useEffect(() => {
+    const fetchAdToggle = async () => {
+      try {
+        const response = await fetch('/api/settings/advertisement-toggle');
+        const data = await response.json();
+        setAdsEnabled(data.enabled);
+      } catch (error) {
+        console.error('Error fetching advertisement toggle:', error);
+      }
+    };
+    fetchAdToggle();
+  }, []);
 
   // Fetch active advertisements for the target audience
   const { data: advertisements = [], isLoading } = useQuery({
     queryKey: [`/api/advertisements/active/${targetAudience}`],
     refetchInterval: 30000, // Refresh every 30 seconds to get latest ads
+    enabled: adsEnabled, // Only fetch if ads are enabled
   });
 
   // Auto-slide functionality
@@ -79,6 +95,11 @@ export default function AdvertisementCarousel({ targetAudience }: AdvertisementC
   const handleMouseLeave = () => {
     setIsAutoPlaying(true);
   };
+
+  // Show white space when ads are disabled
+  if (!adsEnabled) {
+    return <div className="h-32" />; // Empty white space
+  }
 
   if (isLoading) {
     return (

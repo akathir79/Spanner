@@ -3022,6 +3022,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get global advertisement toggle setting
+  app.get('/api/settings/advertisement-toggle', async (req, res) => {
+    try {
+      const value = await storage.getSetting('advertisement_enabled');
+      // Default to true if not set
+      res.json({ enabled: value === null ? true : value === 'true' });
+    } catch (error) {
+      console.error('Error getting advertisement toggle:', error);
+      res.status(500).json({ message: 'Failed to get advertisement toggle' });
+    }
+  });
+
+  // Set global advertisement toggle setting (admin only)
+  app.put('/api/settings/advertisement-toggle', async (req, res) => {
+    try {
+      const { enabled } = req.body;
+      await storage.setSetting('advertisement_enabled', enabled ? 'true' : 'false');
+      res.json({ message: 'Advertisement toggle updated successfully', enabled });
+    } catch (error) {
+      console.error('Error setting advertisement toggle:', error);
+      res.status(500).json({ message: 'Failed to set advertisement toggle' });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
