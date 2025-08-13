@@ -136,15 +136,69 @@ export default function AdvertisementManager() {
     });
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
+    if (!file) return;
+
+    try {
+      // Compress image before setting it
+      const compressedDataUrl = await compressImageFile(file);
+      setFormData({ ...formData, image: compressedDataUrl });
+    } catch (error) {
+      console.error('Image compression failed:', error);
+      // Fallback to original file
       const reader = new FileReader();
       reader.onloadend = () => {
         setFormData({ ...formData, image: reader.result as string });
       };
       reader.readAsDataURL(file);
     }
+  };
+
+  // Compress image file for faster loading and smaller storage
+  const compressImageFile = async (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+
+      if (!ctx) {
+        reject(new Error('Canvas not supported'));
+        return;
+      }
+
+      img.onload = () => {
+        // Calculate optimal dimensions for advertisements
+        const maxWidth = 1200;
+        const maxHeight = 800;
+        let { width, height } = img;
+
+        // Maintain aspect ratio while fitting within bounds
+        if (width > maxWidth) {
+          height = (height * maxWidth) / width;
+          width = maxWidth;
+        }
+        if (height > maxHeight) {
+          width = (width * maxHeight) / height;
+          height = maxHeight;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        
+        // Draw image with high quality
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(img, 0, 0, width, height);
+        
+        // Convert to compressed format
+        const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.85);
+        resolve(compressedDataUrl);
+      };
+
+      img.onerror = () => reject(new Error('Image load failed'));
+      img.src = URL.createObjectURL(file);
+    });
   };
 
   const handleSubmit = (e: React.FormEvent) => {

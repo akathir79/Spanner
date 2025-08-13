@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { OptimizedImage } from "./OptimizedImage";
 
 interface Advertisement {
   id: string;
@@ -132,11 +133,19 @@ export default function AdvertisementCarousel({ targetAudience }: AdvertisementC
           isTransitioning ? 'opacity-0 scale-95' : 'opacity-100 scale-100'
         }`}>
           <div className="relative w-full" style={{ minHeight: '200px', maxHeight: '400px' }}>
-            <img 
+            <OptimizedImage 
               src={currentAd.image} 
               alt={currentAd.title || "Advertisement"}
               className="w-full h-auto object-contain"
               style={{ minHeight: '200px', maxHeight: '400px' }}
+              compression={{
+                maxWidth: 1200,
+                maxHeight: 800,
+                quality: 0.85,
+                format: 'webp'
+              }}
+              lazy={false}
+              showLoader={true}
             />
             {/* Optional overlay button */}
             {currentAd.link && currentAd.buttonText && (
@@ -244,11 +253,19 @@ export default function AdvertisementCarousel({ targetAudience }: AdvertisementC
             {/* Right content - Image if in mixed mode */}
             {displayMode === 'mixed' && currentAd.image && (
               <div className="w-2/5 flex items-center">
-                <img 
+                <OptimizedImage 
                   src={currentAd.image} 
                   alt={currentAd.title || "Advertisement"}
                   className="w-full h-auto object-contain rounded-lg"
                   style={{ maxHeight: '300px', minHeight: '150px' }}
+                  compression={{
+                    maxWidth: 600,
+                    maxHeight: 400,
+                    quality: 0.8,
+                    format: 'webp'
+                  }}
+                  lazy={false}
+                  showLoader={false}
                 />
               </div>
             )}
