@@ -46,7 +46,7 @@ export default function AdvertisementCarousel({ targetAudience }: AdvertisementC
   }, []);
 
   // Fetch active advertisements for the target audience
-  const { data: advertisements = [], isLoading } = useQuery<Advertisement[]>({
+  const { data: advertisements = [], isLoading } = useQuery({
     queryKey: [`/api/advertisements/active/${targetAudience}`],
     refetchInterval: 30000, // Refresh every 30 seconds to get latest ads
     enabled: adsEnabled, // Only fetch if ads are enabled
@@ -104,8 +104,8 @@ export default function AdvertisementCarousel({ targetAudience }: AdvertisementC
 
   if (isLoading) {
     return (
-      <Card className="w-full animate-pulse bg-gradient-to-r from-purple-400 to-pink-400" style={{ minHeight: '200px', maxHeight: '400px' }}>
-        <CardContent className="p-0 h-full flex items-center justify-center" style={{ minHeight: '200px' }}>
+      <Card className="w-full h-64 animate-pulse bg-gradient-to-r from-purple-400 to-pink-400">
+        <CardContent className="p-0 h-full flex items-center justify-center">
           <div className="text-white">Loading advertisements...</div>
         </CardContent>
       </Card>
@@ -131,13 +131,11 @@ export default function AdvertisementCarousel({ targetAudience }: AdvertisementC
         <Card className={`w-full overflow-hidden transition-all duration-500 ${
           isTransitioning ? 'opacity-0 scale-95' : 'opacity-100 scale-100'
         }`}>
-          <div className="relative w-full" style={{ minHeight: '200px', maxHeight: '400px' }}>
+          <div className="relative w-full h-64">
             <img 
               src={currentAd.image} 
               alt={currentAd.title || "Advertisement"}
-              className="w-full h-auto object-contain"
-              style={{ minHeight: '200px', maxHeight: '400px' }}
-              loading="eager"
+              className="w-full h-full object-cover"
             />
             {/* Optional overlay button */}
             {currentAd.link && currentAd.buttonText && (
@@ -145,7 +143,6 @@ export default function AdvertisementCarousel({ targetAudience }: AdvertisementC
                 <Button
                   onClick={() => window.open(currentAd.link, '_blank')}
                   className="bg-white/90 text-gray-900 hover:bg-white shadow-lg"
-                  size="lg"
                 >
                   {currentAd.buttonText}
                 </Button>
@@ -203,17 +200,15 @@ export default function AdvertisementCarousel({ targetAudience }: AdvertisementC
         }`}
         style={{
           background: currentAd.backgroundColor || "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-          minHeight: displayMode === 'text' ? '180px' : '200px',
-          maxHeight: '400px'
         }}
       >
-        <CardContent className="p-8 h-full">
-          <div className="flex items-center justify-between gap-6 h-full">
+        <CardContent className="p-8">
+          <div className="flex items-center justify-between gap-6">
             {/* Left content */}
-            <div className="flex-1 flex flex-col justify-center">
+            <div className="flex-1">
               {currentAd.title && (
                 <h3 
-                  className="text-2xl md:text-3xl font-bold mb-3"
+                  className="text-3xl font-bold mb-3"
                   style={{ color: currentAd.textColor || "#ffffff" }}
                 >
                   {currentAd.title}
@@ -221,7 +216,7 @@ export default function AdvertisementCarousel({ targetAudience }: AdvertisementC
               )}
               {currentAd.description && (
                 <p 
-                  className="text-base md:text-lg mb-6 opacity-90"
+                  className="text-lg mb-6 opacity-90"
                   style={{ color: currentAd.textColor || "#ffffff" }}
                 >
                   {currentAd.description}
@@ -230,7 +225,7 @@ export default function AdvertisementCarousel({ targetAudience }: AdvertisementC
               {currentAd.link && (
                 <Button
                   onClick={() => window.open(currentAd.link, '_blank')}
-                  className="bg-white/20 backdrop-blur-sm border-white/30 hover:bg-white/30 w-fit"
+                  className="bg-white/20 backdrop-blur-sm border-white/30 hover:bg-white/30"
                   size="lg"
                   style={{ 
                     color: currentAd.textColor || "#ffffff",
@@ -244,13 +239,11 @@ export default function AdvertisementCarousel({ targetAudience }: AdvertisementC
 
             {/* Right content - Image if in mixed mode */}
             {displayMode === 'mixed' && currentAd.image && (
-              <div className="w-2/5 flex items-center">
+              <div className="w-2/5">
                 <img 
                   src={currentAd.image} 
                   alt={currentAd.title || "Advertisement"}
-                  className="w-full h-auto object-contain rounded-lg"
-                  style={{ maxHeight: '300px', minHeight: '150px' }}
-                  loading="eager"
+                  className="w-full h-44 object-cover rounded-lg"
                 />
               </div>
             )}
