@@ -46,6 +46,13 @@ export default function AdvertisementCarousel({ targetAudience }: AdvertisementC
     return () => clearInterval(interval);
   }, [isAutoPlaying, advertisements.length]);
 
+  // Add transition effect when index changes
+  useEffect(() => {
+    setIsTransitioning(true);
+    const timer = setTimeout(() => setIsTransitioning(false), 300);
+    return () => clearTimeout(timer);
+  }, [currentIndex]);
+
   const handlePrevious = () => {
     setIsAutoPlaying(false);
     setCurrentIndex((prev) => 
@@ -141,13 +148,6 @@ export default function AdvertisementCarousel({ targetAudience }: AdvertisementC
   }
 
   const currentAd = advertisements[currentIndex];
-
-  // Add transition effect when index changes
-  useEffect(() => {
-    setIsTransitioning(true);
-    const timer = setTimeout(() => setIsTransitioning(false), 300);
-    return () => clearTimeout(timer);
-  }, [currentIndex]);
 
   return (
     <div 
