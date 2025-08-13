@@ -1573,6 +1573,123 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Bulk delete users endpoint
+  app.delete("/api/admin/bulk-delete-users", async (req, res) => {
+    try {
+      const { userIds } = req.body;
+      
+      if (!userIds || !Array.isArray(userIds) || userIds.length === 0) {
+        return res.status(400).json({ error: "No user IDs provided" });
+      }
+      
+      console.log(`Bulk delete request for ${userIds.length} users:`, userIds);
+      
+      let deletedCount = 0;
+      const errors = [];
+      const skippedSuperAdmins = [];
+      
+      for (const userId of userIds) {
+        try {
+          // Check if user exists
+          const user = await storage.getUser(userId);
+          if (!user) {
+            console.log(`User not found: ${userId}`);
+            errors.push(`User ${userId} not found`);
+            continue;
+          }
+          
+          // Prevent deletion of super admin accounts
+          if (user.role === 'super_admin') {
+            console.log(`Skipping super admin: ${userId}`);
+            skippedSuperAdmins.push(userId);
+            continue;
+          }
+          
+          await storage.deleteUser(userId);
+          deletedCount++;
+          console.log(`Successfully deleted user: ${userId}`);
+        } catch (error) {
+          console.error(`Error deleting user ${userId}:`, error);
+          errors.push(`Failed to delete user ${userId}`);
+        }
+      }
+      
+      console.log(`Bulk delete completed: ${deletedCount} deleted, ${errors.length} errors, ${skippedSuperAdmins.length} super admins skipped`);
+      
+      let message = `${deletedCount} user(s) deleted successfully`;
+      if (skippedSuperAdmins.length > 0) {
+        message += `, ${skippedSuperAdmins.length} super admin(s) skipped`;
+      }
+      
+      res.json({ 
+        message,
+        deletedCount,
+        skippedSuperAdmins: skippedSuperAdmins.length > 0 ? skippedSuperAdmins : undefined,
+        errors: errors.length > 0 ? errors : undefined
+      });
+    } catch (error) {
+      console.error("Bulk delete error:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // Bulk verify users endpoint
+  app.put("/api/admin/bulk-verify-users", async (req, res) => {
+    try {
+      const { userIds } = req.body;
+      
+      if (!userIds || !Array.isArray(userIds) || userIds.length === 0) {
+        return res.status(400).json({ error: "No user IDs provided" });
+      }
+      
+      console.log(`Bulk verify request for ${userIds.length} users:`, userIds);
+      
+      let verifiedCount = 0;
+      const errors = [];
+      
+      for (const userId of userIds) {
+        try {
+          // Check if user exists
+          const user = await storage.getUser(userId);
+          if (!user) {
+            console.log(`User not found: ${userId}`);
+            errors.push(`User ${userId} not found`);
+            continue;
+          }
+          
+          // Update user verification status and approve if worker
+          if (user.role === 'worker') {
+            await storage.updateUser(userId, { 
+              isVerified: true,
+              status: "approved"
+            });
+          } else {
+            await storage.updateUser(userId, { 
+              isVerified: true
+            });
+          }
+          
+          verifiedCount++;
+          console.log(`Successfully verified user: ${userId}`);
+        } catch (error) {
+          console.error(`Error verifying user ${userId}:`, error);
+          errors.push(`Failed to verify user ${userId}`);
+        }
+      }
+      
+      console.log(`Bulk verify completed: ${verifiedCount} verified, ${errors.length} errors`);
+      
+      res.json({ 
+        message: `${verifiedCount} user(s) verified successfully`,
+        verifiedCount,
+        errors: errors.length > 0 ? errors : undefined
+      });
+    } catch (error) {
+      console.error("Bulk verify error:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
   app.patch("/api/admin/update-worker/:workerId", async (req, res) => {
     try {
       const { workerId } = req.params;

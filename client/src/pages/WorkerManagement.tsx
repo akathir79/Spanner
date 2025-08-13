@@ -554,6 +554,50 @@ export default function WorkerManagement() {
     },
   });
 
+  const bulkDeleteUsersMutation = useMutation({
+    mutationFn: async (userIds: string[]) => {
+      return await apiRequest("DELETE", "/api/admin/bulk-delete-users", { userIds });
+    },
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      setSelectedWorkerIds(new Set());
+      setShowBulkDeleteDialog(false);
+      toast({
+        title: "Success",
+        description: data.message || "Workers deleted successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error?.message || "Failed to delete workers",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const bulkVerifyUsersMutation = useMutation({
+    mutationFn: async (userIds: string[]) => {
+      return await apiRequest("PUT", "/api/admin/bulk-verify-users", { userIds });
+    },
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      setSelectedWorkerIds(new Set());
+      setShowBulkVerifyDialog(false);
+      toast({
+        title: "Success",
+        description: data.message || "Workers verified successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error?.message || "Failed to verify workers",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Action handlers
   const handleViewDetails = (worker: User) => {
     setSelectedWorker(worker);
@@ -3520,16 +3564,16 @@ export default function WorkerManagement() {
             <AlertDialogAction 
               onClick={async () => {
                 setBulkActionLoading(true);
-                // TODO: Implement bulk verify API call
-                toast({
-                  title: "Workers Verified",
-                  description: `${selectedWorkerIds.size} worker(s) have been verified successfully.`
-                });
-                setSelectedWorkerIds(new Set());
-                setBulkActionLoading(false);
-                setShowBulkVerifyDialog(false);
+                try {
+                  const userIdsArray = Array.from(selectedWorkerIds);
+                  await bulkVerifyUsersMutation.mutateAsync(userIdsArray);
+                } catch (error) {
+                  console.error("Bulk verify error:", error);
+                } finally {
+                  setBulkActionLoading(false);
+                }
               }}
-              disabled={bulkActionLoading}
+              disabled={bulkActionLoading || bulkVerifyUsersMutation.isPending}
             >
               {bulkActionLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <UserCheck className="w-4 h-4 mr-2" />}
               Verify Workers
@@ -3552,16 +3596,16 @@ export default function WorkerManagement() {
             <AlertDialogAction 
               onClick={async () => {
                 setBulkActionLoading(true);
-                // TODO: Implement bulk delete API call
-                toast({
-                  title: "Workers Deleted",
-                  description: `${selectedWorkerIds.size} worker(s) have been deleted successfully.`
-                });
-                setSelectedWorkerIds(new Set());
-                setBulkActionLoading(false);
-                setShowBulkDeleteDialog(false);
+                try {
+                  const userIdsArray = Array.from(selectedWorkerIds);
+                  await bulkDeleteUsersMutation.mutateAsync(userIdsArray);
+                } catch (error) {
+                  console.error("Bulk delete error:", error);
+                } finally {
+                  setBulkActionLoading(false);
+                }
               }}
-              disabled={bulkActionLoading}
+              disabled={bulkActionLoading || bulkDeleteUsersMutation.isPending}
               className="bg-red-600 hover:bg-red-700"
             >
               {bulkActionLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Trash2 className="w-4 h-4 mr-2" />}

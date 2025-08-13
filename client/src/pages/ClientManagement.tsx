@@ -554,6 +554,50 @@ export default function ClientManagement() {
     },
   });
 
+  const bulkDeleteUsersMutation = useMutation({
+    mutationFn: async (userIds: string[]) => {
+      return await apiRequest("DELETE", "/api/admin/bulk-delete-users", { userIds });
+    },
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      setSelectedClientIds(new Set());
+      setShowBulkDeleteDialog(false);
+      toast({
+        title: "Success",
+        description: data.message || "Users deleted successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error?.message || "Failed to delete users",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const bulkVerifyUsersMutation = useMutation({
+    mutationFn: async (userIds: string[]) => {
+      return await apiRequest("PUT", "/api/admin/bulk-verify-users", { userIds });
+    },
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      setSelectedClientIds(new Set());
+      setShowBulkVerifyDialog(false);
+      toast({
+        title: "Success",
+        description: data.message || "Users verified successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error?.message || "Failed to verify users",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Action handlers
   const handleViewDetails = (client: User) => {
     setSelectedClient(client);
@@ -3478,15 +3522,16 @@ export default function ClientManagement() {
             <AlertDialogAction 
               onClick={async () => {
                 setBulkActionLoading(true);
-                toast({
-                  title: "Clients Verified",
-                  description: `${selectedClientIds.size} client(s) have been verified successfully.`
-                });
-                setSelectedClientIds(new Set());
-                setBulkActionLoading(false);
-                setShowBulkVerifyDialog(false);
+                try {
+                  const userIdsArray = Array.from(selectedClientIds);
+                  await bulkVerifyUsersMutation.mutateAsync(userIdsArray);
+                } catch (error) {
+                  console.error("Bulk verify error:", error);
+                } finally {
+                  setBulkActionLoading(false);
+                }
               }}
-              disabled={bulkActionLoading}
+              disabled={bulkActionLoading || bulkVerifyUsersMutation.isPending}
             >
               {bulkActionLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <UserCheck className="w-4 h-4 mr-2" />}
               Verify Clients
@@ -3509,15 +3554,16 @@ export default function ClientManagement() {
             <AlertDialogAction 
               onClick={async () => {
                 setBulkActionLoading(true);
-                toast({
-                  title: "Clients Deleted",
-                  description: `${selectedClientIds.size} client(s) have been deleted successfully.`
-                });
-                setSelectedClientIds(new Set());
-                setBulkActionLoading(false);
-                setShowBulkDeleteDialog(false);
+                try {
+                  const userIdsArray = Array.from(selectedClientIds);
+                  await bulkDeleteUsersMutation.mutateAsync(userIdsArray);
+                } catch (error) {
+                  console.error("Bulk delete error:", error);
+                } finally {
+                  setBulkActionLoading(false);
+                }
               }}
-              disabled={bulkActionLoading}
+              disabled={bulkActionLoading || bulkDeleteUsersMutation.isPending}
               className="bg-red-600 hover:bg-red-700"
             >
               {bulkActionLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Trash2 className="w-4 h-4 mr-2" />}

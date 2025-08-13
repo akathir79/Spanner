@@ -563,6 +563,50 @@ export default function AdminManagement() {
     }
   };
 
+  const bulkDeleteUsersMutation = useMutation({
+    mutationFn: async (userIds: string[]) => {
+      return await apiRequest("DELETE", "/api/admin/bulk-delete-users", { userIds });
+    },
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/admins"] });
+      setSelectedAdminIds(new Set());
+      setShowBulkDeleteDialog(false);
+      toast({
+        title: "Success",
+        description: data.message || "Admins deleted successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error?.message || "Failed to delete admins",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const bulkVerifyUsersMutation = useMutation({
+    mutationFn: async (userIds: string[]) => {
+      return await apiRequest("PUT", "/api/admin/bulk-verify-users", { userIds });
+    },
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/admins"] });
+      setSelectedAdminIds(new Set());
+      setShowBulkVerifyDialog(false);
+      toast({
+        title: "Success",
+        description: data.message || "Admins verified successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error?.message || "Failed to verify admins",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleCallAdmin = (admin: User) => {
     if (admin.mobile) {
       window.open(`tel:${admin.mobile}`, '_blank');
@@ -1861,15 +1905,16 @@ export default function AdminManagement() {
               <AlertDialogAction 
                 onClick={async () => {
                   setBulkActionLoading(true);
-                  toast({
-                    title: "Admins Verified",
-                    description: `${selectedAdminIds.size} admin(s) have been verified successfully.`
-                  });
-                  setSelectedAdminIds(new Set());
-                  setBulkActionLoading(false);
-                  setShowBulkVerifyDialog(false);
+                  try {
+                    const userIdsArray = Array.from(selectedAdminIds);
+                    await bulkVerifyUsersMutation.mutateAsync(userIdsArray);
+                  } catch (error) {
+                    console.error("Bulk verify error:", error);
+                  } finally {
+                    setBulkActionLoading(false);
+                  }
                 }}
-                disabled={bulkActionLoading}
+                disabled={bulkActionLoading || bulkVerifyUsersMutation.isPending}
               >
                 {bulkActionLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <UserCheck className="w-4 h-4 mr-2" />}
                 Verify Admins
@@ -1892,15 +1937,16 @@ export default function AdminManagement() {
               <AlertDialogAction 
                 onClick={async () => {
                   setBulkActionLoading(true);
-                  toast({
-                    title: "Admins Deleted",
-                    description: `${selectedAdminIds.size} admin(s) have been deleted successfully.`
-                  });
-                  setSelectedAdminIds(new Set());
-                  setBulkActionLoading(false);
-                  setShowBulkDeleteDialog(false);
+                  try {
+                    const userIdsArray = Array.from(selectedAdminIds);
+                    await bulkDeleteUsersMutation.mutateAsync(userIdsArray);
+                  } catch (error) {
+                    console.error("Bulk delete error:", error);
+                  } finally {
+                    setBulkActionLoading(false);
+                  }
                 }}
-                disabled={bulkActionLoading}
+                disabled={bulkActionLoading || bulkDeleteUsersMutation.isPending}
                 className="bg-red-600 hover:bg-red-700"
               >
                 {bulkActionLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Trash2 className="w-4 h-4 mr-2" />}
