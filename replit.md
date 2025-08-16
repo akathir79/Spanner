@@ -37,6 +37,18 @@ Preferred communication style: Simple, everyday language.
 
 ## Key Components
 
+### Voice-Powered Quick Post System
+Complete multilingual voice job posting feature accessible via green 🎤 button in navbar:
+- **Real-time Voice Recognition**: Google Gemini-powered speech-to-text with automatic language detection
+- **Multilingual Support**: Supports 10+ Indian languages (Hindi, Tamil, Telugu, Bengali, Malayalam, Kannada, Gujarati, Marathi, Punjabi, English)
+- **Smart Information Extraction**: AI automatically extracts job title, description, service category, urgency, budget, location, requirements, and timeframe from voice
+- **Intelligent Location Resolution**: Users can mention just area name - system intelligently resolves full district and state information
+- **Automatic Account Creation**: For new users, extracts personal information from voice and creates account automatically
+- **Seamless Integration**: Posts directly to existing job system with all extracted information
+- **User Flow**: Welcome → Voice Recording → Processing → Review → Job Posted
+- **Real-time Processing**: Live transcription display with detected language indicator
+- **Fallback Support**: Graceful fallback to demo mode if API services are unavailable
+
 ### Database Backup & Restore System
 Complete database backup and restore utilities in `database/` folder:
 - **backup-export.ts**: Export complete database to JSON backup files
@@ -94,6 +106,7 @@ Located in `shared/schema.ts`, the database includes:
 - **Interactive Budget Slider**: Added real-time budget slider with live preview, quick presets (Basic, Standard, Premium, Luxury), dual-range controls, and manual input fallback for both job creation and editing (August 16, 2025)
 - **Budget Badge Instant Updates**: Fixed budget badge display issues with immediate cache invalidation, server response integration, and consistent Indian number formatting across all job displays (August 16, 2025)
 - **Comprehensive Financial Model System**: Fully implemented 5-tier financial system with real-time wallets, GST calculations, admin commission handling, referral rewards, mock payment processing, and complete admin control dashboard - ready for Stripe integration (August 16, 2025)
+- **Voice-Powered Quick Post System**: Complete multilingual voice job posting system with Google Gemini integration for 10+ Indian languages, real-time speech recognition, intelligent location extraction from partial addresses, automatic account creation flow, and seamless job posting workflow (August 16, 2025)
 
 ### Language Support
 - English-only interface for India-wide coverage

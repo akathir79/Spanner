@@ -1,6 +1,6 @@
 import React from 'react';
-import QuickPostBasic from '@/components/QuickPostBasic';
+import QuickPostWorking from '@/components/QuickPostWorking';
 
 export default function QuickPostPage() {
-  return <QuickPostBasic />;
+  return <QuickPostWorking />;
 }
