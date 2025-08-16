@@ -87,6 +87,7 @@ Located in `shared/schema.ts`, the database includes:
 - **Recent Testing**: Successfully tested complete workflow with booking BKG-TEST-COMPLETION-001: worker completion → OTP generation (348185) → client verification → review submission → all data persisted correctly
 - **Booking Tabs System**: Service bookings now organized with "Current Jobs" and "Completed Jobs" tabs with delete functionality for completed jobs and 30-day auto-cleanup warnings (August 16, 2025)
 - **Client Deletion Fixed**: Resolved foreign key constraint issues in user deletion - both individual and bulk client deletion now working properly with proper cascade deletion of reviews, bookings, and related data (August 16, 2025)
+- **Budget Display Fixed**: Resolved job posting budget update and display issues - budget increases now properly save to database and display correctly in job posting badges instead of showing "Negotiable" (August 16, 2025)
 
 ### Language Support
 - English-only interface for India-wide coverage

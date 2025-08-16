@@ -2361,12 +2361,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { jobId } = req.params;
       console.log("Updating job posting:", jobId, req.body);
       
-      // Convert budget numbers to strings for database compatibility
-      const { budgetMin, budgetMax, deadline, ...rest } = req.body;
+      // Process deadline field
+      const { deadline, ...rest } = req.body;
       const updateData = {
         ...rest,
-        budgetMin: budgetMin !== undefined && budgetMin !== null ? budgetMin.toString() : null,
-        budgetMax: budgetMax !== undefined && budgetMax !== null ? budgetMax.toString() : null,
         deadline: deadline ? new Date(deadline) : null,
       };
       
@@ -2387,17 +2385,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Job ID:", id);
       console.log("Request body:", req.body);
       
-      // Convert budget numbers to strings for database compatibility
-      const { budgetMin, budgetMax, ...rest } = req.body;
-      const jobData = {
-        ...rest,
-        budgetMin: budgetMin !== undefined && budgetMin !== null && budgetMin !== "" ? budgetMin.toString() : null,
-        budgetMax: budgetMax !== undefined && budgetMax !== null && budgetMax !== "" ? budgetMax.toString() : null,
-      };
+      console.log("Processed job data for database:", req.body);
       
-      console.log("Processed job data for database:", jobData);
-      
-      const job = await storage.updateJobPosting(id, jobData);
+      const job = await storage.updateJobPosting(id, req.body);
       console.log("Updated job result:", job);
       
       res.json(job);

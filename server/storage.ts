@@ -991,13 +991,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createJobPosting(jobPosting: InsertJobPosting): Promise<JobPosting> {
-    // Convert numeric fields to strings for database compatibility
-    const dbJobPosting = {
-      ...jobPosting,
-      budgetMin: jobPosting.budgetMin !== undefined && jobPosting.budgetMin !== null ? jobPosting.budgetMin.toString() : null,
-      budgetMax: jobPosting.budgetMax !== undefined && jobPosting.budgetMax !== null ? jobPosting.budgetMax.toString() : null,
-    };
-    const [job] = await db.insert(jobPostings).values([dbJobPosting]).returning();
+    const [job] = await db.insert(jobPostings).values([jobPosting]).returning();
     return job;
   }
 
