@@ -101,7 +101,8 @@ export default function FinancialManagement() {
     adminCommissionRate: string;
     advancePaymentPercentage: string;
     completionPercentage: string;
-    referralRewardAmount: string;
+    clientReferralReward: string;
+    workerReferralReward: string;
     minimumTransactionAmount: string;
     maximumTransactionAmount: string;
     processingFeeRate: string;
@@ -111,10 +112,11 @@ export default function FinancialManagement() {
     type: "free",
     gstEnabled: false,
     gstRate: "18",
-    adminCommissionRate: "10",
+    adminCommissionRate: "10", 
     advancePaymentPercentage: "30",
     completionPercentage: "70",
-    referralRewardAmount: "100",
+    clientReferralReward: "100",
+    workerReferralReward: "100",
     minimumTransactionAmount: "50",
     maximumTransactionAmount: "100000",
     processingFeeRate: "2.5"
@@ -188,8 +190,8 @@ export default function FinancialManagement() {
           isActive: false,
           adminCommissionPercentage: modelForm.adminCommissionRate || "0",
           gstPercentage: modelForm.gstEnabled ? (modelForm.gstRate || "18") : "0",
-          referralClientReward: modelForm.referralRewardAmount || "0",
-          referralWorkerReward: modelForm.referralRewardAmount || "0",
+          referralClientReward: modelForm.clientReferralReward || "0",
+          referralWorkerReward: modelForm.workerReferralReward || "0",
           referralEnabledForClient: false,
           referralEnabledForWorker: false,
           settings: {}
@@ -229,8 +231,8 @@ export default function FinancialManagement() {
           type: modelForm.type,
           adminCommissionPercentage: modelForm.adminCommissionRate || "0",
           gstPercentage: modelForm.gstEnabled ? (modelForm.gstRate || "18") : "0",
-          referralClientReward: modelForm.referralRewardAmount || "0",
-          referralWorkerReward: modelForm.referralRewardAmount || "0",
+          referralClientReward: modelForm.clientReferralReward || "0",
+          referralWorkerReward: modelForm.workerReferralReward || "0",
           referralEnabledForClient: false,
           referralEnabledForWorker: false,
           settings: {}
@@ -404,7 +406,8 @@ export default function FinancialManagement() {
       adminCommissionRate: "10",
       advancePaymentPercentage: "30",
       completionPercentage: "70",
-      referralRewardAmount: "100",
+      clientReferralReward: "100",
+      workerReferralReward: "100",
       minimumTransactionAmount: "50",
       maximumTransactionAmount: "100000",
       processingFeeRate: "2.5"
@@ -594,19 +597,31 @@ export default function FinancialManagement() {
                 </div>
               )}
 
-              {modelForm.type === 'referral_earning' && (
+              {/* Client and Worker Referral Rewards - Always shown for all model types */}
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="referral-reward">Referral Reward Amount (₹)</Label>
+                  <Label htmlFor="client-referral">Client Referral (₹)</Label>
                   <Input
-                    id="referral-reward"
+                    id="client-referral"
                     type="number"
-                    value={modelForm.referralRewardAmount}
-                    onChange={(e) => setModelForm({...modelForm, referralRewardAmount: e.target.value})}
+                    value={modelForm.clientReferralReward}
+                    onChange={(e) => setModelForm({...modelForm, clientReferralReward: e.target.value})}
                     placeholder="100"
-                    data-testid="input-referral-reward"
+                    data-testid="input-client-referral"
                   />
                 </div>
-              )}
+                <div>
+                  <Label htmlFor="worker-referral">Worker Referral (₹)</Label>
+                  <Input
+                    id="worker-referral"
+                    type="number"
+                    value={modelForm.workerReferralReward}
+                    onChange={(e) => setModelForm({...modelForm, workerReferralReward: e.target.value})}
+                    placeholder="100"
+                    data-testid="input-worker-referral"
+                  />
+                </div>
+              </div>
 
               <div className="grid grid-cols-3 gap-4">
                 <div>
