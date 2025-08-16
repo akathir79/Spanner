@@ -13,6 +13,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
+import { Slider } from "@/components/ui/slider";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -1714,38 +1715,138 @@ const JobPostingForm = ({ onClose }: { onClose?: () => void }) => {
             <p className="text-xs text-muted-foreground">(Leave empty if negotiable)</p>
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="budgetMin" className="text-sm font-medium text-emerald-700 flex items-center gap-1">
-              <TrendingUp className="h-3 w-3" />
-              Minimum (₹)
-            </Label>
-            <Input
-              id="budgetMin"
-              type="number"
-              value={formData.budgetMin}
-              onChange={(e) => setFormData({ ...formData, budgetMin: e.target.value })}
-              placeholder="799"
-              className="h-12 text-base bg-white/80 border-2 border-emerald-200/50 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 transition-all"
-              min="0"
-              step="1"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="budgetMax" className="text-sm font-medium text-emerald-700 flex items-center gap-1">
-              <TrendingUp className="h-3 w-3" />
-              Maximum (₹)
-            </Label>
-            <Input
-              id="budgetMax"
-              type="number"
-              value={formData.budgetMax}
-              onChange={(e) => setFormData({ ...formData, budgetMax: e.target.value })}
-              placeholder="999"
-              className="h-12 text-base bg-white/80 border-2 border-emerald-200/50 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 transition-all"
-              min="0"
-              step="1"
-            />
+        <div className="space-y-6">
+          {/* Interactive Budget Slider with Real-time Preview */}
+          <div className="bg-gradient-to-br from-emerald-50 to-green-50 p-6 rounded-xl border-2 border-emerald-200/50">
+            <div className="flex items-center gap-2 mb-4">
+              <TrendingUp className="h-5 w-5 text-emerald-600" />
+              <Label className="text-lg font-semibold text-emerald-800">Budget Range</Label>
+            </div>
+            
+            {/* Real-time Preview Display */}
+            <div className="bg-white/80 backdrop-blur-sm p-4 rounded-lg border border-emerald-200 mb-6">
+              <div className="text-center">
+                <div className="text-3xl font-bold text-emerald-700 mb-2">
+                  {Number(formData.budgetMin) > 0 && Number(formData.budgetMax) > 0 
+                    ? `₹${Number(formData.budgetMin).toLocaleString('en-IN')} - ₹${Number(formData.budgetMax).toLocaleString('en-IN')}`
+                    : 'Set your budget range'}
+                </div>
+                <div className="text-sm text-emerald-600">
+                  {Number(formData.budgetMin) > 0 && Number(formData.budgetMax) > 0 
+                    ? `Average: ₹${Math.round((Number(formData.budgetMin) + Number(formData.budgetMax)) / 2).toLocaleString('en-IN')}`
+                    : 'Use the slider below to set minimum and maximum budget'}
+                </div>
+              </div>
+            </div>
+
+            {/* Dual Range Slider */}
+            <div className="space-y-4">
+              <div className="space-y-3">
+                <div className="flex justify-between text-sm text-emerald-700">
+                  <span>Minimum Budget</span>
+                  <span className="font-semibold">₹{Number(formData.budgetMin || 0).toLocaleString('en-IN')}</span>
+                </div>
+                <Slider
+                  value={[Number(formData.budgetMin || 500)]}
+                  onValueChange={(value) => {
+                    const newMin = value[0];
+                    const currentMax = Number(formData.budgetMax || 1000);
+                    setFormData({ 
+                      ...formData, 
+                      budgetMin: newMin.toString(),
+                      budgetMax: newMin > currentMax ? newMin.toString() : formData.budgetMax
+                    });
+                  }}
+                  max={50000}
+                  min={100}
+                  step={100}
+                  className="w-full"
+                />
+              </div>
+              
+              <div className="space-y-3">
+                <div className="flex justify-between text-sm text-emerald-700">
+                  <span>Maximum Budget</span>
+                  <span className="font-semibold">₹{Number(formData.budgetMax || 0).toLocaleString('en-IN')}</span>
+                </div>
+                <Slider
+                  value={[Number(formData.budgetMax || 1000)]}
+                  onValueChange={(value) => {
+                    const newMax = value[0];
+                    const currentMin = Number(formData.budgetMin || 500);
+                    setFormData({ 
+                      ...formData, 
+                      budgetMax: newMax.toString(),
+                      budgetMin: newMax < currentMin ? newMax.toString() : formData.budgetMin
+                    });
+                  }}
+                  max={50000}
+                  min={100}
+                  step={100}
+                  className="w-full"
+                />
+              </div>
+            </div>
+
+            {/* Quick Budget Presets */}
+            <div className="mt-6">
+              <Label className="text-sm font-medium text-emerald-700 mb-3 block">Quick Presets</Label>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                {[
+                  { label: 'Basic', min: 500, max: 1000 },
+                  { label: 'Standard', min: 1000, max: 3000 },
+                  { label: 'Premium', min: 3000, max: 7000 },
+                  { label: 'Luxury', min: 7000, max: 15000 }
+                ].map((preset) => (
+                  <Button
+                    key={preset.label}
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setFormData({ 
+                      ...formData, 
+                      budgetMin: preset.min.toString(),
+                      budgetMax: preset.max.toString()
+                    })}
+                    className="h-8 text-xs bg-emerald-50 hover:bg-emerald-100 border-emerald-200 text-emerald-700"
+                  >
+                    {preset.label}
+                    <span className="ml-1 text-xs opacity-75">
+                      ₹{(preset.min / 1000).toFixed(0)}k-{(preset.max / 1000).toFixed(0)}k
+                    </span>
+                  </Button>
+                ))}
+              </div>
+            </div>
+
+            {/* Manual Input Option */}
+            <div className="mt-6 pt-4 border-t border-emerald-200">
+              <Label className="text-sm font-medium text-emerald-700 mb-3 block">Or enter manually</Label>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Input
+                    type="number"
+                    value={formData.budgetMin}
+                    onChange={(e) => setFormData({ ...formData, budgetMin: e.target.value })}
+                    placeholder="Minimum amount"
+                    className="h-10 text-sm bg-white/80 border-emerald-200 focus:border-emerald-400"
+                    min="0"
+                    step="100"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Input
+                    type="number"
+                    value={formData.budgetMax}
+                    onChange={(e) => setFormData({ ...formData, budgetMax: e.target.value })}
+                    placeholder="Maximum amount"
+                    className="h-10 text-sm bg-white/80 border-emerald-200 focus:border-emerald-400"
+                    min="0"
+                    step="100"
+                  />
+                </div>
+              </div>
+            </div>
           </div>
         </div>
         {formData.budgetMin && formData.budgetMax && (
@@ -4256,63 +4357,137 @@ export default function Dashboard() {
                   </p>
                 </div>
 
-                {/* Budget Section */}
-                <div className="space-y-4 bg-white dark:bg-slate-800 p-6 rounded-xl border-2 border-emerald-200 dark:border-emerald-800">
+                {/* Interactive Budget Slider Section for Edit Modal */}
+                <div className="bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 p-6 rounded-xl border-2 border-emerald-200 dark:border-emerald-800">
                   <div className="flex items-center gap-2 mb-4">
-                    <div className="p-2 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg">
-                      <span className="text-emerald-600 dark:text-emerald-400 font-bold text-lg">₹</span>
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-slate-800 dark:text-slate-200">Budget Range</h3>
-                      <p className="text-sm text-slate-600 dark:text-slate-400">Set your preferred budget range</p>
-                    </div>
+                    <TrendingUp className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                    <Label className="text-lg font-semibold text-emerald-800 dark:text-emerald-200">Budget Range</Label>
                   </div>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="edit-budget-min" className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                        Minimum Budget (₹)
-                      </Label>
-                      <div className="relative">
-                        <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-emerald-600 dark:text-emerald-400 font-semibold">₹</span>
+                  {/* Real-time Preview Display */}
+                  <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm p-4 rounded-lg border border-emerald-200 dark:border-emerald-700 mb-6">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-emerald-700 dark:text-emerald-300 mb-2">
+                        {Number(editingJobData.budgetMin) > 0 && Number(editingJobData.budgetMax) > 0 
+                          ? `₹${Number(editingJobData.budgetMin).toLocaleString('en-IN')} - ₹${Number(editingJobData.budgetMax).toLocaleString('en-IN')}`
+                          : 'Set your budget range'}
+                      </div>
+                      <div className="text-sm text-emerald-600 dark:text-emerald-400">
+                        {Number(editingJobData.budgetMin) > 0 && Number(editingJobData.budgetMax) > 0 
+                          ? `Average: ₹${Math.round((Number(editingJobData.budgetMin) + Number(editingJobData.budgetMax)) / 2).toLocaleString('en-IN')}`
+                          : 'Use the slider below to adjust budget'}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Dual Range Slider */}
+                  <div className="space-y-4">
+                    <div className="space-y-3">
+                      <div className="flex justify-between text-sm text-emerald-700 dark:text-emerald-300">
+                        <span>Minimum Budget</span>
+                        <span className="font-semibold">₹{Number(editingJobData.budgetMin || 0).toLocaleString('en-IN')}</span>
+                      </div>
+                      <Slider
+                        value={[Number(editingJobData.budgetMin || 500)]}
+                        onValueChange={(value) => {
+                          const newMin = value[0];
+                          const currentMax = Number(editingJobData.budgetMax || 1000);
+                          setEditingJobData(prev => ({ 
+                            ...prev, 
+                            budgetMin: newMin.toString(),
+                            budgetMax: newMin > currentMax ? newMin.toString() : prev.budgetMax
+                          }));
+                        }}
+                        max={50000}
+                        min={100}
+                        step={100}
+                        className="w-full"
+                      />
+                    </div>
+                    
+                    <div className="space-y-3">
+                      <div className="flex justify-between text-sm text-emerald-700 dark:text-emerald-300">
+                        <span>Maximum Budget</span>
+                        <span className="font-semibold">₹{Number(editingJobData.budgetMax || 0).toLocaleString('en-IN')}</span>
+                      </div>
+                      <Slider
+                        value={[Number(editingJobData.budgetMax || 1000)]}
+                        onValueChange={(value) => {
+                          const newMax = value[0];
+                          const currentMin = Number(editingJobData.budgetMin || 500);
+                          setEditingJobData(prev => ({ 
+                            ...prev, 
+                            budgetMax: newMax.toString(),
+                            budgetMin: newMax < currentMin ? newMax.toString() : prev.budgetMin
+                          }));
+                        }}
+                        max={50000}
+                        min={100}
+                        step={100}
+                        className="w-full"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Quick Budget Presets for Edit */}
+                  <div className="mt-6">
+                    <Label className="text-sm font-medium text-emerald-700 dark:text-emerald-300 mb-3 block">Quick Presets</Label>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                      {[
+                        { label: 'Basic', min: 500, max: 1000 },
+                        { label: 'Standard', min: 1000, max: 3000 },
+                        { label: 'Premium', min: 3000, max: 7000 },
+                        { label: 'Luxury', min: 7000, max: 15000 }
+                      ].map((preset) => (
+                        <Button
+                          key={preset.label}
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setEditingJobData(prev => ({ 
+                            ...prev, 
+                            budgetMin: preset.min.toString(),
+                            budgetMax: preset.max.toString()
+                          }))}
+                          className="h-8 text-xs bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-900/20 dark:hover:bg-emerald-800/30 border-emerald-200 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300"
+                        >
+                          {preset.label}
+                          <span className="ml-1 text-xs opacity-75">
+                            ₹{(preset.min / 1000).toFixed(0)}k-{(preset.max / 1000).toFixed(0)}k
+                          </span>
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Manual Input Option for Edit */}
+                  <div className="mt-6 pt-4 border-t border-emerald-200 dark:border-emerald-700">
+                    <Label className="text-sm font-medium text-emerald-700 dark:text-emerald-300 mb-3 block">Or enter manually</Label>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
                         <Input
-                          id="edit-budget-min"
                           type="number"
-                          value={editingJobData.budgetMin || ''}
+                          value={editingJobData.budgetMin}
                           onChange={(e) => setEditingJobData(prev => ({...prev, budgetMin: e.target.value}))}
-                          placeholder="1000"
-                          className="pl-8 border-2 focus:border-emerald-500 bg-white dark:bg-slate-700"
+                          placeholder="Minimum amount"
+                          className="h-10 text-sm bg-white/80 dark:bg-slate-700/80 border-emerald-200 dark:border-emerald-600 focus:border-emerald-400 dark:focus:border-emerald-500"
+                          min="0"
+                          step="100"
                         />
                       </div>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="edit-budget-max" className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                        Maximum Budget (₹)
-                      </Label>
-                      <div className="relative">
-                        <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-emerald-600 dark:text-emerald-400 font-semibold">₹</span>
+                      <div className="space-y-2">
                         <Input
-                          id="edit-budget-max"
                           type="number"
-                          value={editingJobData.budgetMax || ''}
+                          value={editingJobData.budgetMax}
                           onChange={(e) => setEditingJobData(prev => ({...prev, budgetMax: e.target.value}))}
-                          placeholder="5000"
-                          className="pl-8 border-2 focus:border-emerald-500 bg-white dark:bg-slate-700"
+                          placeholder="Maximum amount"
+                          className="h-10 text-sm bg-white/80 dark:bg-slate-700/80 border-emerald-200 dark:border-emerald-600 focus:border-emerald-400 dark:focus:border-emerald-500"
+                          min="0"
+                          step="100"
                         />
                       </div>
                     </div>
                   </div>
-                  
-                  {editingJobData.budgetMin && editingJobData.budgetMax && (
-                    <div className="mt-4 p-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg border border-emerald-200 dark:border-emerald-800">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium text-emerald-800 dark:text-emerald-300">Budget Range:</span>
-                        <span className="font-bold text-emerald-700 dark:text-emerald-400">
-                          ₹{editingJobData.budgetMin} - ₹{editingJobData.budgetMax}
-                        </span>
-                      </div>
-                    </div>
-                  )}
                 </div>
               </div>
 
