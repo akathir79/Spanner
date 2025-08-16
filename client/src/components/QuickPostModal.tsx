@@ -33,6 +33,7 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
   });
   const [otpSent, setOtpSent] = useState(false);
   const [otp, setOtp] = useState('');
+  const [generatedOtp, setGeneratedOtp] = useState('');
 
   // Refs
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -298,6 +299,7 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
       const result = await loginWithOtp(quickAuthData.mobile, quickAuthData.role);
       if (result.success) {
         setOtpSent(true);
+        setGeneratedOtp(result.otp || '');
         toast({
           title: "OTP Sent",
           description: `OTP sent to ${quickAuthData.mobile}. Development OTP: ${result.otp || '123456'}`,
@@ -496,18 +498,25 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
                     onChange={(e) => setOtp(e.target.value)}
                     maxLength={6}
                   />
-                  <div className="flex justify-between items-center mt-1">
+                  <div className="space-y-2 mt-1">
                     <p className="text-xs text-muted-foreground">
                       OTP sent to {quickAuthData.mobile}
                     </p>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setOtp('123456')}
-                      className="text-xs h-6 px-2"
-                    >
-                      Paste Dev OTP
-                    </Button>
+                    {generatedOtp && (
+                      <div className="flex justify-between items-center bg-gray-50 p-2 rounded">
+                        <span className="text-xs text-gray-600">
+                          Development OTP: {generatedOtp}
+                        </span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setOtp(generatedOtp)}
+                          className="text-xs h-6 px-2"
+                        >
+                          Paste OTP
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 </div>
                 
