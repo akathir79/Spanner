@@ -4,8 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
 import { useLocation } from "wouter";
-import AdvertisementManager from "@/components/AdvertisementManager";
-import FinancialManagement from "@/components/FinancialManagement";
+
 import { Switch } from "@/components/ui/switch";
 import { 
   Users,
@@ -41,7 +40,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { ChatSystem } from "@/components/ChatSystem";
+
 
 export default function AdminDashboard() {
   const { user } = useAuth();
@@ -521,81 +520,9 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
 
-        {/* Advertisement Management Section */}
-        <div className="mt-8">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center space-x-2">
-                  <Megaphone className="h-5 w-5" />
-                  <span>Advertisement Management</span>
-                </CardTitle>
-                <div className="flex items-center space-x-3">
-                  <Label htmlFor="ads-toggle" className="text-sm font-medium">
-                    {adsEnabled ? "Ads Enabled" : "Ads Disabled"}
-                  </Label>
-                  <Switch
-                    id="ads-toggle"
-                    checked={adsEnabled}
-                    onCheckedChange={handleAdToggle}
-                    className={adsEnabled ? "" : "bg-gray-200"}
-                  />
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              {adsEnabled ? (
-                <AdvertisementManager />
-              ) : (
-                <div className="text-center py-8 text-muted-foreground">
-                  <Megaphone className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p className="text-lg font-medium mb-2">Advertisements are currently disabled</p>
-                  <p className="text-sm">Toggle the switch above to enable advertisement display across the platform.</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
 
-        {/* Chat Management Section */}
-        <div className="mt-8">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <MessageCircle className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                Client Messages & Support
-              </CardTitle>
-              <p className="text-muted-foreground">
-                Manage conversations with clients and workers, respond to support requests
-              </p>
-            </CardHeader>
-            <CardContent>
-              <ChatSystem 
-                userId={user?.id || ''} 
-                userRole={user?.role === 'admin' || user?.role === 'super_admin' ? 'admin' : 'client'}
-                userName={`${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'Admin'}
-              />
-            </CardContent>
-          </Card>
-        </div>
 
-        {/* Financial Management Section */}
-        <div className="mt-8">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <DollarSign className="h-5 w-5 text-green-600 dark:text-green-400" />
-                Financial Management System
-              </CardTitle>
-              <p className="text-muted-foreground">
-                Manage payment models, user wallets, transactions, and financial analytics
-              </p>
-            </CardHeader>
-            <CardContent>
-              <FinancialManagement />
-            </CardContent>
-          </Card>
-        </div>
+
 
       </div>
     </div>
