@@ -2778,8 +2778,10 @@ export default function Dashboard() {
                         <CardContent className="p-4">
                           <div className="flex justify-between items-start mb-3">
                             <div>
-                              <h4 className="font-semibold capitalize">
-                                {booking.serviceCategory.replace('_', ' ')} Service
+                              <h4 className="font-semibold">
+                                {booking.description?.includes('Booking created from accepted bid for:') 
+                                  ? booking.description.replace('Booking created from accepted bid for: ', '')
+                                  : `${booking.serviceCategory.replace('_', ' ')} Service`}
                               </h4>
                               <p className="text-sm text-muted-foreground">
                                 Booking ID: {booking.id}
