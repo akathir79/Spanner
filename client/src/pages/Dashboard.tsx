@@ -2919,18 +2919,6 @@ export default function Dashboard() {
           </div>
           <div className="flex items-center gap-3">
             <NotificationCenter userId={user?.id || ''} userRole={user?.role || 'client'} />
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                localStorage.removeItem('user');
-                window.location.href = '/';
-              }}
-              className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100"
-            >
-              <User className="h-4 w-4 mr-1" />
-              Logout
-            </Button>
           </div>
         </div>
 
