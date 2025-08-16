@@ -3021,7 +3021,7 @@ export default function Dashboard() {
                         return (
                           <Card 
                             key={job.id} 
-                            className={`bg-gradient-to-br from-slate-800 via-slate-700 to-slate-800 border border-slate-600 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:border-blue-400 cursor-pointer ${
+                            className={`bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:border-blue-400 cursor-pointer ${
                               selectedJobPosting?.id === job.id ? 'border-blue-400 ring-2 ring-blue-300' : ''
                             }`}
                             onClick={() => {
@@ -3033,17 +3033,17 @@ export default function Dashboard() {
                               {/* Top Header with ID, Posted Date, Budget, Status Badge and Action Buttons */}
                               <div className="flex items-center justify-between mb-3">
                                 <div className="flex items-center gap-2">
-                                  <div className="text-sm font-mono font-medium text-green-400 bg-green-900/30 px-3 py-1 rounded-md inline-block border border-green-500/30">
+                                  <div className="text-sm font-mono font-medium text-green-700 dark:text-green-400 bg-green-100 dark:bg-green-900/30 px-3 py-1 rounded-md inline-block border border-green-300 dark:border-green-500/30">
                                     ID: {job.id}
                                   </div>
-                                  <div className="flex items-center gap-1.5 text-xs text-amber-400 bg-amber-900/20 px-2 py-1 rounded border border-amber-500/30">
+                                  <div className="flex items-center gap-1.5 text-xs text-amber-700 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/20 px-2 py-1 rounded border border-amber-300 dark:border-amber-500/30">
                                     <Clock className="h-3 w-3" />
                                     <span>Posted {new Date(job.createdAt).toLocaleDateString()}</span>
                                   </div>
                                   <div className={`flex items-center gap-1.5 px-2 py-1 rounded border text-xs ${
-                                    job.budgetMin && job.budgetMax && Number(job.budgetMin) > 0 && Number(job.budgetMax) > 0 ? 'text-emerald-400 bg-emerald-900/20 border-emerald-500/30' : 'text-slate-400 bg-slate-700/30 border-slate-500/30'
+                                    job.budgetMin && job.budgetMax && Number(job.budgetMin) > 0 && Number(job.budgetMax) > 0 ? 'text-emerald-700 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-900/20 border-emerald-300 dark:border-emerald-500/30' : 'text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-700/30 border-slate-300 dark:border-slate-500/30'
                                   }`}>
-                                    <span className="font-bold text-white">
+                                    <span className="font-bold text-gray-900 dark:text-white">
                                       {job.budgetMin && job.budgetMax && Number(job.budgetMin) > 0 && Number(job.budgetMax) > 0 ? `₹${job.budgetMin} - ₹${job.budgetMax}` : 'Negotiable'}
                                     </span>
                                   </div>
@@ -3051,7 +3051,7 @@ export default function Dashboard() {
                                     <Button
                                       variant="outline"
                                       size="sm"
-                                      className="h-7 px-2 text-xs bg-orange-900/20 hover:bg-orange-800/30 text-orange-400 border-orange-500/30"
+                                      className="h-7 px-2 text-xs bg-orange-100 dark:bg-orange-900/20 hover:bg-orange-200 dark:hover:bg-orange-800/30 text-orange-700 dark:text-orange-400 border-orange-300 dark:border-orange-500/30"
                                       onClick={(e) => {
                                         e.stopPropagation();
                                         handleEditJob(job);
@@ -3083,7 +3083,7 @@ export default function Dashboard() {
                                   <Button
                                     variant="ghost"
                                     size="sm"
-                                    className={`h-8 w-8 p-0 ${job.status === 'in_progress' || job.status === 'completed' ? 'text-gray-400 cursor-not-allowed' : 'text-blue-400 hover:bg-blue-500/20 hover:text-blue-300'}`}
+                                    className={`h-8 w-8 p-0 ${job.status === 'in_progress' || job.status === 'completed' ? 'text-gray-400 cursor-not-allowed' : 'text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-500/20 hover:text-blue-700 dark:hover:text-blue-300'}`}
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       if (job.status === 'in_progress' || job.status === 'completed') {
@@ -3103,7 +3103,7 @@ export default function Dashboard() {
                                   <Button
                                     variant="ghost"
                                     size="sm"
-                                    className="h-8 w-8 p-0 text-red-400 hover:text-red-300 hover:bg-red-500/20"
+                                    className="h-8 w-8 p-0 text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-100 dark:hover:bg-red-500/20"
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       if (window.confirm(`Are you sure you want to delete the job posting "${job.title}"? This action cannot be undone.`)) {
@@ -3122,7 +3122,7 @@ export default function Dashboard() {
                                 {/* Service Address */}
                                 <Collapsible open={isExpanded} onOpenChange={() => toggleCardExpanded(job.id)}>
                                   <CollapsibleTrigger asChild>
-                                    <Button variant="ghost" className="w-full justify-between p-2 h-auto text-slate-300 hover:text-blue-300 bg-slate-800/50 border border-slate-600/30 rounded-md">
+                                    <Button variant="ghost" className="w-full justify-between p-2 h-auto text-gray-700 dark:text-slate-300 hover:text-blue-700 dark:hover:text-blue-300 bg-gray-100 dark:bg-slate-800/50 border border-gray-300 dark:border-slate-600/30 rounded-md">
                                       <div className="flex items-center gap-2">
                                         <MapPin className="h-3 w-3" />
                                         <span className="text-xs font-medium">Service Address</span>
@@ -3131,7 +3131,7 @@ export default function Dashboard() {
                                     </Button>
                                   </CollapsibleTrigger>
                                   <CollapsibleContent className="mt-1">
-                                    <div className="text-xs text-slate-300 bg-slate-900/50 border border-slate-600/30 p-2 rounded whitespace-pre-line">
+                                    <div className="text-xs text-gray-700 dark:text-slate-300 bg-gray-100 dark:bg-slate-900/50 border border-gray-300 dark:border-slate-600/30 p-2 rounded whitespace-pre-line">
                                       {job.serviceAddress || 'Service address not specified'}
                                     </div>
                                   </CollapsibleContent>
@@ -3140,7 +3140,7 @@ export default function Dashboard() {
                                 {/* Media Attachments */}
                                 <Collapsible>
                                   <CollapsibleTrigger asChild>
-                                    <Button variant="ghost" className="w-full justify-between p-2 h-auto text-slate-300 hover:text-blue-300 bg-slate-800/50 border border-slate-600/30 rounded-md">
+                                    <Button variant="ghost" className="w-full justify-between p-2 h-auto text-gray-700 dark:text-slate-300 hover:text-blue-700 dark:hover:text-blue-300 bg-gray-100 dark:bg-slate-800/50 border border-gray-300 dark:border-slate-600/30 rounded-md">
                                       <div className="flex items-center gap-2">
                                         <Paperclip className="h-3 w-3" />
                                         <span className="text-xs font-medium">Media</span>
@@ -3153,7 +3153,7 @@ export default function Dashboard() {
                                       <Button
                                         variant="outline"
                                         size="sm"
-                                        className="h-7 px-2 bg-red-900/20 hover:bg-red-800/30 text-red-300 border-red-500/30 text-xs"
+                                        className="h-7 px-2 bg-red-100 dark:bg-red-900/20 hover:bg-red-200 dark:hover:bg-red-800/30 text-red-700 dark:text-red-300 border-red-300 dark:border-red-500/30 text-xs"
                                         onClick={(e) => {
                                           e.stopPropagation();
                                           isRecording ? stopRecording() : startRecording(job.id);
@@ -3166,7 +3166,7 @@ export default function Dashboard() {
                                       <Button
                                         variant="outline"
                                         size="sm"
-                                        className="h-7 px-2 bg-purple-900/20 hover:bg-purple-800/30 text-purple-300 border-purple-500/30 text-xs"
+                                        className="h-7 px-2 bg-purple-100 dark:bg-purple-900/20 hover:bg-purple-200 dark:hover:bg-purple-800/30 text-purple-700 dark:text-purple-300 border-purple-300 dark:border-purple-500/30 text-xs"
                                         onClick={() => {
                                           const input = document.createElement('input');
                                           input.type = 'file';
@@ -3181,7 +3181,7 @@ export default function Dashboard() {
                                       <Button
                                         variant="outline"
                                         size="sm"
-                                        className="h-7 px-2 bg-blue-900/20 hover:bg-blue-800/30 text-blue-300 border-blue-500/30 text-xs"
+                                        className="h-7 px-2 bg-blue-100 dark:bg-blue-900/20 hover:bg-blue-200 dark:hover:bg-blue-800/30 text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-500/30 text-xs"
                                         onClick={() => {
                                           const input = document.createElement('input');
                                           input.type = 'file';
@@ -3200,7 +3200,7 @@ export default function Dashboard() {
                                       <div className="space-y-1 mt-2">
                                         {/* Audio */}
                                         {jobMediaFiles[job.id].audio && (
-                                          <div className="flex items-center gap-2 p-2 bg-slate-900/30 border border-slate-600/30 rounded text-xs">
+                                          <div className="flex items-center gap-2 p-2 bg-gray-100 dark:bg-slate-900/30 border border-gray-300 dark:border-slate-600/30 rounded text-xs">
                                             <Volume2 className="h-3 w-3" />
                                             <audio controls className="flex-1 h-6">
                                               <source src={jobMediaFiles[job.id].audio} type="audio/webm" />
@@ -3211,7 +3211,7 @@ export default function Dashboard() {
                                         {jobMediaFiles[job.id].images && jobMediaFiles[job.id].images.length > 0 && (
                                           <div className="grid grid-cols-2 gap-1">
                                             {jobMediaFiles[job.id].images.slice(0, 2).map((img: string, idx: number) => (
-                                              <img key={idx} src={img} className="w-full h-16 object-cover rounded border border-slate-600/30" />
+                                              <img key={idx} src={img} className="w-full h-16 object-cover rounded border border-gray-300 dark:border-slate-600/30" />
                                             ))}
                                           </div>
                                         )}
@@ -3219,7 +3219,7 @@ export default function Dashboard() {
                                         {jobMediaFiles[job.id].videos && jobMediaFiles[job.id].videos.length > 0 && (
                                           <div className="space-y-1">
                                             {jobMediaFiles[job.id].videos.slice(0, 1).map((vid: string, idx: number) => (
-                                              <video key={idx} controls className="w-full h-20 rounded border border-slate-600/30">
+                                              <video key={idx} controls className="w-full h-20 rounded border border-gray-300 dark:border-slate-600/30">
                                                 <source src={vid} />
                                               </video>
                                             ))}
@@ -3235,7 +3235,7 @@ export default function Dashboard() {
                               <div className="flex items-start justify-between">
                                 <div className="flex-1">
                                   <div className="flex items-center justify-between">
-                                    <h3 className="font-semibold text-xl text-white cursor-pointer hover:text-blue-300 transition-colors flex-1" onClick={() => {
+                                    <h3 className="font-semibold text-xl text-gray-900 dark:text-white cursor-pointer hover:text-blue-700 dark:hover:text-blue-300 transition-colors flex-1" onClick={() => {
                                       setSelectedJobPosting(job);
                                       setActiveTab("bids");
                                     }}>
@@ -3243,19 +3243,19 @@ export default function Dashboard() {
                                     </h3>
 
                                   </div>
-                                  <p className="text-sm text-blue-300 font-medium mt-1">
+                                  <p className="text-sm text-blue-700 dark:text-blue-300 font-medium mt-1">
                                     {job.serviceCategory} • {job.district}, Tamil Nadu
                                   </p>
                                   {/* Requirements badges moved here */}
                                   {job.requirements && job.requirements.length > 0 && (
                                     <div className="flex flex-wrap gap-1 mt-2">
                                       {job.requirements.slice(0, 2).map((req: string, index: number) => (
-                                        <Badge key={index} variant="outline" className="text-xs bg-slate-600/50 text-slate-200 border-slate-500">
+                                        <Badge key={index} variant="outline" className="text-xs bg-gray-200 dark:bg-slate-600/50 text-gray-700 dark:text-slate-200 border-gray-400 dark:border-slate-500">
                                           {req}
                                         </Badge>
                                       ))}
                                       {job.requirements.length > 2 && (
-                                        <Badge variant="outline" className="text-xs bg-slate-600/50 text-slate-200 border-slate-500">
+                                        <Badge variant="outline" className="text-xs bg-gray-200 dark:bg-slate-600/50 text-gray-700 dark:text-slate-200 border-gray-400 dark:border-slate-500">
                                           +{job.requirements.length - 2} more
                                         </Badge>
                                       )}
@@ -3265,8 +3265,8 @@ export default function Dashboard() {
                               </div>
                               
                               {/* Description */}
-                              <div className="bg-slate-900/50 border border-slate-600/50 rounded-lg p-4">
-                                <p className="text-slate-200 leading-relaxed">
+                              <div className="bg-gray-100 dark:bg-slate-900/50 border border-gray-300 dark:border-slate-600/50 rounded-lg p-4">
+                                <p className="text-gray-800 dark:text-slate-200 leading-relaxed">
                                   {job.description}
                                 </p>
                               </div>
