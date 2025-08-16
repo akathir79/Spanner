@@ -3739,7 +3739,7 @@ export default function Dashboard() {
                                   // Refresh the bids data and job postings to update status
                                   queryClient.invalidateQueries({ queryKey: ["/api/bids/job", selectedJobPosting?.id] });
                                   queryClient.invalidateQueries({ queryKey: ["/api/job-postings/client"] });
-                                  queryClient.invalidateQueries({ queryKey: ["/api/bookings/user"] });
+                                  queryClient.invalidateQueries({ queryKey: ["/api/bookings/user", user?.id, "client"] });
                                   
                                 } catch (error) {
                                   console.error('Error accepting bid:', error);

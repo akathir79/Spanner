@@ -928,22 +928,27 @@ export class DatabaseStorage implements IStorage {
       ));
 
     // Create a booking automatically
-    const bookingData = {
-      id: `BKG-${Date.now()}`, // Generate a unique booking ID
-      clientId: jobPosting.clientId,
-      workerId: bid.workerId,
-      serviceCategory: jobPosting.serviceCategory,
-      description: `Booking created from accepted bid for: ${jobPosting.title}`,
-      district: jobPosting.district,
-      scheduledDate: new Date(), // Default to current date
-      totalAmount: bid.proposedAmount,
-      status: "pending",
-      paymentStatus: "pending",
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
+    try {
+      const bookingData = {
+        id: `BKG-${Date.now()}`, // Generate a unique booking ID
+        clientId: jobPosting.clientId,
+        workerId: bid.workerId,
+        serviceCategory: jobPosting.serviceCategory,
+        description: `Booking created from accepted bid for: ${jobPosting.title}`,
+        district: jobPosting.district,
+        scheduledDate: new Date(), // Default to current date
+        totalAmount: bid.proposedAmount,
+        status: "pending",
+        paymentStatus: "pending",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
 
-    await db.insert(bookings).values(bookingData);
+      await db.insert(bookings).values(bookingData);
+      console.log('Booking created successfully:', bookingData.id);
+    } catch (error) {
+      console.error('Error creating booking:', error);
+    }
 
     return updatedBid || undefined;
   }
