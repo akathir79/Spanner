@@ -1960,7 +1960,7 @@ export default function Dashboard() {
   const [, setLocation] = useLocation();
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
   const [selectedWorker, setSelectedWorker] = useState<any>(null);
-  const [isWalletCollapsed, setIsWalletCollapsed] = useState(false);
+  const [isWalletCollapsed, setIsWalletCollapsed] = useState(true);
   const [searchFilters, setSearchFilters] = useState({
     service: "",
     district: "",
@@ -2557,6 +2557,12 @@ export default function Dashboard() {
                 <CardTitle className="text-lg font-semibold flex items-center gap-2">
                   <Wallet className="h-5 w-5 text-green-600" />
                   <span>My Wallet</span>
+                  {isWalletCollapsed && (
+                    <div className="flex items-center gap-1 ml-2">
+                      <IndianRupee className="h-4 w-4 text-green-600" />
+                      <span className="text-lg font-bold text-green-600">2,450.00</span>
+                    </div>
+                  )}
                 </CardTitle>
                 <div className="flex items-center gap-2">
                   <Badge variant="outline" className="bg-green-100 text-green-700 border-green-300">

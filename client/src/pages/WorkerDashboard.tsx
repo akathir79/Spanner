@@ -875,7 +875,7 @@ export default function WorkerDashboard() {
   const [, setLocation] = useLocation();
   const [showRejoinModal, setShowRejoinModal] = useState(false);
   const [rejoinReason, setRejoinReason] = useState("");
-  const [isWalletCollapsed, setIsWalletCollapsed] = useState(false);
+  const [isWalletCollapsed, setIsWalletCollapsed] = useState(true);
   
   // Force re-render when showRejoinModal changes
   useEffect(() => {
@@ -1286,6 +1286,12 @@ export default function WorkerDashboard() {
                     <CardTitle className="text-lg font-semibold flex items-center gap-2">
                       <Wallet className="h-5 w-5 text-green-600" />
                       <span>My Wallet</span>
+                      {isWalletCollapsed && (
+                        <div className="flex items-center gap-1 ml-2">
+                          <IndianRupee className="h-4 w-4 text-green-600" />
+                          <span className="text-lg font-bold text-green-600">{stats.totalEarnings.toLocaleString()}</span>
+                        </div>
+                      )}
                     </CardTitle>
                     <div className="flex items-center gap-2">
                       <Badge variant="outline" className="bg-green-100 text-green-700 border-green-300">
