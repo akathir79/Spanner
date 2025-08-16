@@ -89,6 +89,27 @@ async function ensureCoreTablesExist(): Promise<void> {
       )
     `));
     
+    // Create financial_models table if it doesn't exist with all current fields
+    await db.execute(sql.raw(`
+      CREATE TABLE IF NOT EXISTS financial_models (
+        id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
+        name TEXT NOT NULL,
+        is_active BOOLEAN DEFAULT false,
+        gst_rate NUMERIC(5,2) DEFAULT '0',
+        admin_commission_percentage NUMERIC(5,2) DEFAULT '0',
+        advance_payment_percentage NUMERIC(5,2) DEFAULT '0',
+        completion_payment_percentage NUMERIC(5,2) DEFAULT '0',
+        client_referral_bonus NUMERIC(10,2) DEFAULT '0',
+        worker_referral_bonus NUMERIC(10,2) DEFAULT '0',
+        worker_commission_percentage NUMERIC(5,2) DEFAULT '0',
+        min_transaction_limit NUMERIC(10,2) DEFAULT '0',
+        max_transaction_limit NUMERIC(10,2) DEFAULT '0',
+        processing_fee_percentage NUMERIC(5,2) DEFAULT '0',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `));
+    
     console.log('✅ Core tables verified/created!');
   } catch (error) {
     console.error('❌ Core table creation failed:', error);
@@ -120,6 +141,7 @@ async function ensureSchemaUpdated(): Promise<void> {
       { table: 'users', column: 'approved_at', type: 'TIMESTAMP' },
       { table: 'users', column: 'approved_by', type: 'VARCHAR' },
       { table: 'users', column: 'last_login_at', type: 'TIMESTAMP' },
+      { table: 'financial_models', column: 'worker_commission_percentage', type: 'NUMERIC(5,2) DEFAULT \'0\'' }
     ];
 
     for (const { table, column, type } of missingColumns) {

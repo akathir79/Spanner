@@ -45,6 +45,7 @@ Complete database backup and restore utilities in `database/` folder:
 - **backups/**: Directory containing backup JSON files with current India-wide platform data
 - **Fresh Backup Created**: Latest backup contains clean database without Tamil references (August 4, 2025)
 - **OTP Records Excluded**: OTP verifications are not stored in backups for security (real-time generation only)
+- **Schema Auto-Updates**: Auto setup now includes complete financial model schema with workerCommissionPercentage field (August 16, 2025)
 
 ### Database Schema
 Located in `shared/schema.ts`, the database includes:
