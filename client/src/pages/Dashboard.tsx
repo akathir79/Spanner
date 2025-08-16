@@ -2583,20 +2583,20 @@ export default function Dashboard() {
         <div className="mb-8 grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Wallet Card - Left Side */}
           <Card className="lg:col-span-1 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border-green-200 dark:border-green-800 overflow-hidden shadow-lg hover:shadow-xl transition-all duration-200">
-            <CardHeader className={isWalletCollapsed ? "py-2" : "pb-3"}>
+            <CardHeader className={isWalletCollapsed ? "px-4 py-1.5" : "pb-3"}>
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="flex items-center gap-1.5">
-                    <Wallet className="h-4 w-4 text-green-600 dark:text-green-400" />
-                    <span className={`font-bold text-green-800 dark:text-green-200 ${isWalletCollapsed ? 'text-sm' : 'text-lg'}`}>My Wallet</span>
+                <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-1">
+                    <Wallet className="h-3.5 w-3.5 text-green-600 dark:text-green-400" />
+                    <span className={`font-semibold text-green-800 dark:text-green-200 ${isWalletCollapsed ? 'text-xs' : 'text-lg'}`}>My Wallet</span>
                   </div>
-                  <Badge variant="outline" className="bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 border-green-300 dark:border-green-600 text-xs px-1.5 py-0">
+                  <Badge variant="outline" className="bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 border-green-300 dark:border-green-600 text-xs px-1 py-0 h-4">
                     Active
                   </Badge>
                   {isWalletCollapsed && (
                     <div className="flex items-center gap-0.5">
-                      <IndianRupee className="h-3.5 w-3.5 text-green-600 dark:text-green-400" />
-                      <span className="text-base font-bold text-green-700 dark:text-green-300">2,450.00</span>
+                      <IndianRupee className="h-3 w-3 text-green-600 dark:text-green-400" />
+                      <span className="text-sm font-bold text-green-700 dark:text-green-300">2,450.00</span>
                     </div>
                   )}
                 </div>
@@ -2604,12 +2604,12 @@ export default function Dashboard() {
                   variant="ghost"
                   size="sm"
                   onClick={() => setIsWalletCollapsed(!isWalletCollapsed)}
-                  className="h-6 w-6 p-0 hover:bg-green-100 dark:hover:bg-green-800/30 rounded-full"
+                  className="h-5 w-5 p-0 hover:bg-green-100 dark:hover:bg-green-800/30 rounded-full"
                 >
                   {isWalletCollapsed ? (
-                    <ChevronDown className="h-3.5 w-3.5 text-green-600 dark:text-green-400" />
+                    <ChevronDown className="h-3 w-3 text-green-600 dark:text-green-400" />
                   ) : (
-                    <ChevronUp className="h-3.5 w-3.5 text-green-600 dark:text-green-400" />
+                    <ChevronUp className="h-3 w-3 text-green-600 dark:text-green-400" />
                   )}
                 </Button>
               </div>

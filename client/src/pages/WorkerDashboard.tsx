@@ -1877,45 +1877,41 @@ export default function WorkerDashboard() {
             {/* My Wallet Section - Left Side */}
             <div className="lg:col-span-1">
               <Card className="bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 dark:from-amber-900/20 dark:via-orange-900/20 dark:to-yellow-900/20 border-amber-200 dark:border-amber-700 overflow-hidden shadow-lg hover:shadow-xl transition-all duration-200">
-                <CardHeader className={isWalletCollapsed ? "pb-1 pt-3" : "pb-2"}>
-                  <div className={isWalletCollapsed ? "space-y-1" : "space-y-3"}>
+                <CardHeader className={isWalletCollapsed ? "px-4 py-1.5" : "pb-2"}>
+                  <div className={isWalletCollapsed ? "space-y-0" : "space-y-3"}>
                     <div className="flex items-center justify-between">
-                      <CardTitle className={`font-bold flex items-center gap-2 text-amber-800 dark:text-amber-200 ${isWalletCollapsed ? 'text-base' : 'text-lg'}`}>
-                        <div className={`bg-amber-100 dark:bg-amber-900/40 rounded-lg ${isWalletCollapsed ? 'p-1' : 'p-1.5'}`}>
-                          <Wallet className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                      <div className="flex items-center gap-1.5">
+                        <div className="flex items-center gap-1">
+                          <div className={`bg-amber-100 dark:bg-amber-900/40 rounded-lg ${isWalletCollapsed ? 'p-0.5' : 'p-1.5'}`}>
+                            <Wallet className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+                          </div>
+                          <span className={`font-semibold text-amber-800 dark:text-amber-200 ${isWalletCollapsed ? 'text-xs' : 'text-lg'}`}>Earnings Wallet</span>
                         </div>
-                        <span>Earnings Wallet</span>
-                      </CardTitle>
+                        {isWalletCollapsed && (
+                          <>
+                            <Badge variant="secondary" className="bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 border-green-300 dark:border-green-600 text-xs px-1 py-0 h-4">
+                              Pro
+                            </Badge>
+                            <div className="flex items-center gap-0.5">
+                              <IndianRupee className="h-3 w-3 text-amber-600 dark:text-amber-400" />
+                              <span className="text-sm font-bold text-amber-800 dark:text-amber-200">{stats.totalEarnings.toLocaleString()}</span>
+                            </div>
+                          </>
+                        )}
+                      </div>
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => setIsWalletCollapsed(!isWalletCollapsed)}
-                        className="h-6 w-6 p-0 hover:bg-amber-100 dark:hover:bg-amber-800/30 rounded-full"
+                        className="h-5 w-5 p-0 hover:bg-amber-100 dark:hover:bg-amber-800/30 rounded-full"
                       >
                         {isWalletCollapsed ? (
-                          <ChevronDown className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+                          <ChevronDown className="h-3 w-3 text-amber-600 dark:text-amber-400" />
                         ) : (
-                          <ChevronUp className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+                          <ChevronUp className="h-3 w-3 text-amber-600 dark:text-amber-400" />
                         )}
                       </Button>
                     </div>
-                    
-                    {isWalletCollapsed && (
-                      <div className="bg-white/60 dark:bg-gray-900/40 rounded-lg p-2 border border-amber-200/50 dark:border-amber-600/30">
-                        <div className="flex items-center justify-between">
-                          <div className="space-y-0">
-                            <p className="text-xs text-amber-700 dark:text-amber-300 font-medium">Total Balance</p>
-                            <div className="flex items-center gap-0.5">
-                              <IndianRupee className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
-                              <span className="text-lg font-bold text-amber-800 dark:text-amber-200">{stats.totalEarnings.toLocaleString()}</span>
-                            </div>
-                          </div>
-                          <Badge variant="secondary" className="bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 border-green-300 dark:border-green-600 text-xs px-1 py-0">
-                            Pro
-                          </Badge>
-                        </div>
-                      </div>
-                    )}
                   </div>
                 </CardHeader>
                 {!isWalletCollapsed && (
