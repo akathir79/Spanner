@@ -3290,6 +3290,11 @@ export default function Dashboard() {
                                      job.status === "in_progress" ? "In Progress" :
                                      job.status === "completed" ? "Completed" : job.status}
                                   </Badge>
+                                  {bidCounts[job.id] > 0 && (
+                                    <Badge variant="secondary" className="bg-orange-500 text-white text-xs px-2 py-1 rounded-full">
+                                      {bidCounts[job.id]} {bidCounts[job.id] === 1 ? 'Bid' : 'Bids'}
+                                    </Badge>
+                                  )}
                                   <Button
                                     variant="ghost"
                                     size="sm"
@@ -3446,11 +3451,7 @@ export default function Dashboard() {
                                     }}>
                                       {job.title}
                                     </h3>
-                                    {bidCounts[job.id] > 0 && (
-                                      <Badge variant="secondary" className="bg-orange-500 text-white text-xs px-2 py-1 rounded-full ml-2">
-                                        {bidCounts[job.id]} {bidCounts[job.id] === 1 ? 'Bid' : 'Bids'}
-                                      </Badge>
-                                    )}
+
                                   </div>
                                   <p className="text-sm text-blue-300 font-medium mt-1">
                                     {job.serviceCategory} • {job.district}, Tamil Nadu
@@ -3571,11 +3572,7 @@ export default function Dashboard() {
                                     >
                                       View Bids
                                     </Button>
-                                    {bidCounts[job.id] > 0 && (
-                                      <Badge variant="secondary" className="bg-orange-500 text-white text-xs px-2 py-1 rounded-full">
-                                        {bidCounts[job.id]} {bidCounts[job.id] === 1 ? 'Bid' : 'Bids'}
-                                      </Badge>
-                                    )}
+
                                   </div>
                                   <Badge variant="outline" className={`text-xs ${job.status === 'in_progress' ? 'bg-blue-100 text-blue-800 border-blue-300' : job.status === 'completed' ? 'bg-green-100 text-green-800 border-green-300' : 'bg-gray-100 text-gray-800 border-gray-300'}`}>
                                     {job.status === 'in_progress' ? 'In Progress' : job.status === 'completed' ? 'Completed' : job.status || 'Active'}
