@@ -2383,15 +2383,24 @@ export default function Dashboard() {
       
       console.log("Frontend sending update data:", updateData);
       
-      await apiRequest("PUT", `/api/job-postings/${editingJob.id}`, updateData);
+      const updatedJob = await apiRequest("PUT", `/api/job-postings/${editingJob.id}`, updateData);
+      
+      // Force immediate UI update by updating the job postings state directly
+      queryClient.setQueryData(["/api/job-postings/client", user?.id], (oldData: any) => {
+        if (!oldData) return oldData;
+        return oldData.map((job: any) => 
+          job.id === editingJob.id 
+            ? { ...job, ...updatedJob, updatedAt: new Date().toISOString() }
+            : job
+        );
+      });
+      
       setIsEditModalOpen(false);
       setEditingJob(null);
       setEditingJobData({});
       
-      // Invalidate multiple related queries to force refresh
-      await queryClient.invalidateQueries({ queryKey: ["/api/job-postings/client", user?.id] });
-      await queryClient.invalidateQueries({ queryKey: ["/api/job-postings"] });
-      await queryClient.refetchQueries({ queryKey: ["/api/job-postings/client", user?.id] });
+      // Also invalidate queries for good measure
+      queryClient.invalidateQueries({ queryKey: ["/api/job-postings/client", user?.id] });
       toast({
         title: "Job Updated",
         description: "Your job posting has been updated successfully.",
