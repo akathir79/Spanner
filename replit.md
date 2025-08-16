@@ -1,8 +1,8 @@
-# SPANNER - Tamil Nadu Blue-Collar Service Marketplace
+# SPANNER - India Blue-Collar Service Marketplace
 
 ## Overview
 
-SPANNER is a comprehensive web application designed to connect blue-collar service workers with clients across all 38 districts of Tamil Nadu. The platform provides a marketplace for various services including plumbing, electrical work, painting, mechanics, and other skilled trades. The application supports multiple user types (clients, workers, admins, and super admins) with role-based dashboards and functionality.
+SPANNER is a comprehensive web application designed to connect blue-collar service workers with clients across all states and districts of India. The platform provides a marketplace for various services including plumbing, electrical work, painting, mechanics, and other skilled trades. The application supports multiple user types (clients, workers, admins, and super admins) with role-based dashboards and functionality.
 
 ## User Preferences
 
@@ -50,8 +50,8 @@ Complete database backup and restore utilities in `database/` folder:
 Located in `shared/schema.ts`, the database includes:
 - **Users**: Core user information with role-based access (client, worker, admin, super_admin)
 - **Worker Profiles**: Extended information for service providers including skills, rates, and verification status
-- **Districts**: Complete coverage of Tamil Nadu's 38 districts with Tamil names
-- **Areas**: Comprehensive village and town coverage with 492+ locations across Tamil Nadu
+- **Districts**: Complete coverage of India's states and districts with authentic government data
+- **Areas**: Comprehensive village and town coverage across all Indian states
 - **Service Categories**: Dynamic service types that workers can offer
 - **Bookings**: Complete booking workflow from request to completion with OTP verification system (completionOTP, otpGeneratedAt, otpVerifiedAt, workerCompletedAt, clientConfirmedAt)
 - **Worker Reviews**: Detailed rating system with multiple criteria (work quality, timeliness, communication, professionalism)

@@ -32,13 +32,13 @@ export default function DistrictManager() {
     try {
       setIsLoading(true);
       // Load from a sample state to get the data structure
-      const response = await fetch('/api/districts/Tamil Nadu');
+      const response = await fetch('/api/districts/India');
       if (response.ok) {
         // Since we can't directly access the JSON file from frontend, 
         // we'll use a workaround to display current data structure
         setDistrictsData({
           states: [
-            { state: "Tamil Nadu", districts: ["Sample data loaded - use file operations below"] }
+            { state: "India", districts: ["Sample data loaded - use file operations below"] }
           ]
         });
       }
