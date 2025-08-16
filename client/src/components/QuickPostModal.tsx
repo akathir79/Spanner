@@ -76,17 +76,26 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
       
       console.log("Microphone access granted, creating MediaRecorder...");
       
-      // Check MediaRecorder support
+      // Check MediaRecorder support and pick best format
+      let mimeType = 'audio/webm';
       if (!MediaRecorder.isTypeSupported('audio/webm')) {
-        console.log("webm not supported, trying mp4");
-        if (!MediaRecorder.isTypeSupported('audio/mp4')) {
-          console.log("mp4 not supported either");
+        console.log("webm not supported, trying webm;codecs=opus");
+        if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
+          mimeType = 'audio/webm;codecs=opus';
+        } else if (MediaRecorder.isTypeSupported('audio/mp4')) {
+          console.log("Using mp4");
+          mimeType = 'audio/mp4';
+        } else {
+          console.log("Using default mime type");
+          mimeType = '';
         }
       }
-
-      const mediaRecorder = new MediaRecorder(stream, {
-        mimeType: MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/mp4'
-      });
+      
+      const mediaRecorder = mimeType 
+        ? new MediaRecorder(stream, { mimeType })
+        : new MediaRecorder(stream);
+      
+      console.log("MediaRecorder created with mimeType:", mediaRecorder.mimeType);
       
       mediaRecorderRef.current = mediaRecorder;
       audioChunksRef.current = [];
@@ -109,18 +118,8 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
       };
 
       mediaRecorder.onstart = () => {
-        console.log("Recording started successfully");
-        setIsRecording(true);
-        setRecordingDuration(0);
-
-        // Start timer
-        timerRef.current = setInterval(() => {
-          setRecordingDuration(prev => {
-            const newDuration = prev + 1;
-            console.log("Recording duration:", newDuration);
-            return newDuration;
-          });
-        }, 1000);
+        console.log("Recording started successfully - onstart event fired");
+        // State already set above for immediate response
       };
 
       mediaRecorder.onerror = (event) => {
@@ -133,6 +132,20 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
       };
 
       console.log("Starting recording...");
+      
+      // Start recording immediately and set state
+      setIsRecording(true);
+      setRecordingDuration(0);
+      
+      // Start timer immediately (don't wait for onstart event)
+      timerRef.current = setInterval(() => {
+        setRecordingDuration(prev => {
+          const newDuration = prev + 1;
+          console.log("Recording duration:", newDuration);
+          return newDuration;
+        });
+      }, 1000);
+      
       mediaRecorder.start(1000); // Record in 1-second chunks
 
     } catch (error) {
@@ -315,9 +328,27 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
                   size="lg" 
                   onClick={startRecording}
                   className="w-full bg-green-600 hover:bg-green-700"
+                  data-testid="start-recording-btn"
                 >
                   <Mic className="w-5 h-5 mr-2" />
                   Start Voice Recording
+                </Button>
+                
+                {/* Debug fallback button for testing */}
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => {
+                    console.log("Debug: Force start recording UI");
+                    setIsRecording(true);
+                    setRecordingDuration(0);
+                    timerRef.current = setInterval(() => {
+                      setRecordingDuration(prev => prev + 1);
+                    }, 1000);
+                  }}
+                  className="text-xs"
+                >
+                  Debug: Force Start Timer
                 </Button>
                 <Button 
                   variant="outline" 
