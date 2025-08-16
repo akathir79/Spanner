@@ -2583,24 +2583,22 @@ export default function Dashboard() {
         <div className="mb-8 grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Wallet Card - Left Side */}
           <Card className="lg:col-span-1 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border-green-200 dark:border-green-800 overflow-hidden shadow-lg hover:shadow-xl transition-all duration-200">
-            <CardHeader className={isWalletCollapsed ? "pb-1 pt-3" : "pb-3"}>
+            <CardHeader className={isWalletCollapsed ? "py-2" : "pb-3"}>
               <div className="flex items-center justify-between">
-                <div className="flex flex-col">
-                  <CardTitle className={`font-bold flex items-center gap-2 text-green-800 dark:text-green-200 ${isWalletCollapsed ? 'text-base' : 'text-lg'}`}>
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5">
                     <Wallet className="h-4 w-4 text-green-600 dark:text-green-400" />
-                    <span>My Wallet</span>
-                  </CardTitle>
-                  <div className={`flex items-center gap-2 ${isWalletCollapsed ? 'mt-0.5' : 'mt-1'}`}>
-                    <Badge variant="outline" className="bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 border-green-300 dark:border-green-600 text-xs px-1.5 py-0">
-                      Active
-                    </Badge>
-                    {isWalletCollapsed && (
-                      <div className="flex items-center gap-0.5">
-                        <IndianRupee className="h-3.5 w-3.5 text-green-600 dark:text-green-400" />
-                        <span className="text-lg font-bold text-green-700 dark:text-green-300">2,450.00</span>
-                      </div>
-                    )}
+                    <span className={`font-bold text-green-800 dark:text-green-200 ${isWalletCollapsed ? 'text-sm' : 'text-lg'}`}>My Wallet</span>
                   </div>
+                  <Badge variant="outline" className="bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 border-green-300 dark:border-green-600 text-xs px-1.5 py-0">
+                    Active
+                  </Badge>
+                  {isWalletCollapsed && (
+                    <div className="flex items-center gap-0.5">
+                      <IndianRupee className="h-3.5 w-3.5 text-green-600 dark:text-green-400" />
+                      <span className="text-base font-bold text-green-700 dark:text-green-300">2,450.00</span>
+                    </div>
+                  )}
                 </div>
                 <Button
                   variant="ghost"
