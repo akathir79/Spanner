@@ -4290,15 +4290,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         audioDataLength: audioData?.length || 0,
         mimeType,
         language,
-        userId,
-        hasSession: !!req.session,
-        isAuthenticated: req.isAuthenticated ? req.isAuthenticated() : false,
-        sessionUserId: req.user?.id
+        userId
       });
 
-      // Use session user ID if available, otherwise use provided userId
-      const currentUserId = req.user?.id || userId;
-      
       if (!audioData) {
         return res.status(400).json({
           success: false,
@@ -4306,10 +4300,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      if (!currentUserId) {
+      if (!userId) {
         return res.status(400).json({
           success: false,
-          message: "User authentication required. Please login first."
+          message: "User ID is required"
         });
       }
 
@@ -4323,7 +4317,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         location: "Auto-detected from voice",
         budget: { min: 1000, max: 5000 },
         urgency: "medium" as const,
-        userId: currentUserId,
+        userId: userId,
         createdAt: new Date().toISOString()
       };
 
@@ -4336,7 +4330,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         audioSize: audioData.length,
         mimeType,
         language,
-        userId: currentUserId
+        userId: userId
       });
 
       res.json({

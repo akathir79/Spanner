@@ -209,7 +209,8 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
         audioSize: base64Audio.length,
         mimeType: audioBlob.type,
         language: selectedLanguage,
-        userId: user?.id
+        userId: user?.id,
+        userObject: user
       });
 
       // Send to server for Gemini processing
