@@ -2285,6 +2285,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Delete bid (for workers to delete their bids)
+  app.delete("/api/bids/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteBid(id);
+      res.json({ message: "Bid deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting bid:", error);
+      res.status(500).json({ message: "Failed to delete bid" });
+    }
+  });
+
   app.put("/api/bids/:id/accept", async (req, res) => {
     try {
       const { id } = req.params;

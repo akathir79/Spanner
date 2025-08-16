@@ -139,6 +139,7 @@ export interface IStorage {
   getBidsByWorker(workerId: string): Promise<(Bid & { jobPosting: JobPosting & { client: User } })[]>;
   createBid(bid: InsertBid): Promise<Bid>;
   updateBid(bidId: string, updates: Partial<Bid>): Promise<Bid | undefined>;
+  deleteBid(bidId: string): Promise<void>;
   acceptBid(bidId: string): Promise<Bid | undefined>;
   rejectBid(bidId: string): Promise<Bid | undefined>;
 
@@ -889,6 +890,10 @@ export class DatabaseStorage implements IStorage {
       .returning();
     
     return updatedBid || undefined;
+  }
+
+  async deleteBid(bidId: string): Promise<void> {
+    await db.delete(bids).where(eq(bids.id, bidId));
   }
 
   async acceptBid(bidId: string): Promise<Bid | undefined> {

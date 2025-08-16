@@ -1075,6 +1075,28 @@ const MyBidsTab = ({ user }: { user: any }) => {
     },
   });
 
+  // Delete bid mutation
+  const deleteBidMutation = useMutation({
+    mutationFn: (bidId: string) => 
+      fetch(`/api/bids/${bidId}`, {
+        method: "DELETE",
+      }).then(res => res.json()),
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Your bid has been deleted successfully!",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/bids/worker", user?.id] });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to delete bid. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleEditBid = (bid: any) => {
     setEditingBid(bid);
     setEditBidData({
@@ -1150,17 +1172,33 @@ const MyBidsTab = ({ user }: { user: any }) => {
                             {bid.status === "accepted" ? "Accepted" :
                              bid.status === "rejected" ? "Rejected" : "Pending"}
                           </Badge>
-                          {/* Only allow editing if bid is pending */}
+                          {/* Only allow editing and deleting if bid is pending */}
                           {bid.status === "pending" && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="text-xs text-blue-400 border-blue-500/30 hover:bg-blue-900/20"
-                              onClick={() => handleEditBid(bid)}
-                            >
-                              <Edit3 className="h-3 w-3 mr-1" />
-                              Edit Bid
-                            </Button>
+                            <div className="flex gap-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="text-xs text-blue-400 border-blue-500/30 hover:bg-blue-900/20"
+                                onClick={() => handleEditBid(bid)}
+                              >
+                                <Edit3 className="h-3 w-3 mr-1" />
+                                Edit
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="text-xs text-red-400 border-red-500/30 hover:bg-red-900/20"
+                                onClick={() => {
+                                  if (window.confirm(`Are you sure you want to delete your bid for "${bid.jobPosting?.title}"? This action cannot be undone.`)) {
+                                    deleteBidMutation.mutate(bid.id);
+                                  }
+                                }}
+                                disabled={deleteBidMutation.isPending}
+                              >
+                                <X className="h-3 w-3 mr-1" />
+                                Delete
+                              </Button>
+                            </div>
                           )}
                         </div>
                       </div>
