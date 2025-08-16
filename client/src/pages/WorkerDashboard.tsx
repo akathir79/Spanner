@@ -2017,7 +2017,14 @@ export default function WorkerDashboard() {
         <Tabs defaultValue="overview" className="space-y-6">
           <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="bookings">Bookings</TabsTrigger>
+            <TabsTrigger value="bookings" className="relative">
+              Bookings
+              {bookings.length > 0 && (
+                <Badge variant="secondary" className="ml-2 bg-purple-500 text-white text-xs px-1 py-0 h-5 min-w-[20px] rounded-full flex items-center justify-center">
+                  {bookings.length}
+                </Badge>
+              )}
+            </TabsTrigger>
             <TabsTrigger value="available-jobs" className="relative">
               Available Jobs
               {availableJobs.length > 0 && (
