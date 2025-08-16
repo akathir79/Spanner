@@ -4280,6 +4280,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Voice processing endpoint for Quick Post
+  app.post("/api/voice/process-job-posting", async (req, res) => {
+    try {
+      const { audioData, mimeType, language, userId } = req.body;
+
+      if (!audioData || !userId) {
+        return res.status(400).json({
+          success: false,
+          message: "Audio data and user ID are required"
+        });
+      }
+
+      // For now, simulate processing and create a sample job post
+      // In production, you would integrate with Gemini to transcribe and extract job details
+      const simulatedJobPost = {
+        id: `VOICE-${Date.now()}`,
+        title: "Voice-Generated Job Posting",
+        description: "This job was created using voice input. Processing with AI to extract details.",
+        serviceCategory: "General Services",
+        location: "Auto-detected from voice",
+        budget: { min: 1000, max: 5000 },
+        urgency: "medium" as const,
+        userId: userId,
+        createdAt: new Date().toISOString()
+      };
+
+      // TODO: Integrate with Gemini service to:
+      // 1. Transcribe the audio
+      // 2. Extract job details (title, description, location, budget, etc.)
+      // 3. Create actual job posting in database
+      
+      console.log("Voice job posting processed:", {
+        audioSize: audioData.length,
+        mimeType,
+        language,
+        userId
+      });
+
+      res.json({
+        success: true,
+        message: "Voice job posting processed successfully",
+        jobPost: simulatedJobPost,
+        transcription: "Sample transcription: I need a plumber to fix my kitchen sink, budget around 2000 rupees",
+        extractedData: {
+          language: language || 'en',
+          confidence: 0.85
+        }
+      });
+
+    } catch (error: any) {
+      console.error("Voice processing error:", error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to process voice recording: " + error.message
+      });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

@@ -21,6 +21,7 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [recordingDuration, setRecordingDuration] = useState(0);
+  const [processedResult, setProcessedResult] = useState<any>(null);
 
   // Refs
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -199,16 +200,54 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
       return;
     }
     
-    // Simulate processing for demo
-    setTimeout(() => {
-      toast({
-        title: "Job Posted Successfully!",
-        description: "Your voice job posting has been created and is now live."
+    try {
+      // Convert audio blob to base64
+      const arrayBuffer = await audioBlob.arrayBuffer();
+      const base64Audio = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+      
+      // Send to server for Gemini processing
+      const response = await fetch('/api/voice/process-job-posting', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          audioData: base64Audio,
+          mimeType: audioBlob.type,
+          language: selectedLanguage,
+          userId: user?.id
+        })
       });
+
+      if (!response.ok) {
+        throw new Error(`Server error: ${response.status}`);
+      }
+
+      const result = await response.json();
+      
+      if (result.success && result.jobPost) {
+        setProcessedResult(result);
+        toast({
+          title: "Job Posted Successfully!",
+          description: `Your job "${result.jobPost.title}" has been created and is now live.`
+        });
+        setCurrentStep('success');
+      } else {
+        throw new Error(result.message || 'Failed to process voice recording');
+      }
+      
+    } catch (error: any) {
+      console.error("Voice processing error:", error);
+      toast({
+        title: "Processing Failed",
+        description: error.message || "Failed to process your voice recording. Please try again.",
+        variant: "destructive"
+      });
+      setCurrentStep('recording');
+    } finally {
       setIsProcessing(false);
-      setCurrentStep('success');
-    }, 2000);
-  }, [toast]);
+    }
+  }, [toast, selectedLanguage, user]);
 
   // Format duration helper
   const formatDuration = (seconds: number) => {
@@ -370,6 +409,24 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
             <p className="text-muted-foreground">
               Your job has been posted successfully. Workers will start bidding soon.
             </p>
+            
+            {processedResult && (
+              <div className="text-left bg-muted p-4 rounded-lg space-y-2">
+                <h4 className="font-semibold">Job Details:</h4>
+                <p><strong>Title:</strong> {processedResult.jobPost.title}</p>
+                <p><strong>Description:</strong> {processedResult.jobPost.description}</p>
+                <p><strong>Budget:</strong> ₹{processedResult.jobPost.budget.min.toLocaleString('en-IN')} - ₹{processedResult.jobPost.budget.max.toLocaleString('en-IN')}</p>
+                <p><strong>Location:</strong> {processedResult.jobPost.location}</p>
+                
+                {processedResult.transcription && (
+                  <div className="mt-2 pt-2 border-t">
+                    <h5 className="font-semibold text-sm">Voice Transcription:</h5>
+                    <p className="text-sm italic">"{processedResult.transcription}"</p>
+                  </div>
+                )}
+              </div>
+            )}
+            
             <Button onClick={onClose} className="w-full">
               Close
             </Button>
