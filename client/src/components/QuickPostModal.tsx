@@ -148,15 +148,15 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
       
       mediaRecorder.start(1000); // Record in 1-second chunks
 
-    } catch (error) {
+    } catch (error: any) {
       console.error("Recording setup error:", error);
       let errorMessage = "Please allow microphone access to use voice recording.";
       
-      if (error.name === 'NotAllowedError') {
+      if (error?.name === 'NotAllowedError') {
         errorMessage = "Microphone access denied. Please allow microphone permission and try again.";
-      } else if (error.name === 'NotFoundError') {
+      } else if (error?.name === 'NotFoundError') {
         errorMessage = "No microphone found. Please connect a microphone and try again.";
-      } else if (error.name === 'NotSupportedError') {
+      } else if (error?.name === 'NotSupportedError') {
         errorMessage = "Your browser doesn't support voice recording. Please use Chrome, Edge, or Safari.";
       }
 
