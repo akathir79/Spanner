@@ -900,6 +900,10 @@ export class DatabaseStorage implements IStorage {
     const [bid] = await db.select().from(bids).where(eq(bids.id, bidId));
     if (!bid) return undefined;
 
+    // Get the job posting details
+    const [jobPosting] = await db.select().from(jobPostings).where(eq(jobPostings.id, bid.jobPostingId));
+    if (!jobPosting) return undefined;
+
     // Update bid status to accepted
     const [updatedBid] = await db.update(bids)
       .set({ status: "accepted", updatedAt: new Date() })
@@ -922,6 +926,24 @@ export class DatabaseStorage implements IStorage {
         eq(bids.jobPostingId, bid.jobPostingId),
         sql`${bids.id} != ${bidId}`
       ));
+
+    // Create a booking automatically
+    const bookingData = {
+      id: `BKG-${Date.now()}`, // Generate a unique booking ID
+      clientId: jobPosting.clientId,
+      workerId: bid.workerId,
+      serviceCategory: jobPosting.serviceCategory,
+      description: `Booking created from accepted bid for: ${jobPosting.title}`,
+      district: jobPosting.district,
+      scheduledDate: new Date(), // Default to current date
+      totalAmount: bid.proposedAmount,
+      status: "pending",
+      paymentStatus: "pending",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    await db.insert(bookings).values(bookingData);
 
     return updatedBid || undefined;
   }

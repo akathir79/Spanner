@@ -3273,8 +3273,19 @@ export default function Dashboard() {
                                   <Button
                                     variant="ghost"
                                     size="sm"
-                                    className="h-8 w-8 p-0 text-blue-400 hover:bg-blue-500/20 hover:text-blue-300"
-                                    onClick={() => handleEditJob(job)}
+                                    className={`h-8 w-8 p-0 ${job.status === 'in_progress' || job.status === 'completed' ? 'text-gray-400 cursor-not-allowed' : 'text-blue-400 hover:bg-blue-500/20 hover:text-blue-300'}`}
+                                    onClick={() => {
+                                      if (job.status === 'in_progress' || job.status === 'completed') {
+                                        toast({
+                                          title: "Cannot Edit Job",
+                                          description: `This job is ${job.status === 'in_progress' ? 'currently in progress' : 'completed'} and cannot be edited.`,
+                                          variant: "destructive",
+                                        });
+                                        return;
+                                      }
+                                      handleEditJob(job);
+                                    }}
+                                    disabled={job.status === 'in_progress' || job.status === 'completed'}
                                   >
                                     <Edit3 className="h-4 w-4" />
                                   </Button>
@@ -3520,8 +3531,8 @@ export default function Dashboard() {
                                   <Button variant="default" size="sm" className="px-4">
                                     View Bids
                                   </Button>
-                                  <Badge variant="outline" className="text-xs">
-                                    {job.status || 'Active'}
+                                  <Badge variant="outline" className={`text-xs ${job.status === 'in_progress' ? 'bg-blue-100 text-blue-800 border-blue-300' : job.status === 'completed' ? 'bg-green-100 text-green-800 border-green-300' : 'bg-gray-100 text-gray-800 border-gray-300'}`}>
+                                    {job.status === 'in_progress' ? 'In Progress' : job.status === 'completed' ? 'Completed' : job.status || 'Active'}
                                   </Badge>
                                 </div>
                               </div>
@@ -3647,8 +3658,10 @@ export default function Dashboard() {
                                     description: `You have accepted ${bid.worker?.firstName}'s bid of ₹${bid.proposedAmount}. They have been notified.`,
                                   });
                                   
-                                  // Refresh the bids data
+                                  // Refresh the bids data and job postings to update status
                                   queryClient.invalidateQueries({ queryKey: ["/api/bids/job", selectedJobPosting?.id] });
+                                  queryClient.invalidateQueries({ queryKey: ["/api/job-postings/client"] });
+                                  queryClient.invalidateQueries({ queryKey: ["/api/bookings/user"] });
                                   
                                 } catch (error) {
                                   console.error('Error accepting bid:', error);
