@@ -2529,24 +2529,32 @@ export default function Dashboard() {
       
       console.log("Frontend sending update data:", updateData);
       
-      const updatedJob = await apiRequest("PUT", `/api/job-postings/${editingJob.id}`, updateData);
+      const response = await apiRequest("PUT", `/api/job-postings/${editingJob.id}`, updateData);
+      const updatedJobData = await response.json();
       
       setIsEditModalOpen(false);
       setEditingJob(null);
       setEditingJobData({});
       
-      // Force immediate UI update and trigger re-render
+      // Force immediate UI update with server response data
       queryClient.setQueryData(["/api/job-postings/client", user?.id], (oldData: any) => {
         if (!oldData) return oldData;
         return oldData.map((job: any) => 
           job.id === editingJob.id 
-            ? { ...job, budgetMin: updateData.budgetMin?.toString(), budgetMax: updateData.budgetMax?.toString(), updatedAt: new Date().toISOString() }
+            ? { 
+                ...job, 
+                ...updatedJobData,
+                // Ensure budget values are strings for consistent display
+                budgetMin: updatedJobData.budgetMin?.toString() || updateData.budgetMin?.toString(),
+                budgetMax: updatedJobData.budgetMax?.toString() || updateData.budgetMax?.toString(),
+                updatedAt: new Date().toISOString()
+              }
             : job
         );
       });
       
-      // Force component re-render
-      await queryClient.refetchQueries({ queryKey: ["/api/job-postings/client", user?.id] });
+      // Invalidate queries to trigger fresh data fetch
+      queryClient.invalidateQueries({ queryKey: ["/api/job-postings/client", user?.id] });
       toast({
         title: "Job Updated",
         description: "Your job posting has been updated successfully.",
@@ -3449,7 +3457,7 @@ export default function Dashboard() {
                                     job.budgetMin && job.budgetMax && Number(job.budgetMin) > 0 && Number(job.budgetMax) > 0 ? 'text-emerald-700 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-900/20 border-emerald-300 dark:border-emerald-500/30' : 'text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-700/30 border-slate-300 dark:border-slate-500/30'
                                   }`}>
                                     <span className="font-bold text-gray-900 dark:text-white">
-                                      {job.budgetMin && job.budgetMax && Number(job.budgetMin) > 0 && Number(job.budgetMax) > 0 ? `₹${job.budgetMin} - ₹${job.budgetMax}` : 'Negotiable'}
+                                      {job.budgetMin && job.budgetMax && Number(job.budgetMin) > 0 && Number(job.budgetMax) > 0 ? `₹${Number(job.budgetMin).toLocaleString('en-IN')} - ₹${Number(job.budgetMax).toLocaleString('en-IN')}` : 'Negotiable'}
                                     </span>
                                   </div>
                                   {noBids && job.status === "open" && (
@@ -4199,7 +4207,7 @@ export default function Dashboard() {
                                       <span className="flex items-center gap-1">
                                         <IndianRupee className="h-4 w-4" />
                                         {job.budgetMin && job.budgetMax && Number(job.budgetMin) > 0 && Number(job.budgetMax) > 0 
-                                          ? `₹${job.budgetMin} - ₹${job.budgetMax}` 
+                                          ? `₹${Number(job.budgetMin).toLocaleString('en-IN')} - ₹${Number(job.budgetMax).toLocaleString('en-IN')}` 
                                           : 'Negotiable'
                                         }
                                       </span>
