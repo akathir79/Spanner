@@ -74,6 +74,7 @@ import {
   BarChart,
   Paperclip,
   Bell,
+  Copy,
   UserCheck,
   Wallet,
   Gift,
@@ -2193,6 +2194,50 @@ export default function Dashboard() {
     },
   });
 
+  // Duplicate job posting mutation
+  const duplicateJobMutation = useMutation({
+    mutationFn: async (originalJob: any) => {
+      const duplicateData = {
+        title: `${originalJob.title} (Copy)`,
+        description: originalJob.description,
+        serviceCategory: originalJob.serviceCategory,
+        serviceAddress: originalJob.serviceAddress,
+        state: originalJob.state,
+        district: originalJob.district,
+        budgetMin: originalJob.budgetMin,
+        budgetMax: originalJob.budgetMax,
+        deadline: originalJob.deadline,
+        requirements: originalJob.requirements || [],
+        clientId: user?.id,
+        status: "open"
+      };
+      
+      const response = await apiRequest("POST", "/api/job-postings", duplicateData);
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Job Duplicated",
+        description: "A copy of your job posting has been created successfully.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/job-postings/client", user?.id] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Duplication Failed",
+        description: error.message || "Failed to duplicate job posting",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Handle job duplication
+  const handleDuplicateJob = (job: any) => {
+    if (window.confirm(`Create a duplicate of "${job.title}"? The new job will be marked as "(Copy)" and posted immediately.`)) {
+      duplicateJobMutation.mutate(job);
+    }
+  };
+
   // Location detection function
   const handleLocationFinder = () => {
     if (!navigator.geolocation) {
@@ -3374,6 +3419,18 @@ export default function Dashboard() {
                                   <Button
                                     variant="ghost"
                                     size="sm"
+                                    className="h-8 w-8 p-0 text-green-600 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-500/20 hover:text-green-700 dark:hover:text-green-300"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleDuplicateJob(job);
+                                    }}
+                                    title="Duplicate Job"
+                                  >
+                                    <Copy className="h-4 w-4" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
                                     className="h-8 w-8 p-0 text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-100 dark:hover:bg-red-500/20"
                                     onClick={(e) => {
                                       e.stopPropagation();
@@ -4087,6 +4144,18 @@ export default function Dashboard() {
                                           Edit Job
                                         </Button>
                                       )}
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => {
+                                          handleDuplicateJob(job);
+                                        }}
+                                        className="h-8 px-3 text-xs bg-green-50 hover:bg-green-100 text-green-700 border-green-200"
+                                        title="Create a copy of this job"
+                                      >
+                                        <Copy className="h-3 w-3 mr-1" />
+                                        Duplicate
+                                      </Button>
                                     </div>
                                   </div>
                                 </div>

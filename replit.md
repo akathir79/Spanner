@@ -89,6 +89,7 @@ Located in `shared/schema.ts`, the database includes:
 - **Client Deletion Fixed**: Resolved foreign key constraint issues in user deletion - both individual and bulk client deletion now working properly with proper cascade deletion of reviews, bookings, and related data (August 16, 2025)
 - **Budget Display Fixed**: Resolved job posting budget update and display issues - budget increases now properly save to database and display correctly in job posting badges instead of showing "Negotiable" (August 16, 2025)
 - **Bids Overview Dashboard**: Added comprehensive bids overview tab with statistics dashboard, job activity tracking, quick access buttons, and enhanced bid management functionality (August 16, 2025)
+- **One-Click Job Duplication**: Implemented job posting duplication feature with copy button on all job cards - creates duplicate job with "(Copy)" suffix, preserving all original details and posting immediately (August 16, 2025)
 
 ### Language Support
 - English-only interface for India-wide coverage
