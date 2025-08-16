@@ -1643,8 +1643,8 @@ const JobPostingForm = ({ onClose }: { onClose?: () => void }) => {
                   }));
                 } else {
                   toast({
-                    title: "Profile Address Not Found",
-                    description: "Please complete your profile address in the Profile tab first.",
+                    title: "Incomplete Profile Address",
+                    description: "Please add your house number, street name, and area in the Profile tab first.",
                     variant: "destructive"
                   });
                 }
