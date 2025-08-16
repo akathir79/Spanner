@@ -684,8 +684,8 @@ const BankDetailsCard = ({ user }: { user: any }) => {
   );
 };
 
-// Worker Jobs Component - MOVED OUTSIDE MAIN COMPONENT 
-const WorkerJobsTab = ({ user }: { user: any }) => {
+// Available Jobs Component 
+const AvailableJobsTab = ({ user }: { user: any }) => {
   const { toast } = useToast();
   
   const [bidFormData, setBidFormData] = useState({
@@ -701,12 +701,6 @@ const WorkerJobsTab = ({ user }: { user: any }) => {
     queryKey: ["/api/job-postings", user?.id],
     queryFn: () => fetch(`/api/job-postings?workerId=${user?.id}`).then(res => res.json()),
     select: (data: any) => data.filter((job: any) => job.status === "open"),
-    enabled: !!user?.id,
-  });
-
-  // Fetch worker's bids
-  const { data: myBids = [] } = useQuery<any[]>({
-    queryKey: ["/api/bids/worker", user?.id],
     enabled: !!user?.id,
   });
 
@@ -814,6 +808,75 @@ const WorkerJobsTab = ({ user }: { user: any }) => {
         </CardContent>
       </Card>
 
+      {/* Bid Submission Modal */}
+      <Dialog open={isBidModalOpen} onOpenChange={setIsBidModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Submit Bid for "{selectedJob?.title}"</DialogTitle>
+            <DialogDescription>
+              Submit your proposal for this job. Make sure to include a competitive rate and clear timeline.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleSubmitBid} className="space-y-4">
+            <div>
+              <Label htmlFor="proposedAmount">Proposed Amount (₹)</Label>
+              <Input
+                id="proposedAmount"
+                type="number"
+                placeholder="Enter your quoted amount"
+                value={bidFormData.proposedAmount}
+                onChange={(e) => setBidFormData(prev => ({ ...prev, proposedAmount: e.target.value }))}
+                required
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="estimatedDuration">Estimated Duration</Label>
+              <Input
+                id="estimatedDuration"
+                placeholder="e.g., 2-3 days, 1 week"
+                value={bidFormData.estimatedDuration}
+                onChange={(e) => setBidFormData(prev => ({ ...prev, estimatedDuration: e.target.value }))}
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="proposal">Your Proposal</Label>
+              <Textarea
+                id="proposal"
+                placeholder="Describe your approach, experience, and why you're the best fit for this job..."
+                value={bidFormData.proposal}
+                onChange={(e) => setBidFormData(prev => ({ ...prev, proposal: e.target.value }))}
+                rows={4}
+                required
+              />
+            </div>
+            
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setIsBidModalOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={createBidMutation.isPending}>
+                {createBidMutation.isPending ? "Submitting..." : "Submit Bid"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+// My Bids Component 
+const MyBidsTab = ({ user }: { user: any }) => {
+  // Fetch worker's bids
+  const { data: myBids = [] } = useQuery<any[]>({
+    queryKey: ["/api/bids/worker", user?.id],
+    enabled: !!user?.id,
+  });
+
+  return (
+    <div className="space-y-6">
       {/* My Bids */}
       <Card>
         <CardHeader>
@@ -1426,10 +1489,11 @@ export default function WorkerDashboard() {
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="bookings">Bookings</TabsTrigger>
-            <TabsTrigger value="jobs">Browse Jobs</TabsTrigger>
+            <TabsTrigger value="available-jobs">Available Jobs</TabsTrigger>
+            <TabsTrigger value="my-bids">My Bids</TabsTrigger>
             <TabsTrigger value="profile">Profile</TabsTrigger>
             <TabsTrigger value="settings">Settings</TabsTrigger>
           </TabsList>
@@ -1592,9 +1656,14 @@ export default function WorkerDashboard() {
             </Card>
           </TabsContent>
 
-          {/* Browse Jobs Tab */}
-          <TabsContent value="jobs" className="space-y-6">
-            <WorkerJobsTab user={user} />
+          {/* Available Jobs Tab */}
+          <TabsContent value="available-jobs" className="space-y-6">
+            <AvailableJobsTab user={user} />
+          </TabsContent>
+
+          {/* My Bids Tab */}
+          <TabsContent value="my-bids" className="space-y-6">
+            <MyBidsTab user={user} />
           </TabsContent>
 
           {/* Profile Tab - Worker Specific with Professional Details */}
