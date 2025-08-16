@@ -1648,10 +1648,10 @@ const JobPostingForm = ({ onClose }: { onClose?: () => void }) => {
         </div>
         <div className="relative">
           <Textarea
-            placeholder="Enter complete service address..."
+            placeholder="Use buttons above to set service address..."
             value={formData.serviceAddress || ''}
-            onChange={(e) => setFormData(prev => ({ ...prev, serviceAddress: e.target.value }))}
-            className="min-h-[110px] resize-none text-base bg-white/80 border-2 border-purple-200/50 focus:border-purple-400 focus:ring-2 focus:ring-purple-100 transition-all rounded-lg"
+            readOnly
+            className="min-h-[110px] resize-none text-base bg-gray-50/80 border-2 border-purple-200/50 cursor-not-allowed transition-all rounded-lg"
           />
           {formData.serviceAddress && (
             <Button
@@ -1670,7 +1670,7 @@ const JobPostingForm = ({ onClose }: { onClose?: () => void }) => {
             <span className="inline-flex items-center gap-1">
               <Info className="h-3 w-3" />
               Example:
-            </span> House No/Building, Street, Area, City, State, PIN Code
+            </span> Area, City, State, PIN Code
           </p>
         </div>
       </div>
