@@ -103,6 +103,7 @@ export default function FinancialManagement() {
     completionPercentage: string;
     clientReferralReward: string;
     workerReferralReward: string;
+    workerJobCommission: string;
     minimumTransactionAmount: string;
     maximumTransactionAmount: string;
     processingFeeRate: string;
@@ -117,6 +118,7 @@ export default function FinancialManagement() {
     completionPercentage: "70",
     clientReferralReward: "100",
     workerReferralReward: "100",
+    workerJobCommission: "80",
     minimumTransactionAmount: "50",
     maximumTransactionAmount: "100000",
     processingFeeRate: "2.5"
@@ -192,6 +194,7 @@ export default function FinancialManagement() {
           gstPercentage: modelForm.gstEnabled ? (modelForm.gstRate || "18") : "0",
           referralClientReward: modelForm.clientReferralReward || "0",
           referralWorkerReward: modelForm.workerReferralReward || "0",
+          workerCommissionPercentage: modelForm.workerJobCommission || "80",
           referralEnabledForClient: false,
           referralEnabledForWorker: false,
           settings: {}
@@ -233,6 +236,7 @@ export default function FinancialManagement() {
           gstPercentage: modelForm.gstEnabled ? (modelForm.gstRate || "18") : "0",
           referralClientReward: modelForm.clientReferralReward || "0",
           referralWorkerReward: modelForm.workerReferralReward || "0",
+          workerCommissionPercentage: modelForm.workerJobCommission || "80",
           referralEnabledForClient: false,
           referralEnabledForWorker: false,
           settings: {}
@@ -407,7 +411,8 @@ export default function FinancialManagement() {
       advancePaymentPercentage: "30",
       completionPercentage: "70",
       clientReferralReward: "100",
-      workerReferralReward: "100",
+      workerReferralReward: "100", 
+      workerJobCommission: "80",
       minimumTransactionAmount: "50",
       maximumTransactionAmount: "100000",
       processingFeeRate: "2.5"
@@ -597,8 +602,8 @@ export default function FinancialManagement() {
                 </div>
               )}
 
-              {/* Client and Worker Referral Rewards - Always shown for all model types */}
-              <div className="grid grid-cols-2 gap-4">
+              {/* Referral Rewards and Worker Commission */}
+              <div className="grid grid-cols-3 gap-4">
                 <div>
                   <Label htmlFor="client-referral">Client Referral (₹)</Label>
                   <Input
@@ -619,6 +624,17 @@ export default function FinancialManagement() {
                     onChange={(e) => setModelForm({...modelForm, workerReferralReward: e.target.value})}
                     placeholder="100"
                     data-testid="input-worker-referral"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="worker-commission">Worker Share Job Commission (%)</Label>
+                  <Input
+                    id="worker-commission"
+                    type="number"
+                    value={modelForm.workerJobCommission}
+                    onChange={(e) => setModelForm({...modelForm, workerJobCommission: e.target.value})}
+                    placeholder="80"
+                    data-testid="input-worker-commission"
                   />
                 </div>
               </div>
