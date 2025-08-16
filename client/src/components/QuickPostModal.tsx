@@ -496,9 +496,19 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
                     onChange={(e) => setOtp(e.target.value)}
                     maxLength={6}
                   />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    OTP sent to {quickAuthData.mobile}
-                  </p>
+                  <div className="flex justify-between items-center mt-1">
+                    <p className="text-xs text-muted-foreground">
+                      OTP sent to {quickAuthData.mobile}
+                    </p>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setOtp('123456')}
+                      className="text-xs h-6 px-2"
+                    >
+                      Paste Dev OTP
+                    </Button>
+                  </div>
                 </div>
                 
                 <Button 
