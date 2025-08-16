@@ -45,7 +45,9 @@ import {
   User,
   Wallet,
   IndianRupee,
-  Gift
+  Gift,
+  ChevronDown,
+  ChevronUp
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
@@ -873,6 +875,7 @@ export default function WorkerDashboard() {
   const [, setLocation] = useLocation();
   const [showRejoinModal, setShowRejoinModal] = useState(false);
   const [rejoinReason, setRejoinReason] = useState("");
+  const [isWalletCollapsed, setIsWalletCollapsed] = useState(false);
   
   // Force re-render when showRejoinModal changes
   useEffect(() => {
@@ -1284,52 +1287,68 @@ export default function WorkerDashboard() {
                       <Wallet className="h-5 w-5 text-green-600" />
                       <span>My Wallet</span>
                     </CardTitle>
-                    <Badge variant="outline" className="bg-green-100 text-green-700 border-green-300">
-                      Active
-                    </Badge>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="bg-green-100 text-green-700 border-green-300">
+                        Active
+                      </Badge>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setIsWalletCollapsed(!isWalletCollapsed)}
+                        className="h-6 w-6 p-0 hover:bg-green-100"
+                      >
+                        {isWalletCollapsed ? (
+                          <ChevronDown className="h-4 w-4 text-green-600" />
+                        ) : (
+                          <ChevronUp className="h-4 w-4 text-green-600" />
+                        )}
+                      </Button>
+                    </div>
                   </div>
                 </CardHeader>
-                <CardContent className="space-y-4 p-4">
-                  {/* Balance Display */}
-                  <div className="bg-white dark:bg-gray-900 rounded-lg p-4 text-center">
-                    <p className="text-sm text-muted-foreground mb-1">Available Balance</p>
-                    <div className="flex items-center justify-center gap-1">
-                      <IndianRupee className="h-8 w-8 text-green-600" />
-                      <span className="text-3xl font-bold text-green-600">{stats.totalEarnings.toLocaleString()}</span>
+                {!isWalletCollapsed && (
+                  <CardContent className="space-y-4 p-4">
+                    {/* Balance Display */}
+                    <div className="bg-white dark:bg-gray-900 rounded-lg p-4 text-center">
+                      <p className="text-sm text-muted-foreground mb-1">Available Balance</p>
+                      <div className="flex items-center justify-center gap-1">
+                        <IndianRupee className="h-8 w-8 text-green-600" />
+                        <span className="text-3xl font-bold text-green-600">{stats.totalEarnings.toLocaleString()}</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-2">
+                        Last updated: {new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                      </p>
                     </div>
-                    <p className="text-xs text-muted-foreground mt-2">
-                      Last updated: {new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
-                    </p>
-                  </div>
-                  
-                  {/* Action Buttons */}
-                  <div className="flex gap-2 w-full">
-                    <Button size="sm" className="flex-1 min-w-0 bg-green-600 hover:bg-green-700 text-white flex items-center justify-center">
-                      <Plus className="h-3 w-3 mr-1" />
-                      <span className="text-xs">Add</span>
-                    </Button>
-                    <Button size="sm" variant="outline" className="flex-[1.2] min-w-0 border-red-300 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center justify-center">
-                      <CreditCard className="h-3 w-3 mr-1" />
-                      <span className="text-xs">Withdraw</span>
-                    </Button>
-                    <Button size="sm" variant="outline" className="flex-1 min-w-0 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border-purple-300 text-purple-700 hover:from-purple-100 hover:to-pink-100 flex items-center justify-center">
-                      <Gift className="h-3 w-3 mr-1" />
-                      <span className="text-xs">Coupon</span>
-                    </Button>
-                  </div>
+                    
+                    {/* Action Buttons */}
+                    <div className="flex gap-2 w-full">
+                      <Button size="sm" className="flex-1 min-w-0 bg-green-600 hover:bg-green-700 text-white flex items-center justify-center">
+                        <Plus className="h-3 w-3 mr-1" />
+                        <span className="text-xs">Add</span>
+                      </Button>
+                      <Button size="sm" variant="outline" className="flex-[1.2] min-w-0 border-red-300 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center justify-center">
+                        <CreditCard className="h-3 w-3 mr-1" />
+                        <span className="text-xs">Withdraw</span>
+                      </Button>
+                      <Button size="sm" variant="outline" className="flex-1 min-w-0 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border-purple-300 text-purple-700 hover:from-purple-100 hover:to-pink-100 flex items-center justify-center">
+                        <Gift className="h-3 w-3 mr-1" />
+                        <span className="text-xs">Coupon</span>
+                      </Button>
+                    </div>
 
-                  {/* Quick Stats */}
-                  <div className="grid grid-cols-2 gap-2 pt-2 border-t">
-                    <div className="text-center">
-                      <p className="text-xs text-muted-foreground">This Month</p>
-                      <p className="text-sm font-semibold text-green-600">+₹{stats.totalEarnings.toLocaleString()}</p>
+                    {/* Quick Stats */}
+                    <div className="grid grid-cols-2 gap-2 pt-2 border-t">
+                      <div className="text-center">
+                        <p className="text-xs text-muted-foreground">This Month</p>
+                        <p className="text-sm font-semibold text-green-600">+₹{stats.totalEarnings.toLocaleString()}</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-xs text-muted-foreground">Pending</p>
+                        <p className="text-sm font-semibold text-orange-600">₹1,200</p>
+                      </div>
                     </div>
-                    <div className="text-center">
-                      <p className="text-xs text-muted-foreground">Pending</p>
-                      <p className="text-sm font-semibold text-orange-600">₹1,200</p>
-                    </div>
-                  </div>
-                </CardContent>
+                  </CardContent>
+                )}
               </Card>
             </div>
             
