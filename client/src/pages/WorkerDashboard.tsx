@@ -1900,24 +1900,38 @@ export default function WorkerDashboard() {
                       </Button>
                     </div>
                     
-                    <div className="bg-white/60 dark:bg-gray-900/40 rounded-xl p-4 border border-amber-200/50 dark:border-amber-600/30">
-                      <div className="flex items-center justify-between">
-                        <div className="space-y-1">
-                          <p className="text-sm text-amber-700 dark:text-amber-300 font-medium">Total Balance</p>
-                          <div className="flex items-center gap-2">
-                            <IndianRupee className="h-6 w-6 text-amber-600 dark:text-amber-400" />
-                            <span className="text-3xl font-bold text-amber-800 dark:text-amber-200">{stats.totalEarnings.toLocaleString()}</span>
+                    {isWalletCollapsed && (
+                      <div className="bg-white/60 dark:bg-gray-900/40 rounded-xl p-4 border border-amber-200/50 dark:border-amber-600/30">
+                        <div className="flex items-center justify-between">
+                          <div className="space-y-1">
+                            <p className="text-sm text-amber-700 dark:text-amber-300 font-medium">Total Balance</p>
+                            <div className="flex items-center gap-2">
+                              <IndianRupee className="h-6 w-6 text-amber-600 dark:text-amber-400" />
+                              <span className="text-3xl font-bold text-amber-800 dark:text-amber-200">{stats.totalEarnings.toLocaleString()}</span>
+                            </div>
                           </div>
+                          <Badge variant="secondary" className="bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 border-green-300 dark:border-green-600 text-xs px-2 py-1">
+                            Professional
+                          </Badge>
                         </div>
-                        <Badge variant="secondary" className="bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 border-green-300 dark:border-green-600 text-xs px-2 py-1">
-                          Professional
-                        </Badge>
                       </div>
-                    </div>
+                    )}
                   </div>
                 </CardHeader>
                 {!isWalletCollapsed && (
                   <CardContent className="space-y-4 px-4 pb-4">
+                    {/* Main Balance Display */}
+                    <div className="bg-gradient-to-r from-white to-amber-50 dark:from-gray-900/40 dark:to-amber-900/20 rounded-lg p-4 text-center border border-amber-200/50 dark:border-amber-600/30">
+                      <p className="text-sm text-amber-700 dark:text-amber-300 mb-1 font-medium">Total Earnings Balance</p>
+                      <div className="flex items-center justify-center gap-1">
+                        <IndianRupee className="h-8 w-8 text-amber-600 dark:text-amber-400" />
+                        <span className="text-4xl font-bold text-amber-800 dark:text-amber-200">{stats.totalEarnings.toLocaleString()}</span>
+                      </div>
+                      <p className="text-xs text-amber-600 dark:text-amber-400 mt-2">
+                        Professional Worker Account
+                      </p>
+                    </div>
+
                     {/* Detailed Earnings Breakdown */}
                     <div className="space-y-3">
                       <div className="bg-gradient-to-r from-white/80 to-amber-50/80 dark:from-gray-900/40 dark:to-amber-900/20 rounded-lg p-4 border border-amber-200/30 dark:border-amber-600/30">

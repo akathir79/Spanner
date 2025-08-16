@@ -2594,10 +2594,12 @@ export default function Dashboard() {
                     <Badge variant="outline" className="bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 border-green-300 dark:border-green-600 text-xs">
                       Active
                     </Badge>
-                    <div className="flex items-center gap-1">
-                      <IndianRupee className="h-5 w-5 text-green-600 dark:text-green-400" />
-                      <span className="text-2xl font-bold text-green-700 dark:text-green-300">2,450.00</span>
-                    </div>
+                    {isWalletCollapsed && (
+                      <div className="flex items-center gap-1">
+                        <IndianRupee className="h-5 w-5 text-green-600 dark:text-green-400" />
+                        <span className="text-2xl font-bold text-green-700 dark:text-green-300">2,450.00</span>
+                      </div>
+                    )}
                   </div>
                 </div>
                 <Button
@@ -2616,14 +2618,14 @@ export default function Dashboard() {
             </CardHeader>
             {!isWalletCollapsed && (
               <CardContent className="space-y-4 p-4">
-                {/* Balance Display */}
-                <div className="bg-white dark:bg-gray-900 rounded-lg p-4 text-center">
-                  <p className="text-sm text-muted-foreground mb-1">Available Balance</p>
+                {/* Main Balance Display */}
+                <div className="bg-gradient-to-r from-white to-green-50 dark:from-gray-900 dark:to-green-900/20 rounded-lg p-4 text-center border border-green-200/50 dark:border-green-600/30">
+                  <p className="text-sm text-green-700 dark:text-green-300 mb-1 font-medium">Available Balance</p>
                   <div className="flex items-center justify-center gap-1">
-                    <IndianRupee className="h-8 w-8 text-green-600" />
-                    <span className="text-3xl font-bold text-green-600">2,450.00</span>
+                    <IndianRupee className="h-8 w-8 text-green-600 dark:text-green-400" />
+                    <span className="text-4xl font-bold text-green-700 dark:text-green-300">2,450.00</span>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-2">
+                  <p className="text-xs text-green-600 dark:text-green-400 mt-2">
                     Last updated: {new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
                   </p>
                 </div>
