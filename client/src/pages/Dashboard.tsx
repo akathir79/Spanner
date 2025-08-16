@@ -1975,6 +1975,7 @@ export default function Dashboard() {
   const [isJobFormOpen, setIsJobFormOpen] = useState(false);
   // Enhanced job card states
   const [editingJob, setEditingJob] = useState<any>(null);
+  const [acceptingBidId, setAcceptingBidId] = useState<string | null>(null);
   const [editingJobData, setEditingJobData] = useState<any>({});
   const [expandedCardIds, setExpandedCardIds] = useState<Set<string>>(new Set());
   const [isRecording, setIsRecording] = useState(false);
@@ -3621,12 +3622,60 @@ export default function Dashboard() {
                             </Button>
                             <Button
                               size="sm"
-                              onClick={() => {
-                                // Accept bid logic
-                                console.log('Accept bid:', bid.id);
+                              onClick={async () => {
+                                if (bid.status === 'accepted') return;
+                                
+                                setAcceptingBidId(bid.id);
+                                try {
+                                  const response = await fetch(`/api/bids/${bid.id}/accept`, {
+                                    method: 'PUT',
+                                    headers: {
+                                      'Content-Type': 'application/json',
+                                    },
+                                  });
+                                  
+                                  if (!response.ok) {
+                                    throw new Error('Failed to accept bid');
+                                  }
+                                  
+                                  const result = await response.json();
+                                  console.log('Bid accepted successfully:', result);
+                                  
+                                  // Show success notification
+                                  toast({
+                                    title: "Bid Accepted Successfully!",
+                                    description: `You have accepted ${bid.worker?.firstName}'s bid of ₹${bid.proposedAmount}. They have been notified.`,
+                                  });
+                                  
+                                  // Refresh the bids data
+                                  queryClient.invalidateQueries({ queryKey: ["/api/bids/job", selectedJobPosting?.id] });
+                                  
+                                } catch (error) {
+                                  console.error('Error accepting bid:', error);
+                                  toast({
+                                    title: "Error",
+                                    description: "Failed to accept bid. Please try again.",
+                                    variant: "destructive",
+                                  });
+                                } finally {
+                                  setAcceptingBidId(null);
+                                }
                               }}
+                              disabled={bid.status === 'accepted' || acceptingBidId === bid.id}
+                              className={bid.status === 'accepted' ? 'bg-green-600' : ''}
                             >
-                              Accept Bid
+                              {acceptingBidId === bid.id ? (
+                                <>
+                                  <span className="animate-spin mr-2">⏳</span>
+                                  Accepting...
+                                </>
+                              ) : bid.status === 'accepted' ? (
+                                <>
+                                  ✓ Accepted
+                                </>
+                              ) : (
+                                'Accept Bid'
+                              )}
                             </Button>
                           </div>
                         </div>

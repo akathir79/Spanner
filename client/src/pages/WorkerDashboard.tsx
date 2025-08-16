@@ -1165,16 +1165,23 @@ const MyBidsTab = ({ user }: { user: any }) => {
                           )}
                         </div>
                         <div className="flex items-center gap-2">
-                          <Badge 
-                            className={`px-3 py-1.5 text-sm font-medium border ${
-                              bid.status === "accepted" ? "bg-green-500 text-white border-green-400" :
-                              bid.status === "rejected" ? "bg-red-500 text-white border-red-400" : 
-                              "bg-yellow-500 text-white border-yellow-400"
-                            }`}
-                          >
-                            {bid.status === "accepted" ? "Accepted" :
-                             bid.status === "rejected" ? "Rejected" : "Pending"}
-                          </Badge>
+                          <div className="flex items-center gap-2">
+                            <Badge 
+                              className={`px-3 py-1.5 text-sm font-medium border ${
+                                bid.status === "accepted" ? "bg-green-500 text-white border-green-400" :
+                                bid.status === "rejected" ? "bg-red-500 text-white border-red-400" : 
+                                "bg-yellow-500 text-white border-yellow-400"
+                              }`}
+                            >
+                              {bid.status === "accepted" ? "✓ Accepted" :
+                               bid.status === "rejected" ? "✗ Rejected" : "⏳ Pending"}
+                            </Badge>
+                            {bid.status === "accepted" && (
+                              <div className="animate-pulse bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium border border-green-300">
+                                🎉 Congratulations!
+                              </div>
+                            )}
+                          </div>
                           {/* Only allow editing and deleting if bid is pending */}
                           {bid.status === "pending" && (
                             <div className="flex gap-2">
