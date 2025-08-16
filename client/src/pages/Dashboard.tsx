@@ -75,7 +75,8 @@ import {
   UserCheck,
   Wallet,
   Gift,
-  Percent
+  Percent,
+  ArrowLeft
 } from "lucide-react";
 import { useLocation } from "wouter";
 import LocationViewer from "@/components/LocationViewer";
@@ -2005,6 +2006,28 @@ export default function Dashboard() {
     enabled: !!user?.id
   });
 
+  // Fetch bid counts for all jobs
+  const { data: bidCounts = {} } = useQuery({
+    queryKey: ["/api/bid-counts/client", user?.id],
+    queryFn: async () => {
+      if (!jobPostings.length) return {};
+      const counts: Record<string, number> = {};
+      await Promise.all(
+        jobPostings.map(async (job: any) => {
+          try {
+            const response = await fetch(`/api/bids/job/${encodeURIComponent(job.id)}`);
+            const bids = await response.json();
+            counts[job.id] = Array.isArray(bids) ? bids.length : 0;
+          } catch (error) {
+            counts[job.id] = 0;
+          }
+        })
+      );
+      return counts;
+    },
+    enabled: !!user?.id && jobPostings.length > 0
+  });
+
   // Fetch bids for selected job posting
   const { data: jobBids = [], isLoading: bidsLoading } = useQuery({
     queryKey: ["/api/bids/job", selectedJobPosting?.id],
@@ -2692,11 +2715,8 @@ export default function Dashboard() {
             >
               Bids
               {/* Show total bids count across all jobs */}
-              {jobPostings.length > 0 && (() => {
-                const totalBids = jobPostings.reduce((total: number, job: any) => {
-                  // We'll show a general indicator rather than exact count to avoid complex queries
-                  return total + (job.selectedBidId ? 1 : 0);
-                }, 0);
+              {Object.keys(bidCounts).length > 0 && (() => {
+                const totalBids = Object.values(bidCounts).reduce((total: number, count: number) => total + count, 0);
                 return totalBids > 0 ? (
                   <Badge variant="secondary" className="ml-2 bg-orange-500 text-white text-xs px-1 py-0 h-5 min-w-[20px] rounded-full flex items-center justify-center">
                     {totalBids}
@@ -3419,12 +3439,19 @@ export default function Dashboard() {
                               {/* Header with Title */}
                               <div className="flex items-start justify-between">
                                 <div className="flex-1">
-                                  <h3 className="font-semibold text-xl text-white cursor-pointer hover:text-blue-300 transition-colors" onClick={() => {
-                                    setSelectedJobPosting(job);
-                                    setActiveTab("bids");
-                                  }}>
-                                    {job.title}
-                                  </h3>
+                                  <div className="flex items-center justify-between">
+                                    <h3 className="font-semibold text-xl text-white cursor-pointer hover:text-blue-300 transition-colors flex-1" onClick={() => {
+                                      setSelectedJobPosting(job);
+                                      setActiveTab("bids");
+                                    }}>
+                                      {job.title}
+                                    </h3>
+                                    {bidCounts[job.id] > 0 && (
+                                      <Badge variant="secondary" className="bg-orange-500 text-white text-xs px-2 py-1 rounded-full ml-2">
+                                        {bidCounts[job.id]} {bidCounts[job.id] === 1 ? 'Bid' : 'Bids'}
+                                      </Badge>
+                                    )}
+                                  </div>
                                   <p className="text-sm text-blue-300 font-medium mt-1">
                                     {job.serviceCategory} • {job.district}, Tamil Nadu
                                   </p>
@@ -3500,7 +3527,10 @@ export default function Dashboard() {
                           <Card 
                             key={job.id}
                             className="cursor-pointer hover:shadow-md transition-all duration-200 border-l-4 border-l-blue-500 hover:border-l-blue-600"
-                            onClick={() => setSelectedJobPosting(job)}
+                            onClick={() => {
+                              setSelectedJobPosting(job);
+                              setActiveTab("bids");
+                            }}
                           >
                             <CardContent className="p-4">
                               <div className="flex items-start justify-between">
@@ -3528,9 +3558,25 @@ export default function Dashboard() {
                                   </div>
                                 </div>
                                 <div className="flex flex-col items-end gap-2 ml-4">
-                                  <Button variant="default" size="sm" className="px-4">
-                                    View Bids
-                                  </Button>
+                                  <div className="flex items-center gap-2">
+                                    <Button 
+                                      variant="default" 
+                                      size="sm" 
+                                      className="px-4"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setSelectedJobPosting(job);
+                                        setActiveTab("bids");
+                                      }}
+                                    >
+                                      View Bids
+                                    </Button>
+                                    {bidCounts[job.id] > 0 && (
+                                      <Badge variant="secondary" className="bg-orange-500 text-white text-xs px-2 py-1 rounded-full">
+                                        {bidCounts[job.id]} {bidCounts[job.id] === 1 ? 'Bid' : 'Bids'}
+                                      </Badge>
+                                    )}
+                                  </div>
                                   <Badge variant="outline" className={`text-xs ${job.status === 'in_progress' ? 'bg-blue-100 text-blue-800 border-blue-300' : job.status === 'completed' ? 'bg-green-100 text-green-800 border-green-300' : 'bg-gray-100 text-gray-800 border-gray-300'}`}>
                                     {job.status === 'in_progress' ? 'In Progress' : job.status === 'completed' ? 'Completed' : job.status || 'Active'}
                                   </Badge>
@@ -3559,27 +3605,50 @@ export default function Dashboard() {
                       </div>
                     )}
                   </div>
-                ) : bidsLoading ? (
-                  <div className="space-y-4">
-                    {[...Array(3)].map((_, i) => (
-                      <div key={i} className="animate-pulse">
-                        <div className="h-20 bg-muted rounded-lg"></div>
-                      </div>
-                    ))}
-                  </div>
-                ) : !jobBids || jobBids.length === 0 ? (
-                  <div className="text-center py-12">
-                    <div className="h-12 w-12 mx-auto mb-4 flex items-center justify-center text-2xl font-bold text-muted-foreground">
-                      ₹
-                    </div>
-                    <h3 className="text-lg font-semibold mb-2">No bids yet</h3>
-                    <p className="text-muted-foreground">
-                      Workers will submit bids for this job soon. Check back later!
-                    </p>
-                  </div>
                 ) : (
-                  <div className="space-y-4 max-h-[600px] overflow-y-auto">
-                    {jobBids.map((bid: any) => (
+                  <div className="space-y-4">
+                    {/* Header with back navigation */}
+                    <div className="flex items-center gap-3 pb-4 border-b">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setSelectedJobPosting(null)}
+                        className="h-8 w-8 p-0"
+                      >
+                        <ArrowLeft className="h-4 w-4" />
+                      </Button>
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-lg">{selectedJobPosting?.title}</h3>
+                        <p className="text-sm text-muted-foreground">
+                          {selectedJobPosting?.serviceCategory} • {selectedJobPosting?.district}
+                        </p>
+                      </div>
+                      <Badge variant="outline" className={`${selectedJobPosting?.status === 'in_progress' ? 'bg-blue-100 text-blue-800 border-blue-300' : selectedJobPosting?.status === 'completed' ? 'bg-green-100 text-green-800 border-green-300' : 'bg-gray-100 text-gray-800 border-gray-300'}`}>
+                        {selectedJobPosting?.status === 'in_progress' ? 'In Progress' : selectedJobPosting?.status === 'completed' ? 'Completed' : selectedJobPosting?.status || 'Open'}
+                      </Badge>
+                    </div>
+
+                    {bidsLoading ? (
+                      <div className="space-y-4">
+                        {[...Array(3)].map((_, i) => (
+                          <div key={i} className="animate-pulse">
+                            <div className="h-20 bg-muted rounded-lg"></div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : !jobBids || jobBids.length === 0 ? (
+                      <div className="text-center py-12">
+                        <div className="h-12 w-12 mx-auto mb-4 flex items-center justify-center text-2xl font-bold text-muted-foreground">
+                          ₹
+                        </div>
+                        <h3 className="text-lg font-semibold mb-2">No bids yet</h3>
+                        <p className="text-muted-foreground">
+                          Workers will submit bids for this job soon. Check back later!
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="space-y-4 max-h-[600px] overflow-y-auto">
+                        {jobBids.map((bid: any) => (
                       <div key={bid.id} className="border rounded-lg p-4 space-y-3">
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
@@ -3692,8 +3761,10 @@ export default function Dashboard() {
                             </Button>
                           </div>
                         </div>
+                          </div>
+                        ))}
                       </div>
-                    ))}
+                    )}
                   </div>
                 )}
               </CardContent>
