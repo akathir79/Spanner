@@ -35,23 +35,25 @@ export const ReviewModal = ({ booking, isOpen, onClose }: ReviewModalProps) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  // Add null check for booking
+  if (!booking) {
+    return null;
+  }
+
   const submitReviewMutation = useMutation({
     mutationFn: async () => {
       const reviewData = {
-        bookingId: booking.id,
         workerId: booking.workerId,
         clientId: booking.clientId,
-        rating,
-        review: review.trim() || undefined,
-        workQualityRating: workQualityRating || undefined,
-        timelinessRating: timelinessRating || undefined,
-        communicationRating: communicationRating || undefined,
-        professionalismRating: professionalismRating || undefined,
-        wouldRecommend,
-        tags: selectedTags.length > 0 ? selectedTags : undefined,
+        overallRating: rating,
+        workQualityRating,
+        timelinessRating,
+        communicationRating,
+        professionalismRating,
+        reviewText: review.trim() || undefined,
       };
       
-      return apiRequest("/api/reviews", "POST", reviewData);
+      return apiRequest(`/api/bookings/${booking.id}/review`, "POST", reviewData);
     },
     onSuccess: () => {
       toast({
@@ -59,7 +61,6 @@ export const ReviewModal = ({ booking, isOpen, onClose }: ReviewModalProps) => {
         description: "Thank you for your feedback! Your review helps other clients make informed decisions.",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/bookings/user"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/workers", booking.workerId, "reviews"] });
       onClose();
     },
     onError: (error: any) => {
@@ -127,7 +128,7 @@ export const ReviewModal = ({ booking, isOpen, onClose }: ReviewModalProps) => {
         <DialogHeader>
           <DialogTitle>Rate Your Experience</DialogTitle>
           <DialogDescription>
-            Help other clients by sharing your experience with {booking.worker?.firstName} {booking.worker?.lastName}
+            Help other clients by sharing your experience with this service
           </DialogDescription>
         </DialogHeader>
         
