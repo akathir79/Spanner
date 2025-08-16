@@ -1971,6 +1971,7 @@ export default function Dashboard() {
   const [districtOpen, setDistrictOpen] = useState(false);
   const [isLocationLoading, setIsLocationLoading] = useState(false);
   const [selectedJobPosting, setSelectedJobPosting] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState("bookings");
   const [isJobFormOpen, setIsJobFormOpen] = useState(false);
   // Enhanced job card states
   const [editingJob, setEditingJob] = useState<any>(null);
@@ -2658,7 +2659,7 @@ export default function Dashboard() {
 
 
 
-        <Tabs defaultValue="bookings" className="space-y-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-5 bg-muted">
             <TabsTrigger 
               value="bookings" 
@@ -2680,9 +2681,21 @@ export default function Dashboard() {
             </TabsTrigger>
             <TabsTrigger 
               value="bids"
-              className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+              className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground relative"
             >
               Bids
+              {/* Show total bids count across all jobs */}
+              {jobPostings.length > 0 && (() => {
+                const totalBids = jobPostings.reduce((total: number, job: any) => {
+                  // We'll show a general indicator rather than exact count to avoid complex queries
+                  return total + (job.selectedBidId ? 1 : 0);
+                }, 0);
+                return totalBids > 0 ? (
+                  <Badge variant="secondary" className="ml-2 bg-orange-500 text-white text-xs px-1 py-0 h-5 min-w-[20px] rounded-full flex items-center justify-center">
+                    {totalBids}
+                  </Badge>
+                ) : null;
+              })()}
             </TabsTrigger>
             <TabsTrigger 
               value="profile"
@@ -3390,7 +3403,6 @@ export default function Dashboard() {
                                 <div className="flex-1">
                                   <h3 className="font-semibold text-xl text-white cursor-pointer hover:text-blue-300 transition-colors" onClick={() => {
                                     setSelectedJobPosting(job);
-                                    // Switch to bids tab when job is clicked
                                     setActiveTab("bids");
                                   }}>
                                     {job.title}
@@ -3492,16 +3504,27 @@ export default function Dashboard() {
                           </div>
                           <div className="text-right">
                             <div className="text-lg font-bold text-green-600">
-                              ₹{bid.bidAmount}
+                              ₹{bid.proposedAmount || bid.bidAmount}
                             </div>
-                            <p className="text-xs text-muted-foreground">
+                            <div className="text-xs text-muted-foreground">
+                              <Badge variant="outline" className={`text-xs ${bid.status === 'pending' ? 'text-yellow-600 bg-yellow-50' : bid.status === 'accepted' ? 'text-green-600 bg-green-50' : 'text-red-600 bg-red-50'}`}>
+                                {bid.status || 'pending'}
+                              </Badge>
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-1">
                               {new Date(bid.createdAt).toLocaleDateString()}
                             </p>
                           </div>
                         </div>
-                        {bid.message && (
+                        {(bid.proposal || bid.message) && (
                           <div className="bg-muted p-3 rounded-lg">
-                            <p className="text-sm">{bid.message}</p>
+                            <p className="text-sm">{bid.proposal || bid.message}</p>
+                          </div>
+                        )}
+                        {bid.estimatedDuration && (
+                          <div className="text-sm text-muted-foreground">
+                            <Clock className="h-4 w-4 inline mr-1" />
+                            Estimated Duration: {bid.estimatedDuration}
                           </div>
                         )}
                         <div className="flex items-center justify-between pt-2 border-t">
