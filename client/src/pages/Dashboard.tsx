@@ -3243,9 +3243,13 @@ export default function Dashboard() {
                         return (
                           <Card 
                             key={job.id} 
-                            className={`bg-gradient-to-br from-slate-800 via-slate-700 to-slate-800 border border-slate-600 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:border-blue-400 ${
+                            className={`bg-gradient-to-br from-slate-800 via-slate-700 to-slate-800 border border-slate-600 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:border-blue-400 cursor-pointer ${
                               selectedJobPosting?.id === job.id ? 'border-blue-400 ring-2 ring-blue-300' : ''
                             }`}
+                            onClick={() => {
+                              setSelectedJobPosting(job);
+                              setActiveTab("bids");
+                            }}
                           >
                             <CardContent className="p-6 space-y-4">
                               {/* Top Header with ID, Posted Date, Budget, Status Badge and Action Buttons */}
@@ -3270,7 +3274,10 @@ export default function Dashboard() {
                                       variant="outline"
                                       size="sm"
                                       className="h-7 px-2 text-xs bg-orange-900/20 hover:bg-orange-800/30 text-orange-400 border-orange-500/30"
-                                      onClick={() => handleEditJob(job)}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleEditJob(job);
+                                      }}
                                     >
                                       Increase Budget
                                     </Button>
@@ -3299,7 +3306,8 @@ export default function Dashboard() {
                                     variant="ghost"
                                     size="sm"
                                     className={`h-8 w-8 p-0 ${job.status === 'in_progress' || job.status === 'completed' ? 'text-gray-400 cursor-not-allowed' : 'text-blue-400 hover:bg-blue-500/20 hover:text-blue-300'}`}
-                                    onClick={() => {
+                                    onClick={(e) => {
+                                      e.stopPropagation();
                                       if (job.status === 'in_progress' || job.status === 'completed') {
                                         toast({
                                           title: "Cannot Edit Job",
@@ -3318,7 +3326,8 @@ export default function Dashboard() {
                                     variant="ghost"
                                     size="sm"
                                     className="h-8 w-8 p-0 text-red-400 hover:text-red-300 hover:bg-red-500/20"
-                                    onClick={() => {
+                                    onClick={(e) => {
+                                      e.stopPropagation();
                                       if (window.confirm(`Are you sure you want to delete the job posting "${job.title}"? This action cannot be undone.`)) {
                                         deleteJobMutation.mutate(job.id);
                                       }
@@ -3367,7 +3376,10 @@ export default function Dashboard() {
                                         variant="outline"
                                         size="sm"
                                         className="h-7 px-2 bg-red-900/20 hover:bg-red-800/30 text-red-300 border-red-500/30 text-xs"
-                                        onClick={isRecording ? stopRecording : () => startRecording(job.id)}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          isRecording ? stopRecording() : startRecording(job.id);
+                                        }}
                                         disabled={isRecording || !!jobMediaFiles[job.id]?.audio}
                                       >
                                         <Mic className="h-2.5 w-2.5 mr-1" />
