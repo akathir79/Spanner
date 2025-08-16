@@ -2735,15 +2735,13 @@ export default function Dashboard() {
               className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground relative"
             >
               Profile
-              {/* Show UPDATE_REQUIRED fields count */}
+              {/* Show UPDATE_REQUIRED fields count (matching NotificationBell logic) */}
               {user && (() => {
                 const updateRequiredFields = [
-                  user.lastName === "UPDATE_REQUIRED" ? 1 : 0,
-                  user.email === "" || user.email === "UPDATE_REQUIRED" ? 1 : 0,
-                  user.profilePicture === null ? 1 : 0,
-                  !user.bankAccountNumber ? 1 : 0,
-                  !user.bankIFSC ? 1 : 0,
-                  !user.bankAccountHolderName ? 1 : 0
+                  (!user.lastName || user.lastName === "UPDATE_REQUIRED") ? 1 : 0,
+                  !user.email ? 1 : 0,
+                  !user.profilePicture ? 1 : 0,
+                  (!user.bankAccountNumber || !user.bankIFSC || !user.bankAccountHolderName) ? 1 : 0 // Bank details grouped as one
                 ].reduce((total, field) => total + field, 0);
                 
                 return updateRequiredFields > 0 ? (
