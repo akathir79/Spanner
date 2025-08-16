@@ -4367,29 +4367,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } catch (geminiError: any) {
         console.error("Gemini processing error:", geminiError);
         
-        // Fallback to basic processing if Gemini fails
-        const fallbackJobPost = {
-          id: `VOICE-${Date.now()}`,
-          title: "Voice Job Request - Processing Required",
-          description: "Voice recording received. Manual processing may be needed to extract full job details.",
-          serviceCategory: "General Services", 
-          location: "To be confirmed",
-          budget: { min: 1000, max: 5000 },
-          urgency: "medium" as const,
-          userId: userId,
-          createdAt: new Date().toISOString()
-        };
-
-        res.json({
-          success: true,
-          message: "Voice job posting created (fallback mode)",
-          jobPost: fallbackJobPost,
-          transcription: "Voice processing is currently unavailable. Your job request has been saved and will be processed manually.",
-          extractedData: {
-            language: language || 'en',
-            confidence: 0.5,
-            fallbackMode: true
-          }
+        // Return error for fallback processing on client side
+        return res.status(500).json({
+          success: false,
+          message: "Voice processing is temporarily unavailable. Please fill in job details manually.",
+          fallbackMode: true,
+          error: geminiError.message || "Voice processing service error",
+          audioReceived: true // Indicates audio was received but processing failed
         });
       }
 

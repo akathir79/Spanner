@@ -1,10 +1,10 @@
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 if (!process.env.GEMINI_API_KEY) {
   throw new Error('GEMINI_API_KEY environment variable is required');
 }
 
-const genAI = new GoogleGenAI(process.env.GEMINI_API_KEY);
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 export interface VoiceTranscriptionResult {
   text: string;
@@ -330,7 +330,7 @@ export async function processVoiceJobPosting(
     }
 
     // Step 2: Extract job details from transcription
-    const jobExtractionResult = await extractJobDetailsFromText(transcriptionResult.text, language);
+    const jobExtractionResult = await extractJobInformation(transcriptionResult.text, transcriptionResult.detectedLanguage);
     
     const processingTime = Date.now() - startTime;
     console.log(`Voice processing completed in ${processingTime}ms`);
@@ -346,7 +346,7 @@ export async function processVoiceJobPosting(
         location: jobExtractionResult.location.fullAddress || `${jobExtractionResult.location.area || ''}, ${jobExtractionResult.location.district || ''}, ${jobExtractionResult.location.state || ''}`.replace(/^,\s*|,\s*$/g, ''),
         district: jobExtractionResult.location.district,
         state: jobExtractionResult.location.state,
-        budget: jobExtractionResult.budget,
+        budget: jobExtractionResult.budget || { min: 1000, max: 5000 },
         urgency: jobExtractionResult.urgency,
         requirements: jobExtractionResult.requirements,
         timeframe: jobExtractionResult.timeframe

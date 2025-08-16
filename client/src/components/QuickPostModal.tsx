@@ -25,6 +25,13 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
   const [processedResult, setProcessedResult] = useState<any>(null);
   const [recordedAudio, setRecordedAudio] = useState<Blob | null>(null);
   const [audioUrl, setAudioUrl] = useState<string>('');
+  const [manualJobData, setManualJobData] = useState({
+    title: '',
+    description: '',
+    budget: { min: 1000, max: 5000 },
+    location: '',
+    urgency: 'medium' as const
+  });
   
   // Quick auth states
   const [quickAuthData, setQuickAuthData] = useState({
@@ -281,22 +288,122 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
           description: `Your job "${result.jobPost.title}" has been created and is now live.`
         });
         setCurrentStep('success');
+      } else if (result.fallbackMode) {
+        // Voice processing failed, show manual input form
+        setCurrentStep('manual-input');
+        toast({
+          title: "Voice Processing Unavailable",
+          description: "Please fill in the job details manually.",
+          variant: "destructive"
+        });
       } else {
         throw new Error(result.message || 'Failed to process voice recording');
       }
       
     } catch (error: any) {
       console.error("Voice processing error:", error);
-      toast({
-        title: "Processing Failed",
-        description: error.message || "Failed to process your voice recording. Please try again.",
-        variant: "destructive"
-      });
-      setCurrentStep('recording');
+      
+      // Check if it's a server error - fallback to manual input
+      if (error.message.includes("Server error: 500")) {
+        setCurrentStep('manual-input');
+        toast({
+          title: "Voice Processing Unavailable",
+          description: "Please fill in the job details manually.",
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "Processing Failed",
+          description: error.message || "Failed to process your voice recording. Please try again.",
+          variant: "destructive"
+        });
+        setCurrentStep('recording');
+      }
     } finally {
       setIsProcessing(false);
     }
   }, [toast, selectedLanguage, user]);
+
+  // Handle manual job submission
+  const handleManualSubmit = useCallback(async () => {
+    if (!manualJobData.title || !manualJobData.description || !manualJobData.location) {
+      toast({
+        title: "Missing Information",
+        description: "Please fill in all required fields (title, description, location)",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsProcessing(true);
+    
+    try {
+      const storedUser = localStorage.getItem('user');
+      const currentUser = user || (storedUser ? JSON.parse(storedUser) : null);
+      
+      if (!currentUser?.id) {
+        throw new Error("User authentication required");
+      }
+
+      const jobPostData = {
+        title: manualJobData.title,
+        description: manualJobData.description,
+        serviceCategory: "General Services", // Default category
+        location: manualJobData.location,
+        budget: manualJobData.budget,
+        urgency: manualJobData.urgency,
+        userId: currentUser.id,
+        isManualEntry: true
+      };
+
+      const response = await fetch('/api/job-postings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(jobPostData)
+      });
+
+      if (!response.ok) {
+        throw new Error(`Server error: ${response.status}`);
+      }
+
+      const result = await response.json();
+      
+      if (result.success) {
+        // Format result to match voice processing response format
+        const formattedResult = {
+          success: true,
+          jobPost: result.jobPost,
+          transcription: audioUrl ? "Job created from voice recording (processed manually)" : null,
+          extractedData: {
+            confidence: 1.0,
+            manualEntry: true
+          }
+        };
+        
+        setProcessedResult(formattedResult);
+        setCurrentStep('success');
+        
+        toast({
+          title: "Job Posted Successfully!",
+          description: `Your job "${result.jobPost.title}" has been created and is now live.`
+        });
+      } else {
+        throw new Error(result.message || 'Failed to create job posting');
+      }
+
+    } catch (error: any) {
+      console.error("Manual job submission error:", error);
+      toast({
+        title: "Submission Failed",
+        description: error.message || "Failed to create job posting. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  }, [manualJobData, user, toast, audioUrl]);
 
   // Quick authentication functions
   const handleSendOtp = useCallback(async () => {
