@@ -240,7 +240,7 @@ export function SuperFastRegisterForm({ role, onComplete, onBack, onStepChange, 
 
   const registerMutation = useMutation({
     mutationFn: async (data: FastClientData | FastWorkerData) => {
-      const endpoint = role === "client" ? "/api/auth/register" : "/api/auth/register";
+      const endpoint = role === "client" ? "/api/auth/signup/client" : "/api/auth/signup/worker";
       const response = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -252,7 +252,18 @@ export function SuperFastRegisterForm({ role, onComplete, onBack, onStepChange, 
           fullAddress: `${data.houseNumber}, ${data.streetName}, ${data.areaName}`, // Combine for full address
         }),
       });
-      if (!response.ok) throw new Error(await response.text());
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        let errorMessage = "Registration failed";
+        try {
+          const errorData = JSON.parse(errorText);
+          errorMessage = errorData.message || errorMessage;
+        } catch {
+          errorMessage = errorText || errorMessage;
+        }
+        throw new Error(errorMessage);
+      }
       return response.json();
     },
     onSuccess: () => {
