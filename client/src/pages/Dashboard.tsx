@@ -3413,6 +3413,66 @@ export default function Dashboard() {
           {/* Profile Tab */}
           <TabsContent value="profile" className="space-y-6">
             <div className="grid gap-6 lg:grid-cols-2">
+              {/* Personal Details Card */}
+              <Card className="col-span-1">
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <User className="h-5 w-5" />
+                      <span>Personal Details</span>
+                    </div>
+{/* Removed customization controls */}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex items-center space-x-4">
+                      <Avatar className="h-16 w-16">
+                        <AvatarImage src={user?.profilePicture || ''} />
+                        <AvatarFallback className="text-lg">
+                          {user?.firstName?.[0]}{user?.lastName?.[0]}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-lg">
+                          {user?.firstName} {user?.lastName}
+                        </h3>
+                        <p className="text-muted-foreground">
+                          {user?.email || user?.mobile || 'No contact info'}
+                        </p>
+                        <div className="flex items-center space-x-2 mt-2">
+                          <Badge variant="outline" className="text-xs">
+                            {user?.role?.toUpperCase()}
+                          </Badge>
+                          <Badge variant={user?.isVerified ? "default" : "secondary"} className="text-xs">
+                            {user?.isVerified ? "Verified" : "Unverified"}
+                          </Badge>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4 pt-4 border-t">
+                      <div>
+                        <Label className="text-sm text-muted-foreground">District</Label>
+                        <p className="text-sm font-semibold mt-1">{user?.district || 'Not set'}</p>
+                      </div>
+                      <div>
+                        <Label className="text-sm text-muted-foreground">Member Since</Label>
+                        <p className="text-sm mt-1">{user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : "N/A"}</p>
+                      </div>
+                      <div>
+                        <Label className="text-sm text-muted-foreground">Total Bookings</Label>
+                        <p className="text-sm font-semibold mt-1">{bookings?.length || 0}</p>
+                      </div>
+                      <div>
+                        <Label className="text-sm text-muted-foreground">Last Login</Label>
+                        <p className="text-sm mt-1">{user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleDateString() : "Today"}</p>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
               {/* Quick Actions Widget */}
               <Card className="col-span-1">
                   <CardHeader>
@@ -3474,6 +3534,19 @@ export default function Dashboard() {
                   </CardContent>
                 </Card>
               )}
+
+              {/* Bank Details Section - Optional for Clients */}
+              <BankDetailsCard
+                user={user}
+                onUpdate={() => {
+                  queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+                  queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+                  refreshUser();
+                }}
+              />
+
+              {/* User Activity Card */}
+              <UserActivityCard user={user} />
             </div>
           </TabsContent>
 
