@@ -384,6 +384,51 @@ export default function AdminDashboard() {
           )}
         </div>
 
+        {/* Main Management Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <Card className="cursor-pointer hover:shadow-lg transition-all duration-300 border-2 hover:border-blue-200" onClick={() => setLocation('/admin/advertisements')}>
+            <CardContent className="p-6">
+              <div className="flex items-center space-x-4">
+                <div className="p-3 bg-blue-100 rounded-lg">
+                  <Megaphone className="h-8 w-8 text-blue-600" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-800">Advertisement Management</h3>
+                  <p className="text-sm text-gray-600 mt-1">Create, edit and manage platform advertisements</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="cursor-pointer hover:shadow-lg transition-all duration-300 border-2 hover:border-green-200" onClick={() => setLocation('/admin/messages')}>
+            <CardContent className="p-6">
+              <div className="flex items-center space-x-4">
+                <div className="p-3 bg-green-100 rounded-lg">
+                  <MessageCircle className="h-8 w-8 text-green-600" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-800">Client & Worker Messages</h3>
+                  <p className="text-sm text-gray-600 mt-1">Handle support requests and communications</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="cursor-pointer hover:shadow-lg transition-all duration-300 border-2 hover:border-purple-200" onClick={() => setLocation('/admin/financial')}>
+            <CardContent className="p-6">
+              <div className="flex items-center space-x-4">
+                <div className="p-3 bg-purple-100 rounded-lg">
+                  <DollarSign className="h-8 w-8 text-purple-600" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-800">Financial Management</h3>
+                  <p className="text-sm text-gray-600 mt-1">Configure payment models and wallet management</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
         {/* Quick Overview */}
         <Card>
           <CardHeader>

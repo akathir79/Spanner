@@ -25,6 +25,9 @@ import PlatformSettings from "@/pages/PlatformSettings";
 import DistrictManager from "@/pages/DistrictManager";
 import Payment from "@/pages/Payment";
 import ServiceHistory from "@/pages/ServiceHistory";
+import AdvertisementManagement from "@/pages/AdvertisementManagement";
+import MessagesSupport from "@/pages/MessagesSupport";
+import FinancialManagementPage from "@/pages/FinancialManagementPage";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -53,6 +56,9 @@ function Router() {
           <Route path="/district-manager" component={DistrictManager} />
           <Route path="/payment/:bookingId" component={Payment} />
           <Route path="/service-history" component={ServiceHistory} />
+          <Route path="/admin/advertisements" component={AdvertisementManagement} />
+          <Route path="/admin/messages" component={MessagesSupport} />
+          <Route path="/admin/financial" component={FinancialManagementPage} />
           <Route component={NotFound} />
         </Switch>
 
