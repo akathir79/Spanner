@@ -2690,12 +2690,18 @@ export default function Dashboard() {
 
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 bg-muted">
+          <TabsList className="grid w-full grid-cols-5 bg-muted">
             <TabsTrigger 
               value="bookings" 
               className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
             >
               My Bookings
+            </TabsTrigger>
+            <TabsTrigger 
+              value="search"
+              className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            >
+              Find Workers
             </TabsTrigger>
             <TabsTrigger 
               value="jobs"
@@ -2757,9 +2763,12 @@ export default function Dashboard() {
                     <p className="text-muted-foreground mb-4">
                       Start by searching for workers and booking your first service.
                     </p>
-                    <Button onClick={() => setIsJobFormOpen(true)}>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Post New Job
+                    <Button onClick={() => {
+                      const searchTab = document.querySelector('[data-state="inactive"][value="search"]') as HTMLElement;
+                      if (searchTab) searchTab.click();
+                    }}>
+                      <Search className="h-4 w-4 mr-2" />
+                      Find Workers
                     </Button>
                   </div>
                 ) : (
@@ -2835,6 +2844,369 @@ export default function Dashboard() {
             </div>
           </TabsContent>
 
+          {/* Find Workers Tab */}
+          <TabsContent value="search" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Search className="h-5 w-5" />
+                  <span>Find Workers</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={(e) => e.preventDefault()} className="space-y-4 mb-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-1">
+                        Service Type
+                      </label>
+                      <Popover open={serviceOpen} onOpenChange={setServiceOpen}>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            role="combobox"
+                            aria-expanded={serviceOpen}
+                            className="w-full justify-between"
+                          >
+                            {searchFilters.service
+                              ? (services as any)?.find((service: any) => service.id === searchFilters.service)?.name
+                              : "Select Service"}
+                            <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-full p-0">
+                          <Command>
+                            <CommandInput placeholder="Search services..." />
+                            <CommandList>
+                              <CommandEmpty>No service found.</CommandEmpty>
+                              <CommandGroup>
+                                {(services as any)?.map((service: any) => (
+                                  <CommandItem
+                                    key={service.id}
+                                    value={service.name}
+                                    onSelect={() => {
+                                      setSearchFilters(prev => ({ ...prev, service: service.id }));
+                                      setServiceOpen(false);
+                                    }}
+                                  >
+                                    {service.name}
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
+                            </CommandList>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
+                      {searchFilters.service && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="mt-1 h-6 px-2 text-xs"
+                          onClick={() => setSearchFilters(prev => ({ ...prev, service: "" }))}
+                        >
+                          <X className="h-3 w-3 mr-1" />
+                          Clear
+                        </Button>
+                      )}
+                    </div>
+                    
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="block text-sm font-medium">
+                          District
+                        </label>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 px-2 text-xs"
+                          onClick={handleLocationFinder}
+                          disabled={isLocationLoading}
+                        >
+                          <MapPinIcon className="h-3 w-3 mr-1" />
+                          {isLocationLoading ? "Finding..." : "Use Location"}
+                        </Button>
+                      </div>
+                      <Popover open={districtOpen} onOpenChange={setDistrictOpen}>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            role="combobox"
+                            aria-expanded={districtOpen}
+                            className="w-full justify-between"
+                          >
+                            {searchFilters.district
+                              ? (() => {
+                                  // Find district from statesDistrictsData
+                                  const allDistricts = statesDistrictsData.states ? Object.values(statesDistrictsData.states).flatMap((stateData: any) => 
+                                    stateData.districts.map((district: string) => ({ id: district, name: district }))
+                                  ) : [];
+                                  const selectedDistrict = allDistricts.find((district: any) => district.id === searchFilters.district);
+                                  return selectedDistrict ? selectedDistrict.name : "Select District";
+                                })()
+                              : "Select District"}
+                            <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-full p-0">
+                          <Command>
+                            <CommandInput placeholder="Search districts..." />
+                            <CommandList>
+                              <CommandEmpty>No district found.</CommandEmpty>
+                              <CommandGroup>
+                                {statesDistrictsData.states && Object.keys(statesDistrictsData.states).length > 0 && 
+                                  Object.values(statesDistrictsData.states).flatMap((stateData: any) => 
+                                    stateData.districts.map((district: string) => ({ id: district, name: district }))
+                                  ).map((district: any) => (
+                                    <CommandItem
+                                      key={district.id}
+                                      value={district.name}
+                                    onSelect={() => {
+                                      setSearchFilters(prev => ({ ...prev, district: district.id }));
+                                      setDistrictOpen(false);
+                                    }}
+                                  >
+                                    {district.name}
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
+                            </CommandList>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
+                      {searchFilters.district && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="mt-1 h-6 px-2 text-xs"
+                          onClick={() => setSearchFilters(prev => ({ ...prev, district: "" }))}
+                        >
+                          <X className="h-3 w-3 mr-1" />
+                          Clear
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium mb-1">
+                      Description
+                    </label>
+                    <Input
+                      placeholder="Describe your service requirement..."
+                      value={searchFilters.description}
+                      onChange={(e) => setSearchFilters(prev => ({ ...prev, description: e.target.value }))}
+                    />
+                  </div>
+                  
+                  <div className="flex gap-2">
+                    <Button type="submit" className="flex-1">
+                      <Search className="h-4 w-4 mr-2" />
+                      Search Workers
+                    </Button>
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      onClick={resetSearchForm}
+                      className="px-4"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </form>
+
+                {workersLoading ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {[...Array(6)].map((_, i) => (
+                      <div key={i} className="animate-pulse">
+                        <div className="h-64 bg-muted rounded-lg"></div>
+                      </div>
+                    ))}
+                  </div>
+                ) : !workers || workers.length === 0 ? (
+                  <div className="text-center py-12">
+                    <Search className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold mb-2">No workers found</h3>
+                    <p className="text-muted-foreground">
+                      Try adjusting your search filters to find workers in your area.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {workers.map((worker: any) => (
+                      <Card key={worker.id} className="hover:shadow-lg transition-all duration-300">
+                        <CardContent className="p-4">
+                          <div className="flex justify-between items-start mb-3">
+                            <div>
+                              <h4 className="font-semibold text-lg">
+                                {worker.firstName} {worker.lastName}
+                              </h4>
+                              <p className="text-sm text-muted-foreground capitalize">
+                                {worker.workerProfile.primaryService.replace('_', ' ')}
+                              </p>
+                            </div>
+                            {worker.workerProfile.isAvailable && (
+                              <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100">
+                                Available
+                              </Badge>
+                            )}
+                          </div>
+                          
+                          <div className="space-y-2 text-sm mb-4">
+                            <div className="flex items-center space-x-2">
+                              <MapPin className="h-3 w-3 text-muted-foreground" />
+                              <span>{worker.district?.name || 'Multiple districts'}</span>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <Star className="h-3 w-3 text-yellow-500" />
+                              <span>
+                                {worker.workerProfile.rating || '0.0'} ({worker.workerProfile.totalJobs || 0} jobs)
+                              </span>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <Clock className="h-3 w-3 text-muted-foreground" />
+                              <span>{worker.workerProfile.experienceYears} years experience</span>
+                            </div>
+                          </div>
+                          
+                          <div className="flex justify-between items-center">
+                            <span className="font-semibold text-green-600">
+                              ₹{worker.workerProfile.hourlyRate}/hour
+                            </span>
+                            <Button
+                              size="sm"
+                              onClick={() => handleContactWorker(worker)}
+                              disabled={!worker.workerProfile.isAvailable}
+                            >
+                              <Phone className="h-4 w-4 mr-2" />
+                              Book Now
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Profile Tab - Client Specific */}
+          <TabsContent value="profile" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Client Profile Card - Basic Information */}
+              <ClientProfileCard user={user} refreshUser={refreshUser} />
+
+              {/* Client Preferences & Settings */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <Settings className="h-5 w-5" />
+                    <span>Preferences & Settings</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-6">
+                    {/* Communication Preferences */}
+                    <div className="space-y-4">
+                      <h4 className="font-semibold flex items-center gap-2">
+                        <Bell className="h-4 w-4" />
+                        Communication Preferences
+                      </h4>
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <Label className="text-sm">Booking Notifications</Label>
+                            <p className="text-xs text-muted-foreground">Get notified about booking updates</p>
+                          </div>
+                          <Switch defaultChecked />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <Label className="text-sm">Worker Responses</Label>
+                            <p className="text-xs text-muted-foreground">Notifications when workers respond</p>
+                          </div>
+                          <Switch defaultChecked />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <Label className="text-sm">Promotional Updates</Label>
+                            <p className="text-xs text-muted-foreground">Receive offers and updates</p>
+                          </div>
+                          <Switch />
+                        </div>
+                      </div>
+                    </div>
+
+                    <Separator />
+
+                    {/* Service Preferences */}
+                    <div className="space-y-4">
+                      <h4 className="font-semibold flex items-center gap-2">
+                        <Briefcase className="h-4 w-4" />
+                        Service Preferences
+                      </h4>
+                      <div className="space-y-3">
+                        <div>
+                          <Label className="text-sm text-muted-foreground">Preferred Service Types</Label>
+                          <div className="flex flex-wrap gap-2 mt-2">
+                            <Badge variant="secondary">Plumbing</Badge>
+                            <Badge variant="secondary">Electrical</Badge>
+                            <Badge variant="secondary">Painting</Badge>
+                          </div>
+                        </div>
+                        <div>
+                          <Label className="text-sm text-muted-foreground">Preferred Time Slots</Label>
+                          <p className="text-sm p-2 bg-muted rounded border mt-1">Morning (9 AM - 12 PM)</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <Separator />
+
+                    {/* Account Information */}
+                    <div className="space-y-4">
+                      <h4 className="font-semibold flex items-center gap-2">
+                        <UserCheck className="h-4 w-4" />
+                        Account Information
+                      </h4>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label className="text-sm text-muted-foreground">Account Status</Label>
+                          <Badge className="bg-green-100 text-green-800 mt-1">Active</Badge>
+                        </div>
+                        <div>
+                          <Label className="text-sm text-muted-foreground">Member Since</Label>
+                          <p className="text-sm mt-1">{user.createdAt ? new Date(user.createdAt).toLocaleDateString() : "N/A"}</p>
+                        </div>
+                        <div>
+                          <Label className="text-sm text-muted-foreground">Total Bookings</Label>
+                          <p className="text-sm font-semibold mt-1">{bookings?.length || 0}</p>
+                        </div>
+                        <div>
+                          <Label className="text-sm text-muted-foreground">Last Login</Label>
+                          <p className="text-sm mt-1">{user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleDateString() : "Today"}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Bank Details Section - Optional for Clients */}
+              <BankDetailsCard
+                user={user}
+                onUpdate={() => {
+                  queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+                  queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+                  refreshUser();
+                }}
+              />
+
+              {/* User Activity Card */}
+              <UserActivityCard user={user} />
+            </div>
+          </TabsContent>
 
           {/* My Jobs Tab */}
           <TabsContent value="jobs" className="space-y-6">
@@ -3413,66 +3785,6 @@ export default function Dashboard() {
           {/* Profile Tab */}
           <TabsContent value="profile" className="space-y-6">
             <div className="grid gap-6 lg:grid-cols-2">
-              {/* Personal Details Card */}
-              <Card className="col-span-1">
-                <CardHeader>
-                  <CardTitle className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <User className="h-5 w-5" />
-                      <span>Personal Details</span>
-                    </div>
-{/* Removed customization controls */}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex items-center space-x-4">
-                      <Avatar className="h-16 w-16">
-                        <AvatarImage src={user?.profilePicture || ''} />
-                        <AvatarFallback className="text-lg">
-                          {user?.firstName?.[0]}{user?.lastName?.[0]}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-lg">
-                          {user?.firstName} {user?.lastName}
-                        </h3>
-                        <p className="text-muted-foreground">
-                          {user?.email || user?.mobile || 'No contact info'}
-                        </p>
-                        <div className="flex items-center space-x-2 mt-2">
-                          <Badge variant="outline" className="text-xs">
-                            {user?.role?.toUpperCase()}
-                          </Badge>
-                          <Badge variant={user?.isVerified ? "default" : "secondary"} className="text-xs">
-                            {user?.isVerified ? "Verified" : "Unverified"}
-                          </Badge>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-4 pt-4 border-t">
-                      <div>
-                        <Label className="text-sm text-muted-foreground">District</Label>
-                        <p className="text-sm font-semibold mt-1">{user?.district || 'Not set'}</p>
-                      </div>
-                      <div>
-                        <Label className="text-sm text-muted-foreground">Member Since</Label>
-                        <p className="text-sm mt-1">{user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : "N/A"}</p>
-                      </div>
-                      <div>
-                        <Label className="text-sm text-muted-foreground">Total Bookings</Label>
-                        <p className="text-sm font-semibold mt-1">{bookings?.length || 0}</p>
-                      </div>
-                      <div>
-                        <Label className="text-sm text-muted-foreground">Last Login</Label>
-                        <p className="text-sm mt-1">{user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleDateString() : "Today"}</p>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
               {/* Quick Actions Widget */}
               <Card className="col-span-1">
                   <CardHeader>
@@ -3485,7 +3797,7 @@ export default function Dashboard() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="grid grid-cols-1 gap-3">
+                    <div className="grid grid-cols-2 gap-3">
                       <Button 
                         variant="outline" 
                         className="h-20 flex flex-col items-center gap-2"
@@ -3493,6 +3805,17 @@ export default function Dashboard() {
                       >
                         <Plus className="h-6 w-6" />
                         <span className="text-sm">Post Job</span>
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        className="h-20 flex flex-col items-center gap-2"
+                        onClick={() => {
+                          const searchTab = document.querySelector('[value="search"]') as HTMLElement;
+                          if (searchTab) searchTab.click();
+                        }}
+                      >
+                        <Search className="h-6 w-6" />
+                        <span className="text-sm">Find Workers</span>
                       </Button>
                     </div>
                   </CardContent>
@@ -3534,19 +3857,6 @@ export default function Dashboard() {
                   </CardContent>
                 </Card>
               )}
-
-              {/* Bank Details Section - Optional for Clients */}
-              <BankDetailsCard
-                user={user}
-                onUpdate={() => {
-                  queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-                  queryClient.invalidateQueries({ queryKey: ["/api/user"] });
-                  refreshUser();
-                }}
-              />
-
-              {/* User Activity Card */}
-              <UserActivityCard user={user} />
             </div>
           </TabsContent>
 
