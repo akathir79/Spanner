@@ -53,6 +53,7 @@ import {
   advertisements,
   type Advertisement,
   type InsertAdvertisement,
+  workerReviews,
   settings,
   type Settings,
   type InsertSettings,
@@ -599,6 +600,95 @@ export class DatabaseStorage implements IStorage {
       .where(eq(bookings.id, id))
       .returning();
     return booking || undefined;
+  }
+
+  // Job completion workflow methods
+  async updateBookingCompletion(id: string, completionData: {
+    status: string;
+    completionOTP: string;
+    otpGeneratedAt: Date;
+    workerCompletedAt: Date;
+  }): Promise<Booking | undefined> {
+    const [booking] = await db
+      .update(bookings)
+      .set({
+        status: completionData.status,
+        completionOTP: completionData.completionOTP,
+        otpGeneratedAt: completionData.otpGeneratedAt,
+        workerCompletedAt: completionData.workerCompletedAt,
+        updatedAt: new Date()
+      })
+      .where(eq(bookings.id, id))
+      .returning();
+    return booking || undefined;
+  }
+
+  async verifyCompletionOTP(id: string, otp: string): Promise<Booking | undefined> {
+    // First check if OTP matches
+    const [existingBooking] = await db
+      .select()
+      .from(bookings)
+      .where(eq(bookings.id, id));
+
+    if (!existingBooking || existingBooking.completionOTP !== otp) {
+      return undefined;
+    }
+
+    // Update with verification timestamp
+    const [booking] = await db
+      .update(bookings)
+      .set({
+        otpVerifiedAt: new Date(),
+        clientConfirmedAt: new Date(),
+        updatedAt: new Date()
+      })
+      .where(eq(bookings.id, id))
+      .returning();
+    return booking || undefined;
+  }
+
+  async createWorkerReview(reviewData: {
+    bookingId: string;
+    workerId: string;
+    clientId: string;
+    overallRating: number;
+    workQualityRating: number;
+    timelinessRating: number;
+    communicationRating: number;
+    professionalismRating: number;
+    reviewText?: string;
+  }): Promise<any> {
+    // Create review in worker_reviews table matching the actual database schema
+    const [review] = await db
+      .insert(workerReviews)
+      .values({
+        bookingId: reviewData.bookingId,
+        workerId: reviewData.workerId,
+        clientId: reviewData.clientId,
+        rating: reviewData.overallRating, // This maps to the required 'rating' column
+        review: reviewData.reviewText || null,
+        workQualityRating: reviewData.workQualityRating,
+        timelinessRating: reviewData.timelinessRating,
+        communicationRating: reviewData.communicationRating,
+        professionalismRating: reviewData.professionalismRating,
+        wouldRecommend: true, // Default to true for positive reviews
+        isPublic: true,
+        isVerified: true,
+        helpfulVotes: 0,
+      })
+      .returning();
+
+    // Update booking with client rating and review
+    await db
+      .update(bookings)
+      .set({
+        clientRating: reviewData.overallRating,
+        clientReview: reviewData.reviewText || null,
+        updatedAt: new Date()
+      })
+      .where(eq(bookings.id, reviewData.bookingId));
+
+    return review;
   }
 
 

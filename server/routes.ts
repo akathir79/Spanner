@@ -1118,6 +1118,104 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Worker marks job as complete (generates OTP for client)
+  app.post("/api/bookings/:id/worker-complete", async (req, res) => {
+    try {
+      const { id } = req.params;
+      console.log("Worker marking job complete:", id);
+      
+      // Generate OTP (in production, this would be sent via SMS)
+      const completionOTP = Math.floor(100000 + Math.random() * 900000).toString();
+      const otpGeneratedAt = new Date();
+      const workerCompletedAt = new Date();
+      
+      // Update booking with completion details
+      const booking = await storage.updateBookingCompletion(id, {
+        status: 'completed',
+        completionOTP,
+        otpGeneratedAt,
+        workerCompletedAt
+      });
+      
+      if (!booking) {
+        return res.status(404).json({ message: "Booking not found" });
+      }
+      
+      console.log(`Job marked complete. OTP ${completionOTP} generated for booking ${id}`);
+      
+      res.json({
+        success: true,
+        message: "Job marked as complete. OTP sent to client.",
+        booking,
+        otp: completionOTP // In development, return OTP for testing
+      });
+    } catch (error) {
+      console.error("Worker complete error:", error);
+      res.status(500).json({ message: "Internal server error", error: error.message });
+    }
+  });
+
+  // Client verifies completion OTP
+  app.post("/api/bookings/:id/verify-completion", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { otp } = req.body;
+      
+      console.log("Client verifying completion OTP:", id, "OTP:", otp);
+      
+      if (!otp) {
+        return res.status(400).json({ message: "OTP is required" });
+      }
+      
+      const booking = await storage.verifyCompletionOTP(id, otp);
+      
+      if (!booking) {
+        return res.status(400).json({ message: "Invalid OTP or booking not found" });
+      }
+      
+      console.log(`Completion OTP verified for booking ${id}`);
+      
+      res.json({
+        success: true,
+        message: "Job completion verified successfully",
+        booking
+      });
+    } catch (error) {
+      console.error("Verify completion error:", error);
+      res.status(500).json({ message: "Internal server error", error: error.message });
+    }
+  });
+
+  // Submit review for completed job
+  app.post("/api/bookings/:id/review", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const reviewData = req.body;
+      
+      console.log("Submitting review for booking:", id, reviewData);
+      
+      const review = await storage.createWorkerReview({
+        bookingId: id,
+        ...reviewData
+      });
+      
+      if (!review) {
+        return res.status(400).json({ message: "Could not create review" });
+      }
+      
+      console.log(`Review submitted for booking ${id}`);
+      
+      res.json({
+        success: true,
+        message: "Review submitted successfully",
+        review
+      });
+    } catch (error) {
+      console.error("Submit review error:", error);
+      res.status(500).json({ message: "Internal server error", error: error.message });
+    }
+  });
+
   // Admin routes
   app.get("/api/admin/users", async (req, res) => {
     try {
