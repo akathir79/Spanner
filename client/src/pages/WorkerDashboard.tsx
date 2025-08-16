@@ -52,7 +52,8 @@ import {
   Paperclip,
   Volume2,
   Camera,
-  Video
+  Video,
+  AlertTriangle
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
