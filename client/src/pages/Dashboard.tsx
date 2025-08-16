@@ -2690,18 +2690,12 @@ export default function Dashboard() {
 
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5 bg-muted">
+          <TabsList className="grid w-full grid-cols-4 bg-muted">
             <TabsTrigger 
               value="bookings" 
               className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
             >
               My Bookings
-            </TabsTrigger>
-            <TabsTrigger 
-              value="search"
-              className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-            >
-              Find Workers
             </TabsTrigger>
             <TabsTrigger 
               value="jobs"
@@ -2780,7 +2774,7 @@ export default function Dashboard() {
                             <div>
                               <h4 className="font-semibold">
                                 {booking.description?.includes('Booking created from accepted bid for:') 
-                                  ? booking.description.replace('Booking created from accepted bid for: ', '')
+                                  ? booking.description.replace('Booking created from accepted bid for: ', '').trim()
                                   : `${booking.serviceCategory.replace('_', ' ')} Service`}
                               </h4>
                               <p className="text-sm text-muted-foreground">
@@ -2844,252 +2838,7 @@ export default function Dashboard() {
             </div>
           </TabsContent>
 
-          {/* Find Workers Tab */}
-          <TabsContent value="search" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Search className="h-5 w-5" />
-                  <span>Find Workers</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={(e) => e.preventDefault()} className="space-y-4 mb-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium mb-1">
-                        Service Type
-                      </label>
-                      <Popover open={serviceOpen} onOpenChange={setServiceOpen}>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant="outline"
-                            role="combobox"
-                            aria-expanded={serviceOpen}
-                            className="w-full justify-between"
-                          >
-                            {searchFilters.service
-                              ? (services as any)?.find((service: any) => service.id === searchFilters.service)?.name
-                              : "Select Service"}
-                            <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-full p-0">
-                          <Command>
-                            <CommandInput placeholder="Search services..." />
-                            <CommandList>
-                              <CommandEmpty>No service found.</CommandEmpty>
-                              <CommandGroup>
-                                {(services as any)?.map((service: any) => (
-                                  <CommandItem
-                                    key={service.id}
-                                    value={service.name}
-                                    onSelect={() => {
-                                      setSearchFilters(prev => ({ ...prev, service: service.id }));
-                                      setServiceOpen(false);
-                                    }}
-                                  >
-                                    {service.name}
-                                  </CommandItem>
-                                ))}
-                              </CommandGroup>
-                            </CommandList>
-                          </Command>
-                        </PopoverContent>
-                      </Popover>
-                      {searchFilters.service && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="mt-1 h-6 px-2 text-xs"
-                          onClick={() => setSearchFilters(prev => ({ ...prev, service: "" }))}
-                        >
-                          <X className="h-3 w-3 mr-1" />
-                          Clear
-                        </Button>
-                      )}
-                    </div>
-                    
-                    <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <label className="block text-sm font-medium">
-                          District
-                        </label>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          className="h-6 px-2 text-xs"
-                          onClick={handleLocationFinder}
-                          disabled={isLocationLoading}
-                        >
-                          <MapPinIcon className="h-3 w-3 mr-1" />
-                          {isLocationLoading ? "Finding..." : "Use Location"}
-                        </Button>
-                      </div>
-                      <Popover open={districtOpen} onOpenChange={setDistrictOpen}>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant="outline"
-                            role="combobox"
-                            aria-expanded={districtOpen}
-                            className="w-full justify-between"
-                          >
-                            {searchFilters.district
-                              ? (() => {
-                                  // Find district from statesDistrictsData
-                                  const allDistricts = statesDistrictsData.states ? Object.values(statesDistrictsData.states).flatMap((stateData: any) => 
-                                    stateData.districts.map((district: string) => ({ id: district, name: district }))
-                                  ) : [];
-                                  const selectedDistrict = allDistricts.find((district: any) => district.id === searchFilters.district);
-                                  return selectedDistrict ? selectedDistrict.name : "Select District";
-                                })()
-                              : "Select District"}
-                            <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-full p-0">
-                          <Command>
-                            <CommandInput placeholder="Search districts..." />
-                            <CommandList>
-                              <CommandEmpty>No district found.</CommandEmpty>
-                              <CommandGroup>
-                                {statesDistrictsData.states && Object.keys(statesDistrictsData.states).length > 0 && 
-                                  Object.values(statesDistrictsData.states).flatMap((stateData: any) => 
-                                    stateData.districts.map((district: string) => ({ id: district, name: district }))
-                                  ).map((district: any) => (
-                                    <CommandItem
-                                      key={district.id}
-                                      value={district.name}
-                                    onSelect={() => {
-                                      setSearchFilters(prev => ({ ...prev, district: district.id }));
-                                      setDistrictOpen(false);
-                                    }}
-                                  >
-                                    {district.name}
-                                  </CommandItem>
-                                ))}
-                              </CommandGroup>
-                            </CommandList>
-                          </Command>
-                        </PopoverContent>
-                      </Popover>
-                      {searchFilters.district && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="mt-1 h-6 px-2 text-xs"
-                          onClick={() => setSearchFilters(prev => ({ ...prev, district: "" }))}
-                        >
-                          <X className="h-3 w-3 mr-1" />
-                          Clear
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium mb-1">
-                      Description
-                    </label>
-                    <Input
-                      placeholder="Describe your service requirement..."
-                      value={searchFilters.description}
-                      onChange={(e) => setSearchFilters(prev => ({ ...prev, description: e.target.value }))}
-                    />
-                  </div>
-                  
-                  <div className="flex gap-2">
-                    <Button type="submit" className="flex-1">
-                      <Search className="h-4 w-4 mr-2" />
-                      Search Workers
-                    </Button>
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      onClick={resetSearchForm}
-                      className="px-4"
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </form>
 
-                {workersLoading ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {[...Array(6)].map((_, i) => (
-                      <div key={i} className="animate-pulse">
-                        <div className="h-64 bg-muted rounded-lg"></div>
-                      </div>
-                    ))}
-                  </div>
-                ) : !workers || workers.length === 0 ? (
-                  <div className="text-center py-12">
-                    <Search className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold mb-2">No workers found</h3>
-                    <p className="text-muted-foreground">
-                      Try adjusting your search filters to find workers in your area.
-                    </p>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {workers.map((worker: any) => (
-                      <Card key={worker.id} className="hover:shadow-lg transition-all duration-300">
-                        <CardContent className="p-4">
-                          <div className="flex justify-between items-start mb-3">
-                            <div>
-                              <h4 className="font-semibold text-lg">
-                                {worker.firstName} {worker.lastName}
-                              </h4>
-                              <p className="text-sm text-muted-foreground capitalize">
-                                {worker.workerProfile.primaryService.replace('_', ' ')}
-                              </p>
-                            </div>
-                            {worker.workerProfile.isAvailable && (
-                              <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100">
-                                Available
-                              </Badge>
-                            )}
-                          </div>
-                          
-                          <div className="space-y-2 text-sm mb-4">
-                            <div className="flex items-center space-x-2">
-                              <MapPin className="h-3 w-3 text-muted-foreground" />
-                              <span>{worker.district?.name || 'Multiple districts'}</span>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <Star className="h-3 w-3 text-yellow-500" />
-                              <span>
-                                {worker.workerProfile.rating || '0.0'} ({worker.workerProfile.totalJobs || 0} jobs)
-                              </span>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <Clock className="h-3 w-3 text-muted-foreground" />
-                              <span>{worker.workerProfile.experienceYears} years experience</span>
-                            </div>
-                          </div>
-                          
-                          <div className="flex justify-between items-center">
-                            <span className="font-semibold text-green-600">
-                              ₹{worker.workerProfile.hourlyRate}/hour
-                            </span>
-                            <Button
-                              size="sm"
-                              onClick={() => handleContactWorker(worker)}
-                              disabled={!worker.workerProfile.isAvailable}
-                            >
-                              <Phone className="h-4 w-4 mr-2" />
-                              Book Now
-                            </Button>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
 
           {/* Profile Tab - Client Specific */}
           <TabsContent value="profile" className="space-y-6">
