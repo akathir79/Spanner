@@ -891,25 +891,6 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getValidOtp(mobile: string, otp: string, purpose: string): Promise<OtpVerification | undefined> {
-    // For development environment, allow "123456" as a valid OTP
-    if (process.env.NODE_ENV === 'development' && otp === '123456') {
-      const [otpRecord] = await db
-        .select()
-        .from(otpVerifications)
-        .where(
-          and(
-            eq(otpVerifications.mobile, mobile),
-            eq(otpVerifications.purpose, purpose),
-            eq(otpVerifications.isUsed, false),
-            sql`${otpVerifications.expiresAt} > NOW()`
-          )
-        )
-        .orderBy(sql`${otpVerifications.createdAt} DESC`)
-        .limit(1);
-      return otpRecord || undefined;
-    }
-
-    // Normal OTP validation
     const [otpRecord] = await db
       .select()
       .from(otpVerifications)
