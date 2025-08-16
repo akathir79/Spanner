@@ -2387,7 +2387,11 @@ export default function Dashboard() {
       setIsEditModalOpen(false);
       setEditingJob(null);
       setEditingJobData({});
-      queryClient.invalidateQueries({ queryKey: ["/api/job-postings/client", user?.id] });
+      
+      // Invalidate multiple related queries to force refresh
+      await queryClient.invalidateQueries({ queryKey: ["/api/job-postings/client", user?.id] });
+      await queryClient.invalidateQueries({ queryKey: ["/api/job-postings"] });
+      await queryClient.refetchQueries({ queryKey: ["/api/job-postings/client", user?.id] });
       toast({
         title: "Job Updated",
         description: "Your job posting has been updated successfully.",
