@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useAuth } from '@/hooks/useAuth';
 import { 
   MessageCircle, 
   Send, 
@@ -67,7 +68,13 @@ interface ChatSystemProps {
   userName: string;
 }
 
-export const ChatSystem: React.FC<ChatSystemProps> = ({ userId, userRole, userName }) => {
+export const ChatSystem: React.FC<Partial<ChatSystemProps>> = ({ userId, userRole, userName }) => {
+  const { user } = useAuth();
+  
+  // Use provided props or fallback to user context
+  const effectiveUserId = userId || user?.id || '';
+  const effectiveUserRole = userRole || user?.role || 'client';
+  const effectiveUserName = userName || user?.username || '';
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
   const [newMessage, setNewMessage] = useState('');
   const [isNewChatOpen, setIsNewChatOpen] = useState(false);
@@ -79,20 +86,23 @@ export const ChatSystem: React.FC<ChatSystemProps> = ({ userId, userRole, userNa
 
   // Fetch conversations based on user role
   const { data: conversations = [] } = useQuery<ChatConversation[]>({
-    queryKey: ['/api/chat/conversations', userRole, userId],
+    queryKey: ['/api/chat/conversations', effectiveUserRole, effectiveUserId],
     queryFn: async () => {
-      const endpoint = userRole === 'client' 
-        ? `/api/chat/conversations/client/${userId}`
-        : userRole === 'worker'
-        ? `/api/chat/conversations/client/${userId}` // Workers can chat with admins like clients
-        : userRole === 'admin' || userRole === 'super_admin'
-        ? `/api/chat/conversations/admin/${userId}`
+      const endpoint = effectiveUserRole === 'client' 
+        ? `/api/chat/conversations/client/${effectiveUserId}`
+        : effectiveUserRole === 'worker'
+        ? `/api/chat/conversations/client/${effectiveUserId}` // Workers can chat with admins like clients
+        : effectiveUserRole === 'admin' || effectiveUserRole === 'super_admin'
+        ? `/api/chat/conversations/admin/${effectiveUserId}`
         : `/api/chat/conversations`;
       
       const response = await fetch(endpoint);
-      return response.json();
+      const data = await response.json();
+      // Ensure we return an array even if API returns an object or null
+      return Array.isArray(data) ? data : [];
     },
     refetchInterval: 10000, // Refresh every 10 seconds
+    enabled: !!effectiveUserId,
   });
 
   // Fetch messages for selected conversation
@@ -109,16 +119,17 @@ export const ChatSystem: React.FC<ChatSystemProps> = ({ userId, userRole, userNa
 
   // Fetch unread message count
   const { data: unreadCount } = useQuery<{ count: number }>({
-    queryKey: ['/api/chat/unread', userId],
+    queryKey: ['/api/chat/unread', effectiveUserId],
     refetchInterval: 10000,
+    enabled: !!effectiveUserId,
   });
 
   // Create new conversation mutation
   const createConversationMutation = useMutation({
     mutationFn: async (data: { subject: string; priority: string }) => {
       return await apiRequest('POST', '/api/chat/conversations', {
-        clientId: userRole === 'client' || userRole === 'worker' ? userId : '',
-        adminId: userRole === 'admin' || userRole === 'super_admin' ? userId : undefined,
+        clientId: effectiveUserRole === 'client' || effectiveUserRole === 'worker' ? effectiveUserId : '',
+        adminId: effectiveUserRole === 'admin' || effectiveUserRole === 'super_admin' ? effectiveUserId : undefined,
         subject: data.subject,
         priority: data.priority,
         status: 'active',
@@ -149,7 +160,7 @@ export const ChatSystem: React.FC<ChatSystemProps> = ({ userId, userRole, userNa
     mutationFn: async (messageData: { conversationId: string; message: string; recipientId: string }) => {
       return await apiRequest('POST', '/api/chat/messages', {
         conversationId: messageData.conversationId,
-        senderId: userId,
+        senderId: effectiveUserId,
         recipientId: messageData.recipientId,
         message: messageData.message,
         messageType: 'text',
@@ -172,10 +183,10 @@ export const ChatSystem: React.FC<ChatSystemProps> = ({ userId, userRole, userNa
   // Mark messages as read mutation
   const markAsReadMutation = useMutation({
     mutationFn: async (conversationId: string) => {
-      return await apiRequest('PUT', `/api/chat/messages/read/${conversationId}/${userId}`);
+      return await apiRequest('PUT', `/api/chat/messages/read/${conversationId}/${effectiveUserId}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/chat/unread', userId] });
+      queryClient.invalidateQueries({ queryKey: ['/api/chat/unread', effectiveUserId] });
       queryClient.invalidateQueries({ queryKey: ['/api/chat/messages', selectedConversation] });
     },
   });
@@ -188,12 +199,12 @@ export const ChatSystem: React.FC<ChatSystemProps> = ({ userId, userRole, userNa
   // Mark messages as read when conversation is selected
   useEffect(() => {
     if (selectedConversation && messages.length > 0) {
-      const unreadMessages = messages.filter(msg => !msg.isRead && msg.recipientId === userId);
+      const unreadMessages = messages.filter(msg => !msg.isRead && msg.recipientId === effectiveUserId);
       if (unreadMessages.length > 0) {
         markAsReadMutation.mutate(selectedConversation);
       }
     }
-  }, [selectedConversation, messages, userId]);
+  }, [selectedConversation, messages, effectiveUserId]);
 
   const handleSendMessage = () => {
     if (!newMessage.trim() || !selectedConversation) return;
@@ -201,7 +212,7 @@ export const ChatSystem: React.FC<ChatSystemProps> = ({ userId, userRole, userNa
     const currentConversation = conversations.find(c => c.id === selectedConversation);
     if (!currentConversation) return;
 
-    const recipientId = userRole === 'client' || userRole === 'worker'
+    const recipientId = effectiveUserRole === 'client' || effectiveUserRole === 'worker'
       ? currentConversation.adminId || '' 
       : currentConversation.clientId;
 
