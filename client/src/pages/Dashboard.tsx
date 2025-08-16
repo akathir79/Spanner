@@ -2734,7 +2734,7 @@ export default function Dashboard() {
 
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 bg-muted">
+          <TabsList className="grid w-full grid-cols-5 bg-muted">
             <TabsTrigger 
               value="bookings" 
               className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground relative"
@@ -2769,6 +2769,21 @@ export default function Dashboard() {
                 const totalBids = Object.values(bidCounts).reduce((total: number, count: number) => total + count, 0);
                 return totalBids > 0 ? (
                   <Badge variant="secondary" className="ml-2 bg-orange-500 text-white text-xs px-1 py-0 h-5 min-w-[20px] rounded-full flex items-center justify-center">
+                    {totalBids}
+                  </Badge>
+                ) : null;
+              })()}
+            </TabsTrigger>
+            <TabsTrigger 
+              value="bids-overview"
+              className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground relative"
+            >
+              Bids Overview
+              {/* Show total bids count across all jobs */}
+              {Object.keys(bidCounts).length > 0 && (() => {
+                const totalBids = Object.values(bidCounts).reduce((total: number, count: number) => total + count, 0);
+                return totalBids > 0 ? (
+                  <Badge variant="secondary" className="ml-2 bg-purple-500 text-white text-xs px-1 py-0 h-5 min-w-[20px] rounded-full flex items-center justify-center">
                     {totalBids}
                   </Badge>
                 ) : null;
@@ -3890,6 +3905,222 @@ export default function Dashboard() {
                 </Card>
               )}
             </div>
+          </TabsContent>
+
+          {/* Bids Overview Tab - Comprehensive view of all bids */}
+          <TabsContent value="bids-overview" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <BarChart className="h-5 w-5" />
+                    <span>Bids Overview Dashboard</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <span>{Object.values(bidCounts).reduce((total: number, count: number) => total + count, 0)} Total Bids</span>
+                    <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
+                      {jobPostings?.length || 0} Active Jobs
+                    </Badge>
+                  </div>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {!jobPostings || jobPostings.length === 0 ? (
+                  <div className="text-center py-12">
+                    <div className="bg-gradient-to-br from-purple-50 to-indigo-100 rounded-full w-20 h-20 mx-auto flex items-center justify-center mb-6">
+                      <BarChart className="h-10 w-10 text-purple-600" />
+                    </div>
+                    <h3 className="text-xl font-semibold mb-3 text-gray-900">No job postings yet</h3>
+                    <p className="text-gray-600 max-w-md mx-auto">
+                      Create job postings to start receiving bids from skilled workers.
+                    </p>
+                    <Button onClick={() => setActiveTab("jobs")} className="mt-4">
+                      Post Your First Job
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    {/* Summary Stats */}
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                      <Card className="p-4">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 bg-blue-100 text-blue-600 rounded-lg">
+                            <Users className="h-5 w-5" />
+                          </div>
+                          <div>
+                            <p className="text-sm text-muted-foreground">Total Bids</p>
+                            <p className="text-2xl font-bold">{Object.values(bidCounts).reduce((total: number, count: number) => total + count, 0)}</p>
+                          </div>
+                        </div>
+                      </Card>
+                      <Card className="p-4">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 bg-green-100 text-green-600 rounded-lg">
+                            <CheckCircle className="h-5 w-5" />
+                          </div>
+                          <div>
+                            <p className="text-sm text-muted-foreground">Active Jobs</p>
+                            <p className="text-2xl font-bold">{jobPostings?.filter((job: any) => job.status === 'open').length || 0}</p>
+                          </div>
+                        </div>
+                      </Card>
+                      <Card className="p-4">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 bg-orange-100 text-orange-600 rounded-lg">
+                            <Clock className="h-5 w-5" />
+                          </div>
+                          <div>
+                            <p className="text-sm text-muted-foreground">Pending Bids</p>
+                            <p className="text-2xl font-bold">{Object.keys(bidCounts).filter(jobId => (bidCounts as any)[jobId] > 0).length}</p>
+                          </div>
+                        </div>
+                      </Card>
+                      <Card className="p-4">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 bg-purple-100 text-purple-600 rounded-lg">
+                            <TrendingUp className="h-5 w-5" />
+                          </div>
+                          <div>
+                            <p className="text-sm text-muted-foreground">Avg Bids/Job</p>
+                            <p className="text-2xl font-bold">
+                              {jobPostings?.length > 0 
+                                ? Math.round(Object.values(bidCounts).reduce((total: number, count: number) => total + count, 0) / jobPostings.length * 10) / 10
+                                : 0
+                              }
+                            </p>
+                          </div>
+                        </div>
+                      </Card>
+                    </div>
+
+                    {/* Jobs with Bids List */}
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-lg font-semibold">Jobs & Bid Activity</h3>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            jobPostings?.forEach((job: any) => {
+                              queryClient.invalidateQueries({ queryKey: ["/api/bids/job", job.id] });
+                            });
+                          }}
+                        >
+                          <RotateCcw className="h-4 w-4 mr-2" />
+                          Refresh All
+                        </Button>
+                      </div>
+                      
+                      <div className="grid gap-4">
+                        {jobPostings?.map((job: any) => {
+                          const bidCount = (bidCounts as any)[job.id] || 0;
+                          return (
+                            <Card 
+                              key={job.id}
+                              className="hover:shadow-lg transition-all duration-200 border-l-4 border-l-purple-500"
+                            >
+                              <CardContent className="p-6">
+                                <div className="flex items-start justify-between mb-4">
+                                  <div className="flex-1">
+                                    <div className="flex items-center gap-3 mb-2">
+                                      <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                                        <Briefcase className="h-5 w-5 text-purple-600" />
+                                      </div>
+                                      <div>
+                                        <h4 className="font-semibold text-lg">{job.title}</h4>
+                                        <p className="text-sm text-muted-foreground">
+                                          {job.serviceCategory} • {job.district}
+                                        </p>
+                                      </div>
+                                    </div>
+                                    <div className="flex items-center gap-4 text-sm">
+                                      <span className="flex items-center gap-1">
+                                        <Calendar className="h-4 w-4" />
+                                        Posted {new Date(job.createdAt).toLocaleDateString()}
+                                      </span>
+                                      <span className="flex items-center gap-1">
+                                        <IndianRupee className="h-4 w-4" />
+                                        {job.budgetMin && job.budgetMax && Number(job.budgetMin) > 0 && Number(job.budgetMax) > 0 
+                                          ? `₹${job.budgetMin} - ₹${job.budgetMax}` 
+                                          : 'Negotiable'
+                                        }
+                                      </span>
+                                      <Badge 
+                                        className={
+                                          job.status === "open" ? "bg-green-100 text-green-800 border-green-300" : 
+                                          "bg-gray-100 text-gray-800 border-gray-300"
+                                        }
+                                      >
+                                        {job.status === "open" ? "Active" : job.status}
+                                      </Badge>
+                                    </div>
+                                  </div>
+                                  
+                                  <div className="flex items-center gap-3">
+                                    <div className="text-center">
+                                      <div className="text-2xl font-bold text-purple-600">{bidCount}</div>
+                                      <div className="text-xs text-muted-foreground">bids</div>
+                                    </div>
+                                    <div className="flex flex-col gap-2">
+                                      <Button
+                                        size="sm"
+                                        onClick={() => {
+                                          setSelectedJobPosting(job);
+                                          setActiveTab("bids");
+                                        }}
+                                        disabled={bidCount === 0}
+                                        className="h-8 px-3 text-xs"
+                                      >
+                                        <Eye className="h-3 w-3 mr-1" />
+                                        View {bidCount > 0 ? `${bidCount} Bids` : 'Details'}
+                                      </Button>
+                                      {job.status === "open" && bidCount === 0 && (
+                                        <Button
+                                          size="sm"
+                                          variant="outline"
+                                          onClick={() => {
+                                            handleEditJob(job);
+                                          }}
+                                          className="h-8 px-3 text-xs"
+                                        >
+                                          <Edit3 className="h-3 w-3 mr-1" />
+                                          Edit Job
+                                        </Button>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                                
+                                {bidCount > 0 && (
+                                  <div className="mt-4 p-3 bg-purple-50 rounded-lg">
+                                    <div className="flex items-center justify-between text-sm">
+                                      <span className="text-purple-700 font-medium">
+                                        ⚡ {bidCount} worker{bidCount > 1 ? 's' : ''} interested in this job
+                                      </span>
+                                      <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        onClick={() => {
+                                          setSelectedJobPosting(job);
+                                          setActiveTab("bids");
+                                        }}
+                                        className="text-purple-700 hover:text-purple-800 hover:bg-purple-100 h-6 px-2 text-xs"
+                                      >
+                                        Review Bids →
+                                      </Button>
+                                    </div>
+                                  </div>
+                                )}
+                              </CardContent>
+                            </Card>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </TabsContent>
 
         </Tabs>
