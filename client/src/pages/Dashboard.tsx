@@ -2563,16 +2563,16 @@ export default function Dashboard() {
               </div>
               
               {/* Action Buttons */}
-              <div className="grid grid-cols-3 gap-2">
-                <Button size="sm" className="w-full bg-green-600 hover:bg-green-700 text-white flex items-center justify-center">
+              <div className="flex gap-2">
+                <Button size="sm" className="flex-1 bg-green-600 hover:bg-green-700 text-white flex items-center justify-center">
                   <Plus className="h-3 w-3 mr-1" />
                   <span className="text-xs">Add</span>
                 </Button>
-                <Button size="sm" variant="outline" className="w-full border-red-300 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center justify-center">
+                <Button size="sm" variant="outline" className="flex-[1.2] border-red-300 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center justify-center">
                   <CreditCard className="h-3 w-3 mr-1" />
                   <span className="text-xs">Withdraw</span>
                 </Button>
-                <Button size="sm" variant="outline" className="w-full bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border-purple-300 text-purple-700 hover:from-purple-100 hover:to-pink-100 flex items-center justify-center">
+                <Button size="sm" variant="outline" className="flex-1 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border-purple-300 text-purple-700 hover:from-purple-100 hover:to-pink-100 flex items-center justify-center">
                   <Gift className="h-3 w-3 mr-1" />
                   <span className="text-xs">Coupon</span>
                 </Button>
