@@ -2732,9 +2732,26 @@ export default function Dashboard() {
             </TabsTrigger>
             <TabsTrigger 
               value="profile"
-              className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+              className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground relative"
             >
               Profile
+              {/* Show UPDATE_REQUIRED fields count */}
+              {user && (() => {
+                const updateRequiredFields = [
+                  user.lastName === "UPDATE_REQUIRED" ? 1 : 0,
+                  user.email === "" || user.email === "UPDATE_REQUIRED" ? 1 : 0,
+                  user.profilePicture === null ? 1 : 0,
+                  !user.bankAccountNumber ? 1 : 0,
+                  !user.bankIFSC ? 1 : 0,
+                  !user.bankAccountHolderName ? 1 : 0
+                ].reduce((total, field) => total + field, 0);
+                
+                return updateRequiredFields > 0 ? (
+                  <Badge variant="secondary" className="ml-2 bg-red-500 text-white text-xs px-1 py-0 h-5 min-w-[20px] rounded-full flex items-center justify-center">
+                    {updateRequiredFields}
+                  </Badge>
+                ) : null;
+              })()}
             </TabsTrigger>
           </TabsList>
 
