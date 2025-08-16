@@ -2260,6 +2260,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update bid (for workers to edit their bids)
+  app.patch("/api/bids/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { proposedAmount, estimatedDuration, proposal } = req.body;
+      
+      // Validate required fields
+      if (!proposedAmount || !proposal) {
+        return res.status(400).json({ message: "Proposed amount and proposal are required" });
+      }
+
+      const result = await storage.updateBid(id, {
+        proposedAmount,
+        estimatedDuration,
+        proposal,
+        updatedAt: new Date().toISOString()
+      });
+      
+      res.json(result);
+    } catch (error) {
+      console.error("Error updating bid:", error);
+      res.status(500).json({ message: "Failed to update bid" });
+    }
+  });
+
   app.put("/api/bids/:id/accept", async (req, res) => {
     try {
       const { id } = req.params;

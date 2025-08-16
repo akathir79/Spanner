@@ -138,6 +138,7 @@ export interface IStorage {
   getBidsByJobPosting(jobPostingId: string): Promise<(Bid & { worker: User & { workerProfile?: WorkerProfile } })[]>;
   getBidsByWorker(workerId: string): Promise<(Bid & { jobPosting: JobPosting & { client: User } })[]>;
   createBid(bid: InsertBid): Promise<Bid>;
+  updateBid(bidId: string, updates: Partial<Bid>): Promise<Bid | undefined>;
   acceptBid(bidId: string): Promise<Bid | undefined>;
   rejectBid(bidId: string): Promise<Bid | undefined>;
 
@@ -865,6 +866,29 @@ export class DatabaseStorage implements IStorage {
     };
     const [newBid] = await db.insert(bids).values([dbBid]).returning();
     return newBid;
+  }
+
+  async updateBid(bidId: string, updates: Partial<Bid>): Promise<Bid | undefined> {
+    // Convert numeric fields to strings for database compatibility if present
+    const dbUpdates = {
+      ...updates,
+      proposedAmount: updates.proposedAmount !== undefined ? updates.proposedAmount.toString() : undefined,
+      updatedAt: new Date()
+    };
+    
+    // Remove undefined values
+    Object.keys(dbUpdates).forEach(key => {
+      if (dbUpdates[key as keyof typeof dbUpdates] === undefined) {
+        delete dbUpdates[key as keyof typeof dbUpdates];
+      }
+    });
+
+    const [updatedBid] = await db.update(bids)
+      .set(dbUpdates)
+      .where(eq(bids.id, bidId))
+      .returning();
+    
+    return updatedBid || undefined;
   }
 
   async acceptBid(bidId: string): Promise<Bid | undefined> {

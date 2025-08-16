@@ -920,16 +920,45 @@ const AvailableJobsTab = ({ user }: { user: any }) => {
                       
                       {/* Submit Bid Button */}
                       <div className="flex justify-end pt-2">
-                        <Button
-                          size="sm"
-                          className="bg-blue-600 hover:bg-blue-700 text-white"
-                          onClick={() => {
-                            setSelectedJob(job);
-                            setIsBidModalOpen(true);
-                          }}
-                        >
-                          Submit Bid
-                        </Button>
+                        {/* Check if worker already has a bid for this job */}
+                        {(() => {
+                          const { data: myBids = [] } = useQuery<any[]>({
+                            queryKey: ["/api/bids/worker", user?.id],
+                            enabled: !!user?.id,
+                          });
+                          const existingBid = myBids.find((bid: any) => bid.jobPosting?.id === job.id);
+                          
+                          return existingBid ? (
+                            <div className="flex items-center gap-2">
+                              <Badge variant="outline" className="text-xs bg-yellow-900/20 text-yellow-400 border-yellow-500/30">
+                                Bid Submitted
+                              </Badge>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="text-xs text-blue-400 border-blue-500/30 hover:bg-blue-900/20"
+                                onClick={() => {
+                                  // Switch to My Bids tab to edit
+                                  const tabsElement = document.querySelector('[value="my-bids"]') as HTMLElement;
+                                  if (tabsElement) tabsElement.click();
+                                }}
+                              >
+                                Edit in My Bids
+                              </Button>
+                            </div>
+                          ) : (
+                            <Button
+                              size="sm"
+                              className="bg-blue-600 hover:bg-blue-700 text-white"
+                              onClick={() => {
+                                setSelectedJob(job);
+                                setIsBidModalOpen(true);
+                              }}
+                            >
+                              Submit Bid
+                            </Button>
+                          );
+                        })()}
                       </div>
                     </CardContent>
                   </Card>
@@ -1006,11 +1035,73 @@ const AvailableJobsTab = ({ user }: { user: any }) => {
 
 // My Bids Component 
 const MyBidsTab = ({ user }: { user: any }) => {
+  const { toast } = useToast();
+  const [editingBid, setEditingBid] = useState<any>(null);
+  const [editBidData, setEditBidData] = useState({
+    proposedAmount: "",
+    estimatedDuration: "",
+    proposal: "",
+  });
+
   // Fetch worker's bids
   const { data: myBids = [] } = useQuery<any[]>({
     queryKey: ["/api/bids/worker", user?.id],
     enabled: !!user?.id,
   });
+
+  // Update bid mutation
+  const updateBidMutation = useMutation({
+    mutationFn: (data: any) => 
+      fetch(`/api/bids/${editingBid.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      }).then(res => res.json()),
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Your bid has been updated successfully!",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/bids/worker", user?.id] });
+      setEditingBid(null);
+      setEditBidData({ proposedAmount: "", estimatedDuration: "", proposal: "" });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update bid. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleEditBid = (bid: any) => {
+    setEditingBid(bid);
+    setEditBidData({
+      proposedAmount: bid.proposedAmount.toString(),
+      estimatedDuration: bid.estimatedDuration || "",
+      proposal: bid.proposal,
+    });
+  };
+
+  const handleUpdateBid = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!editBidData.proposedAmount || !editBidData.proposal) {
+      toast({
+        title: "Validation Error",
+        description: "Please fill in all required fields.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    updateBidMutation.mutate({
+      proposedAmount: parseFloat(editBidData.proposedAmount),
+      estimatedDuration: editBidData.estimatedDuration,
+      proposal: editBidData.proposal,
+    });
+  };
 
   return (
     <div className="space-y-6">
@@ -1059,6 +1150,18 @@ const MyBidsTab = ({ user }: { user: any }) => {
                             {bid.status === "accepted" ? "Accepted" :
                              bid.status === "rejected" ? "Rejected" : "Pending"}
                           </Badge>
+                          {/* Only allow editing if bid is pending */}
+                          {bid.status === "pending" && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="text-xs text-blue-400 border-blue-500/30 hover:bg-blue-900/20"
+                              onClick={() => handleEditBid(bid)}
+                            >
+                              <Edit3 className="h-3 w-3 mr-1" />
+                              Edit Bid
+                            </Button>
+                          )}
                         </div>
                       </div>
 
@@ -1208,6 +1311,62 @@ const MyBidsTab = ({ user }: { user: any }) => {
           )}
         </CardContent>
       </Card>
+
+      {/* Edit Bid Modal */}
+      <Dialog open={!!editingBid} onOpenChange={() => setEditingBid(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Bid for "{editingBid?.jobPosting?.title}"</DialogTitle>
+            <DialogDescription>
+              Update your proposal for this job. The client will be notified of the changes.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleUpdateBid} className="space-y-4">
+            <div>
+              <Label htmlFor="editProposedAmount">Proposed Amount (₹)</Label>
+              <Input
+                id="editProposedAmount"
+                type="number"
+                placeholder="Enter your quoted amount"
+                value={editBidData.proposedAmount}
+                onChange={(e) => setEditBidData(prev => ({ ...prev, proposedAmount: e.target.value }))}
+                required
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="editEstimatedDuration">Estimated Duration</Label>
+              <Input
+                id="editEstimatedDuration"
+                placeholder="e.g., 2-3 days, 1 week"
+                value={editBidData.estimatedDuration}
+                onChange={(e) => setEditBidData(prev => ({ ...prev, estimatedDuration: e.target.value }))}
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="editProposal">Your Proposal</Label>
+              <Textarea
+                id="editProposal"
+                placeholder="Describe your approach, experience, and why you're the best fit for this job..."
+                value={editBidData.proposal}
+                onChange={(e) => setEditBidData(prev => ({ ...prev, proposal: e.target.value }))}
+                rows={4}
+                required
+              />
+            </div>
+            
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setEditingBid(null)}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={updateBidMutation.isPending}>
+                {updateBidMutation.isPending ? "Updating..." : "Update Bid"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
