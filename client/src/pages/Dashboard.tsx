@@ -2529,13 +2529,25 @@ export default function Dashboard() {
       
       console.log("Frontend sending update data:", updateData);
       
+      // Update cache FIRST before making API call for instant UI feedback
+      queryClient.setQueryData(["/api/job-postings/client", user?.id], (oldData: any) => {
+        if (!oldData) return oldData;
+        return oldData.map((job: any) => 
+          job.id === editingJob.id 
+            ? { 
+                ...job, 
+                ...editingJobData,
+                budgetMin: updateData.budgetMin?.toString(),
+                budgetMax: updateData.budgetMax?.toString(),
+                updatedAt: new Date().toISOString()
+              }
+            : job
+        );
+      });
+      
       const updatedJobData = await apiRequest("PUT", `/api/job-postings/${editingJob.id}`, updateData);
       
-      setIsEditModalOpen(false);
-      setEditingJob(null);
-      setEditingJobData({});
-      
-      // Force immediate UI update with server response data
+      // Update cache again with server response to ensure consistency
       queryClient.setQueryData(["/api/job-postings/client", user?.id], (oldData: any) => {
         if (!oldData) return oldData;
         return oldData.map((job: any) => 
@@ -2543,17 +2555,17 @@ export default function Dashboard() {
             ? { 
                 ...job, 
                 ...updatedJobData,
-                // Ensure budget values are strings for consistent display
-                budgetMin: updatedJobData.budgetMin?.toString() || updateData.budgetMin?.toString(),
-                budgetMax: updatedJobData.budgetMax?.toString() || updateData.budgetMax?.toString(),
+                budgetMin: updatedJobData?.budgetMin?.toString() || updateData.budgetMin?.toString(),
+                budgetMax: updatedJobData?.budgetMax?.toString() || updateData.budgetMax?.toString(),
                 updatedAt: new Date().toISOString()
               }
             : job
         );
       });
       
-      // Invalidate queries to trigger fresh data fetch
-      queryClient.invalidateQueries({ queryKey: ["/api/job-postings/client", user?.id] });
+      setIsEditModalOpen(false);
+      setEditingJob(null);
+      setEditingJobData({});
       toast({
         title: "Job Updated",
         description: "Your job posting has been updated successfully.",
