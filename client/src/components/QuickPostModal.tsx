@@ -231,12 +231,16 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
       const arrayBuffer = await audioBlob.arrayBuffer();
       const base64Audio = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
       
+      // Get current user (check localStorage if useAuth hasn't updated yet)
+      const storedUser = localStorage.getItem('user');
+      const currentUser = user || (storedUser ? JSON.parse(storedUser) : null);
+      
       console.log("Sending voice data to server:", {
         audioSize: base64Audio.length,
         mimeType: audioBlob.type,
         language: selectedLanguage,
-        userId: user?.id,
-        userObject: user
+        userId: currentUser?.id,
+        userObject: currentUser
       });
 
       // Send to server for Gemini processing
@@ -249,7 +253,7 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
           audioData: base64Audio,
           mimeType: audioBlob.type,
           language: selectedLanguage,
-          userId: user?.id
+          userId: currentUser?.id
         })
       });
 
