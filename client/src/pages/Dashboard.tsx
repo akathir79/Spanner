@@ -2007,7 +2007,13 @@ export default function Dashboard() {
   // Fetch bids for selected job posting
   const { data: jobBids = [], isLoading: bidsLoading } = useQuery({
     queryKey: ["/api/bids/job", selectedJobPosting?.id],
-    queryFn: () => fetch(`/api/bids/job/${selectedJobPosting.id}`).then(res => res.json()),
+    queryFn: async () => {
+      console.log("Fetching bids for job:", selectedJobPosting.id);
+      const response = await fetch(`/api/bids/job/${encodeURIComponent(selectedJobPosting.id)}`);
+      const data = await response.json();
+      console.log("Bids response:", data);
+      return data;
+    },
     enabled: !!selectedJobPosting?.id
   });
 
@@ -3462,14 +3468,61 @@ export default function Dashboard() {
               </CardHeader>
               <CardContent>
                 {!selectedJobPosting ? (
-                  <div className="text-center py-12">
-                    <div className="h-12 w-12 mx-auto mb-4 flex items-center justify-center text-3xl font-bold text-muted-foreground">
-                      ₹
+                  <div className="space-y-6">
+                    <div className="text-center py-8">
+                      <div className="h-12 w-12 mx-auto mb-4 flex items-center justify-center text-3xl font-bold text-muted-foreground">
+                        ₹
+                      </div>
+                      <h3 className="text-lg font-semibold mb-2">Select a Job to View Bids</h3>
+                      <p className="text-muted-foreground mb-4">
+                        Click on any job below to see worker bids, or go to "My Jobs" tab to create new jobs.
+                      </p>
                     </div>
-                    <h3 className="text-lg font-semibold mb-2">Select a Job Posting</h3>
-                    <p className="text-muted-foreground">
-                      Click on any job posting from the "My Jobs" tab to view worker bids.
-                    </p>
+                    
+                    {/* Show all jobs with quick selection */}
+                    {jobPostings && jobPostings.length > 0 ? (
+                      <div className="grid gap-3">
+                        <h4 className="font-medium text-sm text-muted-foreground mb-2">Your Posted Jobs:</h4>
+                        {jobPostings.map((job: any) => (
+                          <div 
+                            key={job.id}
+                            className="border rounded-lg p-4 cursor-pointer hover:border-primary hover:bg-muted/50 transition-all"
+                            onClick={() => setSelectedJobPosting(job)}
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className="flex-1">
+                                <h4 className="font-medium">{job.title}</h4>
+                                <p className="text-sm text-muted-foreground">
+                                  {job.serviceCategory} • {job.district}, Tamil Nadu
+                                </p>
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  Posted: {new Date(job.createdAt).toLocaleDateString()}
+                                </p>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Badge variant="outline" className="text-xs">
+                                  View Bids
+                                </Badge>
+                                <span className="text-lg">→</span>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-6 border-t">
+                        <p className="text-muted-foreground text-sm">
+                          No jobs posted yet. Create your first job posting to start receiving bids.
+                        </p>
+                        <Button 
+                          variant="outline" 
+                          className="mt-3"
+                          onClick={() => setActiveTab("jobs")}
+                        >
+                          Go to My Jobs
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 ) : bidsLoading ? (
                   <div className="space-y-4">
