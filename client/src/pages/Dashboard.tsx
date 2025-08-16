@@ -1975,6 +1975,7 @@ export default function Dashboard() {
   const [isLocationLoading, setIsLocationLoading] = useState(false);
   const [selectedJobPosting, setSelectedJobPosting] = useState<any>(null);
   const [activeTab, setActiveTab] = useState("bookings");
+  const [bookingTab, setBookingTab] = useState("current"); // current or completed
   const [isJobFormOpen, setIsJobFormOpen] = useState(false);
   // Enhanced job card states
   const [editingJob, setEditingJob] = useState<any>(null);
@@ -2165,6 +2166,28 @@ export default function Dashboard() {
       toast({
         title: "Rejection Failed",
         description: error.message || "Failed to reject bid",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Delete completed booking mutation
+  const deleteBookingMutation = useMutation({
+    mutationFn: async (bookingId: string) => {
+      const response = await apiRequest("DELETE", `/api/bookings/${bookingId}`);
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Job Deleted",
+        description: "The completed job has been removed from your history.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/bookings/user", user?.id] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Delete Failed",
+        description: error.message || "Failed to delete the job",
         variant: "destructive",
       });
     },
@@ -2801,8 +2824,44 @@ export default function Dashboard() {
                     </Button>
                   </div>
                 ) : (
-                  <div className="space-y-4">
-                    {bookings.map((booking: any) => (
+                  <Tabs value={bookingTab} onValueChange={setBookingTab} className="w-full">
+                    <TabsList className="grid w-full grid-cols-2 mb-4">
+                      <TabsTrigger value="current" className="flex items-center space-x-2">
+                        <Clock className="h-4 w-4" />
+                        <span>Current Jobs</span>
+                        {(() => {
+                          const currentJobs = bookings.filter((b: any) => b.status !== "completed");
+                          return currentJobs.length > 0 && (
+                            <Badge variant="secondary" className="ml-1 bg-blue-500 text-white text-xs px-1 py-0 h-5 min-w-[20px] rounded-full">
+                              {currentJobs.length}
+                            </Badge>
+                          );
+                        })()}
+                      </TabsTrigger>
+                      <TabsTrigger value="completed" className="flex items-center space-x-2">
+                        <CheckCircle className="h-4 w-4" />
+                        <span>Completed Jobs</span>
+                        {(() => {
+                          const completedJobs = bookings.filter((b: any) => b.status === "completed");
+                          return completedJobs.length > 0 && (
+                            <Badge variant="secondary" className="ml-1 bg-green-500 text-white text-xs px-1 py-0 h-5 min-w-[20px] rounded-full">
+                              {completedJobs.length}
+                            </Badge>
+                          );
+                        })()}
+                      </TabsTrigger>
+                    </TabsList>
+
+                    <TabsContent value="current" className="space-y-4">
+                      {(() => {
+                        const currentJobs = bookings.filter((b: any) => b.status !== "completed");
+                        return currentJobs.length === 0 ? (
+                          <div className="text-center py-8">
+                            <Clock className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+                            <p className="text-muted-foreground">No current jobs</p>
+                          </div>
+                        ) : (
+                          currentJobs.map((booking: any) => (
                       <Card key={booking.id} className="hover:shadow-md transition-shadow bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border-green-200 dark:border-green-700">
                         <CardContent className="p-4">
                           <div className="flex justify-between items-start mb-3">
@@ -2932,8 +2991,109 @@ export default function Dashboard() {
                           )}
                         </CardContent>
                       </Card>
-                    ))}
-                  </div>
+                            ))
+                        );
+                      })()}
+                    </TabsContent>
+
+                    <TabsContent value="completed" className="space-y-4">
+                      {(() => {
+                        const completedJobs = bookings.filter((b: any) => b.status === "completed");
+                        return completedJobs.length === 0 ? (
+                          <div className="text-center py-8">
+                            <CheckCircle className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+                            <p className="text-muted-foreground">No completed jobs</p>
+                          </div>
+                        ) : (
+                          completedJobs.map((booking: any) => {
+                            const completedDate = new Date(booking.clientConfirmedAt || booking.createdAt);
+                            const isOld = (Date.now() - completedDate.getTime()) > (30 * 24 * 60 * 60 * 1000); // 30 days
+                            
+                            return (
+                              <Card key={booking.id} className="hover:shadow-md transition-shadow bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border-green-200 dark:border-green-700">
+                                <CardContent className="p-4">
+                                  <div className="flex justify-between items-start mb-3">
+                                    <div>
+                                      <h4 className="font-semibold">
+                                        {booking.description?.includes('Booking created from accepted bid for:') 
+                                          ? booking.description.replace('Booking created from accepted bid for: ', '').trim()
+                                          : `${booking.serviceCategory.replace('_', ' ')} Service`}
+                                      </h4>
+                                      <p className="text-sm text-muted-foreground">
+                                        Completed on: {completedDate.toLocaleDateString()}
+                                      </p>
+                                    </div>
+                                    <div className="flex items-center space-x-2">
+                                      <Badge className="bg-green-100 text-green-800 border-green-200">
+                                        <CheckCircle className="h-3 w-3 mr-1" />
+                                        Completed
+                                      </Badge>
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => deleteBookingMutation.mutate(booking.id)}
+                                        disabled={deleteBookingMutation.isPending}
+                                        className="h-8 w-8 p-0 hover:bg-red-50 hover:text-red-600 hover:border-red-200"
+                                        data-testid={`button-delete-${booking.id}`}
+                                      >
+                                        <X className="h-4 w-4" />
+                                      </Button>
+                                    </div>
+                                  </div>
+                                  
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                                    <div className="flex items-center space-x-2">
+                                      <Clock className="h-4 w-4 text-muted-foreground" />
+                                      <span>
+                                        {new Date(booking.scheduledDate).toLocaleDateString()}
+                                      </span>
+                                    </div>
+                                    <div className="flex items-center space-x-2">
+                                      <MapPin className="h-4 w-4 text-muted-foreground" />
+                                      <span>{booking.district?.name || booking.district}</span>
+                                    </div>
+                                  </div>
+                                  
+                                  {booking.clientRating && (
+                                    <div className="mt-3 p-2 bg-green-50 border border-green-200 rounded-lg">
+                                      <div className="flex items-center space-x-2 text-green-700">
+                                        <Star className="h-4 w-4" />
+                                        <span className="text-sm font-medium">
+                                          Rated {booking.clientRating}★
+                                        </span>
+                                      </div>
+                                      {booking.clientReview && (
+                                        <p className="text-xs text-green-600 mt-1">
+                                          "{booking.clientReview}"
+                                        </p>
+                                      )}
+                                    </div>
+                                  )}
+                                  
+                                  {booking.totalAmount && (
+                                    <div className="mt-3 flex justify-between items-center">
+                                      <span className="font-semibold text-green-600">
+                                        ₹{booking.totalAmount}
+                                      </span>
+                                      <Badge variant={booking.paymentStatus === "paid" ? "default" : "secondary"}>
+                                        Payment: {booking.paymentStatus}
+                                      </Badge>
+                                    </div>
+                                  )}
+
+                                  {isOld && (
+                                    <div className="mt-3 p-2 bg-orange-50 border border-orange-200 rounded text-xs text-orange-600">
+                                      This job is over 30 days old and will be automatically removed soon
+                                    </div>
+                                  )}
+                                </CardContent>
+                              </Card>
+                            );
+                          })
+                        );
+                      })()}
+                    </TabsContent>
+                  </Tabs>
                 )}
               </CardContent>
             </Card>

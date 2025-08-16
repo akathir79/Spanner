@@ -1216,6 +1216,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Delete completed booking
+  app.delete("/api/bookings/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      
+      // First check if booking exists and is completed
+      const booking = await storage.getBooking(id);
+      if (!booking) {
+        return res.status(404).json({ message: "Booking not found" });
+      }
+      
+      if (booking.status !== "completed") {
+        return res.status(400).json({ message: "Only completed bookings can be deleted" });
+      }
+      
+      const deleted = await storage.deleteBooking(id);
+      
+      if (!deleted) {
+        return res.status(400).json({ message: "Could not delete booking" });
+      }
+      
+      console.log(`Booking deleted: ${id}`);
+      
+      res.json({
+        success: true,
+        message: "Booking deleted successfully"
+      });
+    } catch (error) {
+      console.error("Delete booking error:", error);
+      res.status(500).json({ message: "Internal server error", error: error.message });
+    }
+  });
+
+  // Cleanup old completed bookings (auto-removal after 30 days)
+  app.post("/api/bookings/cleanup", async (req, res) => {
+    try {
+      const thirtyDaysAgo = new Date(Date.now() - (30 * 24 * 60 * 60 * 1000));
+      
+      const deletedCount = await storage.cleanupOldBookings(thirtyDaysAgo);
+      
+      console.log(`Cleaned up ${deletedCount} old completed bookings`);
+      
+      res.json({
+        success: true,
+        message: `Cleaned up ${deletedCount} old completed bookings`,
+        deletedCount
+      });
+    } catch (error) {
+      console.error("Cleanup bookings error:", error);
+      res.status(500).json({ message: "Internal server error", error: error.message });
+    }
+  });
+
   // Admin routes
   app.get("/api/admin/users", async (req, res) => {
     try {

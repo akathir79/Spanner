@@ -61,7 +61,7 @@ import {
   jobCompletionOTPs
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, sql, desc, ilike, inArray, or } from "drizzle-orm";
+import { eq, and, sql, desc, ilike, inArray, or, isNull, lt } from "drizzle-orm";
 import { generateCustomUserId } from "./userIdGenerator";
 
 export interface IStorage {
@@ -689,6 +689,86 @@ export class DatabaseStorage implements IStorage {
       .where(eq(bookings.id, reviewData.bookingId));
 
     return review;
+  }
+
+  async getBooking(bookingId: string): Promise<any> {
+    const [booking] = await db
+      .select()
+      .from(bookings)
+      .where(eq(bookings.id, bookingId));
+    return booking || null;
+  }
+
+  async deleteBooking(bookingId: string): Promise<boolean> {
+    try {
+      // First delete related reviews
+      await db
+        .delete(workerReviews)
+        .where(eq(workerReviews.bookingId, bookingId));
+
+      // Then delete the booking
+      const result = await db
+        .delete(bookings)
+        .where(eq(bookings.id, bookingId))
+        .returning();
+
+      return result.length > 0;
+    } catch (error) {
+      console.error("Delete booking error:", error);
+      return false;
+    }
+  }
+
+  async cleanupOldBookings(cutoffDate: Date): Promise<number> {
+    try {
+      // Delete reviews for old completed bookings first
+      const oldBookingsSubquery = db
+        .select({ id: bookings.id })
+        .from(bookings)
+        .where(
+          and(
+            eq(bookings.status, "completed"),
+            or(
+              lt(bookings.clientConfirmedAt, cutoffDate),
+              and(
+                isNull(bookings.clientConfirmedAt),
+                lt(bookings.createdAt, cutoffDate)
+              )
+            )
+          )
+        );
+
+      await db
+        .delete(workerReviews)
+        .where(
+          inArray(
+            workerReviews.bookingId,
+            oldBookingsSubquery
+          )
+        );
+
+      // Then delete the old completed bookings
+      const deletedBookings = await db
+        .delete(bookings)
+        .where(
+          and(
+            eq(bookings.status, "completed"),
+            or(
+              lt(bookings.clientConfirmedAt, cutoffDate),
+              and(
+                isNull(bookings.clientConfirmedAt),
+                lt(bookings.createdAt, cutoffDate)
+              )
+            )
+          )
+        )
+        .returning();
+
+      return deletedBookings.length;
+    } catch (error) {
+      console.error("Cleanup old bookings error:", error);
+      return 0;
+    }
   }
 
 
