@@ -12,6 +12,7 @@ import { useQuery } from "@tanstack/react-query";
 import { NotificationBell } from "./NotificationBell";
 import { FloatingRegisterButton } from "./FloatingRegisterButton";
 import { AvatarGenerator } from "./AvatarGenerator";
+import QuickPostButton from "./QuickPostButton";
 
 export function Navbar() {
   const [location] = useLocation();
@@ -73,11 +74,7 @@ export function Navbar() {
             {/* Desktop Navigation - Quick Join & Quick Post Buttons */}
             <div className="hidden md:flex items-center justify-center flex-1 gap-4">
               <FloatingRegisterButton />
-              <Link href="/quick-post">
-                <Button variant="default" size="sm" className="bg-green-600 hover:bg-green-700 text-white">
-                  🎤 Quick Post
-                </Button>
-              </Link>
+              <QuickPostButton />
             </div>
 
             {/* Controls */}
