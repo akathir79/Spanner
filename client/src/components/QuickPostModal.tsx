@@ -55,36 +55,101 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
   // Start recording function
   const startRecording = useCallback(async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream);
+      // Check if media devices are supported
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        toast({
+          title: "Browser Not Supported",
+          description: "Your browser doesn't support voice recording. Please use Chrome, Edge, or Safari.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      console.log("Requesting microphone access...");
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          sampleRate: 44100
+        }
+      });
+      
+      console.log("Microphone access granted, creating MediaRecorder...");
+      
+      // Check MediaRecorder support
+      if (!MediaRecorder.isTypeSupported('audio/webm')) {
+        console.log("webm not supported, trying mp4");
+        if (!MediaRecorder.isTypeSupported('audio/mp4')) {
+          console.log("mp4 not supported either");
+        }
+      }
+
+      const mediaRecorder = new MediaRecorder(stream, {
+        mimeType: MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/mp4'
+      });
+      
       mediaRecorderRef.current = mediaRecorder;
       audioChunksRef.current = [];
 
       mediaRecorder.ondataavailable = (event) => {
+        console.log("Data available, size:", event.data.size);
         if (event.data.size > 0) {
           audioChunksRef.current.push(event.data);
         }
       };
 
       mediaRecorder.onstop = () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        console.log("Recording stopped, creating blob...");
+        const audioBlob = new Blob(audioChunksRef.current, { 
+          type: mediaRecorder.mimeType 
+        });
+        console.log("Audio blob size:", audioBlob.size);
         stream.getTracks().forEach(track => track.stop());
         processRecording(audioBlob);
       };
 
-      mediaRecorder.start();
-      setIsRecording(true);
-      setRecordingDuration(0);
+      mediaRecorder.onstart = () => {
+        console.log("Recording started successfully");
+        setIsRecording(true);
+        setRecordingDuration(0);
 
-      // Start timer
-      timerRef.current = setInterval(() => {
-        setRecordingDuration(prev => prev + 1);
-      }, 1000);
+        // Start timer
+        timerRef.current = setInterval(() => {
+          setRecordingDuration(prev => {
+            const newDuration = prev + 1;
+            console.log("Recording duration:", newDuration);
+            return newDuration;
+          });
+        }, 1000);
+      };
+
+      mediaRecorder.onerror = (event) => {
+        console.error("MediaRecorder error:", event);
+        toast({
+          title: "Recording Error",
+          description: "Failed to record audio. Please try again.",
+          variant: "destructive"
+        });
+      };
+
+      console.log("Starting recording...");
+      mediaRecorder.start(1000); // Record in 1-second chunks
 
     } catch (error) {
+      console.error("Recording setup error:", error);
+      let errorMessage = "Please allow microphone access to use voice recording.";
+      
+      if (error.name === 'NotAllowedError') {
+        errorMessage = "Microphone access denied. Please allow microphone permission and try again.";
+      } else if (error.name === 'NotFoundError') {
+        errorMessage = "No microphone found. Please connect a microphone and try again.";
+      } else if (error.name === 'NotSupportedError') {
+        errorMessage = "Your browser doesn't support voice recording. Please use Chrome, Edge, or Safari.";
+      }
+
       toast({
         title: "Microphone Error",
-        description: "Please allow microphone access to use voice recording.",
+        description: errorMessage,
         variant: "destructive"
       });
     }
@@ -92,7 +157,9 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
 
   // Stop recording function
   const stopRecording = useCallback(() => {
+    console.log("Stop recording called, isRecording:", isRecording);
     if (mediaRecorderRef.current && isRecording) {
+      console.log("Stopping MediaRecorder...");
       mediaRecorderRef.current.stop();
       setIsRecording(false);
       
@@ -105,7 +172,19 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
 
   // Process recording function
   const processRecording = useCallback(async (audioBlob: Blob) => {
+    console.log("Processing recording, blob size:", audioBlob.size);
     setIsProcessing(true);
+    
+    if (audioBlob.size === 0) {
+      toast({
+        title: "Recording Failed",
+        description: "No audio was recorded. Please try again and speak into your microphone.",
+        variant: "destructive"
+      });
+      setIsProcessing(false);
+      setCurrentStep('recording');
+      return;
+    }
     
     // Simulate processing for demo
     setTimeout(() => {
