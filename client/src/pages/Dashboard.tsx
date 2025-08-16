@@ -1621,12 +1621,34 @@ const JobPostingForm = ({ onClose }: { onClose?: () => void }) => {
               variant="ghost"
               size="sm"
               className="h-8 px-3 text-xs font-medium bg-gradient-to-r from-green-50 to-green-100 text-green-700 hover:from-green-100 hover:to-green-200 border border-green-300 rounded-full shadow-sm transition-all"
-              onClick={() => setFormData(prev => ({ 
-                ...prev, 
-                serviceAddress: user?.address ? `${user.address}\n${user.district}, ${user.state || 'Tamil Nadu'}\nPIN: ${user.pincode || ''}`.trim() : '',
-                state: user?.state || 'Tamil Nadu',
-                districtId: user?.district || ''
-              }))}
+              onClick={() => {
+                // Build full address from user profile data
+                const addressParts = [];
+                if (user?.houseNumber) addressParts.push(user.houseNumber);
+                if (user?.streetName) addressParts.push(user.streetName);
+                if (user?.areaName) addressParts.push(user.areaName);
+                if (user?.district) addressParts.push(user.district);
+                if (user?.state) addressParts.push(user.state);
+                if (user?.pincode) addressParts.push(`PIN: ${user.pincode}`);
+                
+                // Use fullAddress if available, otherwise build from parts
+                const profileAddress = user?.fullAddress || addressParts.join(', ');
+                
+                if (profileAddress) {
+                  setFormData(prev => ({ 
+                    ...prev, 
+                    serviceAddress: profileAddress,
+                    state: user?.state || 'Tamil Nadu',
+                    districtId: user?.district || ''
+                  }));
+                } else {
+                  toast({
+                    title: "Profile Address Not Found",
+                    description: "Please complete your profile address in the Profile tab first.",
+                    variant: "destructive"
+                  });
+                }
+              }}
             >
               <Home className="h-3 w-3 mr-1" />
               Use Profile Address
