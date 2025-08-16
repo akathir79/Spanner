@@ -1434,6 +1434,36 @@ export default function WorkerDashboard() {
     queryKey: ["/api/bids/worker", user?.id],
     enabled: !!user?.id,
   });
+
+  // Calculate UPDATE_REQUIRED fields count
+  const getUpdateRequiredCount = () => {
+    if (!user) return 0;
+    
+    let count = 0;
+    const fieldsToCheck = [
+      user.lastName,
+      user.email,
+      user.houseNumber,
+      user.streetName,
+      user.areaName,
+      user.district,
+      user.state,
+      user.pincode,
+      user.fullAddress,
+      user.aadhaarNumber,
+      user.panNumber
+    ];
+    
+    fieldsToCheck.forEach(field => {
+      if (field === "UPDATE_REQUIRED" || field === "" || field === null || field === undefined) {
+        count++;
+      }
+    });
+    
+    return count;
+  };
+
+  const updateRequiredCount = getUpdateRequiredCount();
   
   // Force re-render when showRejoinModal changes
   useEffect(() => {
@@ -2003,7 +2033,14 @@ export default function WorkerDashboard() {
                 </Badge>
               )}
             </TabsTrigger>
-            <TabsTrigger value="profile">Profile</TabsTrigger>
+            <TabsTrigger value="profile" className="relative">
+              Profile
+              {updateRequiredCount > 0 && (
+                <Badge variant="secondary" className="ml-2 bg-red-500 text-white text-xs px-1 py-0 h-5 min-w-[20px] rounded-full flex items-center justify-center">
+                  {updateRequiredCount}
+                </Badge>
+              )}
+            </TabsTrigger>
             <TabsTrigger value="settings">Settings</TabsTrigger>
           </TabsList>
 
@@ -2177,6 +2214,26 @@ export default function WorkerDashboard() {
 
           {/* Profile Tab - Worker Specific with Professional Details */}
           <TabsContent value="profile" className="space-y-6">
+            {/* Update Required Summary */}
+            {updateRequiredCount > 0 && (
+              <Card className="border-red-200 bg-red-50 dark:bg-red-950 dark:border-red-800">
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2 text-red-800 dark:text-red-200">
+                    <AlertTriangle className="h-5 w-5" />
+                    <span>Profile Updates Required</span>
+                    <Badge variant="secondary" className="bg-red-500 text-white">
+                      {updateRequiredCount} field{updateRequiredCount > 1 ? 's' : ''}
+                    </Badge>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-red-700 dark:text-red-300 text-sm">
+                    Please update all required fields in your profile to improve your visibility to potential clients and ensure smooth service delivery.
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+            
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Worker Professional Profile with Edit Functionality */}
               <WorkerProfileCard user={user} refreshUser={refreshUser} />
