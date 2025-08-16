@@ -1622,18 +1622,13 @@ const JobPostingForm = ({ onClose }: { onClose?: () => void }) => {
               size="sm"
               className="h-8 px-3 text-xs font-medium bg-gradient-to-r from-green-50 to-green-100 text-green-700 hover:from-green-100 hover:to-green-200 border border-green-300 rounded-full shadow-sm transition-all"
               onClick={() => {
-                // Build simplified address showing only Area, District, and State
-                const locationParts = [];
-                if (user?.areaName) locationParts.push(user.areaName);
-                if (user?.district) locationParts.push(user.district);
-                if (user?.state) locationParts.push(user.state);
-                
-                const profileLocation = locationParts.join(', ');
-                
-                if (profileLocation && user?.areaName) {
+                // Build formatted address with area on separate line
+                if (user?.areaName && user?.district && user?.state) {
+                  const formattedAddress = `${user.areaName}\n${user.district}, ${user.state}${user.pincode ? `\nPIN: ${user.pincode}` : ''}`;
+                  
                   setFormData(prev => ({ 
                     ...prev, 
-                    serviceAddress: profileLocation,
+                    serviceAddress: formattedAddress,
                     state: user?.state || 'Tamil Nadu',
                     districtId: user?.district || ''
                   }));
