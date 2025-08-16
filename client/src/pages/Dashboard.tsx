@@ -2385,22 +2385,22 @@ export default function Dashboard() {
       
       const updatedJob = await apiRequest("PUT", `/api/job-postings/${editingJob.id}`, updateData);
       
-      // Force immediate UI update by updating the job postings state directly
-      queryClient.setQueryData(["/api/job-postings/client", user?.id], (oldData: any) => {
-        if (!oldData) return oldData;
-        return oldData.map((job: any) => 
-          job.id === editingJob.id 
-            ? { ...job, ...updatedJob, updatedAt: new Date().toISOString() }
-            : job
-        );
-      });
-      
       setIsEditModalOpen(false);
       setEditingJob(null);
       setEditingJobData({});
       
-      // Also invalidate queries for good measure
-      queryClient.invalidateQueries({ queryKey: ["/api/job-postings/client", user?.id] });
+      // Force immediate UI update and trigger re-render
+      queryClient.setQueryData(["/api/job-postings/client", user?.id], (oldData: any) => {
+        if (!oldData) return oldData;
+        return oldData.map((job: any) => 
+          job.id === editingJob.id 
+            ? { ...job, budgetMin: updateData.budgetMin?.toString(), budgetMax: updateData.budgetMax?.toString(), updatedAt: new Date().toISOString() }
+            : job
+        );
+      });
+      
+      // Force component re-render
+      await queryClient.refetchQueries({ queryKey: ["/api/job-postings/client", user?.id] });
       toast({
         title: "Job Updated",
         description: "Your job posting has been updated successfully.",
@@ -3269,13 +3269,9 @@ export default function Dashboard() {
                         return (
                           <Card 
                             key={job.id} 
-                            className={`bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-200 dark:border-blue-700 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:border-blue-400 cursor-pointer ${
+                            className={`bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-200 dark:border-blue-700 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 ${
                               selectedJobPosting?.id === job.id ? 'border-blue-400 ring-2 ring-blue-300' : ''
                             }`}
-                            onClick={() => {
-                              setSelectedJobPosting(job);
-                              setActiveTab("bids");
-                            }}
                           >
                             <CardContent className="p-6 space-y-4">
                               {/* Top Header with ID, Posted Date, Budget, Status Badge and Action Buttons */}
@@ -3310,6 +3306,18 @@ export default function Dashboard() {
                                   )}
                                 </div>
                                 <div className="flex items-center gap-2">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-7 px-3 text-xs bg-blue-100 dark:bg-blue-900/20 hover:bg-blue-200 dark:hover:bg-blue-800/30 text-blue-700 dark:text-blue-400 border-blue-300 dark:border-blue-500/30"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setSelectedJobPosting(job);
+                                      setActiveTab("bids");
+                                    }}
+                                  >
+                                    View Bids
+                                  </Button>
                                   <Badge 
                                     className={`px-3 py-1.5 text-sm font-medium border ${
                                       job.status === "open" ? "bg-emerald-500 text-white border-emerald-400" : 
