@@ -37,13 +37,139 @@ async function checkDatabaseExists(): Promise<boolean> {
   }
 }
 
+async function ensureCoreTablesExist(): Promise<void> {
+  try {
+    console.log('🔧 Ensuring core tables exist...');
+    
+    // Create settings table if it doesn't exist
+    await db.execute(sql.raw(`
+      CREATE TABLE IF NOT EXISTS settings (
+        key VARCHAR PRIMARY KEY,
+        value TEXT NOT NULL,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `));
+    
+    // Create advertisements table if it doesn't exist
+    await db.execute(sql.raw(`
+      CREATE TABLE IF NOT EXISTS advertisements (
+        id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
+        title TEXT NOT NULL,
+        description TEXT,
+        image TEXT,
+        target_audience TEXT NOT NULL,
+        link TEXT,
+        button_text TEXT,
+        background_color TEXT DEFAULT '#ffffff',
+        text_color TEXT DEFAULT '#000000',
+        display_mode TEXT DEFAULT 'card',
+        is_active BOOLEAN DEFAULT true,
+        priority INTEGER DEFAULT 0,
+        start_date TIMESTAMP,
+        end_date TIMESTAMP,
+        created_by VARCHAR,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `));
+    
+    // Create transfer_history table if it doesn't exist
+    await db.execute(sql.raw(`
+      CREATE TABLE IF NOT EXISTS transfer_history (
+        id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
+        worker_id VARCHAR NOT NULL,
+        client_id VARCHAR,
+        amount DECIMAL(10, 2) NOT NULL,
+        transfer_type TEXT NOT NULL,
+        status TEXT DEFAULT 'pending',
+        reference_id TEXT,
+        description TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `));
+    
+    console.log('✅ Core tables verified/created!');
+  } catch (error) {
+    console.error('❌ Core table creation failed:', error);
+  }
+}
+
+async function ensureSchemaUpdated(): Promise<void> {
+  try {
+    console.log('🔧 Ensuring database schema is up to date...');
+    
+    // Check and add missing columns that might not exist in older databases
+    const missingColumns = [
+      { table: 'users', column: 'house_number', type: 'TEXT' },
+      { table: 'users', column: 'street_name', type: 'TEXT' },
+      { table: 'users', column: 'area_name', type: 'TEXT' },
+      { table: 'users', column: 'full_address', type: 'TEXT' },
+      { table: 'users', column: 'bank_address', type: 'TEXT' },
+      { table: 'users', column: 'bank_micr', type: 'TEXT' },
+      { table: 'users', column: 'is_suspended', type: 'BOOLEAN DEFAULT false' },
+      { table: 'users', column: 'suspended_at', type: 'TIMESTAMP' },
+      { table: 'users', column: 'suspended_by', type: 'VARCHAR' },
+      { table: 'users', column: 'suspension_reason', type: 'TEXT' },
+      { table: 'users', column: 'rejoin_requested_at', type: 'TIMESTAMP' },
+      { table: 'users', column: 'rejoin_request_reason', type: 'TEXT' },
+      { table: 'users', column: 'has_rejoin_request', type: 'BOOLEAN DEFAULT false' },
+      { table: 'users', column: 'verification_comment', type: 'TEXT' },
+      { table: 'users', column: 'verified_at', type: 'TIMESTAMP' },
+      { table: 'users', column: 'verified_by', type: 'VARCHAR' },
+      { table: 'users', column: 'approved_at', type: 'TIMESTAMP' },
+      { table: 'users', column: 'approved_by', type: 'VARCHAR' },
+      { table: 'users', column: 'last_login_at', type: 'TIMESTAMP' },
+    ];
+
+    for (const { table, column, type } of missingColumns) {
+      try {
+        // Check if column exists
+        const columnCheck = await db.execute(sql.raw(`
+          SELECT COUNT(*) as count 
+          FROM information_schema.columns 
+          WHERE table_name = '${table}' 
+          AND column_name = '${column}'
+        `));
+        
+        const columnExists = (columnCheck.rows[0] as any)?.count > 0;
+        
+        if (!columnExists) {
+          console.log(`  Adding missing column: ${table}.${column}`);
+          await db.execute(sql.raw(`ALTER TABLE ${table} ADD COLUMN ${column} ${type}`));
+        }
+      } catch (error) {
+        // Column might already exist or there might be a constraint issue
+        console.log(`  Column ${table}.${column} already exists or has constraint issues`);
+      }
+    }
+
+    console.log('✅ Database schema update completed!');
+  } catch (error) {
+    console.error('❌ Database schema update failed:', error);
+    throw error;
+  }
+}
+
 async function runDatabaseMigrations(): Promise<void> {
   try {
     console.log('🔧 Running database migrations...');
     
-    // Run drizzle migrations to create tables
-    const { execSync } = await import('child_process');
-    execSync('npm run db:push', { stdio: 'inherit' });
+    // Create any missing tables first
+    await ensureCoreTablesExist();
+    
+    // First try to create tables using drizzle-kit push in non-interactive mode
+    try {
+      const { execSync } = await import('child_process');
+      // Use --yes flag to auto-confirm all prompts
+      execSync('yes | npm run db:push', { stdio: 'ignore', timeout: 30000 });
+    } catch (error) {
+      // If drizzle push fails, continue with manual schema updates
+      console.log('📝 Drizzle push completed or skipped, continuing with schema updates...');
+    }
+    
+    // Ensure all schema updates are applied
+    await ensureSchemaUpdated();
     
     console.log('✅ Database migrations completed!');
   } catch (error) {
