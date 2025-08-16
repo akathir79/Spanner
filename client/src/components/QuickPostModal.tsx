@@ -205,6 +205,13 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
       const arrayBuffer = await audioBlob.arrayBuffer();
       const base64Audio = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
       
+      console.log("Sending voice data to server:", {
+        audioSize: base64Audio.length,
+        mimeType: audioBlob.type,
+        language: selectedLanguage,
+        userId: user?.id
+      });
+
       // Send to server for Gemini processing
       const response = await fetch('/api/voice/process-job-posting', {
         method: 'POST',
@@ -348,10 +355,23 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
             ) : isProcessing ? (
               <>
                 <Loader2 className="w-12 h-12 animate-spin mx-auto" />
-                <h3 className="text-xl font-semibold">Processing...</h3>
-                <p className="text-muted-foreground">
-                  Converting your voice to job posting...
-                </p>
+                <h3 className="text-xl font-semibold">Processing Your Voice...</h3>
+                <div className="space-y-2 text-sm text-muted-foreground">
+                  <p>🎤 Analyzing voice recording...</p>
+                  <p>🧠 Extracting job details with AI...</p>
+                  <p>📝 Creating job posting...</p>
+                </div>
+                <div className="bg-muted p-3 rounded-lg text-left text-sm">
+                  <h4 className="font-semibold mb-2">What we're extracting:</h4>
+                  <ul className="space-y-1">
+                    <li>• Job title and description</li>
+                    <li>• Service category</li>
+                    <li>• Budget range</li>
+                    <li>• Location details</li>
+                    <li>• Urgency level</li>
+                    <li>• Timeframe requirements</li>
+                  </ul>
+                </div>
               </>
             ) : (
               <>

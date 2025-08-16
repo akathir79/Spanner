@@ -4284,11 +4284,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/voice/process-job-posting", async (req, res) => {
     try {
       const { audioData, mimeType, language, userId } = req.body;
+      
+      console.log("Voice processing request:", {
+        hasAudioData: !!audioData,
+        audioDataLength: audioData?.length || 0,
+        mimeType,
+        language,
+        userId,
+        hasSession: !!req.session,
+        isAuthenticated: req.isAuthenticated ? req.isAuthenticated() : false,
+        sessionUserId: req.user?.id
+      });
 
-      if (!audioData || !userId) {
+      // Use session user ID if available, otherwise use provided userId
+      const currentUserId = req.user?.id || userId;
+      
+      if (!audioData) {
         return res.status(400).json({
           success: false,
-          message: "Audio data and user ID are required"
+          message: "Audio data is required"
+        });
+      }
+      
+      if (!currentUserId) {
+        return res.status(400).json({
+          success: false,
+          message: "User authentication required. Please login first."
         });
       }
 
@@ -4302,7 +4323,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         location: "Auto-detected from voice",
         budget: { min: 1000, max: 5000 },
         urgency: "medium" as const,
-        userId: userId,
+        userId: currentUserId,
         createdAt: new Date().toISOString()
       };
 
@@ -4315,7 +4336,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         audioSize: audioData.length,
         mimeType,
         language,
-        userId
+        userId: currentUserId
       });
 
       res.json({
