@@ -1622,29 +1622,25 @@ const JobPostingForm = ({ onClose }: { onClose?: () => void }) => {
               size="sm"
               className="h-8 px-3 text-xs font-medium bg-gradient-to-r from-green-50 to-green-100 text-green-700 hover:from-green-100 hover:to-green-200 border border-green-300 rounded-full shadow-sm transition-all"
               onClick={() => {
-                // Build full address from user profile data
-                const addressParts = [];
-                if (user?.houseNumber) addressParts.push(user.houseNumber);
-                if (user?.streetName) addressParts.push(user.streetName);
-                if (user?.areaName) addressParts.push(user.areaName);
-                if (user?.district) addressParts.push(user.district);
-                if (user?.state) addressParts.push(user.state);
-                if (user?.pincode) addressParts.push(`PIN: ${user.pincode}`);
+                // Build simplified address showing only Area, District, and State
+                const locationParts = [];
+                if (user?.areaName) locationParts.push(user.areaName);
+                if (user?.district) locationParts.push(user.district);
+                if (user?.state) locationParts.push(user.state);
                 
-                // Use fullAddress if available, otherwise build from parts
-                const profileAddress = user?.fullAddress || addressParts.join(', ');
+                const profileLocation = locationParts.join(', ');
                 
-                if (profileAddress) {
+                if (profileLocation && user?.areaName) {
                   setFormData(prev => ({ 
                     ...prev, 
-                    serviceAddress: profileAddress,
+                    serviceAddress: profileLocation,
                     state: user?.state || 'Tamil Nadu',
                     districtId: user?.district || ''
                   }));
                 } else {
                   toast({
-                    title: "Incomplete Profile Address",
-                    description: "Please add your house number, street name, and area in the Profile tab first.",
+                    title: "Incomplete Profile Location",
+                    description: "Please add your area name in the Profile tab first.",
                     variant: "destructive"
                   });
                 }
