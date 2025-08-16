@@ -19,6 +19,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/components/LanguageProvider";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import JobCompletionModal from "@/components/JobCompletionModal";
+import ReviewModal from "@/components/ReviewModal";
 import { useToast } from "@/hooks/use-toast";
 import { 
   User, 
@@ -1985,6 +1987,12 @@ export default function Dashboard() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [jobMediaFiles, setJobMediaFiles] = useState<{ [jobId: string]: { audio?: string; images: string[]; videos: string[] } }>({});
   
+  // Job completion and review modals
+  const [jobCompletionModalOpen, setJobCompletionModalOpen] = useState(false);
+  const [reviewModalOpen, setReviewModalOpen] = useState(false);
+  const [completionBooking, setCompletionBooking] = useState<any>(null);
+  const [reviewBooking, setReviewBooking] = useState<any>(null);
+  
   // Removed dashboard customization state
 
   // Removed dashboard layout management functions
@@ -2842,6 +2850,73 @@ export default function Dashboard() {
                                 workerName={`${booking.worker?.firstName || 'Worker'} ${booking.worker?.lastName || ''}`}
                                 isActive={true}
                               />
+                            </div>
+                          )}
+
+                          {/* Job Completion Workflow */}
+                          {booking.status === "completed" && booking.completionOTP && !booking.otpVerifiedAt && (
+                            <div className="mt-4 p-3 bg-orange-50 border border-orange-200 rounded-lg">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center space-x-2 text-orange-700">
+                                  <Clock className="h-4 w-4" />
+                                  <span className="text-sm font-medium">Worker has completed the job</span>
+                                </div>
+                                <Button
+                                  size="sm"
+                                  onClick={() => {
+                                    setCompletionBooking(booking);
+                                    setJobCompletionModalOpen(true);
+                                  }}
+                                  className="bg-orange-600 hover:bg-orange-700 text-white"
+                                  data-testid={`button-verify-completion-${booking.id}`}
+                                >
+                                  Verify Completion
+                                </Button>
+                              </div>
+                              <p className="text-xs text-orange-600 mt-1">
+                                Please verify the completion using the OTP sent to your phone
+                              </p>
+                            </div>
+                          )}
+
+                          {booking.status === "completed" && booking.otpVerifiedAt && !booking.clientRating && (
+                            <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center space-x-2 text-blue-700">
+                                  <Star className="h-4 w-4" />
+                                  <span className="text-sm font-medium">Job completed successfully</span>
+                                </div>
+                                <Button
+                                  size="sm"
+                                  onClick={() => {
+                                    setReviewBooking(booking);
+                                    setReviewModalOpen(true);
+                                  }}
+                                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                                  data-testid={`button-review-worker-${booking.id}`}
+                                >
+                                  Rate & Review
+                                </Button>
+                              </div>
+                              <p className="text-xs text-blue-600 mt-1">
+                                Share your experience to help other clients
+                              </p>
+                            </div>
+                          )}
+
+                          {booking.status === "completed" && booking.clientRating && (
+                            <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                              <div className="flex items-center space-x-2 text-green-700">
+                                <CheckCircle className="h-4 w-4" />
+                                <span className="text-sm font-medium">
+                                  Job completed with {booking.clientRating}★ rating
+                                </span>
+                              </div>
+                              {booking.clientReview && (
+                                <p className="text-xs text-green-600 mt-1">
+                                  Your review: "{booking.clientReview}"
+                                </p>
+                              )}
                             </div>
                           )}
                           
@@ -3897,6 +3972,28 @@ export default function Dashboard() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Job Completion Modal for Client OTP Verification */}
+      <JobCompletionModal
+        booking={completionBooking}
+        isOpen={jobCompletionModalOpen}
+        onClose={() => {
+          setJobCompletionModalOpen(false);
+          setCompletionBooking(null);
+        }}
+        userRole="client"
+      />
+
+      {/* Review Modal for Client to Rate and Review Worker */}
+      <ReviewModal
+        booking={reviewBooking}
+        isOpen={reviewModalOpen}
+        onClose={() => {
+          setReviewModalOpen(false);
+          setReviewBooking(null);
+        }}
+        userRole="client"
+      />
     </div>
   );
 }

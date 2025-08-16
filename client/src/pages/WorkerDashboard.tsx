@@ -1498,8 +1498,24 @@ export default function WorkerDashboard() {
   // Update booking status mutation (MUST BE CALLED BEFORE ANY RETURNS)
   const updateBookingMutation = useMutation({
     mutationFn: async ({ bookingId, status }: { bookingId: string; status: string }) => {
-      const response = await apiRequest("PATCH", `/api/bookings/${bookingId}/status`, { status });
-      return response.json();
+      try {
+        const response = await apiRequest("PATCH", `/api/bookings/${bookingId}/status`, { status });
+        const text = await response.text();
+        
+        if (!text || text.trim() === '') {
+          return { success: true };
+        }
+        
+        try {
+          return JSON.parse(text);
+        } catch (parseError) {
+          console.error('JSON parse error:', parseError, 'Response text:', text);
+          throw new Error('Invalid server response format');
+        }
+      } catch (error) {
+        console.error('Update booking status error:', error);
+        throw error;
+      }
     },
     onSuccess: () => {
       toast({
@@ -2226,11 +2242,36 @@ export default function WorkerDashboard() {
                         {booking.status === "in_progress" && (
                           <Button
                             size="sm"
-                            onClick={() => handleStatusUpdate(booking.id, "completed")}
+                            onClick={() => {
+                              setCompletionBooking(booking);
+                              setJobCompletionModalOpen(true);
+                            }}
                             disabled={updateBookingMutation.isPending}
+                            data-testid={`button-complete-job-${booking.id}`}
                           >
                             Mark Complete
                           </Button>
+                        )}
+
+                        {booking.status === "completed" && booking.completionOTP && !booking.otpVerifiedAt && (
+                          <div className="text-sm text-orange-600 bg-orange-50 p-2 rounded">
+                            <CheckCircle className="h-4 w-4 inline mr-1" />
+                            Waiting for client OTP verification
+                          </div>
+                        )}
+
+                        {booking.status === "completed" && booking.otpVerifiedAt && !booking.clientRating && (
+                          <div className="text-sm text-blue-600 bg-blue-50 p-2 rounded">
+                            <Star className="h-4 w-4 inline mr-1" />
+                            Completed - Waiting for client review
+                          </div>
+                        )}
+
+                        {booking.status === "completed" && booking.clientRating && (
+                          <div className="text-sm text-green-600 bg-green-50 p-2 rounded">
+                            <CheckCircle className="h-4 w-4 inline mr-1" />
+                            Job completed with {booking.clientRating}★ rating
+                          </div>
                         )}
                       </div>
                     ))}

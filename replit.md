@@ -53,7 +53,8 @@ Located in `shared/schema.ts`, the database includes:
 - **Districts**: Complete coverage of Tamil Nadu's 38 districts with Tamil names
 - **Areas**: Comprehensive village and town coverage with 492+ locations across Tamil Nadu
 - **Service Categories**: Dynamic service types that workers can offer
-- **Bookings**: Complete booking workflow from request to completion
+- **Bookings**: Complete booking workflow from request to completion with OTP verification system (completionOTP, otpGeneratedAt, otpVerifiedAt, workerCompletedAt, clientConfirmedAt)
+- **Worker Reviews**: Detailed rating system with multiple criteria (work quality, timeliness, communication, professionalism)
 - **OTP Verifications**: Secure authentication via mobile OTP
 - **Location Tracking**: GPS tracking for service delivery with geofencing
 - **Payments**: Complete payment processing with Stripe integration
@@ -77,11 +78,12 @@ Located in `shared/schema.ts`, the database includes:
 
 ### User Interfaces
 - **Home Page**: Service discovery with search and filters
-- **Client Dashboard**: Booking management and service requests
-- **Worker Dashboard**: Job management, earnings tracking, and availability control
+- **Client Dashboard**: Booking management and service requests with complete job completion workflow (OTP verification and review system)
+- **Worker Dashboard**: Job management, earnings tracking, and availability control with job completion workflow
 - **Admin Dashboard**: Platform oversight, user management, analytics, and advertisement management
 - **UPDATE_REQUIRED Styling**: Text displayed in red color (text-red-500) with reduced font size (text-xs) across all dashboards for better visual clarity (August 13, 2025)
 - **Advertisement System**: Sliding carousel advertisements with admin management, image upload, targeted audience display for clients and workers, and global toggle to enable/disable all ads (August 13, 2025)
+- **Job Completion System**: Complete OTP verification workflow where workers mark jobs complete, clients receive OTP for verification, and detailed review/rating system with worker performance tracking (August 16, 2025)
 
 ### Language Support
 - English-only interface for India-wide coverage
