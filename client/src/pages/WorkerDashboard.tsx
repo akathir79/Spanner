@@ -1499,18 +1499,24 @@ export default function WorkerDashboard() {
   const updateBookingMutation = useMutation({
     mutationFn: async ({ bookingId, status }: { bookingId: string; status: string }) => {
       try {
-        const response = await apiRequest("PATCH", `/api/bookings/${bookingId}/status`, { status });
-        const text = await response.text();
-        
-        if (!text || text.trim() === '') {
-          return { success: true };
+        const response = await fetch(`/api/bookings/${bookingId}/status`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ status }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
-        
-        try {
-          return JSON.parse(text);
-        } catch (parseError) {
-          console.error('JSON parse error:', parseError, 'Response text:', text);
-          throw new Error('Invalid server response format');
+
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          return await response.json();
+        } else {
+          console.warn('Response is not JSON, status:', response.status);
+          return { success: true, status: response.status };
         }
       } catch (error) {
         console.error('Update booking status error:', error);

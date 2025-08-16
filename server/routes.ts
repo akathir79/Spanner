@@ -1090,8 +1090,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Update booking status
   app.patch("/api/bookings/:id/status", async (req, res) => {
     try {
+      console.log("PATCH booking status request:", { id: req.params.id, body: req.body });
       const { id } = req.params;
       const { status } = req.body;
+      
+      if (!status) {
+        return res.status(400).json({ message: "Status is required" });
+      }
       
       const booking = await storage.updateBookingStatus(id, status);
       
@@ -1099,13 +1104,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Booking not found" });
       }
       
+      console.log("Booking status updated successfully:", booking.id, "->", booking.status);
+      
+      res.set('Content-Type', 'application/json');
       res.json({
+        success: true,
         message: "Booking status updated",
         booking
       });
     } catch (error) {
       console.error("Update booking status error:", error);
-      res.status(500).json({ message: "Internal server error" });
+      res.status(500).json({ message: "Internal server error", error: error.message });
     }
   });
 
