@@ -1,5 +1,6 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
@@ -12,16 +13,26 @@ interface QuickPostModalProps {
 }
 
 export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps) {
-  const { user } = useAuth();
+  const { user, loginWithOtp, verifyOtp, signupClient } = useAuth();
   const { toast } = useToast();
 
   // Simple state management
-  const [currentStep, setCurrentStep] = useState<'language' | 'recording' | 'success'>('language');
+  const [currentStep, setCurrentStep] = useState<'auth-check' | 'login' | 'register' | 'language' | 'recording' | 'success'>('auth-check');
   const [selectedLanguage, setSelectedLanguage] = useState<string>('en');
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [recordingDuration, setRecordingDuration] = useState(0);
   const [processedResult, setProcessedResult] = useState<any>(null);
+  
+  // Quick auth states
+  const [quickAuthData, setQuickAuthData] = useState({
+    mobile: '',
+    firstName: '',
+    lastName: '',
+    role: 'client' as 'client' | 'worker'
+  });
+  const [otpSent, setOtpSent] = useState(false);
+  const [otp, setOtp] = useState('');
 
   // Refs
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -42,16 +53,30 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
     { code: 'pa', name: 'Punjabi', flag: '🇮🇳' }
   ];
 
-  // Reset when modal opens/closes
+  // Check authentication status when modal opens
   useEffect(() => {
     if (isOpen) {
-      setCurrentStep('language');
+      if (user) {
+        // User is logged in, go directly to language selection
+        setCurrentStep('language');
+      } else {
+        // User not logged in, start with auth check
+        setCurrentStep('auth-check');
+      }
       setSelectedLanguage('en');
       setIsRecording(false);
       setIsProcessing(false);
       setRecordingDuration(0);
+      setOtpSent(false);
+      setOtp('');
+      setQuickAuthData({
+        mobile: '',
+        firstName: '',
+        lastName: '',
+        role: 'client'
+      });
     }
-  }, [isOpen]);
+  }, [isOpen, user]);
 
   // Start recording function
   const startRecording = useCallback(async () => {
@@ -257,6 +282,112 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
     }
   }, [toast, selectedLanguage, user]);
 
+  // Quick authentication functions
+  const handleSendOtp = useCallback(async () => {
+    if (!quickAuthData.mobile || quickAuthData.mobile.length < 10) {
+      toast({
+        title: "Invalid Mobile",
+        description: "Please enter a valid 10-digit mobile number",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsProcessing(true);
+    try {
+      const result = await loginWithOtp(quickAuthData.mobile, quickAuthData.role);
+      if (result.success) {
+        setOtpSent(true);
+        toast({
+          title: "OTP Sent",
+          description: `OTP sent to ${quickAuthData.mobile}. Development OTP: ${result.otp}`,
+        });
+      } else {
+        throw new Error(result.error || 'Failed to send OTP');
+      }
+    } catch (error: any) {
+      toast({
+        title: "Failed to Send OTP",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  }, [quickAuthData, loginWithOtp, toast]);
+
+  const handleVerifyOtp = useCallback(async () => {
+    if (!otp || otp.length !== 6) {
+      toast({
+        title: "Invalid OTP",
+        description: "Please enter the 6-digit OTP",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsProcessing(true);
+    try {
+      const result = await verifyOtp(quickAuthData.mobile, otp, 'login');
+      if (result) {
+        toast({
+          title: "Login Successful",
+          description: `Welcome ${result.firstName}!`
+        });
+        setCurrentStep('language');
+      } else {
+        throw new Error('Invalid OTP or failed to login');
+      }
+    } catch (error: any) {
+      toast({
+        title: "Login Failed",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  }, [otp, quickAuthData.mobile, verifyOtp, toast]);
+
+  const handleQuickRegister = useCallback(async () => {
+    if (!quickAuthData.firstName || !quickAuthData.lastName || !quickAuthData.mobile) {
+      toast({
+        title: "Missing Information",
+        description: "Please fill in all required fields",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsProcessing(true);
+    try {
+      const result = await signupClient({
+        firstName: quickAuthData.firstName,
+        lastName: quickAuthData.lastName,
+        mobile: quickAuthData.mobile,
+        role: quickAuthData.role
+      });
+      
+      if (result.success && result.user) {
+        toast({
+          title: "Registration Successful",
+          description: `Welcome ${result.user.firstName}! Account created successfully.`
+        });
+        setCurrentStep('language');
+      } else {
+        throw new Error(result.error || 'Failed to create account');
+      }
+    } catch (error: any) {
+      toast({
+        title: "Registration Failed",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  }, [quickAuthData, signupClient, toast]);
+
   // Format duration helper
   const formatDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -285,6 +416,198 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
             Quick Post with Voice
           </DialogTitle>
         </DialogHeader>
+
+        {/* Authentication Check Step */}
+        {currentStep === 'auth-check' && (
+          <div className="text-center space-y-4">
+            <div className="text-6xl">🔐</div>
+            <h3 className="text-xl font-semibold">Quick Post Authentication</h3>
+            <p className="text-muted-foreground">
+              To create a voice job post, you need to be logged in.
+            </p>
+            <div className="grid grid-cols-2 gap-2">
+              <Button onClick={() => setCurrentStep('login')} className="w-full">
+                I Have an Account
+              </Button>
+              <Button onClick={() => setCurrentStep('register')} variant="outline" className="w-full">
+                Create New Account
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Quick Login Step */}
+        {currentStep === 'login' && (
+          <div className="space-y-4">
+            <div className="text-center">
+              <h3 className="text-xl font-semibold">Quick Login</h3>
+              <p className="text-muted-foreground">Enter your mobile number to login</p>
+            </div>
+            
+            {!otpSent ? (
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium">Mobile Number</label>
+                  <Input
+                    type="tel"
+                    placeholder="Enter 10-digit mobile number"
+                    value={quickAuthData.mobile}
+                    onChange={(e) => setQuickAuthData(prev => ({ ...prev, mobile: e.target.value }))}
+                    maxLength={10}
+                  />
+                </div>
+                
+                <div>
+                  <label className="text-sm font-medium">User Type</label>
+                  <div className="grid grid-cols-2 gap-2 mt-2">
+                    <Button
+                      variant={quickAuthData.role === 'client' ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setQuickAuthData(prev => ({ ...prev, role: 'client' }))}
+                    >
+                      Client
+                    </Button>
+                    <Button
+                      variant={quickAuthData.role === 'worker' ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setQuickAuthData(prev => ({ ...prev, role: 'worker' }))}
+                    >
+                      Worker
+                    </Button>
+                  </div>
+                </div>
+                
+                <Button 
+                  onClick={handleSendOtp} 
+                  className="w-full"
+                  disabled={isProcessing}
+                >
+                  {isProcessing ? "Sending..." : "Send OTP"}
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium">Enter OTP</label>
+                  <Input
+                    type="text"
+                    placeholder="Enter 6-digit OTP"
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value)}
+                    maxLength={6}
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    OTP sent to {quickAuthData.mobile}
+                  </p>
+                </div>
+                
+                <Button 
+                  onClick={handleVerifyOtp} 
+                  className="w-full"
+                  disabled={isProcessing}
+                >
+                  {isProcessing ? "Verifying..." : "Verify & Login"}
+                </Button>
+                
+                <Button 
+                  onClick={() => setOtpSent(false)} 
+                  variant="outline"
+                  className="w-full"
+                >
+                  Change Mobile Number
+                </Button>
+              </div>
+            )}
+            
+            <Button 
+              onClick={() => setCurrentStep('auth-check')} 
+              variant="ghost"
+              className="w-full"
+            >
+              ← Back
+            </Button>
+          </div>
+        )}
+
+        {/* Quick Registration Step */}
+        {currentStep === 'register' && (
+          <div className="space-y-4">
+            <div className="text-center">
+              <h3 className="text-xl font-semibold">Quick Registration</h3>
+              <p className="text-muted-foreground">Create your account to post jobs</p>
+            </div>
+            
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="text-sm font-medium">First Name</label>
+                  <Input
+                    type="text"
+                    placeholder="First name"
+                    value={quickAuthData.firstName}
+                    onChange={(e) => setQuickAuthData(prev => ({ ...prev, firstName: e.target.value }))}
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Last Name</label>
+                  <Input
+                    type="text"
+                    placeholder="Last name"
+                    value={quickAuthData.lastName}
+                    onChange={(e) => setQuickAuthData(prev => ({ ...prev, lastName: e.target.value }))}
+                  />
+                </div>
+              </div>
+              
+              <div>
+                <label className="text-sm font-medium">Mobile Number</label>
+                <Input
+                  type="tel"
+                  placeholder="Enter 10-digit mobile number"
+                  value={quickAuthData.mobile}
+                  onChange={(e) => setQuickAuthData(prev => ({ ...prev, mobile: e.target.value }))}
+                  maxLength={10}
+                />
+              </div>
+              
+              <div>
+                <label className="text-sm font-medium">Account Type</label>
+                <div className="grid grid-cols-2 gap-2 mt-2">
+                  <Button
+                    variant={quickAuthData.role === 'client' ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setQuickAuthData(prev => ({ ...prev, role: 'client' }))}
+                  >
+                    Client (Post Jobs)
+                  </Button>
+                  <Button
+                    variant={quickAuthData.role === 'worker' ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setQuickAuthData(prev => ({ ...prev, role: 'worker' }))}
+                  >
+                    Worker (Find Jobs)
+                  </Button>
+                </div>
+              </div>
+              
+              <Button 
+                onClick={handleQuickRegister} 
+                className="w-full"
+                disabled={isProcessing}
+              >
+                {isProcessing ? "Creating Account..." : "Create Account & Continue"}
+              </Button>
+            </div>
+            
+            <Button 
+              onClick={() => setCurrentStep('auth-check')} 
+              variant="ghost"
+              className="w-full"
+            >
+              ← Back
+            </Button>
+          </div>
+        )}
 
         {/* Language Selection Step */}
         {currentStep === 'language' && (
