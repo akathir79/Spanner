@@ -250,6 +250,14 @@ export function SuperFastRegisterForm({ role, onComplete, onBack, onStepChange, 
           lastName: "UPDATE_REQUIRED", // Mark for update
           email: "", // Will be requested in dashboard
           fullAddress: `${data.houseNumber}, ${data.streetName}, ${data.areaName}`, // Combine for full address
+          // Worker-specific required fields with defaults for quick registration
+          ...(role === "worker" && {
+            aadhaarNumber: "000000000000", // Placeholder - to be updated in dashboard
+            experienceYears: 1, // Default - to be updated in dashboard  
+            hourlyRate: 100, // Default rate - to be updated in dashboard
+            serviceDistricts: [data.district || "Salem"], // Use selected district
+            skills: [data.primaryService || "General"], // Use primary service as default skill
+          })
         }),
       });
       
