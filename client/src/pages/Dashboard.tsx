@@ -2693,15 +2693,27 @@ export default function Dashboard() {
           <TabsList className="grid w-full grid-cols-4 bg-muted">
             <TabsTrigger 
               value="bookings" 
-              className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+              className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground relative"
             >
               My Bookings
+              {/* Show bookings count */}
+              {bookings && bookings.length > 0 && (
+                <Badge variant="secondary" className="ml-2 bg-green-500 text-white text-xs px-1 py-0 h-5 min-w-[20px] rounded-full flex items-center justify-center">
+                  {bookings.length}
+                </Badge>
+              )}
             </TabsTrigger>
             <TabsTrigger 
               value="jobs"
-              className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+              className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground relative"
             >
               My Jobs
+              {/* Show job postings count */}
+              {jobPostings && jobPostings.length > 0 && (
+                <Badge variant="secondary" className="ml-2 bg-blue-500 text-white text-xs px-1 py-0 h-5 min-w-[20px] rounded-full flex items-center justify-center">
+                  {jobPostings.length}
+                </Badge>
+              )}
             </TabsTrigger>
             <TabsTrigger 
               value="bids"
