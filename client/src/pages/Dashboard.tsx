@@ -2782,7 +2782,7 @@ export default function Dashboard() {
                                 {booking.serviceCategory.replace('_', ' ')} Service
                               </h4>
                               <p className="text-sm text-muted-foreground">
-                                Booking ID: {booking.id.substring(0, 8)}
+                                Booking ID: {booking.id}
                               </p>
                             </div>
                             <Badge className={getStatusColor(booking.status)}>
