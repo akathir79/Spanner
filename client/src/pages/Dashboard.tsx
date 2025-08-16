@@ -2529,8 +2529,7 @@ export default function Dashboard() {
       
       console.log("Frontend sending update data:", updateData);
       
-      const response = await apiRequest("PUT", `/api/job-postings/${editingJob.id}`, updateData);
-      const updatedJobData = await response.json();
+      const updatedJobData = await apiRequest("PUT", `/api/job-postings/${editingJob.id}`, updateData);
       
       setIsEditModalOpen(false);
       setEditingJob(null);
