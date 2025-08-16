@@ -295,25 +295,15 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
 
     setIsProcessing(true);
     try {
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          mobile: quickAuthData.mobile, 
-          role: quickAuthData.role 
-        }),
-      });
-
-      const result = await response.json();
-      
-      if (response.ok) {
+      const result = await loginWithOtp(quickAuthData.mobile, quickAuthData.role);
+      if (result.success) {
         setOtpSent(true);
         toast({
           title: "OTP Sent",
           description: `OTP sent to ${quickAuthData.mobile}. Development OTP: ${result.otp || '123456'}`,
         });
       } else {
-        throw new Error(result.message || 'Failed to send OTP');
+        throw new Error(result.error || 'Failed to send OTP');
       }
     } catch (error: any) {
       toast({
@@ -324,7 +314,7 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
     } finally {
       setIsProcessing(false);
     }
-  }, [quickAuthData, toast]);
+  }, [quickAuthData, loginWithOtp, toast]);
 
   const handleVerifyOtp = useCallback(async () => {
     if (!otp || otp.length !== 6) {
@@ -338,31 +328,15 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
 
     setIsProcessing(true);
     try {
-      const response = await fetch("/api/auth/verify-otp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          mobile: quickAuthData.mobile, 
-          otp: otp, 
-          purpose: 'login' 
-        }),
-      });
-
-      const result = await response.json();
-      
-      if (response.ok && result.user) {
-        // Store user in localStorage like other forms do
-        localStorage.setItem("user", JSON.stringify(result.user));
-        
+      const result = await verifyOtp(quickAuthData.mobile, otp, 'login');
+      if (result) {
         toast({
           title: "Login Successful",
-          description: `Welcome ${result.user.firstName}!`
+          description: `Welcome ${result.firstName}!`
         });
-        
-        // Trigger a reload to update auth state
-        window.location.reload();
+        setCurrentStep('language');
       } else {
-        throw new Error(result.message || 'Invalid OTP or failed to login');
+        throw new Error('Invalid OTP or failed to login');
       }
     } catch (error: any) {
       toast({
@@ -373,7 +347,7 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
     } finally {
       setIsProcessing(false);
     }
-  }, [otp, quickAuthData.mobile, toast]);
+  }, [otp, quickAuthData.mobile, verifyOtp, toast]);
 
   const handleQuickRegister = useCallback(async () => {
     if (!quickAuthData.firstName || !quickAuthData.lastName || !quickAuthData.mobile) {
@@ -387,32 +361,21 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
 
     setIsProcessing(true);
     try {
-      const response = await fetch("/api/auth/signup/client", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          firstName: quickAuthData.firstName,
-          lastName: quickAuthData.lastName,
-          mobile: quickAuthData.mobile,
-          role: quickAuthData.role
-        }),
+      const result = await signupClient({
+        firstName: quickAuthData.firstName,
+        lastName: quickAuthData.lastName,
+        mobile: quickAuthData.mobile,
+        role: quickAuthData.role
       });
-
-      const result = await response.json();
       
-      if (response.ok && result.user) {
-        // Store user in localStorage like other forms do
-        localStorage.setItem("user", JSON.stringify(result.user));
-        
+      if (result.success && result.user) {
         toast({
           title: "Registration Successful",
           description: `Welcome ${result.user.firstName}! Account created successfully.`
         });
-        
-        // Trigger a reload to update auth state
-        window.location.reload();
+        setCurrentStep('language');
       } else {
-        throw new Error(result.message || 'Failed to create account');
+        throw new Error(result.error || 'Failed to create account');
       }
     } catch (error: any) {
       toast({
@@ -423,7 +386,7 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
     } finally {
       setIsProcessing(false);
     }
-  }, [quickAuthData, toast]);
+  }, [quickAuthData, signupClient, toast]);
 
   // Format duration helper
   const formatDuration = (seconds: number) => {
