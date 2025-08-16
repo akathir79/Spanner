@@ -61,7 +61,7 @@ interface ChatConversation {
 
 interface ChatSystemProps {
   userId: string;
-  userRole: 'client' | 'admin' | 'super_admin';
+  userRole: 'client' | 'worker' | 'admin' | 'super_admin';
   userName: string;
 }
 
@@ -81,6 +81,8 @@ export const ChatSystem: React.FC<ChatSystemProps> = ({ userId, userRole, userNa
     queryFn: async () => {
       const endpoint = userRole === 'client' 
         ? `/api/chat/conversations/client/${userId}`
+        : userRole === 'worker'
+        ? `/api/chat/conversations/client/${userId}` // Workers can chat with admins like clients
         : userRole === 'admin' || userRole === 'super_admin'
         ? `/api/chat/conversations/admin/${userId}`
         : `/api/chat/conversations`;
@@ -113,8 +115,8 @@ export const ChatSystem: React.FC<ChatSystemProps> = ({ userId, userRole, userNa
   const createConversationMutation = useMutation({
     mutationFn: async (data: { subject: string; priority: string }) => {
       return await apiRequest('POST', '/api/chat/conversations', {
-        clientId: userRole === 'client' ? userId : '',
-        adminId: userRole !== 'client' ? userId : undefined,
+        clientId: userRole === 'client' || userRole === 'worker' ? userId : '',
+        adminId: userRole === 'admin' || userRole === 'super_admin' ? userId : undefined,
         subject: data.subject,
         priority: data.priority,
         status: 'active',
@@ -197,7 +199,7 @@ export const ChatSystem: React.FC<ChatSystemProps> = ({ userId, userRole, userNa
     const currentConversation = conversations.find(c => c.id === selectedConversation);
     if (!currentConversation) return;
 
-    const recipientId = userRole === 'client' 
+    const recipientId = userRole === 'client' || userRole === 'worker'
       ? currentConversation.adminId || '' 
       : currentConversation.clientId;
 
@@ -261,7 +263,7 @@ export const ChatSystem: React.FC<ChatSystemProps> = ({ userId, userRole, userNa
             <div className="flex items-center gap-2">
               <MessageCircle className="h-5 w-5 text-blue-600 dark:text-blue-400" />
               <h3 className="font-semibold text-slate-900 dark:text-slate-100">
-                {userRole === 'client' ? 'Support Chat' : 'Client Messages'}
+                {userRole === 'client' || userRole === 'worker' ? 'Support Chat' : 'Client Messages'}
               </h3>
             </div>
             {unreadCount?.count > 0 && (
@@ -271,7 +273,7 @@ export const ChatSystem: React.FC<ChatSystemProps> = ({ userId, userRole, userNa
             )}
           </div>
           
-          {userRole === 'client' && (
+          {(userRole === 'client' || userRole === 'worker') && (
             <Dialog open={isNewChatOpen} onOpenChange={setIsNewChatOpen}>
               <DialogTrigger asChild>
                 <Button size="sm" className="w-full">
@@ -326,7 +328,7 @@ export const ChatSystem: React.FC<ChatSystemProps> = ({ userId, userRole, userNa
             <div className="p-4 text-center">
               <MessageCircle className="h-8 w-8 text-slate-400 mx-auto mb-2" />
               <p className="text-sm text-slate-500 dark:text-slate-400">
-                {userRole === 'client' ? 'No conversations yet' : 'No client messages'}
+                {userRole === 'client' || userRole === 'worker' ? 'No conversations yet' : 'No client messages'}
               </p>
             </div>
           ) : (
@@ -357,7 +359,7 @@ export const ChatSystem: React.FC<ChatSystemProps> = ({ userId, userRole, userNa
                           </Avatar>
                           <div className="min-w-0 flex-1">
                             <p className="font-medium text-sm text-slate-900 dark:text-slate-100 truncate">
-                              {userRole === 'client' 
+                              {userRole === 'client' || userRole === 'worker'
                                 ? conversation.adminName || 'Admin'
                                 : conversation.clientName || 'Client'
                               }

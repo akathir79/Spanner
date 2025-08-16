@@ -53,7 +53,8 @@ import {
   Volume2,
   Camera,
   Video,
-  AlertTriangle
+  AlertTriangle,
+  MessageCircle
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
@@ -62,6 +63,7 @@ import LocationTracker from "@/components/LocationTracker";
 import BankDetailsModal from "@/components/BankDetailsModal";
 import AdvertisementCarousel from "@/components/AdvertisementCarousel";
 import JobCompletionModal from "@/components/JobCompletionModal";
+import { ChatSystem } from "@/components/ChatSystem";
 import { format } from "date-fns";
 
 // Worker Profile Card Component with Edit functionality
@@ -2072,7 +2074,7 @@ export default function WorkerDashboard() {
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6">
+          <TabsList className="grid w-full grid-cols-7">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="bookings" className="relative">
               Bookings
@@ -2107,6 +2109,10 @@ export default function WorkerDashboard() {
               )}
             </TabsTrigger>
             <TabsTrigger value="settings">Settings</TabsTrigger>
+            <TabsTrigger value="chat">
+              Support Chat
+              <MessageCircle className="h-3 w-3 ml-1" />
+            </TabsTrigger>
           </TabsList>
 
           {/* Overview Tab */}
@@ -2573,6 +2579,28 @@ export default function WorkerDashboard() {
                     </div>
                   </div>
                 </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Chat Tab Content */}
+          <TabsContent value="chat" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <MessageCircle className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                  Support Chat
+                </CardTitle>
+                <p className="text-muted-foreground">
+                  Get help from our support team or resolve any issues you're facing
+                </p>
+              </CardHeader>
+              <CardContent>
+                <ChatSystem 
+                  userId={user?.id || ''} 
+                  userRole="worker"
+                  userName={`${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'Worker'}
+                />
               </CardContent>
             </Card>
           </TabsContent>

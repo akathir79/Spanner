@@ -28,7 +28,8 @@ import {
   X,
   MapPin,
   Camera,
-  Megaphone
+  Megaphone,
+  MessageCircle
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -38,6 +39,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { ChatSystem } from "@/components/ChatSystem";
 
 export default function AdminDashboard() {
   const { user } = useAuth();
@@ -504,6 +506,28 @@ export default function AdminDashboard() {
                   <p className="text-sm">Toggle the switch above to enable advertisement display across the platform.</p>
                 </div>
               )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Chat Management Section */}
+        <div className="mt-8">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <MessageCircle className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                Client Messages & Support
+              </CardTitle>
+              <p className="text-muted-foreground">
+                Manage conversations with clients and workers, respond to support requests
+              </p>
+            </CardHeader>
+            <CardContent>
+              <ChatSystem 
+                userId={user?.id || ''} 
+                userRole={user?.role === 'admin' || user?.role === 'super_admin' ? 'admin' : 'client'}
+                userName={`${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'Admin'}
+              />
             </CardContent>
           </Card>
         </div>
