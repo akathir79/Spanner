@@ -1021,39 +1021,184 @@ const MyBidsTab = ({ user }: { user: any }) => {
         </CardHeader>
         <CardContent>
           {myBids.length > 0 ? (
-            <div className="space-y-4">
-              {myBids.map((bid: any) => (
-                <div key={bid.id} className="border rounded-lg p-4 space-y-3">
-                  <div className="flex justify-between items-start">
-                    <h3 className="font-medium">{bid.jobPosting?.title || "Job Title"}</h3>
-                    <Badge
-                      variant={
-                        bid.status === "accepted" ? "default" :
-                        bid.status === "rejected" ? "destructive" : "secondary"
-                      }
-                    >
-                      {bid.status}
-                    </Badge>
-                  </div>
-                  
-                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                    <div className="flex items-center gap-1">
-                      <DollarSign className="h-4 w-4" />
-                      ₹{bid.proposedAmount}
-                    </div>
-                    {bid.estimatedDuration && (
-                      <div className="flex items-center gap-1">
-                        <Clock className="h-4 w-4" />
-                        {bid.estimatedDuration}
+            <div className="space-y-4 max-h-[600px] overflow-y-auto">
+              {myBids.map((bid: any) => {
+                const job = bid.jobPosting;
+                return (
+                  <Card 
+                    key={bid.id} 
+                    className="bg-gradient-to-br from-slate-800 via-slate-700 to-slate-800 border border-slate-600 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300"
+                  >
+                    <CardContent className="p-6 space-y-4">
+                      {/* Top Header with Job ID, Bid Date, and Status */}
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2">
+                          <div className="text-sm font-mono font-medium text-green-400 bg-green-900/30 px-3 py-1 rounded-md inline-block border border-green-500/30">
+                            Job ID: {job?.id || "N/A"}
+                          </div>
+                          <div className="flex items-center gap-1.5 text-xs text-purple-400 bg-purple-900/20 px-2 py-1 rounded border border-purple-500/30">
+                            <Clock className="h-3 w-3" />
+                            <span>Bid Submitted {new Date(bid.createdAt).toLocaleDateString()}</span>
+                          </div>
+                          {job?.budgetMin && job?.budgetMax && (
+                            <div className="flex items-center gap-1.5 px-2 py-1 rounded border text-xs text-emerald-400 bg-emerald-900/20 border-emerald-500/30">
+                              <span className="font-bold text-white">
+                                Client Budget: ₹{job.budgetMin} - ₹{job.budgetMax}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge 
+                            className={`px-3 py-1.5 text-sm font-medium border ${
+                              bid.status === "accepted" ? "bg-green-500 text-white border-green-400" :
+                              bid.status === "rejected" ? "bg-red-500 text-white border-red-400" : 
+                              "bg-yellow-500 text-white border-yellow-400"
+                            }`}
+                          >
+                            {bid.status === "accepted" ? "Accepted" :
+                             bid.status === "rejected" ? "Rejected" : "Pending"}
+                          </Badge>
+                        </div>
                       </div>
-                    )}
-                  </div>
-                  
-                  <p className="text-sm p-2 bg-muted/50 rounded">
-                    {bid.proposal}
-                  </p>
-                </div>
-              ))}
+
+                      {/* Your Bid Details */}
+                      <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4 mb-3">
+                        <h4 className="text-sm font-semibold text-blue-300 mb-2">Your Bid Details</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          <div className="flex items-center gap-2 text-sm">
+                            <DollarSign className="h-4 w-4 text-green-400" />
+                            <span className="text-slate-300">Your Proposal: </span>
+                            <span className="font-bold text-green-400">₹{bid.proposedAmount}</span>
+                          </div>
+                          {bid.estimatedDuration && (
+                            <div className="flex items-center gap-2 text-sm">
+                              <Clock className="h-4 w-4 text-amber-400" />
+                              <span className="text-slate-300">Duration: </span>
+                              <span className="text-amber-400">{bid.estimatedDuration}</span>
+                            </div>
+                          )}
+                        </div>
+                        <div className="mt-3">
+                          <p className="text-xs text-slate-400 mb-1">Your Proposal:</p>
+                          <p className="text-sm text-slate-200 bg-slate-800/50 p-2 rounded border border-slate-600/30">
+                            {bid.proposal}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Job Details from Client */}
+                      {job && (
+                        <>
+                          {/* Service Address & Media */}
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-3">
+                            {/* Service Address */}
+                            <Collapsible>
+                              <CollapsibleTrigger asChild>
+                                <Button variant="ghost" className="w-full justify-between p-2 h-auto text-slate-300 hover:text-blue-300 bg-slate-800/50 border border-slate-600/30 rounded-md">
+                                  <div className="flex items-center gap-2">
+                                    <MapPin className="h-3 w-3" />
+                                    <span className="text-xs font-medium">Service Address</span>
+                                  </div>
+                                  <ChevronDown className="h-3 w-3" />
+                                </Button>
+                              </CollapsibleTrigger>
+                              <CollapsibleContent className="mt-1">
+                                <div className="text-xs text-slate-300 bg-slate-900/50 border border-slate-600/30 p-2 rounded whitespace-pre-line">
+                                  {job.serviceAddress || 'Service address not specified'}
+                                </div>
+                              </CollapsibleContent>
+                            </Collapsible>
+
+                            {/* Media Attachments */}
+                            <Collapsible>
+                              <CollapsibleTrigger asChild>
+                                <Button variant="ghost" className="w-full justify-between p-2 h-auto text-slate-300 hover:text-blue-300 bg-slate-800/50 border border-slate-600/30 rounded-md">
+                                  <div className="flex items-center gap-2">
+                                    <Paperclip className="h-3 w-3" />
+                                    <span className="text-xs font-medium">Client Media</span>
+                                  </div>
+                                  <ChevronDown className="h-3 w-3" />
+                                </Button>
+                              </CollapsibleTrigger>
+                              <CollapsibleContent className="mt-1">
+                                <div className="text-xs text-slate-300 bg-slate-900/50 border border-slate-600/30 p-2 rounded">
+                                  {job.attachments && job.attachments.length > 0 ? (
+                                    <div className="space-y-2">
+                                      {job.attachments.map((attachment: any, idx: number) => (
+                                        <div key={idx} className="flex items-center gap-2 p-2 bg-slate-800/30 border border-slate-600/30 rounded">
+                                          {attachment.type === 'audio' && (
+                                            <>
+                                              <Volume2 className="h-3 w-3" />
+                                              <audio controls className="flex-1 h-6">
+                                                <source src={attachment.url} type="audio/webm" />
+                                              </audio>
+                                            </>
+                                          )}
+                                          {attachment.type === 'image' && (
+                                            <>
+                                              <Camera className="h-3 w-3" />
+                                              <img src={attachment.url} className="w-16 h-16 object-cover rounded border border-slate-600/30" alt="Job attachment" />
+                                            </>
+                                          )}
+                                          {attachment.type === 'video' && (
+                                            <>
+                                              <Video className="h-3 w-3" />
+                                              <video controls className="w-full h-20 rounded border border-slate-600/30">
+                                                <source src={attachment.url} />
+                                              </video>
+                                            </>
+                                          )}
+                                        </div>
+                                      ))}
+                                    </div>
+                                  ) : (
+                                    <span className="text-slate-400">No media attachments</span>
+                                  )}
+                                </div>
+                              </CollapsibleContent>
+                            </Collapsible>
+                          </div>
+
+                          {/* Job Title and Details */}
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <h3 className="font-semibold text-xl text-white">
+                                {job.title}
+                              </h3>
+                              <p className="text-sm text-blue-300 font-medium mt-1">
+                                {job.serviceCategory} • {job.district}, Tamil Nadu
+                              </p>
+                              {/* Requirements badges */}
+                              {job.requirements && job.requirements.length > 0 && (
+                                <div className="flex flex-wrap gap-1 mt-2">
+                                  {job.requirements.slice(0, 2).map((req: string, index: number) => (
+                                    <Badge key={index} variant="outline" className="text-xs bg-slate-600/50 text-slate-200 border-slate-500">
+                                      {req}
+                                    </Badge>
+                                  ))}
+                                  {job.requirements.length > 2 && (
+                                    <Badge variant="outline" className="text-xs bg-slate-600/50 text-slate-200 border-slate-500">
+                                      +{job.requirements.length - 2} more
+                                    </Badge>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          
+                          {/* Job Description */}
+                          <div className="bg-slate-900/50 border border-slate-600/50 rounded-lg p-4">
+                            <p className="text-slate-200 leading-relaxed">
+                              {job.description}
+                            </p>
+                          </div>
+                        </>
+                      )}
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           ) : (
             <div className="text-center py-8">
