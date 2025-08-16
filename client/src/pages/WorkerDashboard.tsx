@@ -15,6 +15,7 @@ import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { 
   BarChart3, 
   MapPin, 
@@ -47,7 +48,11 @@ import {
   IndianRupee,
   Gift,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Paperclip,
+  Volume2,
+  Camera,
+  Video
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
@@ -765,39 +770,171 @@ const AvailableJobsTab = ({ user }: { user: any }) => {
         </CardHeader>
         <CardContent>
           {jobPostings.length > 0 ? (
-            <div className="space-y-4">
-              {jobPostings.map((job: any) => (
-                <div key={job.id} className="border rounded-lg p-4 space-y-3">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="font-medium">{job.title}</h3>
-                      <p className="text-sm text-muted-foreground">{job.description}</p>
-                    </div>
-                    <Badge>₹{job.budget}</Badge>
-                  </div>
-                  
-                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                    <div className="flex items-center gap-1">
-                      <MapPin className="h-4 w-4" />
-                      {job.location}
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Calendar className="h-4 w-4" />
-                      {new Date(job.createdAt).toLocaleDateString()}
-                    </div>
-                  </div>
-                  
-                  <Button
-                    size="sm"
-                    onClick={() => {
-                      setSelectedJob(job);
-                      setIsBidModalOpen(true);
-                    }}
+            <div className="space-y-4 max-h-[600px] overflow-y-auto">
+              {jobPostings.map((job: any) => {
+                return (
+                  <Card 
+                    key={job.id} 
+                    className="bg-gradient-to-br from-slate-800 via-slate-700 to-slate-800 border border-slate-600 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:border-blue-400"
                   >
-                    Submit Bid
-                  </Button>
-                </div>
-              ))}
+                    <CardContent className="p-6 space-y-4">
+                      {/* Top Header with ID, Posted Date, Budget, Status Badge */}
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2">
+                          <div className="text-sm font-mono font-medium text-green-400 bg-green-900/30 px-3 py-1 rounded-md inline-block border border-green-500/30">
+                            ID: {job.id}
+                          </div>
+                          <div className="flex items-center gap-1.5 text-xs text-amber-400 bg-amber-900/20 px-2 py-1 rounded border border-amber-500/30">
+                            <Clock className="h-3 w-3" />
+                            <span>Posted {new Date(job.createdAt).toLocaleDateString()}</span>
+                          </div>
+                          <div className={`flex items-center gap-1.5 px-2 py-1 rounded border text-xs ${
+                            job.budgetMin && job.budgetMax && Number(job.budgetMin) > 0 && Number(job.budgetMax) > 0 ? 'text-emerald-400 bg-emerald-900/20 border-emerald-500/30' : 'text-slate-400 bg-slate-700/30 border-slate-500/30'
+                          }`}>
+                            <span className="font-bold text-white">
+                              {job.budgetMin && job.budgetMax && Number(job.budgetMin) > 0 && Number(job.budgetMax) > 0 ? `₹${job.budgetMin} - ₹${job.budgetMax}` : 'Negotiable'}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge 
+                            className={`px-3 py-1.5 text-sm font-medium border ${
+                              job.status === "open" ? "bg-emerald-500 text-white border-emerald-400" : 
+                              job.status === "closed" ? "bg-gray-500 text-white border-gray-400" : 
+                              job.status === "in_progress" ? "bg-blue-500 text-white border-blue-400" :
+                              job.status === "completed" ? "bg-green-500 text-white border-green-400" :
+                              "bg-gray-500 text-white border-gray-400"
+                            }`}
+                          >
+                            {job.status === "open" ? "Open" :
+                             job.status === "in_progress" ? "In Progress" :
+                             job.status === "completed" ? "Completed" : job.status}
+                          </Badge>
+                        </div>
+                      </div>
+
+                      {/* Service Address & Media Attachments */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-3">
+                        {/* Service Address */}
+                        <Collapsible>
+                          <CollapsibleTrigger asChild>
+                            <Button variant="ghost" className="w-full justify-between p-2 h-auto text-slate-300 hover:text-blue-300 bg-slate-800/50 border border-slate-600/30 rounded-md">
+                              <div className="flex items-center gap-2">
+                                <MapPin className="h-3 w-3" />
+                                <span className="text-xs font-medium">Service Address</span>
+                              </div>
+                              <ChevronDown className="h-3 w-3" />
+                            </Button>
+                          </CollapsibleTrigger>
+                          <CollapsibleContent className="mt-1">
+                            <div className="text-xs text-slate-300 bg-slate-900/50 border border-slate-600/30 p-2 rounded whitespace-pre-line">
+                              {job.serviceAddress || 'Service address not specified'}
+                            </div>
+                          </CollapsibleContent>
+                        </Collapsible>
+
+                        {/* Media Attachments */}
+                        <Collapsible>
+                          <CollapsibleTrigger asChild>
+                            <Button variant="ghost" className="w-full justify-between p-2 h-auto text-slate-300 hover:text-blue-300 bg-slate-800/50 border border-slate-600/30 rounded-md">
+                              <div className="flex items-center gap-2">
+                                <Paperclip className="h-3 w-3" />
+                                <span className="text-xs font-medium">Media</span>
+                              </div>
+                              <ChevronDown className="h-3 w-3" />
+                            </Button>
+                          </CollapsibleTrigger>
+                          <CollapsibleContent className="mt-1">
+                            <div className="text-xs text-slate-300 bg-slate-900/50 border border-slate-600/30 p-2 rounded">
+                              {/* Display job attachments if any */}
+                              {job.attachments && job.attachments.length > 0 ? (
+                                <div className="space-y-2">
+                                  {job.attachments.map((attachment: any, idx: number) => (
+                                    <div key={idx} className="flex items-center gap-2 p-2 bg-slate-800/30 border border-slate-600/30 rounded">
+                                      {attachment.type === 'audio' && (
+                                        <>
+                                          <Volume2 className="h-3 w-3" />
+                                          <audio controls className="flex-1 h-6">
+                                            <source src={attachment.url} type="audio/webm" />
+                                          </audio>
+                                        </>
+                                      )}
+                                      {attachment.type === 'image' && (
+                                        <>
+                                          <Camera className="h-3 w-3" />
+                                          <img src={attachment.url} className="w-16 h-16 object-cover rounded border border-slate-600/30" alt="Job attachment" />
+                                        </>
+                                      )}
+                                      {attachment.type === 'video' && (
+                                        <>
+                                          <Video className="h-3 w-3" />
+                                          <video controls className="w-full h-20 rounded border border-slate-600/30">
+                                            <source src={attachment.url} />
+                                          </video>
+                                        </>
+                                      )}
+                                    </div>
+                                  ))}
+                                </div>
+                              ) : (
+                                <span className="text-slate-400">No media attachments</span>
+                              )}
+                            </div>
+                          </CollapsibleContent>
+                        </Collapsible>
+                      </div>
+
+                      {/* Header with Title */}
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-xl text-white">
+                            {job.title}
+                          </h3>
+                          <p className="text-sm text-blue-300 font-medium mt-1">
+                            {job.serviceCategory} • {job.district}, Tamil Nadu
+                          </p>
+                          {/* Requirements badges */}
+                          {job.requirements && job.requirements.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mt-2">
+                              {job.requirements.slice(0, 2).map((req: string, index: number) => (
+                                <Badge key={index} variant="outline" className="text-xs bg-slate-600/50 text-slate-200 border-slate-500">
+                                  {req}
+                                </Badge>
+                              ))}
+                              {job.requirements.length > 2 && (
+                                <Badge variant="outline" className="text-xs bg-slate-600/50 text-slate-200 border-slate-500">
+                                  +{job.requirements.length - 2} more
+                                </Badge>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      
+                      {/* Description */}
+                      <div className="bg-slate-900/50 border border-slate-600/50 rounded-lg p-4">
+                        <p className="text-slate-200 leading-relaxed">
+                          {job.description}
+                        </p>
+                      </div>
+                      
+                      {/* Submit Bid Button */}
+                      <div className="flex justify-end pt-2">
+                        <Button
+                          size="sm"
+                          className="bg-blue-600 hover:bg-blue-700 text-white"
+                          onClick={() => {
+                            setSelectedJob(job);
+                            setIsBidModalOpen(true);
+                          }}
+                        >
+                          Submit Bid
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           ) : (
             <div className="text-center py-8">
