@@ -3594,6 +3594,111 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Chat Notification Preferences API Routes
+
+  // Get user's notification preferences (create default if none exist)
+  app.get("/api/chat/notification-preferences/:userId", async (req, res) => {
+    try {
+      const { userId } = req.params;
+      let preferences = await storage.getChatNotificationPreferences(userId);
+      
+      // If no preferences exist, create default ones
+      if (!preferences) {
+        const defaultPreferences = {
+          userId,
+          newMessageNotifications: true,
+          priorityMessageNotifications: true,
+          conversationStartedNotifications: true,
+          adminResponseNotifications: true,
+          emailNotifications: false,
+          pushNotifications: true,
+          soundNotifications: true,
+          desktopNotifications: false,
+          notificationFrequency: 'immediate' as const,
+          quietHoursEnabled: false,
+          quietHoursStart: '22:00',
+          quietHoursEnd: '08:00',
+        };
+        preferences = await storage.createChatNotificationPreferences(defaultPreferences);
+      }
+      
+      res.json(preferences);
+    } catch (error) {
+      console.error("Error getting notification preferences:", error);
+      res.status(500).json({ message: "Failed to get notification preferences" });
+    }
+  });
+
+  // Update user's notification preferences
+  app.put("/api/chat/notification-preferences/:userId", async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const updates = req.body;
+      
+      // Try to update existing preferences
+      let preferences = await storage.updateChatNotificationPreferences(userId, updates);
+      
+      // If no preferences exist, create them with the updates
+      if (!preferences) {
+        const defaultPreferences = {
+          userId,
+          newMessageNotifications: true,
+          priorityMessageNotifications: true,
+          conversationStartedNotifications: true,
+          adminResponseNotifications: true,
+          emailNotifications: false,
+          pushNotifications: true,
+          soundNotifications: true,
+          desktopNotifications: false,
+          notificationFrequency: 'immediate' as const,
+          quietHoursEnabled: false,
+          quietHoursStart: '22:00',
+          quietHoursEnd: '08:00',
+          ...updates,
+        };
+        preferences = await storage.createChatNotificationPreferences(defaultPreferences);
+      }
+      
+      res.json(preferences);
+    } catch (error) {
+      console.error("Error updating notification preferences:", error);
+      res.status(500).json({ message: "Failed to update notification preferences" });
+    }
+  });
+
+  // Reset user's notification preferences to defaults
+  app.post("/api/chat/notification-preferences/:userId/reset", async (req, res) => {
+    try {
+      const { userId } = req.params;
+      
+      // Delete existing preferences
+      await storage.deleteChatNotificationPreferences(userId);
+      
+      // Create default preferences
+      const defaultPreferences = {
+        userId,
+        newMessageNotifications: true,
+        priorityMessageNotifications: true,
+        conversationStartedNotifications: true,
+        adminResponseNotifications: true,
+        emailNotifications: false,
+        pushNotifications: true,
+        soundNotifications: true,
+        desktopNotifications: false,
+        notificationFrequency: 'immediate' as const,
+        quietHoursEnabled: false,
+        quietHoursStart: '22:00',
+        quietHoursEnd: '08:00',
+      };
+      
+      const preferences = await storage.createChatNotificationPreferences(defaultPreferences);
+      res.json(preferences);
+    } catch (error) {
+      console.error("Error resetting notification preferences:", error);
+      res.status(500).json({ message: "Failed to reset notification preferences" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

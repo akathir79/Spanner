@@ -63,10 +63,13 @@ import {
   type InsertNotification,
   chatMessages,
   chatConversations,
+  chatNotificationPreferences,
   type ChatMessage,
   type ChatConversation,
   type InsertChatMessage,
-  type InsertChatConversation
+  type InsertChatConversation,
+  type ChatNotificationPreferences,
+  type InsertChatNotificationPreferences
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, sql, desc, ilike, inArray, or, isNull, lt } from "drizzle-orm";
@@ -218,6 +221,12 @@ export interface IStorage {
   getUnreadNotificationCount(userId: string): Promise<number>;
   markNotificationAsRead(notificationId: string): Promise<Notification | undefined>;
   deleteNotification(notificationId: string): Promise<void>;
+  
+  // Chat Notification Preferences
+  getChatNotificationPreferences(userId: string): Promise<ChatNotificationPreferences | undefined>;
+  createChatNotificationPreferences(preferences: InsertChatNotificationPreferences): Promise<ChatNotificationPreferences>;
+  updateChatNotificationPreferences(userId: string, updates: Partial<ChatNotificationPreferences>): Promise<ChatNotificationPreferences | undefined>;
+  deleteChatNotificationPreferences(userId: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1845,6 +1854,36 @@ export class DatabaseStorage implements IStorage {
 
   async deleteChatMessage(messageId: string): Promise<void> {
     await db.delete(chatMessages).where(eq(chatMessages.id, messageId));
+  }
+
+  // Chat Notification Preferences methods
+  async getChatNotificationPreferences(userId: string): Promise<ChatNotificationPreferences | undefined> {
+    const [preferences] = await db
+      .select()
+      .from(chatNotificationPreferences)
+      .where(eq(chatNotificationPreferences.userId, userId));
+    return preferences || undefined;
+  }
+
+  async createChatNotificationPreferences(preferences: InsertChatNotificationPreferences): Promise<ChatNotificationPreferences> {
+    const [newPreferences] = await db
+      .insert(chatNotificationPreferences)
+      .values(preferences)
+      .returning();
+    return newPreferences;
+  }
+
+  async updateChatNotificationPreferences(userId: string, updates: Partial<ChatNotificationPreferences>): Promise<ChatNotificationPreferences | undefined> {
+    const [updatedPreferences] = await db
+      .update(chatNotificationPreferences)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(chatNotificationPreferences.userId, userId))
+      .returning();
+    return updatedPreferences || undefined;
+  }
+
+  async deleteChatNotificationPreferences(userId: string): Promise<void> {
+    await db.delete(chatNotificationPreferences).where(eq(chatNotificationPreferences.userId, userId));
   }
 }
 

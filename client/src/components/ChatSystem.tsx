@@ -13,7 +13,8 @@ import {
   Filter,
   Archive,
   Star,
-  MoreHorizontal
+  MoreHorizontal,
+  Settings
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -29,6 +30,7 @@ import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { formatDistanceToNow } from 'date-fns';
+import ChatNotificationPreferences from '@/components/ChatNotificationPreferences';
 
 interface ChatMessage {
   id: string;
@@ -265,6 +267,16 @@ export const ChatSystem: React.FC<ChatSystemProps> = ({ userId, userRole, userNa
               <h3 className="font-semibold text-slate-900 dark:text-slate-100">
                 {userRole === 'client' || userRole === 'worker' ? 'Support Chat' : 'Client Messages'}
               </h3>
+            </div>
+            <div className="flex items-center gap-2">
+              <ChatNotificationPreferences 
+                userId={userId}
+                trigger={
+                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                    <Settings className="h-4 w-4" />
+                  </Button>
+                }
+              />
             </div>
             {unreadCount?.count > 0 && (
               <Badge variant="destructive" className="text-xs">

@@ -791,6 +791,26 @@ export const chatMessages = pgTable('chat_messages', {
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
 
+// Chat notification preferences table
+export const chatNotificationPreferences = pgTable('chat_notification_preferences', {
+  id: text('id').primaryKey().$defaultFn(() => generateId()),
+  userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  newMessageNotifications: boolean('new_message_notifications').notNull().default(true),
+  priorityMessageNotifications: boolean('priority_message_notifications').notNull().default(true),
+  conversationStartedNotifications: boolean('conversation_started_notifications').notNull().default(true),
+  adminResponseNotifications: boolean('admin_response_notifications').notNull().default(true),
+  emailNotifications: boolean('email_notifications').notNull().default(false),
+  pushNotifications: boolean('push_notifications').notNull().default(true),
+  soundNotifications: boolean('sound_notifications').notNull().default(true),
+  desktopNotifications: boolean('desktop_notifications').notNull().default(false),
+  notificationFrequency: text('notification_frequency').notNull().default('immediate'), // immediate, hourly, daily
+  quietHoursEnabled: boolean('quiet_hours_enabled').notNull().default(false),
+  quietHoursStart: text('quiet_hours_start').default('22:00'), // 24-hour format
+  quietHoursEnd: text('quiet_hours_end').default('08:00'), // 24-hour format
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
 // Chat Conversations table to track conversation metadata
 export const chatConversations = pgTable('chat_conversations', {
   id: text('id').primaryKey().$defaultFn(() => generateId()),
@@ -822,3 +842,12 @@ export const insertChatConversationSchema = createInsertSchema(chatConversations
 });
 export type InsertChatConversation = z.infer<typeof insertChatConversationSchema>;
 export type ChatConversation = typeof chatConversations.$inferSelect;
+
+// Schema types for chat notification preferences
+export const insertChatNotificationPreferencesSchema = createInsertSchema(chatNotificationPreferences).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type ChatNotificationPreferences = typeof chatNotificationPreferences.$inferSelect;
+export type InsertChatNotificationPreferences = z.infer<typeof insertChatNotificationPreferencesSchema>;
