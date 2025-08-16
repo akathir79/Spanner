@@ -2545,23 +2545,31 @@ export default function Dashboard() {
         );
       });
       
-      const updatedJobData = await apiRequest("PUT", `/api/job-postings/${editingJob.id}`, updateData);
-      
-      // Update cache again with server response to ensure consistency
-      queryClient.setQueryData(["/api/job-postings/client", user?.id], (oldData: any) => {
-        if (!oldData) return oldData;
-        return oldData.map((job: any) => 
-          job.id === editingJob.id 
-            ? { 
-                ...job, 
-                ...updatedJobData,
-                budgetMin: updatedJobData?.budgetMin?.toString() || updateData.budgetMin?.toString(),
-                budgetMax: updatedJobData?.budgetMax?.toString() || updateData.budgetMax?.toString(),
-                updatedAt: new Date().toISOString()
-              }
-            : job
-        );
-      });
+      try {
+        const response = await apiRequest("PUT", `/api/job-postings/${editingJob.id}`, updateData);
+        const updatedJobData = await response.json();
+        
+        // Update cache again with server response to ensure consistency
+        queryClient.setQueryData(["/api/job-postings/client", user?.id], (oldData: any) => {
+          if (!oldData) return oldData;
+          return oldData.map((job: any) => 
+            job.id === editingJob.id 
+              ? { 
+                  ...job, 
+                  ...updatedJobData,
+                  budgetMin: updatedJobData?.budgetMin?.toString() || updateData.budgetMin?.toString(),
+                  budgetMax: updatedJobData?.budgetMax?.toString() || updateData.budgetMax?.toString(),
+                  updatedAt: new Date().toISOString()
+                }
+              : job
+          );
+        });
+        
+        console.log("Job successfully updated with server response:", updatedJobData);
+      } catch (serverError) {
+        console.error("Server update failed, keeping optimistic update:", serverError);
+        // Keep the optimistic update if server fails
+      }
       
       setIsEditModalOpen(false);
       setEditingJob(null);

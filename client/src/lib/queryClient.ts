@@ -11,7 +11,7 @@ export async function apiRequest(
   method: string,
   url: string,
   data?: unknown | undefined,
-): Promise<any> {
+): Promise<Response> {
   const user = localStorage.getItem("user");
   const headers: Record<string, string> = {
     ...(data ? { "Content-Type": "application/json" } : {}),
@@ -34,7 +34,7 @@ export async function apiRequest(
   });
 
   await throwIfResNotOk(res);
-  return await res.json();
+  return res;
 }
 
 type UnauthorizedBehavior = "returnNull" | "throw";
