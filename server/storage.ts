@@ -930,7 +930,7 @@ export class DatabaseStorage implements IStorage {
     // Create a booking automatically
     try {
       const bookingData = {
-        id: `BKG-${Date.now()}`, // Generate a unique booking ID
+        id: `BKG-${jobPosting.id}`, // Use job posting ID format
         clientId: jobPosting.clientId,
         workerId: bid.workerId,
         serviceCategory: jobPosting.serviceCategory,
