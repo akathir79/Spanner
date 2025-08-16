@@ -17,7 +17,7 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
   const { toast } = useToast();
 
   // Simple state management
-  const [currentStep, setCurrentStep] = useState<'auth-check' | 'login' | 'register' | 'language' | 'recording' | 'success'>('auth-check');
+  const [currentStep, setCurrentStep] = useState<'auth-check' | 'login' | 'register' | 'language' | 'recording' | 'manual-input' | 'success'>('auth-check');
   const [selectedLanguage, setSelectedLanguage] = useState<string>('en');
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);

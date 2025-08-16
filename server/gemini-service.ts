@@ -55,17 +55,26 @@ export async function transcribeAudioWithLanguageDetection(
     });
 
     const prompt = `
-    Please transcribe this audio and provide:
-    1. The transcribed text
-    2. The detected language (ISO 639-1 code like 'en', 'hi', 'ta', 'te', etc.)
-    3. Confidence score (0-1)
+    Please transcribe this audio file with multilingual support for Indian languages.
+    
+    CRITICAL REQUIREMENTS:
+    1. If audio is in Tamil, Hindi, Telugu, Bengali, Malayalam, Kannada, Gujarati, Marathi, or Punjabi:
+       - First transcribe in the original language
+       - Then provide clear English translation
+       - Preserve job/service context and technical terms
+       - Convert local place names to standard English spellings
+    2. Detect the actual spoken language accurately
+    3. For job-related content, translate service categories to English
     
     Respond in JSON format:
     {
-      "text": "transcribed text here",
-      "detectedLanguage": "language_code",
+      "text": "English translation of the transcribed content (or original if already English)",
+      "detectedLanguage": "ISO 639-1 code (en, hi, ta, te, bn, ml, kn, gu, mr, pa)",
       "confidence": 0.95
     }
+    
+    Example: If Tamil audio says "நான் ஒரு பிளம்பர் வேலை செய்ய வேண்டும்", 
+    respond with text: "I need a plumber job done"
     `;
 
     const result = await model.generateContent([
@@ -79,7 +88,12 @@ export async function transcribeAudioWithLanguageDetection(
     ]);
 
     const response = await result.response;
-    const jsonResponse = JSON.parse(response.text());
+    let responseText = response.text();
+    
+    // Clean up response - remove markdown code blocks if present
+    responseText = responseText.replace(/^```json\s*/, '').replace(/\s*```$/, '').trim();
+    
+    const jsonResponse = JSON.parse(responseText);
     
     return {
       text: jsonResponse.text || "",
@@ -147,8 +161,12 @@ export async function extractJobInformation(
 
     const result = await model.generateContent(prompt);
     const response = await result.response;
+    let responseText = response.text();
     
-    return JSON.parse(response.text());
+    // Clean up response - remove markdown code blocks if present
+    responseText = responseText.replace(/^```json\s*/, '').replace(/\s*```$/, '').trim();
+    
+    return JSON.parse(responseText);
   } catch (error) {
     console.error('Error extracting job information:', error);
     throw new Error('Failed to extract job information');
@@ -198,8 +216,12 @@ export async function extractUserInformation(
 
     const result = await model.generateContent(prompt);
     const response = await result.response;
+    let responseText = response.text();
     
-    return JSON.parse(response.text());
+    // Clean up response - remove markdown code blocks if present
+    responseText = responseText.replace(/^```json\s*/, '').replace(/\s*```$/, '').trim();
+    
+    return JSON.parse(responseText);
   } catch (error) {
     console.error('Error extracting user information:', error);
     throw new Error('Failed to extract user information');
@@ -244,8 +266,12 @@ export async function resolveLocationFromPartialAddress(
 
     const result = await model.generateContent(prompt);
     const response = await result.response;
+    let responseText = response.text();
     
-    return JSON.parse(response.text());
+    // Clean up response - remove markdown code blocks if present
+    responseText = responseText.replace(/^```json\s*/, '').replace(/\s*```$/, '').trim();
+    
+    return JSON.parse(responseText);
   } catch (error) {
     console.error('Error resolving location:', error);
     return {
@@ -279,8 +305,12 @@ export async function detectLanguage(text: string): Promise<{language: string; c
 
     const result = await model.generateContent(prompt);
     const response = await result.response;
+    let responseText = response.text();
     
-    return JSON.parse(response.text());
+    // Clean up response - remove markdown code blocks if present
+    responseText = responseText.replace(/^```json\s*/, '').replace(/\s*```$/, '').trim();
+    
+    return JSON.parse(responseText);
   } catch (error) {
     console.error('Error detecting language:', error);
     return { language: "en", confidence: 0.5 };
