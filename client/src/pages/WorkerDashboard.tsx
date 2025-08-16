@@ -1269,31 +1269,67 @@ export default function WorkerDashboard() {
   return (
     <div className="min-h-screen bg-muted/30 pt-20 pb-8">
       <div className="container mx-auto px-4">
+        {/* Wallet and Advertisement Section - Top Welcome Area */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">
-            Welcome back, {user.firstName}! ({user.id})
-          </h1>
-          <div className="space-y-2">
-            <p className="text-muted-foreground">
-              Manage your services and track your earnings from your worker dashboard.
-            </p>
-            {workerProfile?.workerProfile?.primaryService && (
-              <div className="flex items-center space-x-2">
-                <span className="text-sm font-medium text-muted-foreground">Services Offered:</span>
-                <Badge variant="secondary" className="capitalize">
-                  {workerProfile.workerProfile.primaryService}
-                </Badge>
-                {workerProfile.workerProfile.skills && workerProfile.workerProfile.skills.length > 0 && (
-                  <>
-                    {workerProfile.workerProfile.skills.map((skill: string, index: number) => (
-                      <Badge key={index} variant="outline" className="capitalize">
-                        {skill}
-                      </Badge>
-                    ))}
-                  </>
-                )}
-              </div>
-            )}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* My Wallet Section - Left Side */}
+            <div className="lg:col-span-1">
+              <Card className="border-green-200 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950 dark:to-green-900">
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center space-x-2 text-green-800 dark:text-green-200">
+                      <CreditCard className="h-5 w-5" />
+                      <span>My Wallet</span>
+                    </CardTitle>
+                    <Badge className="bg-green-600 text-white hover:bg-green-700">
+                      Active
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="text-center py-2">
+                    <p className="text-sm text-green-700 dark:text-green-300 mb-1">Available Balance</p>
+                    <p className="text-3xl font-bold text-green-800 dark:text-green-200">
+                      ₹ {stats.totalEarnings.toLocaleString()}
+                    </p>
+                    <p className="text-xs text-green-600 dark:text-green-400 mt-1">
+                      Last updated: {new Date().toLocaleTimeString()}
+                    </p>
+                  </div>
+                  
+                  <div className="flex gap-2">
+                    <Button size="sm" className="flex-1 bg-green-600 hover:bg-green-700 text-white">
+                      <Plus className="h-3 w-3 mr-1" />
+                      Add
+                    </Button>
+                    <Button size="sm" variant="outline" className="flex-1 border-red-300 text-red-600 hover:bg-red-50 hover:text-red-700">
+                      <DollarSign className="h-3 w-3 mr-1" />
+                      Withdraw
+                    </Button>
+                    <Button size="sm" variant="outline" className="flex-1 border-purple-300 text-purple-600 hover:bg-purple-50 hover:text-purple-700">
+                      <FileText className="h-3 w-3 mr-1" />
+                      Coupon
+                    </Button>
+                  </div>
+                  
+                  <div className="flex justify-between text-sm">
+                    <div className="text-center">
+                      <p className="text-green-700 dark:text-green-300">This Month</p>
+                      <p className="font-semibold text-green-800 dark:text-green-200">+₹{stats.totalEarnings.toLocaleString()}</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-yellow-700 dark:text-yellow-300">Pending</p>
+                      <p className="font-semibold text-yellow-800 dark:text-yellow-200">₹0</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+            
+            {/* Advertisement Section - Right Side */}
+            <div className="lg:col-span-2">
+              <AdvertisementCarousel targetAudience="worker" />
+            </div>
           </div>
         </div>
 
@@ -1368,68 +1404,6 @@ export default function WorkerDashboard() {
 
           {/* Overview Tab */}
           <TabsContent value="overview" className="space-y-6">
-            {/* Wallet and Advertisement Section */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-              {/* My Wallet Section - Left Side */}
-              <div className="lg:col-span-1">
-                <Card className="border-green-200 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950 dark:to-green-900">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="flex items-center space-x-2 text-green-800 dark:text-green-200">
-                        <CreditCard className="h-5 w-5" />
-                        <span>My Wallet</span>
-                      </CardTitle>
-                      <Badge className="bg-green-600 text-white hover:bg-green-700">
-                        Active
-                      </Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="text-center py-2">
-                      <p className="text-sm text-green-700 dark:text-green-300 mb-1">Available Balance</p>
-                      <p className="text-3xl font-bold text-green-800 dark:text-green-200">
-                        ₹ {stats.totalEarnings.toLocaleString()}
-                      </p>
-                      <p className="text-xs text-green-600 dark:text-green-400 mt-1">
-                        Last updated: {new Date().toLocaleTimeString()}
-                      </p>
-                    </div>
-                    
-                    <div className="flex gap-2">
-                      <Button size="sm" className="flex-1 bg-green-600 hover:bg-green-700 text-white">
-                        <Plus className="h-3 w-3 mr-1" />
-                        Add
-                      </Button>
-                      <Button size="sm" variant="outline" className="flex-1 border-red-300 text-red-600 hover:bg-red-50 hover:text-red-700">
-                        <DollarSign className="h-3 w-3 mr-1" />
-                        Withdraw
-                      </Button>
-                      <Button size="sm" variant="outline" className="flex-1 border-purple-300 text-purple-600 hover:bg-purple-50 hover:text-purple-700">
-                        <FileText className="h-3 w-3 mr-1" />
-                        Coupon
-                      </Button>
-                    </div>
-                    
-                    <div className="flex justify-between text-sm">
-                      <div className="text-center">
-                        <p className="text-green-700 dark:text-green-300">This Month</p>
-                        <p className="font-semibold text-green-800 dark:text-green-200">+₹{stats.totalEarnings.toLocaleString()}</p>
-                      </div>
-                      <div className="text-center">
-                        <p className="text-yellow-700 dark:text-yellow-300">Pending</p>
-                        <p className="font-semibold text-yellow-800 dark:text-yellow-200">₹0</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-              
-              {/* Advertisement Section - Right Side */}
-              <div className="lg:col-span-2">
-                <AdvertisementCarousel targetAudience="worker" />
-              </div>
-            </div>
-
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Recent Bookings */}
               <Card>
