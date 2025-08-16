@@ -286,3 +286,82 @@ export async function detectLanguage(text: string): Promise<{language: string; c
     return { language: "en", confidence: 0.5 };
   }
 }
+
+interface VoiceJobResult {
+  success: boolean;
+  message?: string;
+  transcription?: string;
+  extractedData?: {
+    title?: string;
+    description?: string;
+    serviceCategory?: string;
+    location?: string;
+    district?: string;
+    state?: string;
+    budget?: { min: number; max: number };
+    urgency?: 'low' | 'medium' | 'high';
+    requirements?: string[];
+    timeframe?: string;
+  };
+  confidence?: number;
+  processingTime?: number;
+}
+
+// Combined function to process voice recordings and extract job details
+export async function processVoiceJobPosting(
+  audioBase64: string,
+  mimeType: string = "audio/webm",
+  language: string = "en",
+  userId: string
+): Promise<VoiceJobResult> {
+  const startTime = Date.now();
+  
+  try {
+    // Step 1: Transcribe the audio
+    console.log("Processing voice recording for job posting...");
+    const transcriptionResult = await transcribeAudioWithLanguageDetection(audioBase64, mimeType);
+    
+    if (!transcriptionResult.text || transcriptionResult.text.trim().length === 0) {
+      return {
+        success: false,
+        message: "No speech detected in the audio recording. Please try recording again with clear speech.",
+        processingTime: Date.now() - startTime
+      };
+    }
+
+    // Step 2: Extract job details from transcription
+    const jobExtractionResult = await extractJobDetailsFromText(transcriptionResult.text, language);
+    
+    const processingTime = Date.now() - startTime;
+    console.log(`Voice processing completed in ${processingTime}ms`);
+
+    return {
+      success: true,
+      message: "Voice job posting processed successfully",
+      transcription: transcriptionResult.text,
+      extractedData: {
+        title: jobExtractionResult.jobTitle,
+        description: jobExtractionResult.jobDescription,
+        serviceCategory: jobExtractionResult.serviceCategory,
+        location: jobExtractionResult.location.fullAddress || `${jobExtractionResult.location.area || ''}, ${jobExtractionResult.location.district || ''}, ${jobExtractionResult.location.state || ''}`.replace(/^,\s*|,\s*$/g, ''),
+        district: jobExtractionResult.location.district,
+        state: jobExtractionResult.location.state,
+        budget: jobExtractionResult.budget,
+        urgency: jobExtractionResult.urgency,
+        requirements: jobExtractionResult.requirements,
+        timeframe: jobExtractionResult.timeframe
+      },
+      confidence: transcriptionResult.confidence,
+      processingTime
+    };
+
+  } catch (error: any) {
+    console.error("Error processing voice job posting:", error);
+    
+    return {
+      success: false,
+      message: `Voice processing failed: ${error.message || 'Unknown error occurred'}`,
+      processingTime: Date.now() - startTime
+    };
+  }
+}

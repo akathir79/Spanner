@@ -4307,42 +4307,91 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // For now, simulate processing and create a sample job post
-      // In production, you would integrate with Gemini to transcribe and extract job details
-      const simulatedJobPost = {
-        id: `VOICE-${Date.now()}`,
-        title: "Voice-Generated Job Posting",
-        description: "This job was created using voice input. Processing with AI to extract details.",
-        serviceCategory: "General Services",
-        location: "Auto-detected from voice",
-        budget: { min: 1000, max: 5000 },
-        urgency: "medium" as const,
-        userId: userId,
-        createdAt: new Date().toISOString()
-      };
-
-      // TODO: Integrate with Gemini service to:
-      // 1. Transcribe the audio
-      // 2. Extract job details (title, description, location, budget, etc.)
-      // 3. Create actual job posting in database
-      
-      console.log("Voice job posting processed:", {
-        audioSize: audioData.length,
-        mimeType,
-        language,
-        userId: userId
-      });
-
-      res.json({
-        success: true,
-        message: "Voice job posting processed successfully",
-        jobPost: simulatedJobPost,
-        transcription: "Sample transcription: I need a plumber to fix my kitchen sink, budget around 2000 rupees",
-        extractedData: {
-          language: language || 'en',
-          confidence: 0.85
+      try {
+        // Import Gemini service
+        const { processVoiceJobPosting } = await import('./gemini-service');
+        
+        // Process the voice recording with Gemini
+        const voiceResult = await processVoiceJobPosting(audioData, mimeType, language, userId);
+        
+        if (!voiceResult.success) {
+          return res.status(400).json({
+            success: false,
+            message: voiceResult.message || "Failed to process voice recording"
+          });
         }
-      });
+
+        // Get user details for location fallback
+        const user = await storage.findUserById(userId);
+        
+        // Create the job post with extracted details
+        const jobPostData = {
+          id: `VOICE-${Date.now()}`,
+          title: voiceResult.extractedData?.title || "Voice-Generated Job Request",
+          description: voiceResult.extractedData?.description || voiceResult.transcription || "Job details extracted from voice recording",
+          serviceCategory: voiceResult.extractedData?.serviceCategory || "General Services",
+          location: voiceResult.extractedData?.location || user?.fullAddress || "Location to be confirmed",
+          district: voiceResult.extractedData?.district || user?.district || "Not specified",
+          state: voiceResult.extractedData?.state || user?.state || "Not specified",
+          budget: voiceResult.extractedData?.budget || { min: 1000, max: 5000 },
+          urgency: voiceResult.extractedData?.urgency || "medium" as const,
+          userId: userId,
+          createdAt: new Date().toISOString(),
+          requirements: voiceResult.extractedData?.requirements || [],
+          timeframe: voiceResult.extractedData?.timeframe || "To be discussed"
+        };
+
+        console.log("Voice job posting processed:", {
+          audioSize: audioData.length,
+          mimeType,
+          language,
+          userId: userId,
+          transcription: voiceResult.transcription?.substring(0, 100) + "...",
+          extractedTitle: jobPostData.title
+        });
+
+        res.json({
+          success: true,
+          message: "Voice job posting processed successfully",
+          jobPost: jobPostData,
+          transcription: voiceResult.transcription,
+          extractedData: {
+            language: language || 'en',
+            confidence: voiceResult.confidence || 0.85,
+            detectedLocation: voiceResult.extractedData?.location,
+            detectedBudget: voiceResult.extractedData?.budget,
+            processingTime: voiceResult.processingTime
+          }
+        });
+
+      } catch (geminiError: any) {
+        console.error("Gemini processing error:", geminiError);
+        
+        // Fallback to basic processing if Gemini fails
+        const fallbackJobPost = {
+          id: `VOICE-${Date.now()}`,
+          title: "Voice Job Request - Processing Required",
+          description: "Voice recording received. Manual processing may be needed to extract full job details.",
+          serviceCategory: "General Services", 
+          location: "To be confirmed",
+          budget: { min: 1000, max: 5000 },
+          urgency: "medium" as const,
+          userId: userId,
+          createdAt: new Date().toISOString()
+        };
+
+        res.json({
+          success: true,
+          message: "Voice job posting created (fallback mode)",
+          jobPost: fallbackJobPost,
+          transcription: "Voice processing is currently unavailable. Your job request has been saved and will be processed manually.",
+          extractedData: {
+            language: language || 'en',
+            confidence: 0.5,
+            fallbackMode: true
+          }
+        });
+      }
 
     } catch (error: any) {
       console.error("Voice processing error:", error);

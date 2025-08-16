@@ -23,6 +23,8 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
   const [isProcessing, setIsProcessing] = useState(false);
   const [recordingDuration, setRecordingDuration] = useState(0);
   const [processedResult, setProcessedResult] = useState<any>(null);
+  const [recordedAudio, setRecordedAudio] = useState<Blob | null>(null);
+  const [audioUrl, setAudioUrl] = useState<string>('');
   
   // Quick auth states
   const [quickAuthData, setQuickAuthData] = useState({
@@ -140,8 +142,17 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
           type: mediaRecorder.mimeType 
         });
         console.log("Audio blob size:", audioBlob.size);
+        
+        // Store the recorded audio for playback
+        setRecordedAudio(audioBlob);
+        setAudioUrl(URL.createObjectURL(audioBlob));
+        
         stream.getTracks().forEach(track => track.stop());
-        processRecording(audioBlob);
+        
+        // Auto-process after a brief delay to show the recording is complete
+        setTimeout(() => {
+          processRecording(audioBlob);
+        }, 1500);
       };
 
       mediaRecorder.onstart = () => {
@@ -679,7 +690,51 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
         {/* Recording Step */}
         {currentStep === 'recording' && (
           <div className="text-center space-y-4">
-            {isRecording ? (
+            {recordedAudio && !isProcessing && !isRecording ? (
+              <>
+                <div className="text-6xl">🎵</div>
+                <h3 className="text-xl font-semibold">Recording Complete</h3>
+                <p className="text-muted-foreground">
+                  Listen to your recording or re-record if needed
+                </p>
+                
+                {/* Audio Playback */}
+                <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+                  <audio controls className="w-full">
+                    <source src={audioUrl} type="audio/webm" />
+                    <source src={audioUrl} type="audio/mp4" />
+                    Your browser does not support the audio element.
+                  </audio>
+                </div>
+                
+                <div className="flex gap-3">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => {
+                      setRecordedAudio(null);
+                      if (audioUrl) {
+                        URL.revokeObjectURL(audioUrl);
+                        setAudioUrl('');
+                      }
+                    }}
+                    className="flex-1"
+                  >
+                    🗑️ Delete & Re-record
+                  </Button>
+                  <Button 
+                    onClick={() => {
+                      if (recordedAudio) {
+                        processRecording(recordedAudio);
+                      }
+                    }}
+                    className="flex-1 bg-green-600 hover:bg-green-700"
+                    disabled={!recordedAudio}
+                  >
+                    ✓ Use This Recording
+                  </Button>
+                </div>
+              </>
+            ) : isRecording ? (
               <>
                 <div className="text-6xl animate-pulse">🔴</div>
                 <h3 className="text-xl font-semibold text-red-600">Recording...</h3>
@@ -769,34 +824,94 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
         )}
 
         {/* Success Step */}
-        {currentStep === 'success' && (
-          <div className="text-center space-y-4">
-            <div className="text-6xl">✅</div>
-            <h3 className="text-xl font-semibold text-green-600">Success!</h3>
-            <p className="text-muted-foreground">
-              Your job has been posted successfully. Workers will start bidding soon.
-            </p>
+        {currentStep === 'success' && processedResult && (
+          <div className="text-center space-y-6">
+            <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto">
+              <div className="w-8 h-8 text-green-600">✓</div>
+            </div>
             
-            {processedResult && (
-              <div className="text-left bg-muted p-4 rounded-lg space-y-2">
-                <h4 className="font-semibold">Job Details:</h4>
-                <p><strong>Title:</strong> {processedResult.jobPost.title}</p>
-                <p><strong>Description:</strong> {processedResult.jobPost.description}</p>
-                <p><strong>Budget:</strong> ₹{processedResult.jobPost.budget.min.toLocaleString('en-IN')} - ₹{processedResult.jobPost.budget.max.toLocaleString('en-IN')}</p>
-                <p><strong>Location:</strong> {processedResult.jobPost.location}</p>
-                
-                {processedResult.transcription && (
-                  <div className="mt-2 pt-2 border-t">
-                    <h5 className="font-semibold text-sm">Voice Transcription:</h5>
-                    <p className="text-sm italic">"{processedResult.transcription}"</p>
-                  </div>
-                )}
+            <div>
+              <h3 className="text-xl font-bold text-green-600 mb-2">Success!</h3>
+              <p className="text-gray-600 mb-6">
+                Your job has been posted successfully. Workers will start bidding soon.
+              </p>
+            </div>
+
+            {/* Audio Playback Section */}
+            {audioUrl && (
+              <div className="bg-blue-50 rounded-lg p-4 space-y-3">
+                <h4 className="font-semibold text-blue-800">Your Voice Recording:</h4>
+                <audio controls className="w-full">
+                  <source src={audioUrl} type="audio/webm" />
+                  <source src={audioUrl} type="audio/mp4" />
+                  Your browser does not support the audio element.
+                </audio>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setCurrentStep('recording');
+                    setProcessedResult(null);
+                    setRecordedAudio(null);
+                    if (audioUrl) {
+                      URL.revokeObjectURL(audioUrl);
+                      setAudioUrl('');
+                    }
+                  }}
+                  className="w-full"
+                >
+                  🎤 Record Again
+                </Button>
               </div>
             )}
-            
-            <Button onClick={onClose} className="w-full">
-              Close
-            </Button>
+
+            <div className="bg-gray-50 rounded-lg p-4 text-left space-y-3">
+              <h4 className="font-semibold text-gray-800">Job Details:</h4>
+              
+              <div>
+                <span className="font-medium">Title:</span> {processedResult.jobPost?.title || 'N/A'}
+              </div>
+              
+              <div>
+                <span className="font-medium">Description:</span> {processedResult.jobPost?.description || 'N/A'}
+              </div>
+              
+              <div>
+                <span className="font-medium">Budget:</span> ₹{processedResult.jobPost?.budget?.min || 0} - ₹{processedResult.jobPost?.budget?.max || 0}
+              </div>
+              
+              <div>
+                <span className="font-medium">Location:</span> {processedResult.jobPost?.location || 'N/A'}
+              </div>
+              
+              {processedResult.transcription && (
+                <div>
+                  <span className="font-medium">Voice Transcription:</span>
+                  <p className="text-sm text-gray-600 italic mt-1">"{processedResult.transcription}"</p>
+                </div>
+              )}
+            </div>
+
+            <div className="flex gap-3">
+              <Button onClick={onClose} className="flex-1">
+                Close
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setCurrentStep('language');
+                  setProcessedResult(null);
+                  setRecordedAudio(null);
+                  if (audioUrl) {
+                    URL.revokeObjectURL(audioUrl);
+                    setAudioUrl('');
+                  }
+                }}
+                className="flex-1"
+              >
+                Create Another Job
+              </Button>
+            </div>
           </div>
         )}
       </DialogContent>
