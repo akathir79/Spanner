@@ -127,7 +127,12 @@ export default function FinancialManagement() {
   // Load financial models
   const loadFinancialModels = async () => {
     try {
-      const response = await fetch("/api/financial-models");
+      const response = await fetch("/api/financial-models", {
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        }
+      });
       if (response.ok) {
         const models = await response.json();
         setFinancialModels(models);
@@ -270,7 +275,11 @@ export default function FinancialManagement() {
           title: "Success",
           description: `Financial model "${modelName}" deleted successfully`
         });
-        loadFinancialModels();
+        // Force reload with cache bypass and state reset
+        setFinancialModels([]);
+        setTimeout(() => {
+          loadFinancialModels();
+        }, 200);
       } else {
         const error = await response.json();
         showToast({

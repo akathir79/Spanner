@@ -3705,6 +3705,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/financial-models", async (req, res) => {
     try {
       const models = await storage.getAllFinancialModels();
+      // Prevent caching to ensure fresh data
+      res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+      res.set('Pragma', 'no-cache');
+      res.set('Expires', '0');
       res.json(models);
     } catch (error) {
       console.error("Error fetching financial models:", error);
@@ -3790,21 +3794,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/financial-models/:id", async (req, res) => {
     try {
       const { id } = req.params;
+      console.log(`Attempting to delete financial model with ID: ${id}`);
       
       // Check if model exists
       const model = await storage.getFinancialModelById(id);
       if (!model) {
+        console.log(`Financial model ${id} not found`);
         return res.status(404).json({ message: "Financial model not found" });
       }
 
-      // Check if model is currently active and being used
-      if (model.isActive) {
-        return res.status(400).json({ 
-          message: "Cannot delete an active financial model. Please deactivate it first." 
-        });
-      }
+      console.log(`Found financial model: ${model.name}, isActive: ${model.isActive}`);
 
+      // Allow deletion regardless of active status for admin override
       await storage.deleteFinancialModel(id);
+      console.log(`Successfully deleted financial model: ${id}`);
+      
       res.json({ message: "Financial model deleted successfully" });
     } catch (error) {
       console.error("Error deleting financial model:", error);
