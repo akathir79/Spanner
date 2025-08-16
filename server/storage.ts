@@ -64,12 +64,30 @@ import {
   chatMessages,
   chatConversations,
   chatNotificationPreferences,
+  financialModels,
+  userWallets,
+  walletTransactions,
+  referrals,
+  financialModelAssignments,
+  paymentIntents,
   type ChatMessage,
   type ChatConversation,
   type InsertChatMessage,
   type InsertChatConversation,
   type ChatNotificationPreferences,
-  type InsertChatNotificationPreferences
+  type InsertChatNotificationPreferences,
+  type FinancialModel,
+  type InsertFinancialModel,
+  type UserWallet,
+  type InsertUserWallet,
+  type WalletTransaction,
+  type InsertWalletTransaction,
+  type Referral,
+  type InsertReferral,
+  type FinancialModelAssignment,
+  type InsertFinancialModelAssignment,
+  type PaymentIntent,
+  type InsertPaymentIntent
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, sql, desc, ilike, inArray, or, isNull, lt } from "drizzle-orm";
@@ -227,6 +245,49 @@ export interface IStorage {
   createChatNotificationPreferences(preferences: InsertChatNotificationPreferences): Promise<ChatNotificationPreferences>;
   updateChatNotificationPreferences(userId: string, updates: Partial<ChatNotificationPreferences>): Promise<ChatNotificationPreferences | undefined>;
   deleteChatNotificationPreferences(userId: string): Promise<void>;
+
+  // Financial Models
+  createFinancialModel(model: InsertFinancialModel): Promise<FinancialModel>;
+  getFinancialModelById(id: string): Promise<FinancialModel | undefined>;
+  getAllFinancialModels(): Promise<FinancialModel[]>;
+  getActiveFinancialModels(): Promise<FinancialModel[]>;
+  updateFinancialModel(id: string, updates: Partial<FinancialModel>): Promise<FinancialModel | undefined>;
+  deleteFinancialModel(id: string): Promise<void>;
+  activateFinancialModel(id: string, userId: string): Promise<FinancialModel | undefined>;
+  deactivateFinancialModel(id: string): Promise<void>;
+
+  // User Wallets
+  createUserWallet(wallet: InsertUserWallet): Promise<UserWallet>;
+  getUserWallet(userId: string): Promise<UserWallet | undefined>;
+  getUserWalletById(walletId: string): Promise<UserWallet | undefined>;
+  updateWalletBalance(userId: string, amount: number, type: 'credit' | 'debit'): Promise<UserWallet | undefined>;
+  freezeWalletAmount(userId: string, amount: number): Promise<UserWallet | undefined>;
+  releaseWalletAmount(userId: string, amount: number): Promise<UserWallet | undefined>;
+
+  // Wallet Transactions
+  createWalletTransaction(transaction: InsertWalletTransaction): Promise<WalletTransaction>;
+  getWalletTransactionsByUser(userId: string, limit?: number): Promise<WalletTransaction[]>;
+  getWalletTransactionById(id: string): Promise<WalletTransaction | undefined>;
+  updateTransactionStatus(id: string, status: string): Promise<WalletTransaction | undefined>;
+  
+  // Referrals
+  createReferral(referral: InsertReferral): Promise<Referral>;
+  getReferralByCode(code: string): Promise<Referral | undefined>;
+  getReferralsByUser(userId: string): Promise<Referral[]>;
+  updateReferralStatus(id: string, status: string): Promise<Referral | undefined>;
+  processReferralReward(id: string): Promise<Referral | undefined>;
+  generateReferralCode(userId: string): Promise<string>;
+
+  // Financial Model Assignments
+  createFinancialModelAssignment(assignment: InsertFinancialModelAssignment): Promise<FinancialModelAssignment>;
+  getActiveAssignmentForBooking(bookingId: string): Promise<FinancialModelAssignment | undefined>;
+  getActiveAssignmentForUser(userId: string): Promise<FinancialModelAssignment | undefined>;
+  getGlobalAssignment(): Promise<FinancialModelAssignment | undefined>;
+
+  // Payment Intents
+  createPaymentIntent(intent: InsertPaymentIntent): Promise<PaymentIntent>;
+  getPaymentIntentByStripeId(stripeId: string): Promise<PaymentIntent | undefined>;
+  updatePaymentIntentStatus(stripeId: string, status: string): Promise<PaymentIntent | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -315,7 +376,7 @@ export class DatabaseStorage implements IStorage {
     }
     
     console.log("Final user data with ID:", userDataWithId.id);
-    const [user] = await db.insert(users).values([userDataWithId]).returning();
+    const [user] = await db.insert(users).values(userDataWithId).returning();
     return user;
   }
 
@@ -1884,6 +1945,275 @@ export class DatabaseStorage implements IStorage {
 
   async deleteChatNotificationPreferences(userId: string): Promise<void> {
     await db.delete(chatNotificationPreferences).where(eq(chatNotificationPreferences.userId, userId));
+  }
+
+  // Financial Models implementation
+  async createFinancialModel(model: InsertFinancialModel): Promise<FinancialModel> {
+    const [newModel] = await db.insert(financialModels).values(model).returning();
+    return newModel;
+  }
+
+  async getFinancialModelById(id: string): Promise<FinancialModel | undefined> {
+    const [model] = await db.select().from(financialModels).where(eq(financialModels.id, id));
+    return model || undefined;
+  }
+
+  async getAllFinancialModels(): Promise<FinancialModel[]> {
+    return await db.select().from(financialModels).orderBy(financialModels.createdAt);
+  }
+
+  async getActiveFinancialModels(): Promise<FinancialModel[]> {
+    return await db.select().from(financialModels)
+      .where(eq(financialModels.isActive, true))
+      .orderBy(financialModels.createdAt);
+  }
+
+  async updateFinancialModel(id: string, updates: Partial<FinancialModel>): Promise<FinancialModel | undefined> {
+    const [updatedModel] = await db.update(financialModels)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(financialModels.id, id))
+      .returning();
+    return updatedModel || undefined;
+  }
+
+  async deleteFinancialModel(id: string): Promise<void> {
+    await db.delete(financialModels).where(eq(financialModels.id, id));
+  }
+
+  async activateFinancialModel(id: string, userId: string): Promise<FinancialModel | undefined> {
+    const [activated] = await db.update(financialModels)
+      .set({ isActive: true, updatedAt: new Date() })
+      .where(eq(financialModels.id, id))
+      .returning();
+    return activated || undefined;
+  }
+
+  async deactivateFinancialModel(id: string): Promise<void> {
+    await db.update(financialModels)
+      .set({ isActive: false, updatedAt: new Date() })
+      .where(eq(financialModels.id, id));
+  }
+
+  // User Wallets implementation
+  async createUserWallet(wallet: InsertUserWallet): Promise<UserWallet> {
+    const [newWallet] = await db.insert(userWallets).values(wallet).returning();
+    return newWallet;
+  }
+
+  async getUserWallet(userId: string): Promise<UserWallet | undefined> {
+    const [wallet] = await db.select().from(userWallets).where(eq(userWallets.userId, userId));
+    return wallet || undefined;
+  }
+
+  async getUserWalletById(walletId: string): Promise<UserWallet | undefined> {
+    const [wallet] = await db.select().from(userWallets).where(eq(userWallets.id, walletId));
+    return wallet || undefined;
+  }
+
+  async updateWalletBalance(userId: string, amount: number, type: 'credit' | 'debit'): Promise<UserWallet | undefined> {
+    const wallet = await this.getUserWallet(userId);
+    if (!wallet) return undefined;
+
+    const currentBalance = parseFloat(wallet.balance);
+    const newBalance = type === 'credit' ? currentBalance + amount : currentBalance - amount;
+    
+    if (newBalance < 0) {
+      throw new Error('Insufficient balance');
+    }
+
+    const [updatedWallet] = await db.update(userWallets)
+      .set({
+        balance: newBalance.toFixed(2),
+        totalEarned: type === 'credit' ? (parseFloat(wallet.totalEarned) + amount).toFixed(2) : wallet.totalEarned,
+        totalSpent: type === 'debit' ? (parseFloat(wallet.totalSpent) + amount).toFixed(2) : wallet.totalSpent,
+        lastTransactionAt: new Date(),
+        updatedAt: new Date()
+      })
+      .where(eq(userWallets.userId, userId))
+      .returning();
+
+    return updatedWallet || undefined;
+  }
+
+  async freezeWalletAmount(userId: string, amount: number): Promise<UserWallet | undefined> {
+    const wallet = await this.getUserWallet(userId);
+    if (!wallet) return undefined;
+
+    const currentBalance = parseFloat(wallet.balance);
+    const currentPending = parseFloat(wallet.pendingBalance);
+    
+    if (currentBalance < amount) {
+      throw new Error('Insufficient balance to freeze');
+    }
+
+    const [updatedWallet] = await db.update(userWallets)
+      .set({
+        balance: (currentBalance - amount).toFixed(2),
+        pendingBalance: (currentPending + amount).toFixed(2),
+        updatedAt: new Date()
+      })
+      .where(eq(userWallets.userId, userId))
+      .returning();
+
+    return updatedWallet || undefined;
+  }
+
+  async releaseWalletAmount(userId: string, amount: number): Promise<UserWallet | undefined> {
+    const wallet = await this.getUserWallet(userId);
+    if (!wallet) return undefined;
+
+    const currentBalance = parseFloat(wallet.balance);
+    const currentPending = parseFloat(wallet.pendingBalance);
+    
+    if (currentPending < amount) {
+      throw new Error('Insufficient pending balance to release');
+    }
+
+    const [updatedWallet] = await db.update(userWallets)
+      .set({
+        balance: (currentBalance + amount).toFixed(2),
+        pendingBalance: (currentPending - amount).toFixed(2),
+        updatedAt: new Date()
+      })
+      .where(eq(userWallets.userId, userId))
+      .returning();
+
+    return updatedWallet || undefined;
+  }
+
+  // Wallet Transactions implementation
+  async createWalletTransaction(transaction: InsertWalletTransaction): Promise<WalletTransaction> {
+    const [newTransaction] = await db.insert(walletTransactions).values({
+      ...transaction,
+      processedAt: new Date()
+    }).returning();
+    return newTransaction;
+  }
+
+  async getWalletTransactionsByUser(userId: string, limit: number = 50): Promise<WalletTransaction[]> {
+    return await db.select().from(walletTransactions)
+      .where(eq(walletTransactions.userId, userId))
+      .orderBy(sql`${walletTransactions.createdAt} DESC`)
+      .limit(limit);
+  }
+
+  async getWalletTransactionById(id: string): Promise<WalletTransaction | undefined> {
+    const [transaction] = await db.select().from(walletTransactions).where(eq(walletTransactions.id, id));
+    return transaction || undefined;
+  }
+
+  async updateTransactionStatus(id: string, status: string): Promise<WalletTransaction | undefined> {
+    const [updatedTransaction] = await db.update(walletTransactions)
+      .set({ status, processedAt: new Date() })
+      .where(eq(walletTransactions.id, id))
+      .returning();
+    return updatedTransaction || undefined;
+  }
+
+  // Referrals implementation
+  async createReferral(referral: InsertReferral): Promise<Referral> {
+    const [newReferral] = await db.insert(referrals).values(referral).returning();
+    return newReferral;
+  }
+
+  async getReferralByCode(code: string): Promise<Referral | undefined> {
+    const [referral] = await db.select().from(referrals).where(eq(referrals.referralCode, code));
+    return referral || undefined;
+  }
+
+  async getReferralsByUser(userId: string): Promise<Referral[]> {
+    return await db.select().from(referrals)
+      .where(eq(referrals.referrerId, userId))
+      .orderBy(sql`${referrals.createdAt} DESC`);
+  }
+
+  async updateReferralStatus(id: string, status: string): Promise<Referral | undefined> {
+    const [updatedReferral] = await db.update(referrals)
+      .set({ 
+        status,
+        completedAt: status === 'completed' ? new Date() : undefined
+      })
+      .where(eq(referrals.id, id))
+      .returning();
+    return updatedReferral || undefined;
+  }
+
+  async processReferralReward(id: string): Promise<Referral | undefined> {
+    const [updatedReferral] = await db.update(referrals)
+      .set({ 
+        rewardPaid: true,
+        rewardPaidAt: new Date()
+      })
+      .where(eq(referrals.id, id))
+      .returning();
+    return updatedReferral || undefined;
+  }
+
+  async generateReferralCode(userId: string): Promise<string> {
+    const user = await this.getUser(userId);
+    if (!user) throw new Error('User not found');
+    
+    // Generate a unique referral code based on user ID and timestamp
+    const timestamp = Date.now().toString(36).toUpperCase();
+    const userPrefix = user.id.split('-')[0] || 'REF';
+    return `${userPrefix}${timestamp}`;
+  }
+
+  // Financial Model Assignments implementation
+  async createFinancialModelAssignment(assignment: InsertFinancialModelAssignment): Promise<FinancialModelAssignment> {
+    const [newAssignment] = await db.insert(financialModelAssignments).values(assignment).returning();
+    return newAssignment;
+  }
+
+  async getActiveAssignmentForBooking(bookingId: string): Promise<FinancialModelAssignment | undefined> {
+    const [assignment] = await db.select().from(financialModelAssignments)
+      .where(and(
+        eq(financialModelAssignments.referenceId, bookingId),
+        eq(financialModelAssignments.referenceType, 'booking'),
+        eq(financialModelAssignments.isActive, true)
+      ));
+    return assignment || undefined;
+  }
+
+  async getActiveAssignmentForUser(userId: string): Promise<FinancialModelAssignment | undefined> {
+    const [assignment] = await db.select().from(financialModelAssignments)
+      .where(and(
+        or(
+          eq(financialModelAssignments.clientId, userId),
+          eq(financialModelAssignments.workerId, userId)
+        ),
+        eq(financialModelAssignments.isActive, true)
+      ));
+    return assignment || undefined;
+  }
+
+  async getGlobalAssignment(): Promise<FinancialModelAssignment | undefined> {
+    const [assignment] = await db.select().from(financialModelAssignments)
+      .where(and(
+        eq(financialModelAssignments.referenceType, 'global'),
+        eq(financialModelAssignments.isActive, true)
+      ));
+    return assignment || undefined;
+  }
+
+  // Payment Intents implementation
+  async createPaymentIntent(intent: InsertPaymentIntent): Promise<PaymentIntent> {
+    const [newIntent] = await db.insert(paymentIntents).values(intent).returning();
+    return newIntent;
+  }
+
+  async getPaymentIntentByStripeId(stripeId: string): Promise<PaymentIntent | undefined> {
+    const [intent] = await db.select().from(paymentIntents)
+      .where(eq(paymentIntents.stripePaymentIntentId, stripeId));
+    return intent || undefined;
+  }
+
+  async updatePaymentIntentStatus(stripeId: string, status: string): Promise<PaymentIntent | undefined> {
+    const [updatedIntent] = await db.update(paymentIntents)
+      .set({ status, updatedAt: new Date() })
+      .where(eq(paymentIntents.stripePaymentIntentId, stripeId))
+      .returning();
+    return updatedIntent || undefined;
   }
 }
 

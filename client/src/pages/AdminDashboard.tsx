@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
 import { useLocation } from "wouter";
 import AdvertisementManager from "@/components/AdvertisementManager";
+import FinancialManagement from "@/components/FinancialManagement";
 import { Switch } from "@/components/ui/switch";
 import { 
   Users,
@@ -29,7 +30,8 @@ import {
   MapPin,
   Camera,
   Megaphone,
-  MessageCircle
+  MessageCircle,
+  DollarSign
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -528,6 +530,24 @@ export default function AdminDashboard() {
                 userRole={user?.role === 'admin' || user?.role === 'super_admin' ? 'admin' : 'client'}
                 userName={`${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'Admin'}
               />
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Financial Management Section */}
+        <div className="mt-8">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <DollarSign className="h-5 w-5 text-green-600 dark:text-green-400" />
+                Financial Management System
+              </CardTitle>
+              <p className="text-muted-foreground">
+                Manage payment models, user wallets, transactions, and financial analytics
+              </p>
+            </CardHeader>
+            <CardContent>
+              <FinancialManagement />
             </CardContent>
           </Card>
         </div>

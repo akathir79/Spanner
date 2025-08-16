@@ -1,8 +1,13 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, boolean, timestamp, decimal, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, boolean, timestamp, decimal, numeric, json, jsonb } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+
+// Helper function to generate unique IDs
+function generateId(): string {
+  return `${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
+}
 
 // Note: Districts and areas now handled via API - no longer stored in database
 
@@ -851,3 +856,161 @@ export const insertChatNotificationPreferencesSchema = createInsertSchema(chatNo
 });
 export type ChatNotificationPreferences = typeof chatNotificationPreferences.$inferSelect;
 export type InsertChatNotificationPreferences = z.infer<typeof insertChatNotificationPreferencesSchema>;
+
+// Financial Models - Admin configurable payment structures
+export const financialModels = pgTable('financial_models', {
+  id: text('id').primaryKey().$defaultFn(() => generateId()),
+  name: text('name').notNull(), // "Free Model", "Advance Payment", etc.
+  type: text('type').notNull(), // "free", "advance", "commission", "full_payment", "referral"
+  description: text('description').notNull(),
+  isActive: boolean('is_active').notNull().default(false),
+  adminCommissionPercentage: numeric('admin_commission_percentage', { precision: 5, scale: 2 }).default('0'),
+  gstPercentage: numeric('gst_percentage', { precision: 5, scale: 2 }).default('18'), // Default GST 18%
+  referralClientReward: numeric('referral_client_reward', { precision: 10, scale: 2 }).default('0'),
+  referralWorkerReward: numeric('referral_worker_reward', { precision: 10, scale: 2 }).default('0'),
+  referralEnabledForClient: boolean('referral_enabled_for_client').notNull().default(false),
+  referralEnabledForWorker: boolean('referral_enabled_for_worker').notNull().default(false),
+  settings: json('settings').default({}), // Additional flexible settings
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  createdBy: text('created_by').references(() => users.id),
+});
+
+// User Wallets - Real-time balance management
+export const userWallets = pgTable('user_wallets', {
+  id: text('id').primaryKey().$defaultFn(() => generateId()),
+  userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }).unique(),
+  balance: numeric('balance', { precision: 15, scale: 2 }).notNull().default('0.00'),
+  pendingBalance: numeric('pending_balance', { precision: 15, scale: 2 }).notNull().default('0.00'), // Funds on hold
+  totalEarned: numeric('total_earned', { precision: 15, scale: 2 }).notNull().default('0.00'),
+  totalSpent: numeric('total_spent', { precision: 15, scale: 2 }).notNull().default('0.00'),
+  totalReferralEarnings: numeric('total_referral_earnings', { precision: 15, scale: 2 }).notNull().default('0.00'),
+  isActive: boolean('is_active').notNull().default(true),
+  lastTransactionAt: timestamp('last_transaction_at'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+// Wallet Transactions - Complete transaction history
+export const walletTransactions = pgTable('wallet_transactions', {
+  id: text('id').primaryKey().$defaultFn(() => generateId()),
+  userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  walletId: text('wallet_id').notNull().references(() => userWallets.id, { onDelete: 'cascade' }),
+  type: text('type').notNull(), // "credit", "debit", "hold", "release", "refund"
+  category: text('category').notNull(), // "job_payment", "commission", "referral", "advance", "withdrawal"
+  amount: numeric('amount', { precision: 15, scale: 2 }).notNull(),
+  balanceBefore: numeric('balance_before', { precision: 15, scale: 2 }).notNull(),
+  balanceAfter: numeric('balance_after', { precision: 15, scale: 2 }).notNull(),
+  description: text('description').notNull(),
+  referenceType: text('reference_type'), // "booking", "job_posting", "referral"
+  referenceId: text('reference_id'),
+  status: text('status').notNull().default('completed'), // "pending", "completed", "failed", "cancelled"
+  stripeTransactionId: text('stripe_transaction_id'),
+  gstAmount: numeric('gst_amount', { precision: 15, scale: 2 }).notNull().default('0.00'),
+  adminCommission: numeric('admin_commission', { precision: 15, scale: 2 }).notNull().default('0.00'),
+  netAmount: numeric('net_amount', { precision: 15, scale: 2 }).notNull(), // Amount after GST and commission
+  metadata: json('metadata').default({}), // Additional transaction details
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  processedAt: timestamp('processed_at'),
+});
+
+// Referral System - User-to-user referrals and job sharing
+export const referrals = pgTable('referrals', {
+  id: text('id').primaryKey().$defaultFn(() => generateId()),
+  referrerId: text('referrer_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  referredUserId: text('referred_user_id').references(() => users.id, { onDelete: 'cascade' }), // null for pending referrals
+  referralCode: text('referral_code').notNull().unique(),
+  type: text('type').notNull(), // "client_referral", "worker_referral", "job_share"
+  status: text('status').notNull().default('pending'), // "pending", "completed", "expired"
+  rewardAmount: numeric('reward_amount', { precision: 10, scale: 2 }).notNull().default('0.00'),
+  rewardPaid: boolean('reward_paid').notNull().default(false),
+  rewardPaidAt: timestamp('reward_paid_at'),
+  jobPostingId: text('job_posting_id').references(() => jobPostings.id), // For job sharing
+  expiresAt: timestamp('expires_at'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  completedAt: timestamp('completed_at'),
+});
+
+// Financial Model Assignments - Which model applies to which booking/job
+export const financialModelAssignments = pgTable('financial_model_assignments', {
+  id: text('id').primaryKey().$defaultFn(() => generateId()),
+  financialModelId: text('financial_model_id').notNull().references(() => financialModels.id),
+  referenceType: text('reference_type').notNull(), // "booking", "job_posting", "global"
+  referenceId: text('reference_id'), // null for global assignments
+  clientId: text('client_id').references(() => users.id),
+  workerId: text('worker_id').references(() => users.id),
+  isActive: boolean('is_active').notNull().default(true),
+  assignedBy: text('assigned_by').references(() => users.id),
+  assignedAt: timestamp('assigned_at').notNull().defaultNow(),
+});
+
+// Payment Intents - Track Stripe payment processing
+export const paymentIntents = pgTable('payment_intents', {
+  id: text('id').primaryKey().$defaultFn(() => generateId()),
+  stripePaymentIntentId: text('stripe_payment_intent_id').notNull().unique(),
+  userId: text('user_id').notNull().references(() => users.id),
+  bookingId: text('booking_id').references(() => bookings.id),
+  jobPostingId: text('job_posting_id').references(() => jobPostings.id),
+  amount: numeric('amount', { precision: 15, scale: 2 }).notNull(),
+  currency: text('currency').notNull().default('INR'),
+  status: text('status').notNull(), // "requires_payment_method", "requires_confirmation", "requires_action", "processing", "requires_capture", "canceled", "succeeded"
+  financialModelId: text('financial_model_id').references(() => financialModels.id),
+  metadata: json('metadata').default({}),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+// Schema exports for financial models
+export const insertFinancialModelSchema = createInsertSchema(financialModels).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type FinancialModel = typeof financialModels.$inferSelect;
+export type InsertFinancialModel = z.infer<typeof insertFinancialModelSchema>;
+
+// Schema exports for user wallets
+export const insertUserWalletSchema = createInsertSchema(userWallets).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  lastTransactionAt: true,
+});
+export type UserWallet = typeof userWallets.$inferSelect;
+export type InsertUserWallet = z.infer<typeof insertUserWalletSchema>;
+
+// Schema exports for wallet transactions
+export const insertWalletTransactionSchema = createInsertSchema(walletTransactions).omit({
+  id: true,
+  createdAt: true,
+  processedAt: true,
+});
+export type WalletTransaction = typeof walletTransactions.$inferSelect;
+export type InsertWalletTransaction = z.infer<typeof insertWalletTransactionSchema>;
+
+// Schema exports for referrals
+export const insertReferralSchema = createInsertSchema(referrals).omit({
+  id: true,
+  createdAt: true,
+  completedAt: true,
+  rewardPaidAt: true,
+});
+export type Referral = typeof referrals.$inferSelect;
+export type InsertReferral = z.infer<typeof insertReferralSchema>;
+
+// Schema exports for financial model assignments
+export const insertFinancialModelAssignmentSchema = createInsertSchema(financialModelAssignments).omit({
+  id: true,
+  assignedAt: true,
+});
+export type FinancialModelAssignment = typeof financialModelAssignments.$inferSelect;
+export type InsertFinancialModelAssignment = z.infer<typeof insertFinancialModelAssignmentSchema>;
+
+// Schema exports for payment intents
+export const insertPaymentIntentSchema = createInsertSchema(paymentIntents).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type PaymentIntent = typeof paymentIntents.$inferSelect;
+export type InsertPaymentIntent = z.infer<typeof insertPaymentIntentSchema>;

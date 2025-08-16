@@ -3699,6 +3699,428 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Financial Models API Routes
+
+  // Get all financial models
+  app.get("/api/financial-models", async (req, res) => {
+    try {
+      const models = await storage.getAllFinancialModels();
+      res.json(models);
+    } catch (error) {
+      console.error("Error fetching financial models:", error);
+      res.status(500).json({ message: "Failed to fetch financial models" });
+    }
+  });
+
+  // Get active financial models only
+  app.get("/api/financial-models/active", async (req, res) => {
+    try {
+      const models = await storage.getActiveFinancialModels();
+      res.json(models);
+    } catch (error) {
+      console.error("Error fetching active financial models:", error);
+      res.status(500).json({ message: "Failed to fetch active financial models" });
+    }
+  });
+
+  // Create new financial model (Super Admin only)
+  app.post("/api/financial-models", async (req, res) => {
+    try {
+      const modelData = req.body;
+      const newModel = await storage.createFinancialModel({
+        ...modelData,
+        createdBy: req.body.createdBy || null
+      });
+      res.status(201).json(newModel);
+    } catch (error) {
+      console.error("Error creating financial model:", error);
+      res.status(500).json({ message: "Failed to create financial model" });
+    }
+  });
+
+  // Update financial model (Super Admin only)
+  app.put("/api/financial-models/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updates = req.body;
+      const updatedModel = await storage.updateFinancialModel(id, updates);
+      
+      if (!updatedModel) {
+        return res.status(404).json({ message: "Financial model not found" });
+      }
+      
+      res.json(updatedModel);
+    } catch (error) {
+      console.error("Error updating financial model:", error);
+      res.status(500).json({ message: "Failed to update financial model" });
+    }
+  });
+
+  // Activate financial model
+  app.post("/api/financial-models/:id/activate", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { userId } = req.body;
+      
+      const activatedModel = await storage.activateFinancialModel(id, userId);
+      if (!activatedModel) {
+        return res.status(404).json({ message: "Financial model not found" });
+      }
+      
+      res.json(activatedModel);
+    } catch (error) {
+      console.error("Error activating financial model:", error);
+      res.status(500).json({ message: "Failed to activate financial model" });
+    }
+  });
+
+  // Deactivate financial model
+  app.post("/api/financial-models/:id/deactivate", async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deactivateFinancialModel(id);
+      res.json({ message: "Financial model deactivated successfully" });
+    } catch (error) {
+      console.error("Error deactivating financial model:", error);
+      res.status(500).json({ message: "Failed to deactivate financial model" });
+    }
+  });
+
+  // User Wallets API Routes
+
+  // Get user wallet (create if doesn't exist)
+  app.get("/api/wallet/:userId", async (req, res) => {
+    try {
+      const { userId } = req.params;
+      let wallet = await storage.getUserWallet(userId);
+      
+      // Create wallet if it doesn't exist
+      if (!wallet) {
+        wallet = await storage.createUserWallet({ userId });
+      }
+      
+      res.json(wallet);
+    } catch (error) {
+      console.error("Error fetching user wallet:", error);
+      res.status(500).json({ message: "Failed to fetch user wallet" });
+    }
+  });
+
+  // Get wallet transactions
+  app.get("/api/wallet/:userId/transactions", async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const limit = parseInt(req.query.limit as string) || 50;
+      const transactions = await storage.getWalletTransactionsByUser(userId, limit);
+      res.json(transactions);
+    } catch (error) {
+      console.error("Error fetching wallet transactions:", error);
+      res.status(500).json({ message: "Failed to fetch wallet transactions" });
+    }
+  });
+
+  // Credit wallet (Admin only)
+  app.post("/api/wallet/:userId/credit", async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const { amount, description, category = 'admin_credit' } = req.body;
+      
+      if (!amount || amount <= 0) {
+        return res.status(400).json({ message: "Invalid amount" });
+      }
+
+      // Get wallet first
+      let wallet = await storage.getUserWallet(userId);
+      if (!wallet) {
+        wallet = await storage.createUserWallet({ userId });
+      }
+
+      const balanceBefore = parseFloat(wallet.balance);
+      const updatedWallet = await storage.updateWalletBalance(userId, amount, 'credit');
+      
+      // Create transaction record
+      await storage.createWalletTransaction({
+        userId,
+        walletId: wallet.id,
+        type: 'credit',
+        category,
+        amount: amount.toString(),
+        balanceBefore: balanceBefore.toString(),
+        balanceAfter: (balanceBefore + amount).toString(),
+        description: description || `Wallet credited with ₹${amount}`,
+        netAmount: amount.toString(),
+        status: 'completed'
+      });
+
+      res.json(updatedWallet);
+    } catch (error) {
+      console.error("Error crediting wallet:", error);
+      res.status(500).json({ message: error.message || "Failed to credit wallet" });
+    }
+  });
+
+  // Debit wallet (Admin only)
+  app.post("/api/wallet/:userId/debit", async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const { amount, description, category = 'admin_debit' } = req.body;
+      
+      if (!amount || amount <= 0) {
+        return res.status(400).json({ message: "Invalid amount" });
+      }
+
+      const wallet = await storage.getUserWallet(userId);
+      if (!wallet) {
+        return res.status(404).json({ message: "Wallet not found" });
+      }
+
+      const balanceBefore = parseFloat(wallet.balance);
+      if (balanceBefore < amount) {
+        return res.status(400).json({ message: "Insufficient balance" });
+      }
+
+      const updatedWallet = await storage.updateWalletBalance(userId, amount, 'debit');
+      
+      // Create transaction record
+      await storage.createWalletTransaction({
+        userId,
+        walletId: wallet.id,
+        type: 'debit',
+        category,
+        amount: amount.toString(),
+        balanceBefore: balanceBefore.toString(),
+        balanceAfter: (balanceBefore - amount).toString(),
+        description: description || `Wallet debited with ₹${amount}`,
+        netAmount: amount.toString(),
+        status: 'completed'
+      });
+
+      res.json(updatedWallet);
+    } catch (error) {
+      console.error("Error debiting wallet:", error);
+      res.status(500).json({ message: error.message || "Failed to debit wallet" });
+    }
+  });
+
+  // Referrals API Routes
+
+  // Generate referral code
+  app.post("/api/referrals/generate", async (req, res) => {
+    try {
+      const { userId, type = 'client_referral' } = req.body;
+      
+      const referralCode = await storage.generateReferralCode(userId);
+      const referral = await storage.createReferral({
+        referrerId: userId,
+        referralCode,
+        type,
+        rewardAmount: '0', // Will be set based on financial model
+        status: 'pending'
+      });
+      
+      res.status(201).json(referral);
+    } catch (error) {
+      console.error("Error generating referral:", error);
+      res.status(500).json({ message: "Failed to generate referral code" });
+    }
+  });
+
+  // Get user referrals
+  app.get("/api/referrals/:userId", async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const referrals = await storage.getReferralsByUser(userId);
+      res.json(referrals);
+    } catch (error) {
+      console.error("Error fetching referrals:", error);
+      res.status(500).json({ message: "Failed to fetch referrals" });
+    }
+  });
+
+  // Use referral code
+  app.post("/api/referrals/use", async (req, res) => {
+    try {
+      const { referralCode, newUserId } = req.body;
+      
+      const referral = await storage.getReferralByCode(referralCode);
+      if (!referral) {
+        return res.status(404).json({ message: "Invalid referral code" });
+      }
+
+      if (referral.status !== 'pending') {
+        return res.status(400).json({ message: "Referral code already used or expired" });
+      }
+
+      // Update referral with new user
+      const updatedReferral = await storage.updateReferralStatus(referral.id, 'completed');
+      res.json(updatedReferral);
+    } catch (error) {
+      console.error("Error using referral code:", error);
+      res.status(500).json({ message: "Failed to use referral code" });
+    }
+  });
+
+  // Enhanced Payment Processing with Mock Support
+  app.post("/api/process-payment", async (req, res) => {
+    try {
+      const { amount, userId, bookingId, financialModelId, description } = req.body;
+      
+      // Mock payment processing for now
+      const mockPaymentId = `pay_mock_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      
+      // Process based on financial model
+      const model = financialModelId ? await storage.getFinancialModelById(financialModelId) : null;
+      
+      let finalAmount = amount;
+      let gstAmount = 0;
+      let adminCommission = 0;
+      
+      if (model && model.gstEnabled) {
+        gstAmount = (amount * parseFloat(model.gstRate)) / 100;
+        finalAmount += gstAmount;
+      }
+      
+      if (model && model.adminCommissionRate) {
+        adminCommission = (amount * parseFloat(model.adminCommissionRate)) / 100;
+      }
+
+      // Create payment intent record
+      await storage.createPaymentIntent({
+        stripePaymentIntentId: mockPaymentId,
+        userId,
+        bookingId,
+        amount: finalAmount.toString(),
+        currency: 'INR',
+        status: 'succeeded',
+        financialModelId,
+        metadata: { 
+          gstAmount: gstAmount.toString(),
+          adminCommission: adminCommission.toString(),
+          description 
+        }
+      });
+
+      res.json({
+        success: true,
+        paymentId: mockPaymentId,
+        amount: finalAmount,
+        gstAmount,
+        adminCommission,
+        message: "Payment processed successfully (Mock Mode)"
+      });
+    } catch (error) {
+      console.error("Error processing payment:", error);
+      res.status(500).json({ message: "Failed to process payment" });
+    }
+  });
+
+  // Initialize default financial models
+  app.post("/api/financial-models/initialize", async (req, res) => {
+    try {
+      const defaultModels = [
+        {
+          name: "Free Service Model",
+          description: "Completely free posting and receiving of services with no charges",
+          type: "free",
+          isActive: true,
+          gstEnabled: false,
+          gstRate: "0",
+          adminCommissionRate: "0",
+          advancePaymentPercentage: "0",
+          completionPercentage: "100",
+          referralRewardAmount: "0",
+          minimumTransactionAmount: "0",
+          maximumTransactionAmount: "0",
+          processingFeeRate: "0"
+        },
+        {
+          name: "Standard Commission Model",
+          description: "10% admin commission with 18% GST on successful service completion",
+          type: "standard_commission",
+          isActive: true,
+          gstEnabled: true,
+          gstRate: "18",
+          adminCommissionRate: "10",
+          advancePaymentPercentage: "0",
+          completionPercentage: "100",
+          referralRewardAmount: "0",
+          minimumTransactionAmount: "100",
+          maximumTransactionAmount: "50000",
+          processingFeeRate: "2.5"
+        },
+        {
+          name: "Advance Payment Model",
+          description: "30% advance payment, 70% on completion with GST and admin commission",
+          type: "advance_payment",
+          isActive: false,
+          gstEnabled: true,
+          gstRate: "18",
+          adminCommissionRate: "8",
+          advancePaymentPercentage: "30",
+          completionPercentage: "70",
+          referralRewardAmount: "0",
+          minimumTransactionAmount: "500",
+          maximumTransactionAmount: "100000",
+          processingFeeRate: "2.5"
+        },
+        {
+          name: "Referral Earning System",
+          description: "Earn ₹100 for each successful referral that completes their first service",
+          type: "referral_earning",
+          isActive: true,
+          gstEnabled: false,
+          gstRate: "0",
+          adminCommissionRate: "0",
+          advancePaymentPercentage: "0",
+          completionPercentage: "100",
+          referralRewardAmount: "100",
+          minimumTransactionAmount: "0",
+          maximumTransactionAmount: "0",
+          processingFeeRate: "0"
+        },
+        {
+          name: "Premium Full Payment Model",
+          description: "Full payment after OTP-verified service completion with premium commission rates",
+          type: "completion_payment",
+          isActive: false,
+          gstEnabled: true,
+          gstRate: "18",
+          adminCommissionRate: "15",
+          advancePaymentPercentage: "0",
+          completionPercentage: "100",
+          referralRewardAmount: "0",
+          minimumTransactionAmount: "1000",
+          maximumTransactionAmount: "200000",
+          processingFeeRate: "3.0"
+        }
+      ];
+
+      const createdModels = [];
+      for (const model of defaultModels) {
+        try {
+          const existingModel = await storage.getAllFinancialModels();
+          const modelExists = existingModel.some(m => m.name === model.name);
+          
+          if (!modelExists) {
+            const created = await storage.createFinancialModel(model);
+            createdModels.push(created);
+          }
+        } catch (error) {
+          console.error(`Error creating model ${model.name}:`, error);
+        }
+      }
+
+      res.json({
+        success: true,
+        message: `${createdModels.length} financial models initialized`,
+        models: createdModels
+      });
+    } catch (error) {
+      console.error("Error initializing financial models:", error);
+      res.status(500).json({ message: "Failed to initialize financial models" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
