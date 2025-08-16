@@ -61,6 +61,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import LocationTracker from "@/components/LocationTracker";
 import BankDetailsModal from "@/components/BankDetailsModal";
 import AdvertisementCarousel from "@/components/AdvertisementCarousel";
+import JobCompletionModal from "@/components/JobCompletionModal";
 import { format } from "date-fns";
 
 // Worker Profile Card Component with Edit functionality
@@ -1428,6 +1429,8 @@ export default function WorkerDashboard() {
   const [showRejoinModal, setShowRejoinModal] = useState(false);
   const [rejoinReason, setRejoinReason] = useState("");
   const [isWalletCollapsed, setIsWalletCollapsed] = useState(true);
+  const [jobCompletionModalOpen, setJobCompletionModalOpen] = useState(false);
+  const [completionBooking, setCompletionBooking] = useState<any>(null);
 
   // Fetch available jobs count for badge
   const { data: availableJobs = [] } = useQuery({
@@ -2587,6 +2590,17 @@ export default function WorkerDashboard() {
           </div>
         </div>
       )}
+
+      {/* Job Completion Modal */}
+      <JobCompletionModal
+        booking={completionBooking}
+        isOpen={jobCompletionModalOpen}
+        onClose={() => {
+          setJobCompletionModalOpen(false);
+          setCompletionBooking(null);
+        }}
+        userRole="worker"
+      />
     </div>
   );
 }

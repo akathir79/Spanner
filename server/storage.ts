@@ -55,7 +55,9 @@ import {
   type InsertAdvertisement,
   settings,
   type Settings,
-  type InsertSettings
+  type InsertSettings,
+  workerReviews,
+  jobCompletionOTPs
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, sql, desc, ilike, inArray, or } from "drizzle-orm";
@@ -102,6 +104,13 @@ export interface IStorage {
   updateBookingStatus(id: string, status: string): Promise<Booking | undefined>;
   getBookingsWithDetails(userId: string): Promise<any[]>;
   updateBookingReview(bookingId: string, rating: number, review: string): Promise<Booking | undefined>;
+  updateBooking(id: string, updates: Partial<Booking>): Promise<Booking | undefined>;
+  
+  // Worker reviews and ratings
+  createWorkerReview(review: any): Promise<any>;
+  getWorkerReviews(workerId: string): Promise<any[]>;
+  updateWorkerRating(workerId: string): Promise<void>;
+  getUserById(userId: string): Promise<User | undefined>;
   
   // OTP management
   createOtp(otp: InsertOtp): Promise<OtpVerification>;
@@ -1400,6 +1409,76 @@ export class DatabaseStorage implements IStorage {
         target: settings.key,
         set: { value, updatedAt: new Date() }
       });
+  }
+
+  // Job completion and review methods
+  async updateBooking(id: string, updates: Partial<Booking>): Promise<Booking | undefined> {
+    const [booking] = await db
+      .update(bookings)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(bookings.id, id))
+      .returning();
+    return booking || undefined;
+  }
+
+  async createWorkerReview(review: any): Promise<any> {
+    const [newReview] = await db.insert(workerReviews).values(review).returning();
+    return newReview;
+  }
+
+  async getWorkerReviews(workerId: string): Promise<any[]> {
+    const reviews = await db
+      .select({
+        id: workerReviews.id,
+        rating: workerReviews.rating,
+        review: workerReviews.review,
+        workQualityRating: workerReviews.workQualityRating,
+        timelinessRating: workerReviews.timelinessRating,
+        communicationRating: workerReviews.communicationRating,
+        professionalismRating: workerReviews.professionalismRating,
+        wouldRecommend: workerReviews.wouldRecommend,
+        tags: workerReviews.tags,
+        isPublic: workerReviews.isPublic,
+        createdAt: workerReviews.createdAt,
+        clientName: sql<string>`CONCAT(${users.firstName}, ' ', ${users.lastName})`,
+      })
+      .from(workerReviews)
+      .leftJoin(users, eq(workerReviews.clientId, users.id))
+      .where(and(
+        eq(workerReviews.workerId, workerId),
+        eq(workerReviews.isPublic, true)
+      ))
+      .orderBy(desc(workerReviews.createdAt));
+
+    return reviews;
+  }
+
+  async updateWorkerRating(workerId: string): Promise<void> {
+    // Calculate average rating from all reviews
+    const ratingResult = await db
+      .select({
+        avgRating: sql<number>`AVG(${workerReviews.rating})::decimal(3,2)`,
+        totalJobs: sql<number>`COUNT(*)::int`
+      })
+      .from(workerReviews)
+      .where(eq(workerReviews.workerId, workerId));
+
+    const avgRating = ratingResult[0]?.avgRating || 0;
+    const totalJobs = ratingResult[0]?.totalJobs || 0;
+
+    // Update worker profile with new rating and job count
+    await db
+      .update(workerProfiles)
+      .set({
+        rating: avgRating.toString(),
+        totalJobs: totalJobs,
+        updatedAt: new Date()
+      })
+      .where(eq(workerProfiles.userId, workerId));
+  }
+
+  async getUserById(userId: string): Promise<User | undefined> {
+    return this.getUser(userId);
   }
 }
 

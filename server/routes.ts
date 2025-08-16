@@ -20,6 +20,33 @@ import {
   insertAdvertisementSchema
 } from "@shared/schema";
 
+// Job completion OTP schema
+const generateCompletionOTPSchema = z.object({
+  bookingId: z.string(),
+  workerId: z.string(),
+});
+
+const verifyCompletionOTPSchema = z.object({
+  bookingId: z.string(),
+  otp: z.string().length(6),
+  clientId: z.string(),
+});
+
+// Review and rating schema
+const submitReviewSchema = z.object({
+  bookingId: z.string(),
+  workerId: z.string(),
+  clientId: z.string(),
+  rating: z.number().min(1).max(5),
+  review: z.string().optional(),
+  workQualityRating: z.number().min(1).max(5).optional(),
+  timelinessRating: z.number().min(1).max(5).optional(),
+  communicationRating: z.number().min(1).max(5).optional(),
+  professionalismRating: z.number().min(1).max(5).optional(),
+  wouldRecommend: z.boolean().optional(),
+  tags: z.array(z.string()).optional(),
+});
+
 // Validation schemas
 const loginSchema = z.object({
   mobile: z.string().min(1),
@@ -80,6 +107,11 @@ async function sendSMS(mobile: string, message: string): Promise<boolean> {
     console.error("SMS sending failed:", error);
     return false;
   }
+}
+
+// Generate job completion OTP
+function generateCompletionOTP(): string {
+  return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
 // Helper function to add minutes to date
@@ -2402,6 +2434,155 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating sharing session:", error);
       res.status(500).json({ message: "Failed to update sharing session" });
+    }
+  });
+
+  // Worker marks job as complete - generates OTP for client
+  app.post("/api/bookings/:id/worker-complete", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { workerId } = req.body;
+
+      // Get booking details
+      const booking = await storage.getBookingById(id);
+      if (!booking) {
+        return res.status(404).json({ message: "Booking not found" });
+      }
+
+      if (booking.workerId !== workerId) {
+        return res.status(403).json({ message: "Unauthorized" });
+      }
+
+      if (booking.status !== "in_progress") {
+        return res.status(400).json({ message: "Job must be in progress to mark as complete" });
+      }
+
+      // Generate completion OTP
+      const otp = generateCompletionOTP();
+      const expiresAt = addMinutes(new Date(), 15); // OTP expires in 15 minutes
+
+      // Update booking status and OTP
+      await storage.updateBooking(id, {
+        status: "worker_completed",
+        completionOTP: otp,
+        otpGeneratedAt: new Date(),
+        workerCompletedAt: new Date(),
+      });
+
+      // Get client details to send OTP
+      const client = await storage.getUserById(booking.clientId);
+      if (client) {
+        const message = `Your SPANNER job completion OTP is: ${otp}. Share this with your worker to confirm job completion. Valid for 15 minutes.`;
+        await sendSMS(client.mobile, message);
+        console.log(`Job completion OTP for ${client.mobile}: ${otp}`);
+      }
+
+      res.json({ 
+        message: "Job marked as complete. OTP sent to client.",
+        status: "worker_completed"
+      });
+    } catch (error) {
+      console.error("Worker complete job error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Client verifies OTP and confirms job completion
+  app.post("/api/bookings/:id/verify-completion", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { clientId, otp } = req.body;
+
+      const booking = await storage.getBookingById(id);
+      if (!booking) {
+        return res.status(404).json({ message: "Booking not found" });
+      }
+
+      if (booking.clientId !== clientId) {
+        return res.status(403).json({ message: "Unauthorized" });
+      }
+
+      if (booking.status !== "worker_completed") {
+        return res.status(400).json({ message: "Job not marked as complete by worker" });
+      }
+
+      if (booking.completionOTP !== otp) {
+        return res.status(400).json({ message: "Invalid OTP" });
+      }
+
+      // Check if OTP is expired (15 minutes)
+      const otpAge = new Date().getTime() - new Date(booking.otpGeneratedAt).getTime();
+      if (otpAge > 15 * 60 * 1000) {
+        return res.status(400).json({ message: "OTP has expired" });
+      }
+
+      // Update booking to completed
+      await storage.updateBooking(id, {
+        status: "completed",
+        otpVerifiedAt: new Date(),
+        clientConfirmedAt: new Date(),
+      });
+
+      res.json({ 
+        message: "Job completion confirmed successfully!",
+        status: "completed"
+      });
+    } catch (error) {
+      console.error("Verify completion OTP error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Submit worker review and rating
+  app.post("/api/reviews", async (req, res) => {
+    try {
+      const reviewData = submitReviewSchema.parse(req.body);
+
+      // Check if booking is completed
+      const booking = await storage.getBookingById(reviewData.bookingId);
+      if (!booking || booking.status !== "completed") {
+        return res.status(400).json({ message: "Can only review completed jobs" });
+      }
+
+      if (booking.clientId !== reviewData.clientId) {
+        return res.status(403).json({ message: "Unauthorized" });
+      }
+
+      // Create review
+      const review = await storage.createWorkerReview({
+        ...reviewData,
+        isPublic: true,
+        isVerified: true,
+      });
+
+      // Update booking with client rating and review
+      await storage.updateBooking(reviewData.bookingId, {
+        clientRating: reviewData.rating,
+        clientReview: reviewData.review || "",
+      });
+
+      // Update worker's overall rating
+      await storage.updateWorkerRating(reviewData.workerId);
+
+      res.status(201).json({
+        message: "Review submitted successfully",
+        review
+      });
+    } catch (error) {
+      console.error("Submit review error:", error);
+      res.status(500).json({ message: "Failed to submit review" });
+    }
+  });
+
+  // Get worker reviews
+  app.get("/api/workers/:id/reviews", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const reviews = await storage.getWorkerReviews(id);
+      res.json(reviews);
+    } catch (error) {
+      console.error("Get worker reviews error:", error);
+      res.status(500).json({ message: "Internal server error" });
     }
   });
 

@@ -104,13 +104,19 @@ export const bookings = pgTable("bookings", {
   description: text("description").notNull(),
   district: text("district").notNull(), // District name stored as text
   scheduledDate: timestamp("scheduled_date").notNull(),
-  status: text("status").notNull().default("pending"), // pending, accepted, in_progress, completed, cancelled
+  status: text("status").notNull().default("pending"), // pending, accepted, in_progress, worker_completed, completed, cancelled
   totalAmount: decimal("total_amount", { precision: 10, scale: 2 }),
   paymentStatus: text("payment_status").default("pending"), // pending, paid, failed
   clientRating: integer("client_rating"), // 1-5
   clientReview: text("client_review"),
   workerRating: integer("worker_rating"), // 1-5
   workerReview: text("worker_review"),
+  // Job completion OTP system  
+  completionOTP: text("completionOTP"), // OTP generated when worker marks job as complete
+  otpGeneratedAt: timestamp("otpGeneratedAt"), // When OTP was generated
+  otpVerifiedAt: timestamp("otpVerifiedAt"), // When client verified OTP
+  workerCompletedAt: timestamp("workerCompletedAt"), // When worker marked as complete
+  clientConfirmedAt: timestamp("clientConfirmedAt"), // When client confirmed completion
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -292,6 +298,42 @@ export const paymentWebhooks = pgTable("payment_webhooks", {
   processed: boolean("processed").default(false),
   processingError: text("processing_error"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Job completion OTP verifications
+export const jobCompletionOTPs = pgTable("job_completion_otps", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  bookingId: varchar("booking_id").references(() => bookings.id).notNull(),
+  otp: text("otp").notNull(),
+  generatedAt: timestamp("generated_at").defaultNow().notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+  isUsed: boolean("is_used").default(false),
+  verifiedAt: timestamp("verified_at"),
+  verifiedByClientId: varchar("verified_by_client_id").references(() => users.id),
+  attempts: integer("attempts").default(0),
+  maxAttempts: integer("max_attempts").default(3),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Worker performance reviews and ratings
+export const workerReviews = pgTable("worker_reviews", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  bookingId: varchar("booking_id").references(() => bookings.id).notNull(),
+  workerId: varchar("worker_id").references(() => users.id).notNull(),
+  clientId: varchar("client_id").references(() => users.id).notNull(),
+  rating: integer("rating").notNull(), // 1-5 stars
+  review: text("review"),
+  workQualityRating: integer("work_quality_rating"), // 1-5
+  timelinessRating: integer("timeliness_rating"), // 1-5
+  communicationRating: integer("communication_rating"), // 1-5
+  professionalismRating: integer("professionalism_rating"), // 1-5
+  wouldRecommend: boolean("would_recommend").default(true),
+  tags: jsonb("tags"), // Array of review tags like ['punctual', 'skilled', 'polite']
+  isPublic: boolean("is_public").default(true), // Whether review is visible to other clients
+  isVerified: boolean("is_verified").default(true), // Admin can mark reviews as verified
+  helpfulVotes: integer("helpful_votes").default(0), // Other clients can vote reviews as helpful
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
 // Messages between users and admins
@@ -683,3 +725,20 @@ export const insertSettingsSchema = createInsertSchema(settings).omit({
 
 export type Settings = typeof settings.$inferSelect;
 export type InsertSettings = z.infer<typeof insertSettingsSchema>;
+
+// Job completion OTP and Review schemas
+export const insertJobCompletionOTPSchema = createInsertSchema(jobCompletionOTPs).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertWorkerReviewSchema = createInsertSchema(workerReviews).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type JobCompletionOTP = typeof jobCompletionOTPs.$inferSelect;
+export type InsertJobCompletionOTP = z.infer<typeof insertJobCompletionOTPSchema>;
+export type WorkerReview = typeof workerReviews.$inferSelect;
+export type InsertWorkerReview = z.infer<typeof insertWorkerReviewSchema>;
