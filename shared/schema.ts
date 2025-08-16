@@ -868,6 +868,7 @@ export const financialModels = pgTable('financial_models', {
   gstPercentage: numeric('gst_percentage', { precision: 5, scale: 2 }).default('18'), // Default GST 18%
   referralClientReward: numeric('referral_client_reward', { precision: 10, scale: 2 }).default('0'),
   referralWorkerReward: numeric('referral_worker_reward', { precision: 10, scale: 2 }).default('0'),
+  workerCommissionPercentage: numeric('worker_commission_percentage', { precision: 5, scale: 2 }).default('0'),
   referralEnabledForClient: boolean('referral_enabled_for_client').notNull().default(false),
   referralEnabledForWorker: boolean('referral_enabled_for_worker').notNull().default(false),
   settings: json('settings').default({}), // Additional flexible settings

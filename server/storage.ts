@@ -2010,12 +2010,37 @@ export class DatabaseStorage implements IStorage {
     return wallet || undefined;
   }
 
-  async updateWalletBalance(userId: string, amount: number, type: 'credit' | 'debit'): Promise<UserWallet | undefined> {
+  async updateWalletBalance(userId: string, amount: number, type: 'credit' | 'debit', financialModelId?: string): Promise<UserWallet | undefined> {
     const wallet = await this.getUserWallet(userId);
     if (!wallet) return undefined;
 
+    let finalAmount = amount;
+
+    // Apply financial model settings if specified
+    if (financialModelId) {
+      const financialModel = await this.getFinancialModelById(financialModelId);
+      if (financialModel && financialModel.isActive) {
+        // Apply GST if enabled and it's a credit transaction
+        if (type === 'credit' && parseFloat(financialModel.gstPercentage) > 0) {
+          const gstAmount = (amount * parseFloat(financialModel.gstPercentage)) / 100;
+          finalAmount = amount + gstAmount;
+        }
+
+        // Apply admin commission if it's a credit transaction
+        if (type === 'credit' && parseFloat(financialModel.adminCommissionPercentage) > 0) {
+          const commissionAmount = (amount * parseFloat(financialModel.adminCommissionPercentage)) / 100;
+          finalAmount = finalAmount - commissionAmount; // Deduct commission from worker
+        }
+
+        // Apply worker commission percentage if specified
+        if (type === 'credit' && parseFloat(financialModel.workerCommissionPercentage) > 0) {
+          finalAmount = (amount * parseFloat(financialModel.workerCommissionPercentage)) / 100;
+        }
+      }
+    }
+
     const currentBalance = parseFloat(wallet.balance);
-    const newBalance = type === 'credit' ? currentBalance + amount : currentBalance - amount;
+    const newBalance = type === 'credit' ? currentBalance + finalAmount : currentBalance - finalAmount;
     
     if (newBalance < 0) {
       throw new Error('Insufficient balance');
@@ -2024,8 +2049,8 @@ export class DatabaseStorage implements IStorage {
     const [updatedWallet] = await db.update(userWallets)
       .set({
         balance: newBalance.toFixed(2),
-        totalEarned: type === 'credit' ? (parseFloat(wallet.totalEarned) + amount).toFixed(2) : wallet.totalEarned,
-        totalSpent: type === 'debit' ? (parseFloat(wallet.totalSpent) + amount).toFixed(2) : wallet.totalSpent,
+        totalEarned: type === 'credit' ? (parseFloat(wallet.totalEarned) + finalAmount).toFixed(2) : wallet.totalEarned,
+        totalSpent: type === 'debit' ? (parseFloat(wallet.totalSpent) + finalAmount).toFixed(2) : wallet.totalSpent,
         lastTransactionAt: new Date(),
         updatedAt: new Date()
       })

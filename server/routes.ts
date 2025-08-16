@@ -3849,11 +3849,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Credit wallet (Admin only)
+  // Credit wallet with financial model integration
   app.post("/api/wallet/:userId/credit", async (req, res) => {
     try {
       const { userId } = req.params;
-      const { amount, description, category = 'admin_credit' } = req.body;
+      const { amount, description, category = 'admin_credit', financialModelId } = req.body;
       
       if (!amount || amount <= 0) {
         return res.status(400).json({ message: "Invalid amount" });
@@ -3866,19 +3866,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const balanceBefore = parseFloat(wallet.balance);
-      const updatedWallet = await storage.updateWalletBalance(userId, amount, 'credit');
+      const updatedWallet = await storage.updateWalletBalance(userId, amount, 'credit', financialModelId);
       
-      // Create transaction record
+      // Calculate final amount for transaction record (may differ from original due to financial model)
+      const balanceAfter = parseFloat(updatedWallet?.balance || '0');
+      const actualCreditAmount = balanceAfter - balanceBefore;
+      
+      // Create transaction record with real values
       await storage.createWalletTransaction({
         userId,
         walletId: wallet.id,
         type: 'credit',
         category,
-        amount: amount.toString(),
+        amount: actualCreditAmount.toString(),
         balanceBefore: balanceBefore.toString(),
-        balanceAfter: (balanceBefore + amount).toString(),
-        description: description || `Wallet credited with ₹${amount}`,
-        netAmount: amount.toString(),
+        balanceAfter: balanceAfter.toString(),
+        description: description || `Wallet credited with ₹${actualCreditAmount.toFixed(2)} (Financial Model Applied)`,
+        netAmount: actualCreditAmount.toString(),
         status: 'completed'
       });
 
@@ -3889,11 +3893,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Debit wallet (Admin only)
+  // Debit wallet with financial model integration
   app.post("/api/wallet/:userId/debit", async (req, res) => {
     try {
       const { userId } = req.params;
-      const { amount, description, category = 'admin_debit' } = req.body;
+      const { amount, description, category = 'admin_debit', financialModelId } = req.body;
       
       if (!amount || amount <= 0) {
         return res.status(400).json({ message: "Invalid amount" });
@@ -3909,19 +3913,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Insufficient balance" });
       }
 
-      const updatedWallet = await storage.updateWalletBalance(userId, amount, 'debit');
+      const updatedWallet = await storage.updateWalletBalance(userId, amount, 'debit', financialModelId);
       
-      // Create transaction record
+      // Calculate final amount for transaction record
+      const balanceAfter = parseFloat(updatedWallet?.balance || '0');
+      const actualDebitAmount = balanceBefore - balanceAfter;
+      
+      // Create transaction record with real values
       await storage.createWalletTransaction({
         userId,
         walletId: wallet.id,
         type: 'debit',
         category,
-        amount: amount.toString(),
+        amount: actualDebitAmount.toString(),
         balanceBefore: balanceBefore.toString(),
-        balanceAfter: (balanceBefore - amount).toString(),
-        description: description || `Wallet debited with ₹${amount}`,
-        netAmount: amount.toString(),
+        balanceAfter: balanceAfter.toString(),
+        description: description || `Wallet debited with ₹${actualDebitAmount.toFixed(2)} (Financial Model Applied)`,
+        netAmount: actualDebitAmount.toString(),
         status: 'completed'
       });
 

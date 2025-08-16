@@ -761,33 +761,73 @@ export default function FinancialManagement() {
                       </Button>
                     </div>
                   </div>
-                  <Badge className={getModelTypeColor(model.type)} data-testid={`badge-model-type-${model.id}`}>
-                    {getModelTypeLabel(model.type)}
+                  <Badge className="bg-blue-100 text-blue-800" data-testid={`badge-model-type-${model.id}`}>
+                    Custom Model
                   </Badge>
                 </CardHeader>
-                <CardContent className="space-y-2">
+                <CardContent className="space-y-3">
                   <p className="text-sm text-gray-600 line-clamp-2">{model.description}</p>
-                  <div className="grid grid-cols-2 gap-2 text-xs">
-                    {parseFloat(model.gstPercentage || '0') > 0 && (
-                      <div className="flex items-center">
-                        <span className="font-medium">GST:</span>
-                        <span className="ml-1">{model.gstPercentage || '0'}%</span>
+                  
+                  {/* Complete Financial Configuration Display */}
+                  <div className="space-y-3">
+                    {/* GST & Commission Row */}
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div className="bg-gray-50 p-2 rounded">
+                        <span className="text-gray-500 block">GST Rate</span>
+                        <div className="font-medium">{model.gstPercentage || '0'}%</div>
                       </div>
-                    )}
-                    <div className="flex items-center">
-                      <span className="font-medium">Commission:</span>
-                      <span className="ml-1">{model.adminCommissionPercentage || '0'}%</span>
+                      <div className="bg-gray-50 p-2 rounded">
+                        <span className="text-gray-500 block">Admin Commission</span>
+                        <div className="font-medium">{model.adminCommissionPercentage || '0'}%</div>
+                      </div>
                     </div>
-                    <div className="flex items-center">
-                      <span className="font-medium">Client Referral:</span>
-                      <span className="ml-1">₹{model.referralClientReward || '0'}</span>
+
+                    {/* Payment Structure Row */}
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div className="bg-gray-50 p-2 rounded">
+                        <span className="text-gray-500 block">Advance Payment</span>
+                        <div className="font-medium">{model.settings?.advancePaymentPercentage || '0'}%</div>
+                      </div>
+                      <div className="bg-gray-50 p-2 rounded">
+                        <span className="text-gray-500 block">Completion Payment</span>
+                        <div className="font-medium">{model.settings?.completionPercentage || '0'}%</div>
+                      </div>
                     </div>
-                    <div className="flex items-center">
-                      <span className="font-medium">Worker Referral:</span>
-                      <span className="ml-1">₹{model.referralWorkerReward || '0'}</span>
+
+                    {/* Referrals & Worker Commission Row */}
+                    <div className="grid grid-cols-3 gap-1 text-xs">
+                      <div className="bg-green-50 p-2 rounded">
+                        <span className="text-gray-500 block">Client Referral</span>
+                        <div className="font-medium text-green-700">₹{model.referralClientReward || '0'}</div>
+                      </div>
+                      <div className="bg-green-50 p-2 rounded">
+                        <span className="text-gray-500 block">Worker Referral</span>
+                        <div className="font-medium text-green-700">₹{model.referralWorkerReward || '0'}</div>
+                      </div>
+                      <div className="bg-blue-50 p-2 rounded">
+                        <span className="text-gray-500 block">Worker Commission</span>
+                        <div className="font-medium text-blue-700">{model.workerCommissionPercentage || '0'}%</div>
+                      </div>
+                    </div>
+
+                    {/* Transaction Limits & Processing Row */}
+                    <div className="grid grid-cols-3 gap-1 text-xs">
+                      <div className="bg-orange-50 p-2 rounded">
+                        <span className="text-gray-500 block">Min Transaction</span>
+                        <div className="font-medium text-orange-700">₹{model.settings?.minimumTransactionAmount || '0'}</div>
+                      </div>
+                      <div className="bg-orange-50 p-2 rounded">
+                        <span className="text-gray-500 block">Max Transaction</span>
+                        <div className="font-medium text-orange-700">₹{model.settings?.maximumTransactionAmount || '0'}</div>
+                      </div>
+                      <div className="bg-purple-50 p-2 rounded">
+                        <span className="text-gray-500 block">Processing Fee</span>
+                        <div className="font-medium text-purple-700">{model.settings?.processingFeeRate || '0'}%</div>
+                      </div>
                     </div>
                   </div>
-                  <div className="flex justify-between items-center pt-2">
+                  
+                  <div className="flex justify-between items-center pt-2 border-t">
                     <Badge variant={model.isActive ? "default" : "secondary"}>
                       {model.isActive ? "Active" : "Inactive"}
                     </Badge>
