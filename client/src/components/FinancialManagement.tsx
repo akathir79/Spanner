@@ -95,7 +95,6 @@ export default function FinancialManagement() {
   const [modelForm, setModelForm] = useState<{
     name: string;
     description: string;
-    type: FinancialModelType;
     gstEnabled: boolean;
     gstRate: string;
     adminCommissionRate: string;
@@ -110,18 +109,17 @@ export default function FinancialManagement() {
   }>({
     name: "",
     description: "",
-    type: "free",
     gstEnabled: false,
-    gstRate: "18",
-    adminCommissionRate: "10", 
-    advancePaymentPercentage: "30",
-    completionPercentage: "70",
-    clientReferralReward: "100",
-    workerReferralReward: "100",
-    workerJobCommission: "80",
-    minimumTransactionAmount: "50",
-    maximumTransactionAmount: "100000",
-    processingFeeRate: "2.5"
+    gstRate: "0",
+    adminCommissionRate: "0", 
+    advancePaymentPercentage: "0",
+    completionPercentage: "0",
+    clientReferralReward: "0",
+    workerReferralReward: "0",
+    workerJobCommission: "0",
+    minimumTransactionAmount: "0",
+    maximumTransactionAmount: "0",
+    processingFeeRate: "0"
   });
 
   const { toast: showToast } = useToast();
@@ -188,16 +186,22 @@ export default function FinancialManagement() {
         body: JSON.stringify({
           name: modelForm.name,
           description: modelForm.description,
-          type: modelForm.type,
+          type: "custom",
           isActive: false,
           adminCommissionPercentage: modelForm.adminCommissionRate || "0",
-          gstPercentage: modelForm.gstEnabled ? (modelForm.gstRate || "18") : "0",
+          gstPercentage: modelForm.gstEnabled ? (modelForm.gstRate || "0") : "0",
           referralClientReward: modelForm.clientReferralReward || "0",
           referralWorkerReward: modelForm.workerReferralReward || "0",
-          workerCommissionPercentage: modelForm.workerJobCommission || "80",
+          workerCommissionPercentage: modelForm.workerJobCommission || "0",
           referralEnabledForClient: false,
           referralEnabledForWorker: false,
-          settings: {}
+          settings: {
+            advancePaymentPercentage: modelForm.advancePaymentPercentage || "0",
+            completionPercentage: modelForm.completionPercentage || "0",
+            minimumTransactionAmount: modelForm.minimumTransactionAmount || "0",
+            maximumTransactionAmount: modelForm.maximumTransactionAmount || "0",
+            processingFeeRate: modelForm.processingFeeRate || "0"
+          }
         })
       });
 
@@ -231,15 +235,21 @@ export default function FinancialManagement() {
         body: JSON.stringify({
           name: modelForm.name,
           description: modelForm.description,
-          type: modelForm.type,
+          type: "custom",
           adminCommissionPercentage: modelForm.adminCommissionRate || "0",
-          gstPercentage: modelForm.gstEnabled ? (modelForm.gstRate || "18") : "0",
+          gstPercentage: modelForm.gstEnabled ? (modelForm.gstRate || "0") : "0",
           referralClientReward: modelForm.clientReferralReward || "0",
           referralWorkerReward: modelForm.workerReferralReward || "0",
-          workerCommissionPercentage: modelForm.workerJobCommission || "80",
+          workerCommissionPercentage: modelForm.workerJobCommission || "0",
           referralEnabledForClient: false,
           referralEnabledForWorker: false,
-          settings: {}
+          settings: {
+            advancePaymentPercentage: modelForm.advancePaymentPercentage || "0",
+            completionPercentage: modelForm.completionPercentage || "0",
+            minimumTransactionAmount: modelForm.minimumTransactionAmount || "0",
+            maximumTransactionAmount: modelForm.maximumTransactionAmount || "0",
+            processingFeeRate: modelForm.processingFeeRate || "0"
+          }
         })
       });
 
@@ -404,18 +414,18 @@ export default function FinancialManagement() {
     setModelForm({
       name: "",
       description: "",
-      type: "free" as FinancialModelType,
+
       gstEnabled: false,
-      gstRate: "18",
-      adminCommissionRate: "10",
-      advancePaymentPercentage: "30",
-      completionPercentage: "70",
-      clientReferralReward: "100",
-      workerReferralReward: "100", 
-      workerJobCommission: "80",
-      minimumTransactionAmount: "50",
-      maximumTransactionAmount: "100000",
-      processingFeeRate: "2.5"
+      gstRate: "0",
+      adminCommissionRate: "0",
+      advancePaymentPercentage: "0",
+      completionPercentage: "0",
+      clientReferralReward: "0",
+      workerReferralReward: "0", 
+      workerJobCommission: "0",
+      minimumTransactionAmount: "0",
+      maximumTransactionAmount: "0",
+      processingFeeRate: "0"
     });
   };
 
@@ -424,16 +434,17 @@ export default function FinancialManagement() {
     setModelForm({
       name: model.name,
       description: model.description,
-      type: model.type,
-      gstEnabled: model.gstEnabled,
-      gstRate: model.gstRate,
-      adminCommissionRate: model.adminCommissionRate,
-      advancePaymentPercentage: model.advancePaymentPercentage,
-      completionPercentage: model.completionPercentage,
-      referralRewardAmount: model.referralRewardAmount,
-      minimumTransactionAmount: model.minimumTransactionAmount,
-      maximumTransactionAmount: model.maximumTransactionAmount,
-      processingFeeRate: model.processingFeeRate
+      gstEnabled: model.gstPercentage !== "0",
+      gstRate: model.gstPercentage || "0",
+      adminCommissionRate: model.adminCommissionPercentage || "0",
+      advancePaymentPercentage: model.settings?.advancePaymentPercentage || "0",
+      completionPercentage: model.settings?.completionPercentage || "0",
+      clientReferralReward: model.referralClientReward || "0",
+      workerReferralReward: model.referralWorkerReward || "0",
+      workerJobCommission: model.workerCommissionPercentage || "0",
+      minimumTransactionAmount: model.settings?.minimumTransactionAmount || "0",
+      maximumTransactionAmount: model.settings?.maximumTransactionAmount || "0",
+      processingFeeRate: model.settings?.processingFeeRate || "0"
     });
     setIsEditModelOpen(true);
   };
@@ -495,35 +506,15 @@ export default function FinancialManagement() {
               <DialogTitle>Create New Financial Model</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="name">Model Name</Label>
-                  <Input
-                    id="name"
-                    value={modelForm.name}
-                    onChange={(e) => setModelForm({...modelForm, name: e.target.value})}
-                    placeholder="e.g., Standard Service Model"
-                    data-testid="input-model-name"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="type">Model Type</Label>
-                  <Select
-                    value={modelForm.type}
-                    onValueChange={(value) => setModelForm({...modelForm, type: value as any})}
-                  >
-                    <SelectTrigger data-testid="select-model-type">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="free">Free Posting/Receiving</SelectItem>
-                      <SelectItem value="advance_payment">Client Advance Payment</SelectItem>
-                      <SelectItem value="standard_commission">Standard Commission</SelectItem>
-                      <SelectItem value="completion_payment">Full Payment After Completion</SelectItem>
-                      <SelectItem value="referral_earning">Referral Earning System</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+              <div>
+                <Label htmlFor="name">Model Name</Label>
+                <Input
+                  id="name"
+                  value={modelForm.name}
+                  onChange={(e) => setModelForm({...modelForm, name: e.target.value})}
+                  placeholder="e.g., Premium Service Model, Basic Package, etc."
+                  data-testid="input-model-name"
+                />
               </div>
 
               <div>
@@ -548,59 +539,57 @@ export default function FinancialManagement() {
                 <Label htmlFor="gst-enabled">Enable GST</Label>
               </div>
 
-              {modelForm.gstEnabled && (
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="gst-rate">GST Rate (%)</Label>
-                    <Input
-                      id="gst-rate"
-                      type="number"
-                      value={modelForm.gstRate}
-                      onChange={(e) => setModelForm({...modelForm, gstRate: e.target.value})}
-                      placeholder="18"
-                      data-testid="input-gst-rate"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="admin-commission">Admin Commission (%)</Label>
-                    <Input
-                      id="admin-commission"
-                      type="number"
-                      value={modelForm.adminCommissionRate}
-                      onChange={(e) => setModelForm({...modelForm, adminCommissionRate: e.target.value})}
-                      placeholder="10"
-                      data-testid="input-admin-commission"
-                    />
-                  </div>
+              {/* GST and Commission Settings */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="gst-rate">GST Rate (%)</Label>
+                  <Input
+                    id="gst-rate"
+                    type="number"
+                    value={modelForm.gstRate}
+                    onChange={(e) => setModelForm({...modelForm, gstRate: e.target.value})}
+                    placeholder="0"
+                    data-testid="input-gst-rate"
+                  />
                 </div>
-              )}
+                <div>
+                  <Label htmlFor="admin-commission">Admin Commission (%)</Label>
+                  <Input
+                    id="admin-commission"
+                    type="number"
+                    value={modelForm.adminCommissionRate}
+                    onChange={(e) => setModelForm({...modelForm, adminCommissionRate: e.target.value})}
+                    placeholder="0"
+                    data-testid="input-admin-commission"
+                  />
+                </div>
+              </div>
 
-              {modelForm.type === 'advance_payment' && (
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="advance-percentage">Advance Payment (%)</Label>
-                    <Input
-                      id="advance-percentage"
-                      type="number"
-                      value={modelForm.advancePaymentPercentage}
-                      onChange={(e) => setModelForm({...modelForm, advancePaymentPercentage: e.target.value})}
-                      placeholder="30"
-                      data-testid="input-advance-percentage"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="completion-percentage">Completion Payment (%)</Label>
-                    <Input
-                      id="completion-percentage"
-                      type="number"
-                      value={modelForm.completionPercentage}
-                      onChange={(e) => setModelForm({...modelForm, completionPercentage: e.target.value})}
-                      placeholder="70"
-                      data-testid="input-completion-percentage"
-                    />
-                  </div>
+              {/* Payment Structure */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="advance-percentage">Advance Payment (%)</Label>
+                  <Input
+                    id="advance-percentage"
+                    type="number"
+                    value={modelForm.advancePaymentPercentage}
+                    onChange={(e) => setModelForm({...modelForm, advancePaymentPercentage: e.target.value})}
+                    placeholder="0"
+                    data-testid="input-advance-percentage"
+                  />
                 </div>
-              )}
+                <div>
+                  <Label htmlFor="completion-percentage">Completion Payment (%)</Label>
+                  <Input
+                    id="completion-percentage"
+                    type="number"
+                    value={modelForm.completionPercentage}
+                    onChange={(e) => setModelForm({...modelForm, completionPercentage: e.target.value})}
+                    placeholder="0"
+                    data-testid="input-completion-percentage"
+                  />
+                </div>
+              </div>
 
               {/* Referral Rewards and Worker Commission */}
               <div className="grid grid-cols-3 gap-4">
@@ -611,7 +600,7 @@ export default function FinancialManagement() {
                     type="number"
                     value={modelForm.clientReferralReward}
                     onChange={(e) => setModelForm({...modelForm, clientReferralReward: e.target.value})}
-                    placeholder="100"
+                    placeholder="0"
                     data-testid="input-client-referral"
                   />
                 </div>
@@ -622,7 +611,7 @@ export default function FinancialManagement() {
                     type="number"
                     value={modelForm.workerReferralReward}
                     onChange={(e) => setModelForm({...modelForm, workerReferralReward: e.target.value})}
-                    placeholder="100"
+                    placeholder="0"
                     data-testid="input-worker-referral"
                   />
                 </div>
@@ -633,7 +622,7 @@ export default function FinancialManagement() {
                     type="number"
                     value={modelForm.workerJobCommission}
                     onChange={(e) => setModelForm({...modelForm, workerJobCommission: e.target.value})}
-                    placeholder="80"
+                    placeholder="0"
                     data-testid="input-worker-commission"
                   />
                 </div>
@@ -671,6 +660,43 @@ export default function FinancialManagement() {
                     value={modelForm.processingFeeRate}
                     onChange={(e) => setModelForm({...modelForm, processingFeeRate: e.target.value})}
                     placeholder="2.5"
+                    data-testid="input-processing-fee"
+                  />
+                </div>
+              </div>
+
+              {/* Transaction Limits and Processing */}
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <Label htmlFor="min-transaction">Min Transaction (₹)</Label>
+                  <Input
+                    id="min-transaction"
+                    type="number"
+                    value={modelForm.minimumTransactionAmount}
+                    onChange={(e) => setModelForm({...modelForm, minimumTransactionAmount: e.target.value})}
+                    placeholder="0"
+                    data-testid="input-min-transaction"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="max-transaction">Max Transaction (₹)</Label>
+                  <Input
+                    id="max-transaction"
+                    type="number"
+                    value={modelForm.maximumTransactionAmount}
+                    onChange={(e) => setModelForm({...modelForm, maximumTransactionAmount: e.target.value})}
+                    placeholder="0"
+                    data-testid="input-max-transaction"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="processing-fee">Processing Fee (%)</Label>
+                  <Input
+                    id="processing-fee"
+                    type="number"
+                    value={modelForm.processingFeeRate}
+                    onChange={(e) => setModelForm({...modelForm, processingFeeRate: e.target.value})}
+                    placeholder="0"
                     data-testid="input-processing-fee"
                   />
                 </div>
@@ -1060,36 +1086,15 @@ export default function FinancialManagement() {
             <DialogTitle>Edit Financial Model</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            {/* Same form content as create modal */}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="edit-name">Model Name</Label>
-                <Input
-                  id="edit-name"
-                  value={modelForm.name}
-                  onChange={(e) => setModelForm({...modelForm, name: e.target.value})}
-                  placeholder="e.g., Standard Service Model"
-                  data-testid="input-edit-model-name"
-                />
-              </div>
-              <div>
-                <Label htmlFor="edit-type">Model Type</Label>
-                <Select
-                  value={modelForm.type}
-                  onValueChange={(value) => setModelForm({...modelForm, type: value as any})}
-                >
-                  <SelectTrigger data-testid="select-edit-model-type">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="free">Free Posting/Receiving</SelectItem>
-                    <SelectItem value="advance_payment">Client Advance Payment</SelectItem>
-                    <SelectItem value="standard_commission">Standard Commission</SelectItem>
-                    <SelectItem value="completion_payment">Full Payment After Completion</SelectItem>
-                    <SelectItem value="referral_earning">Referral Earning System</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+            <div>
+              <Label htmlFor="edit-name">Model Name</Label>
+              <Input
+                id="edit-name"
+                value={modelForm.name}
+                onChange={(e) => setModelForm({...modelForm, name: e.target.value})}
+                placeholder="e.g., Premium Service Model, Basic Package, etc."
+                data-testid="input-edit-model-name"
+              />
             </div>
 
             <div>
@@ -1102,6 +1107,142 @@ export default function FinancialManagement() {
                 rows={3}
                 data-testid="textarea-edit-model-description"
               />
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="edit-gst-enabled"
+                checked={modelForm.gstEnabled}
+                onCheckedChange={(checked) => setModelForm({...modelForm, gstEnabled: checked})}
+                data-testid="switch-edit-gst-enabled"
+              />
+              <Label htmlFor="edit-gst-enabled">Enable GST</Label>
+            </div>
+
+            {/* GST and Commission Settings */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="edit-gst-rate">GST Rate (%)</Label>
+                <Input
+                  id="edit-gst-rate"
+                  type="number"
+                  value={modelForm.gstRate}
+                  onChange={(e) => setModelForm({...modelForm, gstRate: e.target.value})}
+                  placeholder="0"
+                  data-testid="input-edit-gst-rate"
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-admin-commission">Admin Commission (%)</Label>
+                <Input
+                  id="edit-admin-commission"
+                  type="number"
+                  value={modelForm.adminCommissionRate}
+                  onChange={(e) => setModelForm({...modelForm, adminCommissionRate: e.target.value})}
+                  placeholder="0"
+                  data-testid="input-edit-admin-commission"
+                />
+              </div>
+            </div>
+
+            {/* Payment Structure */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="edit-advance-percentage">Advance Payment (%)</Label>
+                <Input
+                  id="edit-advance-percentage"
+                  type="number"
+                  value={modelForm.advancePaymentPercentage}
+                  onChange={(e) => setModelForm({...modelForm, advancePaymentPercentage: e.target.value})}
+                  placeholder="0"
+                  data-testid="input-edit-advance-percentage"
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-completion-percentage">Completion Payment (%)</Label>
+                <Input
+                  id="edit-completion-percentage"
+                  type="number"
+                  value={modelForm.completionPercentage}
+                  onChange={(e) => setModelForm({...modelForm, completionPercentage: e.target.value})}
+                  placeholder="0"
+                  data-testid="input-edit-completion-percentage"
+                />
+              </div>
+            </div>
+
+            {/* Referral Rewards and Worker Commission */}
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <Label htmlFor="edit-client-referral">Client Referral (₹)</Label>
+                <Input
+                  id="edit-client-referral"
+                  type="number"
+                  value={modelForm.clientReferralReward}
+                  onChange={(e) => setModelForm({...modelForm, clientReferralReward: e.target.value})}
+                  placeholder="0"
+                  data-testid="input-edit-client-referral"
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-worker-referral">Worker Referral (₹)</Label>
+                <Input
+                  id="edit-worker-referral"
+                  type="number"
+                  value={modelForm.workerReferralReward}
+                  onChange={(e) => setModelForm({...modelForm, workerReferralReward: e.target.value})}
+                  placeholder="0"
+                  data-testid="input-edit-worker-referral"
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-worker-commission">Worker Share Job Commission (%)</Label>
+                <Input
+                  id="edit-worker-commission"
+                  type="number"
+                  value={modelForm.workerJobCommission}
+                  onChange={(e) => setModelForm({...modelForm, workerJobCommission: e.target.value})}
+                  placeholder="0"
+                  data-testid="input-edit-worker-commission"
+                />
+              </div>
+            </div>
+
+            {/* Transaction Limits and Processing */}
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <Label htmlFor="edit-min-transaction">Min Transaction (₹)</Label>
+                <Input
+                  id="edit-min-transaction"
+                  type="number"
+                  value={modelForm.minimumTransactionAmount}
+                  onChange={(e) => setModelForm({...modelForm, minimumTransactionAmount: e.target.value})}
+                  placeholder="0"
+                  data-testid="input-edit-min-transaction"
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-max-transaction">Max Transaction (₹)</Label>
+                <Input
+                  id="edit-max-transaction"
+                  type="number"
+                  value={modelForm.maximumTransactionAmount}
+                  onChange={(e) => setModelForm({...modelForm, maximumTransactionAmount: e.target.value})}
+                  placeholder="0"
+                  data-testid="input-edit-max-transaction"
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-processing-fee">Processing Fee (%)</Label>
+                <Input
+                  id="edit-processing-fee"
+                  type="number"
+                  value={modelForm.processingFeeRate}
+                  onChange={(e) => setModelForm({...modelForm, processingFeeRate: e.target.value})}
+                  placeholder="0"
+                  data-testid="input-edit-processing-fee"
+                />
+              </div>
             </div>
 
             <div className="flex justify-end space-x-2 pt-4">
