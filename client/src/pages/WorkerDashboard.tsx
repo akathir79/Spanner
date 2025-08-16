@@ -709,6 +709,12 @@ const AvailableJobsTab = ({ user }: { user: any }) => {
     enabled: !!user?.id,
   });
 
+  // Fetch worker's bids to check for existing bids - MOVED TO TOP LEVEL
+  const { data: myBids = [] } = useQuery<any[]>({
+    queryKey: ["/api/bids/worker", user?.id],
+    enabled: !!user?.id,
+  });
+
   // Create bid mutation
   const createBidMutation = useMutation({
     mutationFn: (data: any) => 
@@ -922,10 +928,6 @@ const AvailableJobsTab = ({ user }: { user: any }) => {
                       <div className="flex justify-end pt-2">
                         {/* Check if worker already has a bid for this job */}
                         {(() => {
-                          const { data: myBids = [] } = useQuery<any[]>({
-                            queryKey: ["/api/bids/worker", user?.id],
-                            enabled: !!user?.id,
-                          });
                           const existingBid = myBids.find((bid: any) => bid.jobPosting?.id === job.id);
                           
                           return existingBid ? (
@@ -1418,6 +1420,20 @@ export default function WorkerDashboard() {
   const [showRejoinModal, setShowRejoinModal] = useState(false);
   const [rejoinReason, setRejoinReason] = useState("");
   const [isWalletCollapsed, setIsWalletCollapsed] = useState(true);
+
+  // Fetch available jobs count for badge
+  const { data: availableJobs = [] } = useQuery({
+    queryKey: ["/api/job-postings", "available", user?.id],
+    queryFn: () => fetch(`/api/job-postings?workerId=${user?.id}`).then(res => res.json()),
+    select: (data: any) => data.filter((job: any) => job.status === "open"),
+    enabled: !!user?.id,
+  });
+
+  // Fetch worker bids count for badge
+  const { data: workerBids = [] } = useQuery({
+    queryKey: ["/api/bids/worker", user?.id],
+    enabled: !!user?.id,
+  });
   
   // Force re-render when showRejoinModal changes
   useEffect(() => {
@@ -1971,8 +1987,22 @@ export default function WorkerDashboard() {
           <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="bookings">Bookings</TabsTrigger>
-            <TabsTrigger value="available-jobs">Available Jobs</TabsTrigger>
-            <TabsTrigger value="my-bids">My Bids</TabsTrigger>
+            <TabsTrigger value="available-jobs" className="relative">
+              Available Jobs
+              {availableJobs.length > 0 && (
+                <Badge variant="secondary" className="ml-2 bg-blue-500 text-white text-xs px-1 py-0 h-5 min-w-[20px] rounded-full flex items-center justify-center">
+                  {availableJobs.length}
+                </Badge>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="my-bids" className="relative">
+              My Bids
+              {workerBids.length > 0 && (
+                <Badge variant="secondary" className="ml-2 bg-green-500 text-white text-xs px-1 py-0 h-5 min-w-[20px] rounded-full flex items-center justify-center">
+                  {workerBids.length}
+                </Badge>
+              )}
+            </TabsTrigger>
             <TabsTrigger value="profile">Profile</TabsTrigger>
             <TabsTrigger value="settings">Settings</TabsTrigger>
           </TabsList>
