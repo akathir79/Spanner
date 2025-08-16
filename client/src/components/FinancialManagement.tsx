@@ -33,15 +33,13 @@ interface FinancialModel {
   description: string;
   type: 'free' | 'advance_payment' | 'standard_commission' | 'completion_payment' | 'referral_earning';
   isActive: boolean;
-  gstEnabled: boolean;
-  gstRate: string;
-  adminCommissionRate: string;
-  advancePaymentPercentage: string;
-  completionPercentage: string;
-  referralRewardAmount: string;
-  minimumTransactionAmount: string;
-  maximumTransactionAmount: string;
-  processingFeeRate: string;
+  adminCommissionPercentage: string;
+  gstPercentage: string;
+  referralClientReward: string;
+  referralWorkerReward: string;
+  referralEnabledForClient: boolean;
+  referralEnabledForWorker: boolean;
+  settings: any;
   createdAt: string;
   updatedAt: string;
   createdBy?: string;
@@ -183,7 +181,19 @@ export default function FinancialManagement() {
       const response = await fetch("/api/financial-models", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(modelForm)
+        body: JSON.stringify({
+          name: modelForm.name,
+          description: modelForm.description,
+          type: modelForm.type,
+          isActive: false,
+          adminCommissionPercentage: modelForm.adminCommissionRate || "0",
+          gstPercentage: modelForm.gstEnabled ? (modelForm.gstRate || "18") : "0",
+          referralClientReward: modelForm.referralRewardAmount || "0",
+          referralWorkerReward: modelForm.referralRewardAmount || "0",
+          referralEnabledForClient: false,
+          referralEnabledForWorker: false,
+          settings: {}
+        })
       });
 
       if (response.ok) {
@@ -213,7 +223,18 @@ export default function FinancialManagement() {
       const response = await fetch(`/api/financial-models/${selectedModel.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(modelForm)
+        body: JSON.stringify({
+          name: modelForm.name,
+          description: modelForm.description,
+          type: modelForm.type,
+          adminCommissionPercentage: modelForm.adminCommissionRate || "0",
+          gstPercentage: modelForm.gstEnabled ? (modelForm.gstRate || "18") : "0",
+          referralClientReward: modelForm.referralRewardAmount || "0",
+          referralWorkerReward: modelForm.referralRewardAmount || "0",
+          referralEnabledForClient: false,
+          referralEnabledForWorker: false,
+          settings: {}
+        })
       });
 
       if (response.ok) {
@@ -690,23 +711,23 @@ export default function FinancialManagement() {
                 <CardContent className="space-y-2">
                   <p className="text-sm text-gray-600 line-clamp-2">{model.description}</p>
                   <div className="grid grid-cols-2 gap-2 text-xs">
-                    {model.gstEnabled && (
+                    {parseFloat(model.gstPercentage || '0') > 0 && (
                       <div className="flex items-center">
                         <span className="font-medium">GST:</span>
-                        <span className="ml-1">{model.gstRate}%</span>
+                        <span className="ml-1">{model.gstPercentage || '0'}%</span>
                       </div>
                     )}
                     <div className="flex items-center">
                       <span className="font-medium">Commission:</span>
-                      <span className="ml-1">{model.adminCommissionRate}%</span>
+                      <span className="ml-1">{model.adminCommissionPercentage || '0'}%</span>
                     </div>
                     <div className="flex items-center">
-                      <span className="font-medium">Min:</span>
-                      <span className="ml-1">₹{model.minimumTransactionAmount}</span>
+                      <span className="font-medium">Client Referral:</span>
+                      <span className="ml-1">₹{model.referralClientReward || '0'}</span>
                     </div>
                     <div className="flex items-center">
-                      <span className="font-medium">Max:</span>
-                      <span className="ml-1">₹{model.maximumTransactionAmount}</span>
+                      <span className="font-medium">Worker Referral:</span>
+                      <span className="ml-1">₹{model.referralWorkerReward || '0'}</span>
                     </div>
                   </div>
                   <div className="flex justify-between items-center pt-2">
