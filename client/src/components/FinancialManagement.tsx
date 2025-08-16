@@ -253,6 +253,42 @@ export default function FinancialManagement() {
     }
   };
 
+  // Delete financial model
+  const deleteFinancialModel = async (modelId: string, modelName: string) => {
+    if (!confirm(`Are you sure you want to delete the financial model "${modelName}"? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/financial-models/${modelId}`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" }
+      });
+
+      if (response.ok) {
+        showToast({
+          title: "Success",
+          description: `Financial model "${modelName}" deleted successfully`
+        });
+        loadFinancialModels();
+      } else {
+        const error = await response.json();
+        showToast({
+          title: "Error",
+          description: error.message || "Failed to delete financial model",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error("Error deleting financial model:", error);
+      showToast({
+        title: "Error",
+        description: "Failed to delete financial model",
+        variant: "destructive"
+      });
+    }
+  };
+
   // Credit wallet
   const creditWallet = async () => {
     if (!selectedWallet || !creditAmount) return;
@@ -626,6 +662,15 @@ export default function FinancialManagement() {
                         data-testid={`button-edit-model-${model.id}`}
                       >
                         <Edit className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => deleteFinancialModel(model.id, model.name)}
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        data-testid={`button-delete-model-${model.id}`}
+                      >
+                        <Trash2 className="w-4 h-4" />
                       </Button>
                     </div>
                   </div>

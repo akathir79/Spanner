@@ -3786,6 +3786,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Delete financial model
+  app.delete("/api/financial-models/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      
+      // Check if model exists
+      const model = await storage.getFinancialModelById(id);
+      if (!model) {
+        return res.status(404).json({ message: "Financial model not found" });
+      }
+
+      // Check if model is currently active and being used
+      if (model.isActive) {
+        return res.status(400).json({ 
+          message: "Cannot delete an active financial model. Please deactivate it first." 
+        });
+      }
+
+      await storage.deleteFinancialModel(id);
+      res.json({ message: "Financial model deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting financial model:", error);
+      res.status(500).json({ message: "Failed to delete financial model" });
+    }
+  });
+
   // User Wallets API Routes
 
   // Get user wallet (create if doesn't exist)
