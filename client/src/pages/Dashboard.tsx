@@ -2537,7 +2537,7 @@ export default function Dashboard() {
         {/* Wallet Card and Promotional Section */}
         <div className="mb-8 grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Wallet Card - Left Side */}
-          <Card className="lg:col-span-1 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border-green-200 dark:border-green-800">
+          <Card className="lg:col-span-1 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border-green-200 dark:border-green-800 overflow-hidden">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-lg font-semibold flex items-center gap-2">
@@ -2549,7 +2549,7 @@ export default function Dashboard() {
                 </Badge>
               </div>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 p-4">
               {/* Balance Display */}
               <div className="bg-white dark:bg-gray-900 rounded-lg p-4 text-center">
                 <p className="text-sm text-muted-foreground mb-1">Available Balance</p>
@@ -2563,16 +2563,16 @@ export default function Dashboard() {
               </div>
               
               {/* Action Buttons */}
-              <div className="flex gap-2">
-                <Button size="sm" className="flex-1 bg-green-600 hover:bg-green-700 text-white flex items-center justify-center">
+              <div className="flex gap-2 w-full">
+                <Button size="sm" className="flex-1 min-w-0 bg-green-600 hover:bg-green-700 text-white flex items-center justify-center">
                   <Plus className="h-3 w-3 mr-1" />
                   <span className="text-xs">Add</span>
                 </Button>
-                <Button size="sm" variant="outline" className="flex-[1.2] border-red-300 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center justify-center">
+                <Button size="sm" variant="outline" className="flex-[1.2] min-w-0 border-red-300 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center justify-center">
                   <CreditCard className="h-3 w-3 mr-1" />
                   <span className="text-xs">Withdraw</span>
                 </Button>
-                <Button size="sm" variant="outline" className="flex-1 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border-purple-300 text-purple-700 hover:from-purple-100 hover:to-pink-100 flex items-center justify-center">
+                <Button size="sm" variant="outline" className="flex-1 min-w-0 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border-purple-300 text-purple-700 hover:from-purple-100 hover:to-pink-100 flex items-center justify-center">
                   <Gift className="h-3 w-3 mr-1" />
                   <span className="text-xs">Coupon</span>
                 </Button>
