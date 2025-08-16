@@ -3940,6 +3940,131 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Voice Processing API Routes
+  app.post("/api/voice/transcribe", async (req, res) => {
+    try {
+      const { audioData, mimeType = "audio/webm" } = req.body;
+      
+      const { transcribeAudioWithLanguageDetection } = await import('./gemini-service');
+      const result = await transcribeAudioWithLanguageDetection(audioData, mimeType);
+      
+      res.json(result);
+    } catch (error) {
+      console.error("Error transcribing audio:", error);
+      res.status(500).json({ message: "Failed to transcribe audio" });
+    }
+  });
+
+  app.post("/api/voice/extract-job", async (req, res) => {
+    try {
+      const { text, detectedLanguage = "en" } = req.body;
+      
+      const { extractJobInformation } = await import('./gemini-service');
+      const result = await extractJobInformation(text, detectedLanguage);
+      
+      res.json(result);
+    } catch (error) {
+      console.error("Error extracting job information:", error);
+      res.status(500).json({ message: "Failed to extract job information" });
+    }
+  });
+
+  app.post("/api/voice/extract-user", async (req, res) => {
+    try {
+      const { text, detectedLanguage = "en" } = req.body;
+      
+      const { extractUserInformation } = await import('./gemini-service');
+      const result = await extractUserInformation(text, detectedLanguage);
+      
+      res.json(result);
+    } catch (error) {
+      console.error("Error extracting user information:", error);
+      res.status(500).json({ message: "Failed to extract user information" });
+    }
+  });
+
+  app.post("/api/voice/resolve-location", async (req, res) => {
+    try {
+      const { partialAddress, detectedLanguage = "en" } = req.body;
+      
+      const { resolveLocationFromPartialAddress } = await import('./gemini-service');
+      const result = await resolveLocationFromPartialAddress(partialAddress, detectedLanguage);
+      
+      res.json(result);
+    } catch (error) {
+      console.error("Error resolving location:", error);
+      res.status(500).json({ message: "Failed to resolve location" });
+    }
+  });
+
+  app.post("/api/voice/detect-language", async (req, res) => {
+    try {
+      const { text } = req.body;
+      
+      const { detectLanguage } = await import('./gemini-service');
+      const result = await detectLanguage(text);
+      
+      res.json(result);
+    } catch (error) {
+      console.error("Error detecting language:", error);
+      res.status(500).json({ message: "Failed to detect language" });
+    }
+  });
+
+  // Quick signup for voice users
+  app.post("/api/auth/quick-signup", async (req, res) => {
+    try {
+      const userData = req.body;
+      
+      // Generate a temporary mobile if not provided
+      if (!userData.mobile) {
+        userData.mobile = `temp_${Date.now()}`;
+      }
+      
+      // Set default password
+      userData.password = userData.password || "quickpost123";
+      userData.confirmPassword = userData.password;
+      userData.role = "client";
+      userData.isVerified = false; // Will need manual verification
+      userData.status = "pending";
+      
+      // Use location resolution if needed
+      if (userData.location && !userData.district) {
+        const { resolveLocationFromPartialAddress } = await import('./gemini-service');
+        const locationResult = await resolveLocationFromPartialAddress(
+          `${userData.location.area || ''} ${userData.location.district || ''} ${userData.location.state || ''}`,
+          "en"
+        );
+        
+        if (locationResult.confidence > 0.7) {
+          userData.district = locationResult.district;
+          userData.state = locationResult.state;
+          userData.address = `${locationResult.area}, ${locationResult.district}, ${locationResult.state}`;
+        }
+      }
+      
+      // Create user
+      const user = await storage.createUser(userData);
+      
+      // Create wallet for the new user
+      await storage.createUserWallet({ userId: user.id });
+      
+      res.status(201).json({
+        id: user.id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        mobile: user.mobile,
+        role: user.role,
+        district: user.district,
+        state: user.state,
+        isVoiceCreated: true
+      });
+    } catch (error) {
+      console.error("Error in quick signup:", error);
+      res.status(400).json({ message: "Quick signup failed", error: error.message });
+    }
+  });
+
   // Referrals API Routes
 
   // Generate referral code

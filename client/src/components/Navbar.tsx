@@ -70,9 +70,14 @@ export function Navbar() {
               <span className="text-xl font-bold text-primary">SPANNER</span>
             </Link>
 
-            {/* Desktop Navigation - Quick Join Button */}
-            <div className="hidden md:flex items-center justify-center flex-1">
+            {/* Desktop Navigation - Quick Join & Quick Post Buttons */}
+            <div className="hidden md:flex items-center justify-center flex-1 gap-4">
               <FloatingRegisterButton />
+              <Link href="/quick-post">
+                <Button variant="default" size="sm" className="bg-green-600 hover:bg-green-700 text-white">
+                  🎤 Quick Post
+                </Button>
+              </Link>
             </div>
 
             {/* Controls */}
