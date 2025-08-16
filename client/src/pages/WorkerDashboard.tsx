@@ -1876,9 +1876,9 @@ export default function WorkerDashboard() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* My Wallet Section - Left Side */}
             <div className="lg:col-span-1">
-              <Card className="bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 dark:from-amber-900/20 dark:via-orange-900/20 dark:to-yellow-900/20 border-amber-200 dark:border-amber-700 overflow-hidden shadow-lg hover:shadow-xl transition-all duration-200">
-                <CardHeader className={isWalletCollapsed ? "px-4 py-1.5" : "pb-2"}>
-                  <div className={isWalletCollapsed ? "space-y-0" : "space-y-3"}>
+              <Card className={`bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 dark:from-amber-900/20 dark:via-orange-900/20 dark:to-yellow-900/20 border-amber-200 dark:border-amber-700 overflow-hidden shadow-lg hover:shadow-xl transition-all duration-200 ${isWalletCollapsed ? 'h-[80px]' : ''}`}>
+                <CardHeader className={isWalletCollapsed ? "px-4 py-0 h-[80px] flex items-center justify-center" : "pb-2"}>
+                  <div className={`w-full ${isWalletCollapsed ? '' : 'space-y-3'}`}>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-1.5">
                         <div className="flex items-center gap-1">

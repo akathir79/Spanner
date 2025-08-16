@@ -2582,9 +2582,9 @@ export default function Dashboard() {
         {/* Wallet Card and Promotional Section */}
         <div className="mb-8 grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Wallet Card - Left Side */}
-          <Card className="lg:col-span-1 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border-green-200 dark:border-green-800 overflow-hidden shadow-lg hover:shadow-xl transition-all duration-200">
-            <CardHeader className={isWalletCollapsed ? "px-4 py-1.5" : "pb-3"}>
-              <div className="flex items-center justify-between">
+          <Card className={`lg:col-span-1 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border-green-200 dark:border-green-800 overflow-hidden shadow-lg hover:shadow-xl transition-all duration-200 ${isWalletCollapsed ? 'h-[80px]' : ''}`}>
+            <CardHeader className={isWalletCollapsed ? "px-4 py-0 h-[80px] flex items-center justify-center" : "pb-3"}>
+              <div className="flex items-center justify-between w-full">
                 <div className="flex items-center gap-1.5">
                   <div className="flex items-center gap-1">
                     <Wallet className="h-3.5 w-3.5 text-green-600 dark:text-green-400" />
