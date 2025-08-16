@@ -30,7 +30,7 @@ import {
   Camera,
   Megaphone,
   MessageCircle,
-  DollarSign
+  IndianRupee
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -417,7 +417,7 @@ export default function AdminDashboard() {
             <CardContent className="p-6">
               <div className="flex items-center space-x-4">
                 <div className="p-3 bg-purple-100 rounded-lg">
-                  <DollarSign className="h-8 w-8 text-purple-600" />
+                  <IndianRupee className="h-8 w-8 text-purple-600" />
                 </div>
                 <div>
                   <h3 className="text-xl font-bold text-gray-800">Financial Management</h3>
