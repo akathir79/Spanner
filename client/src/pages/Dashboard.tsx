@@ -2582,36 +2582,36 @@ export default function Dashboard() {
         {/* Wallet Card and Promotional Section */}
         <div className="mb-8 grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Wallet Card - Left Side */}
-          <Card className="lg:col-span-1 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border-green-200 dark:border-green-800 overflow-hidden">
+          <Card className="lg:col-span-1 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border-green-200 dark:border-green-800 overflow-hidden shadow-lg hover:shadow-xl transition-all duration-200">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-lg font-semibold flex items-center gap-2">
-                  <Wallet className="h-5 w-5 text-green-600" />
-                  <span>My Wallet</span>
-                  {isWalletCollapsed && (
-                    <div className="flex items-center gap-1 ml-2">
-                      <IndianRupee className="h-4 w-4 text-green-600" />
-                      <span className="text-lg font-bold text-green-600">2,450.00</span>
+                <div className="flex flex-col">
+                  <CardTitle className="text-lg font-bold flex items-center gap-2 text-green-800 dark:text-green-200">
+                    <Wallet className="h-6 w-6 text-green-600 dark:text-green-400" />
+                    <span>My Wallet</span>
+                  </CardTitle>
+                  <div className="flex items-center gap-2 mt-1">
+                    <Badge variant="outline" className="bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 border-green-300 dark:border-green-600 text-xs">
+                      Active
+                    </Badge>
+                    <div className="flex items-center gap-1">
+                      <IndianRupee className="h-5 w-5 text-green-600 dark:text-green-400" />
+                      <span className="text-2xl font-bold text-green-700 dark:text-green-300">2,450.00</span>
                     </div>
-                  )}
-                </CardTitle>
-                <div className="flex items-center gap-2">
-                  <Badge variant="outline" className="bg-green-100 text-green-700 border-green-300">
-                    Active
-                  </Badge>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setIsWalletCollapsed(!isWalletCollapsed)}
-                    className="h-6 w-6 p-0 hover:bg-green-100"
-                  >
-                    {isWalletCollapsed ? (
-                      <ChevronDown className="h-4 w-4 text-green-600" />
-                    ) : (
-                      <ChevronUp className="h-4 w-4 text-green-600" />
-                    )}
-                  </Button>
+                  </div>
                 </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsWalletCollapsed(!isWalletCollapsed)}
+                  className="h-8 w-8 p-0 hover:bg-green-100 dark:hover:bg-green-800/30 rounded-full"
+                >
+                  {isWalletCollapsed ? (
+                    <ChevronDown className="h-5 w-5 text-green-600 dark:text-green-400" />
+                  ) : (
+                    <ChevronUp className="h-5 w-5 text-green-600 dark:text-green-400" />
+                  )}
+                </Button>
               </div>
             </CardHeader>
             {!isWalletCollapsed && (

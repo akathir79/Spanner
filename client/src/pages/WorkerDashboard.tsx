@@ -1876,78 +1876,93 @@ export default function WorkerDashboard() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* My Wallet Section - Left Side */}
             <div className="lg:col-span-1">
-              <Card className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border-green-200 dark:border-green-800 overflow-hidden">
-                <CardHeader className="pb-3">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-lg font-semibold flex items-center gap-2">
-                      <Wallet className="h-5 w-5 text-green-600" />
-                      <span>My Wallet</span>
-                      {isWalletCollapsed && (
-                        <div className="flex items-center gap-1 ml-2">
-                          <IndianRupee className="h-4 w-4 text-green-600" />
-                          <span className="text-lg font-bold text-green-600">{stats.totalEarnings.toLocaleString()}</span>
+              <Card className="bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 dark:from-amber-900/20 dark:via-orange-900/20 dark:to-yellow-900/20 border-amber-200 dark:border-amber-700 overflow-hidden shadow-lg hover:shadow-xl transition-all duration-200">
+                <CardHeader className="pb-2">
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-xl font-bold flex items-center gap-3 text-amber-800 dark:text-amber-200">
+                        <div className="p-2 bg-amber-100 dark:bg-amber-900/40 rounded-lg">
+                          <Wallet className="h-6 w-6 text-amber-600 dark:text-amber-400" />
                         </div>
-                      )}
-                    </CardTitle>
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline" className="bg-green-100 text-green-700 border-green-300">
-                        Active
-                      </Badge>
+                        <span>Earnings Wallet</span>
+                      </CardTitle>
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => setIsWalletCollapsed(!isWalletCollapsed)}
-                        className="h-6 w-6 p-0 hover:bg-green-100"
+                        className="h-9 w-9 p-0 hover:bg-amber-100 dark:hover:bg-amber-800/30 rounded-full border border-amber-200 dark:border-amber-600"
                       >
                         {isWalletCollapsed ? (
-                          <ChevronDown className="h-4 w-4 text-green-600" />
+                          <ChevronDown className="h-5 w-5 text-amber-600 dark:text-amber-400" />
                         ) : (
-                          <ChevronUp className="h-4 w-4 text-green-600" />
+                          <ChevronUp className="h-5 w-5 text-amber-600 dark:text-amber-400" />
                         )}
                       </Button>
+                    </div>
+                    
+                    <div className="bg-white/60 dark:bg-gray-900/40 rounded-xl p-4 border border-amber-200/50 dark:border-amber-600/30">
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-1">
+                          <p className="text-sm text-amber-700 dark:text-amber-300 font-medium">Total Balance</p>
+                          <div className="flex items-center gap-2">
+                            <IndianRupee className="h-6 w-6 text-amber-600 dark:text-amber-400" />
+                            <span className="text-3xl font-bold text-amber-800 dark:text-amber-200">{stats.totalEarnings.toLocaleString()}</span>
+                          </div>
+                        </div>
+                        <Badge variant="secondary" className="bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 border-green-300 dark:border-green-600 text-xs px-2 py-1">
+                          Professional
+                        </Badge>
+                      </div>
                     </div>
                   </div>
                 </CardHeader>
                 {!isWalletCollapsed && (
-                  <CardContent className="space-y-4 p-4">
-                    {/* Balance Display */}
-                    <div className="bg-white dark:bg-gray-900 rounded-lg p-4 text-center">
-                      <p className="text-sm text-muted-foreground mb-1">Available Balance</p>
-                      <div className="flex items-center justify-center gap-1">
-                        <IndianRupee className="h-8 w-8 text-green-600" />
-                        <span className="text-3xl font-bold text-green-600">{stats.totalEarnings.toLocaleString()}</span>
+                  <CardContent className="space-y-4 px-4 pb-4">
+                    {/* Detailed Earnings Breakdown */}
+                    <div className="space-y-3">
+                      <div className="bg-gradient-to-r from-white/80 to-amber-50/80 dark:from-gray-900/40 dark:to-amber-900/20 rounded-lg p-4 border border-amber-200/30 dark:border-amber-600/30">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-1">
+                            <p className="text-xs text-amber-700 dark:text-amber-300 font-medium">This Month</p>
+                            <div className="flex items-center gap-1">
+                              <TrendingUp className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                              <span className="text-lg font-bold text-amber-800 dark:text-amber-200">+₹{(stats.totalEarnings * 0.3).toLocaleString()}</span>
+                            </div>
+                          </div>
+                          <div className="space-y-1">
+                            <p className="text-xs text-amber-700 dark:text-amber-300 font-medium">Pending</p>
+                            <div className="flex items-center gap-1">
+                              <Clock className="h-4 w-4 text-orange-600 dark:text-orange-400" />
+                              <span className="text-lg font-bold text-orange-700 dark:text-orange-300">₹1,200</span>
+                            </div>
+                          </div>
+                        </div>
                       </div>
-                      <p className="text-xs text-muted-foreground mt-2">
-                        Last updated: {new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
-                      </p>
                     </div>
                     
-                    {/* Action Buttons */}
-                    <div className="flex gap-2 w-full">
-                      <Button size="sm" className="flex-1 min-w-0 bg-green-600 hover:bg-green-700 text-white flex items-center justify-center">
-                        <Plus className="h-3 w-3 mr-1" />
-                        <span className="text-xs">Add</span>
-                      </Button>
-                      <Button size="sm" variant="outline" className="flex-[1.2] min-w-0 border-red-300 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center justify-center">
-                        <CreditCard className="h-3 w-3 mr-1" />
-                        <span className="text-xs">Withdraw</span>
-                      </Button>
-                      <Button size="sm" variant="outline" className="flex-1 min-w-0 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border-purple-300 text-purple-700 hover:from-purple-100 hover:to-pink-100 flex items-center justify-center">
-                        <Gift className="h-3 w-3 mr-1" />
-                        <span className="text-xs">Coupon</span>
+                    {/* Professional Action Buttons */}
+                    <div className="space-y-2">
+                      <div className="grid grid-cols-2 gap-2">
+                        <Button size="sm" className="bg-amber-600 hover:bg-amber-700 dark:bg-amber-700 dark:hover:bg-amber-800 text-white border-0 font-medium">
+                          <Plus className="h-4 w-4 mr-2" />
+                          Top Up
+                        </Button>
+                        <Button size="sm" variant="outline" className="border-orange-300 dark:border-orange-600 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20 font-medium">
+                          <CreditCard className="h-4 w-4 mr-2" />
+                          Withdraw
+                        </Button>
+                      </div>
+                      <Button size="sm" variant="outline" className="w-full bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border-purple-300 dark:border-purple-600 text-purple-700 dark:text-purple-300 hover:from-purple-100 hover:to-pink-100 font-medium">
+                        <Gift className="h-4 w-4 mr-2" />
+                        Redeem Reward Points
                       </Button>
                     </div>
 
-                    {/* Quick Stats */}
-                    <div className="grid grid-cols-2 gap-2 pt-2 border-t">
-                      <div className="text-center">
-                        <p className="text-xs text-muted-foreground">This Month</p>
-                        <p className="text-sm font-semibold text-green-600">+₹{stats.totalEarnings.toLocaleString()}</p>
-                      </div>
-                      <div className="text-center">
-                        <p className="text-xs text-muted-foreground">Pending</p>
-                        <p className="text-sm font-semibold text-orange-600">₹1,200</p>
-                      </div>
+                    {/* Last Updated Info */}
+                    <div className="text-center pt-2 border-t border-amber-200/50 dark:border-amber-600/30">
+                      <p className="text-xs text-amber-600 dark:text-amber-400">
+                        Last updated: {new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                      </p>
                     </div>
                   </CardContent>
                 )}
