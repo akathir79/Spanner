@@ -1274,52 +1274,52 @@ export default function WorkerDashboard() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* My Wallet Section - Left Side */}
             <div className="lg:col-span-1">
-              <Card className="border-green-200 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950 dark:to-green-900">
-                <CardHeader className="pb-3">
+              <Card className="bg-green-50 dark:bg-green-950/50 border border-green-200 dark:border-green-800">
+                <CardHeader className="pb-4">
                   <div className="flex items-center justify-between">
-                    <CardTitle className="flex items-center space-x-2 text-green-800 dark:text-green-200">
-                      <CreditCard className="h-5 w-5" />
+                    <CardTitle className="flex items-center space-x-2 text-gray-700 dark:text-gray-300 text-lg font-medium">
+                      <CreditCard className="h-5 w-5 text-green-600" />
                       <span>My Wallet</span>
                     </CardTitle>
-                    <Badge className="bg-green-600 text-white hover:bg-green-700">
+                    <Badge className="bg-green-100 text-green-700 border border-green-300 hover:bg-green-200 dark:bg-green-900 dark:text-green-300 dark:border-green-700">
                       Active
                     </Badge>
                   </div>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="text-center py-2">
-                    <p className="text-sm text-green-700 dark:text-green-300 mb-1">Available Balance</p>
-                    <p className="text-3xl font-bold text-green-800 dark:text-green-200">
+                <CardContent className="space-y-6">
+                  <div className="text-center">
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">Available Balance</p>
+                    <p className="text-3xl font-bold text-green-600 dark:text-green-400">
                       ₹ {stats.totalEarnings.toLocaleString()}
                     </p>
-                    <p className="text-xs text-green-600 dark:text-green-400 mt-1">
+                    <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
                       Last updated: {new Date().toLocaleTimeString()}
                     </p>
                   </div>
                   
                   <div className="flex gap-2">
-                    <Button size="sm" className="flex-1 bg-green-600 hover:bg-green-700 text-white">
+                    <Button size="sm" className="flex-1 bg-green-600 hover:bg-green-700 text-white border-0">
                       <Plus className="h-3 w-3 mr-1" />
                       Add
                     </Button>
-                    <Button size="sm" variant="outline" className="flex-1 border-red-300 text-red-600 hover:bg-red-50 hover:text-red-700">
+                    <Button size="sm" variant="outline" className="flex-1 border-red-300 text-red-600 hover:bg-red-50 hover:text-red-700 dark:border-red-700 dark:text-red-400 dark:hover:bg-red-950">
                       <DollarSign className="h-3 w-3 mr-1" />
                       Withdraw
                     </Button>
-                    <Button size="sm" variant="outline" className="flex-1 border-purple-300 text-purple-600 hover:bg-purple-50 hover:text-purple-700">
+                    <Button size="sm" variant="outline" className="flex-1 border-purple-300 text-purple-600 hover:bg-purple-50 hover:text-purple-700 dark:border-purple-700 dark:text-purple-400 dark:hover:bg-purple-950">
                       <FileText className="h-3 w-3 mr-1" />
                       Coupon
                     </Button>
                   </div>
                   
                   <div className="flex justify-between text-sm">
-                    <div className="text-center">
-                      <p className="text-green-700 dark:text-green-300">This Month</p>
-                      <p className="font-semibold text-green-800 dark:text-green-200">+₹{stats.totalEarnings.toLocaleString()}</p>
+                    <div className="text-left">
+                      <p className="text-gray-500 dark:text-gray-400 text-xs">This Month</p>
+                      <p className="font-semibold text-green-600 dark:text-green-400">+₹{stats.totalEarnings.toLocaleString()}</p>
                     </div>
-                    <div className="text-center">
-                      <p className="text-yellow-700 dark:text-yellow-300">Pending</p>
-                      <p className="font-semibold text-yellow-800 dark:text-yellow-200">₹0</p>
+                    <div className="text-right">
+                      <p className="text-gray-500 dark:text-gray-400 text-xs">Pending</p>
+                      <p className="font-semibold text-orange-500 dark:text-orange-400">₹1,200</p>
                     </div>
                   </div>
                 </CardContent>
