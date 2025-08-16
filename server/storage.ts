@@ -325,6 +325,9 @@ export class DatabaseStorage implements IStorage {
       await db.transaction(async (tx) => {
         // If user is a worker, delete worker-specific data
         if (user.role === 'worker') {
+          // Delete worker reviews first (they reference worker)
+          await tx.delete(workerReviews).where(eq(workerReviews.workerId, id));
+          
           // Delete worker bank details
           await tx.delete(workerBankDetails).where(eq(workerBankDetails.workerId, id));
           
@@ -344,6 +347,11 @@ export class DatabaseStorage implements IStorage {
           await tx.delete(bids).where(eq(bids.workerId, id));
         }
 
+        // If user is a client, delete client-related reviews
+        if (user.role === 'client') {
+          await tx.delete(workerReviews).where(eq(workerReviews.clientId, id));
+        }
+
         // Delete user-related data regardless of role
         // Delete OTP verifications
         await tx.delete(otpVerifications).where(eq(otpVerifications.mobile, user.mobile));
@@ -359,6 +367,9 @@ export class DatabaseStorage implements IStorage {
         // Delete bookings where user is client
         const userBookings = await tx.select().from(bookings).where(eq(bookings.clientId, id));
         for (const booking of userBookings) {
+          // Delete worker reviews for this booking first (foreign key constraint)
+          await tx.delete(workerReviews).where(eq(workerReviews.bookingId, booking.id));
+          
           // Delete related location data for each booking
           await tx.delete(locationTracking).where(eq(locationTracking.bookingId, booking.id));
           await tx.delete(locationSharingSessions).where(eq(locationSharingSessions.bookingId, booking.id));
@@ -370,6 +381,9 @@ export class DatabaseStorage implements IStorage {
         // Delete bookings where user is worker
         const workerBookings = await tx.select().from(bookings).where(eq(bookings.workerId, id));
         for (const booking of workerBookings) {
+          // Delete worker reviews for this booking first (foreign key constraint)
+          await tx.delete(workerReviews).where(eq(workerReviews.bookingId, booking.id));
+          
           // Delete related location data for each booking
           await tx.delete(locationTracking).where(eq(locationTracking.bookingId, booking.id));
           await tx.delete(locationSharingSessions).where(eq(locationSharingSessions.bookingId, booking.id));
