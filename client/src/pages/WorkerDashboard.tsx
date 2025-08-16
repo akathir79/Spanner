@@ -42,7 +42,10 @@ import {
   Edit3,
   Save,
   X,
-  User
+  User,
+  Wallet,
+  IndianRupee,
+  Gift
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
@@ -1274,52 +1277,56 @@ export default function WorkerDashboard() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* My Wallet Section - Left Side */}
             <div className="lg:col-span-1">
-              <Card className="bg-green-50 dark:bg-green-950/50 border border-green-200 dark:border-green-800">
-                <CardHeader className="pb-4">
+              <Card className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border-green-200 dark:border-green-800 overflow-hidden">
+                <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
-                    <CardTitle className="flex items-center space-x-2 text-gray-700 dark:text-gray-300 text-lg font-medium">
-                      <CreditCard className="h-5 w-5 text-green-600" />
+                    <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                      <Wallet className="h-5 w-5 text-green-600" />
                       <span>My Wallet</span>
                     </CardTitle>
-                    <Badge className="bg-green-100 text-green-700 border border-green-300 hover:bg-green-200 dark:bg-green-900 dark:text-green-300 dark:border-green-700">
+                    <Badge variant="outline" className="bg-green-100 text-green-700 border-green-300">
                       Active
                     </Badge>
                   </div>
                 </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="text-center">
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">Available Balance</p>
-                    <p className="text-3xl font-bold text-green-600 dark:text-green-400">
-                      ₹ {stats.totalEarnings.toLocaleString()}
-                    </p>
-                    <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
-                      Last updated: {new Date().toLocaleTimeString()}
-                    </p>
-                  </div>
-                  
-                  <div className="flex gap-2">
-                    <Button size="sm" className="flex-1 bg-green-600 hover:bg-green-700 text-white border-0">
-                      <Plus className="h-3 w-3 mr-1" />
-                      Add
-                    </Button>
-                    <Button size="sm" variant="outline" className="flex-1 border-red-300 text-red-600 hover:bg-red-50 hover:text-red-700 dark:border-red-700 dark:text-red-400 dark:hover:bg-red-950">
-                      <DollarSign className="h-3 w-3 mr-1" />
-                      Withdraw
-                    </Button>
-                    <Button size="sm" variant="outline" className="flex-1 border-purple-300 text-purple-600 hover:bg-purple-50 hover:text-purple-700 dark:border-purple-700 dark:text-purple-400 dark:hover:bg-purple-950">
-                      <FileText className="h-3 w-3 mr-1" />
-                      Coupon
-                    </Button>
-                  </div>
-                  
-                  <div className="flex justify-between text-sm">
-                    <div className="text-left">
-                      <p className="text-gray-500 dark:text-gray-400 text-xs">This Month</p>
-                      <p className="font-semibold text-green-600 dark:text-green-400">+₹{stats.totalEarnings.toLocaleString()}</p>
+                <CardContent className="space-y-4 p-4">
+                  {/* Balance Display */}
+                  <div className="bg-white dark:bg-gray-900 rounded-lg p-4 text-center">
+                    <p className="text-sm text-muted-foreground mb-1">Available Balance</p>
+                    <div className="flex items-center justify-center gap-1">
+                      <IndianRupee className="h-8 w-8 text-green-600" />
+                      <span className="text-3xl font-bold text-green-600">{stats.totalEarnings.toLocaleString()}</span>
                     </div>
-                    <div className="text-right">
-                      <p className="text-gray-500 dark:text-gray-400 text-xs">Pending</p>
-                      <p className="font-semibold text-orange-500 dark:text-orange-400">₹1,200</p>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Last updated: {new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                    </p>
+                  </div>
+                  
+                  {/* Action Buttons */}
+                  <div className="flex gap-2 w-full">
+                    <Button size="sm" className="flex-1 min-w-0 bg-green-600 hover:bg-green-700 text-white flex items-center justify-center">
+                      <Plus className="h-3 w-3 mr-1" />
+                      <span className="text-xs">Add</span>
+                    </Button>
+                    <Button size="sm" variant="outline" className="flex-[1.2] min-w-0 border-red-300 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center justify-center">
+                      <CreditCard className="h-3 w-3 mr-1" />
+                      <span className="text-xs">Withdraw</span>
+                    </Button>
+                    <Button size="sm" variant="outline" className="flex-1 min-w-0 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border-purple-300 text-purple-700 hover:from-purple-100 hover:to-pink-100 flex items-center justify-center">
+                      <Gift className="h-3 w-3 mr-1" />
+                      <span className="text-xs">Coupon</span>
+                    </Button>
+                  </div>
+
+                  {/* Quick Stats */}
+                  <div className="grid grid-cols-2 gap-2 pt-2 border-t">
+                    <div className="text-center">
+                      <p className="text-xs text-muted-foreground">This Month</p>
+                      <p className="text-sm font-semibold text-green-600">+₹{stats.totalEarnings.toLocaleString()}</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-xs text-muted-foreground">Pending</p>
+                      <p className="text-sm font-semibold text-orange-600">₹1,200</p>
                     </div>
                   </div>
                 </CardContent>
