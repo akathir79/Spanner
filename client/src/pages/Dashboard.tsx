@@ -3461,65 +3461,88 @@ export default function Dashboard() {
           <TabsContent value="bids" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <span className="text-lg font-bold">₹</span>
-                  {selectedJobPosting ? `Bids for "${selectedJobPosting.title}"` : 'Select a Job to View Bids'}
+                <CardTitle className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg font-bold">₹</span>
+                    {selectedJobPosting ? `Bids for "${selectedJobPosting.title}"` : 'Job Bids'}
+                  </div>
+                  {selectedJobPosting && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setSelectedJobPosting(null)}
+                      className="text-xs flex items-center gap-1"
+                    >
+                      ← Back to Jobs
+                    </Button>
+                  )}
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 {!selectedJobPosting ? (
-                  <div className="space-y-6">
-                    <div className="text-center py-8">
-                      <div className="h-12 w-12 mx-auto mb-4 flex items-center justify-center text-3xl font-bold text-muted-foreground">
-                        ₹
-                      </div>
-                      <h3 className="text-lg font-semibold mb-2">Select a Job to View Bids</h3>
-                      <p className="text-muted-foreground mb-4">
-                        Click on any job below to see worker bids, or go to "My Jobs" tab to create new jobs.
-                      </p>
-                    </div>
-                    
-                    {/* Show all jobs with quick selection */}
+                  <div className="space-y-4">
+                    {/* Show all jobs with enhanced design */}
                     {jobPostings && jobPostings.length > 0 ? (
-                      <div className="grid gap-3">
-                        <h4 className="font-medium text-sm text-muted-foreground mb-2">Your Posted Jobs:</h4>
+                      <div className="grid gap-4">
                         {jobPostings.map((job: any) => (
-                          <div 
+                          <Card 
                             key={job.id}
-                            className="border rounded-lg p-4 cursor-pointer hover:border-primary hover:bg-muted/50 transition-all"
+                            className="cursor-pointer hover:shadow-md transition-all duration-200 border-l-4 border-l-blue-500 hover:border-l-blue-600"
                             onClick={() => setSelectedJobPosting(job)}
                           >
-                            <div className="flex items-center justify-between">
-                              <div className="flex-1">
-                                <h4 className="font-medium">{job.title}</h4>
-                                <p className="text-sm text-muted-foreground">
-                                  {job.serviceCategory} • {job.district}, Tamil Nadu
-                                </p>
-                                <p className="text-xs text-muted-foreground mt-1">
-                                  Posted: {new Date(job.createdAt).toLocaleDateString()}
-                                </p>
+                            <CardContent className="p-4">
+                              <div className="flex items-start justify-between">
+                                <div className="flex-1 space-y-2">
+                                  <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                                      <span className="text-blue-600 font-bold text-lg">₹</span>
+                                    </div>
+                                    <div>
+                                      <h4 className="font-semibold text-lg">{job.title}</h4>
+                                      <p className="text-sm text-muted-foreground">
+                                        {job.serviceCategory} • {job.district}, Tamil Nadu
+                                      </p>
+                                    </div>
+                                  </div>
+                                  <div className="pl-13">
+                                    <p className="text-xs text-muted-foreground">
+                                      Posted: {new Date(job.createdAt).toLocaleDateString()}
+                                    </p>
+                                    {job.description && (
+                                      <p className="text-sm text-gray-600 mt-1 line-clamp-2">
+                                        {job.description.length > 80 ? `${job.description.substring(0, 80)}...` : job.description}
+                                      </p>
+                                    )}
+                                  </div>
+                                </div>
+                                <div className="flex flex-col items-end gap-2 ml-4">
+                                  <Button variant="default" size="sm" className="px-4">
+                                    View Bids
+                                  </Button>
+                                  <Badge variant="outline" className="text-xs">
+                                    {job.status || 'Active'}
+                                  </Badge>
+                                </div>
                               </div>
-                              <div className="flex items-center gap-2">
-                                <Badge variant="outline" className="text-xs">
-                                  View Bids
-                                </Badge>
-                                <span className="text-lg">→</span>
-                              </div>
-                            </div>
-                          </div>
+                            </CardContent>
+                          </Card>
                         ))}
                       </div>
                     ) : (
-                      <div className="text-center py-6 border-t">
-                        <p className="text-muted-foreground text-sm">
-                          No jobs posted yet. Create your first job posting to start receiving bids.
+                      <div className="text-center py-12">
+                        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                          <span className="text-2xl">📋</span>
+                        </div>
+                        <h3 className="text-lg font-semibold mb-2">No Jobs Posted Yet</h3>
+                        <p className="text-muted-foreground text-sm mb-4">
+                          Create your first job posting to start receiving bids from workers.
                         </p>
                         <Button 
-                          variant="outline" 
-                          className="mt-3"
+                          variant="default" 
                           onClick={() => setActiveTab("jobs")}
+                          className="px-6"
                         >
-                          Go to My Jobs
+                          Create First Job
                         </Button>
                       </div>
                     )}
