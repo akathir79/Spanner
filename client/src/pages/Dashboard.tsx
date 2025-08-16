@@ -218,7 +218,7 @@ const ClientProfileCard = ({ user, refreshUser }: { user: any, refreshUser: () =
   };
 
   return (
-    <Card>
+    <Card className="bg-gradient-to-r from-cyan-50 to-blue-50 dark:from-cyan-900/20 dark:to-blue-900/20 border-cyan-200 dark:border-cyan-700">
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center space-x-2">
@@ -639,7 +639,7 @@ const ProfileDetailsCard = ({ user, onUpdate }: { user: any, onUpdate: () => voi
   };
 
   return (
-    <Card>
+    <Card className="bg-gradient-to-r from-teal-50 to-cyan-50 dark:from-teal-900/20 dark:to-cyan-900/20 border-teal-200 dark:border-teal-700">
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">
@@ -982,7 +982,7 @@ const BankDetailsCard = ({ user, onUpdate }: { user: any, onUpdate: () => void }
   };
 
   return (
-    <Card>
+    <Card className="bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 border-yellow-200 dark:border-yellow-700">
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">
@@ -2795,7 +2795,7 @@ export default function Dashboard() {
                 ) : (
                   <div className="space-y-4">
                     {bookings.map((booking: any) => (
-                      <Card key={booking.id} className="hover:shadow-md transition-shadow">
+                      <Card key={booking.id} className="hover:shadow-md transition-shadow bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border-green-200 dark:border-green-700">
                         <CardContent className="p-4">
                           <div className="flex justify-between items-start mb-3">
                             <div>
@@ -3021,7 +3021,7 @@ export default function Dashboard() {
                         return (
                           <Card 
                             key={job.id} 
-                            className={`bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:border-blue-400 cursor-pointer ${
+                            className={`bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-200 dark:border-blue-700 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:border-blue-400 cursor-pointer ${
                               selectedJobPosting?.id === job.id ? 'border-blue-400 ring-2 ring-blue-300' : ''
                             }`}
                             onClick={() => {
@@ -3317,7 +3317,7 @@ export default function Dashboard() {
                         {jobPostings.map((job: any) => (
                           <Card 
                             key={job.id}
-                            className="cursor-pointer hover:shadow-md transition-all duration-200 border-l-4 border-l-blue-500 hover:border-l-blue-600"
+                            className="cursor-pointer hover:shadow-md transition-all duration-200 border-l-4 border-l-orange-500 hover:border-l-orange-600 bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20 border border-orange-200 dark:border-orange-700"
                             onClick={() => {
                               setSelectedJobPosting(job);
                               setActiveTab("bids");
@@ -3327,8 +3327,8 @@ export default function Dashboard() {
                               <div className="flex items-start justify-between">
                                 <div className="flex-1 space-y-2">
                                   <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                                      <span className="text-blue-600 font-bold text-lg">₹</span>
+                                    <div className="w-10 h-10 bg-orange-100 dark:bg-orange-900/30 rounded-lg flex items-center justify-center">
+                                      <span className="text-orange-600 dark:text-orange-400 font-bold text-lg">₹</span>
                                     </div>
                                     <div>
                                       <h4 className="font-semibold text-lg">{job.title}</h4>
@@ -3436,7 +3436,7 @@ export default function Dashboard() {
                     ) : (
                       <div className="space-y-4 max-h-[600px] overflow-y-auto">
                         {jobBids.map((bid: any) => (
-                      <div key={bid.id} className="border rounded-lg p-4 space-y-3">
+                      <div key={bid.id} className="border rounded-lg p-4 space-y-3 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border-purple-200 dark:border-purple-700">
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
                             <h4 className="font-semibold">
