@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { CheckCircle, Clock, AlertCircle } from "lucide-react";
+import { NotificationService } from "@/lib/notifications";
 
 interface JobCompletionModalProps {
   booking: any;
@@ -27,7 +28,16 @@ export const JobCompletionModal = ({ booking, isOpen, onClose, userRole }: JobCo
         workerId: booking.workerId,
       });
     },
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
+      // Send notification to client about job completion
+      await NotificationService.notifyOTPCompletion({
+        recipientId: booking.clientId,
+        senderId: booking.workerId,
+        bookingId: booking.id,
+        jobTitle: booking.jobTitle || 'Service',
+        workerName: booking.workerName || 'Worker'
+      });
+
       toast({
         title: "Job Marked Complete",
         description: "OTP has been sent to the client for verification.",
@@ -52,7 +62,16 @@ export const JobCompletionModal = ({ booking, isOpen, onClose, userRole }: JobCo
         otp: otp.trim(),
       });
     },
-    onSuccess: () => {
+    onSuccess: async () => {
+      // Send notification to worker about job completion
+      await NotificationService.notifyJobCompletion({
+        recipientId: booking.workerId,
+        senderId: booking.clientId,
+        bookingId: booking.id,
+        jobTitle: booking.jobTitle || 'Service',
+        clientName: booking.clientName || 'Client'
+      });
+
       toast({
         title: "Job Completed Successfully!",
         description: "The job has been marked as completed. You can now rate the worker.",

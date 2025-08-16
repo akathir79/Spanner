@@ -402,6 +402,8 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   receivedMessages: many(messages, { relationName: "receivedMessages" }),
   transferHistory: many(transferHistory),
   financialStatements: many(financialStatements),
+  sentNotifications: many(notifications, { relationName: "sentNotifications" }),
+  receivedNotifications: many(notifications, { relationName: "receivedNotifications" }),
 }));
 
 export const workerProfilesRelations = relations(workerProfiles, ({ one }) => ({
@@ -536,6 +538,10 @@ export const financialStatementsRelations = relations(financialStatements, ({ on
     references: [users.id],
   }),
 }));
+
+
+
+
 
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({
@@ -718,6 +724,23 @@ export const settings = pgTable("settings", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+// Notifications for two-way communication between clients and workers
+export const notifications = pgTable("notifications", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  recipientId: varchar("recipient_id").references(() => users.id).notNull(), // Who receives the notification
+  senderId: varchar("sender_id").references(() => users.id), // Who triggered the notification (optional for system notifications)
+  type: text("type").notNull(), // budget_update, job_status_change, bid_response, otp_completion, bid_request, etc.
+  title: text("title").notNull(), // Notification title
+  message: text("message").notNull(), // Notification message
+  relatedId: text("related_id"), // Related job/booking/bid ID for context
+  relatedType: text("related_type"), // job_posting, booking, bid, etc.
+  data: jsonb("data"), // Additional data for the notification (budget amounts, etc.)
+  isRead: boolean("is_read").default(false),
+  readAt: timestamp("read_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 // Settings schemas
 export const insertSettingsSchema = createInsertSchema(settings).omit({
   updatedAt: true,
@@ -742,3 +765,13 @@ export type JobCompletionOTP = typeof jobCompletionOTPs.$inferSelect;
 export type InsertJobCompletionOTP = z.infer<typeof insertJobCompletionOTPSchema>;
 export type WorkerReview = typeof workerReviews.$inferSelect;
 export type InsertWorkerReview = z.infer<typeof insertWorkerReviewSchema>;
+
+// Notification schemas
+export const insertNotificationSchema = createInsertSchema(notifications).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type Notification = typeof notifications.$inferSelect;
+export type InsertNotification = z.infer<typeof insertNotificationSchema>;

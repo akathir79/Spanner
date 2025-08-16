@@ -87,6 +87,7 @@ import LocationViewer from "@/components/LocationViewer";
 import ClientBankDetailsForm from "@/components/ClientBankDetailsForm";
 import { ProfileCompletionAlert } from "@/components/ProfileCompletionAlert";
 import AdvertisementCarousel from "@/components/AdvertisementCarousel";
+import { NotificationCenter } from "@/components/NotificationCenter";
 import statesDistrictsData from "@shared/states-districts.json";
 // Services and districts are now fetched dynamically from database
 
@@ -2905,6 +2906,33 @@ export default function Dashboard() {
         </div>
 
 
+
+        {/* Dashboard Header with Notification Center */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-2">
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+              Dashboard
+            </h2>
+            <Badge variant="secondary" className="text-xs">
+              {user?.role === 'client' ? 'Client' : user?.role === 'worker' ? 'Worker' : user?.role === 'admin' ? 'Admin' : 'User'}
+            </Badge>
+          </div>
+          <div className="flex items-center gap-3">
+            <NotificationCenter userId={user?.id || ''} userRole={user?.role || 'client'} />
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                localStorage.removeItem('user');
+                window.location.href = '/';
+              }}
+              className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100"
+            >
+              <User className="h-4 w-4 mr-1" />
+              Logout
+            </Button>
+          </div>
+        </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-5 bg-muted">
