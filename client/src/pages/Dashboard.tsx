@@ -80,7 +80,8 @@ import {
   Wallet,
   Gift,
   Percent,
-  ArrowLeft
+  ArrowLeft,
+  MessageCircle
 } from "lucide-react";
 import { useLocation } from "wouter";
 import LocationViewer from "@/components/LocationViewer";
@@ -88,6 +89,7 @@ import ClientBankDetailsForm from "@/components/ClientBankDetailsForm";
 import { ProfileCompletionAlert } from "@/components/ProfileCompletionAlert";
 import AdvertisementCarousel from "@/components/AdvertisementCarousel";
 import { NotificationCenter } from "@/components/NotificationCenter";
+import { ChatSystem } from "@/components/ChatSystem";
 import statesDistrictsData from "@shared/states-districts.json";
 // Services and districts are now fetched dynamically from database
 
@@ -2923,7 +2925,7 @@ export default function Dashboard() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5 bg-muted">
+          <TabsList className="grid w-full grid-cols-6 bg-muted">
             <TabsTrigger 
               value="bookings" 
               className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground relative"
@@ -2998,6 +3000,13 @@ export default function Dashboard() {
                   </Badge>
                 ) : null;
               })()}
+            </TabsTrigger>
+            <TabsTrigger 
+              value="chat"
+              className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground relative"
+            >
+              Support Chat
+              <MessageCircle className="h-3 w-3 ml-1" />
             </TabsTrigger>
           </TabsList>
 
@@ -3434,6 +3443,28 @@ export default function Dashboard() {
               {/* User Activity Card */}
               <UserActivityCard user={user} />
             </div>
+          </TabsContent>
+
+          {/* Chat Tab Content */}
+          <TabsContent value="chat" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <MessageCircle className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                  Support Chat
+                </CardTitle>
+                <p className="text-muted-foreground">
+                  Get help from our support team or resolve any issues you're facing
+                </p>
+              </CardHeader>
+              <CardContent>
+                <ChatSystem 
+                  userId={user?.id || ''} 
+                  userRole={user?.role === 'admin' || user?.role === 'super_admin' ? 'admin' : 'client'}
+                  userName={`${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'User'}
+                />
+              </CardContent>
+            </Card>
           </TabsContent>
 
           {/* My Jobs Tab */}

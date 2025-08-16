@@ -775,3 +775,50 @@ export const insertNotificationSchema = createInsertSchema(notifications).omit({
 
 export type Notification = typeof notifications.$inferSelect;
 export type InsertNotification = z.infer<typeof insertNotificationSchema>;
+
+// Chat Messages table for client-admin communication
+export const chatMessages = pgTable('chat_messages', {
+  id: text('id').primaryKey().$defaultFn(() => generateId()),
+  conversationId: text('conversation_id').notNull(), // Unique ID for each client-admin conversation
+  senderId: text('sender_id').notNull().references(() => users.id),
+  recipientId: text('recipient_id').notNull().references(() => users.id),
+  message: text('message').notNull(),
+  messageType: text('message_type').notNull().default('text'), // text, image, file
+  attachmentUrl: text('attachment_url'),
+  isRead: boolean('is_read').notNull().default(false),
+  readAt: timestamp('read_at'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+// Chat Conversations table to track conversation metadata
+export const chatConversations = pgTable('chat_conversations', {
+  id: text('id').primaryKey().$defaultFn(() => generateId()),
+  clientId: text('client_id').notNull().references(() => users.id),
+  adminId: text('admin_id').references(() => users.id), // Can be null if not assigned yet
+  subject: text('subject'),
+  status: text('status').notNull().default('active'), // active, closed, archived
+  priority: text('priority').notNull().default('normal'), // low, normal, high, urgent
+  lastMessageAt: timestamp('last_message_at').defaultNow(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+export const insertChatMessageSchema = createInsertSchema(chatMessages).omit({
+  id: true,
+  isRead: true,
+  readAt: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertChatMessage = z.infer<typeof insertChatMessageSchema>;
+export type ChatMessage = typeof chatMessages.$inferSelect;
+
+export const insertChatConversationSchema = createInsertSchema(chatConversations).omit({
+  id: true,
+  lastMessageAt: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertChatConversation = z.infer<typeof insertChatConversationSchema>;
+export type ChatConversation = typeof chatConversations.$inferSelect;

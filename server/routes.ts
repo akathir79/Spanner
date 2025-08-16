@@ -3469,6 +3469,131 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Chat routes
+  app.post("/api/chat/conversations", async (req, res) => {
+    try {
+      const conversation = await storage.createConversation(req.body);
+      res.status(201).json(conversation);
+    } catch (error) {
+      console.error("Error creating conversation:", error);
+      res.status(500).json({ message: "Failed to create conversation" });
+    }
+  });
+
+  app.get("/api/chat/conversations/client/:clientId", async (req, res) => {
+    try {
+      const { clientId } = req.params;
+      const conversations = await storage.getConversationsByClient(clientId);
+      res.json(conversations);
+    } catch (error) {
+      console.error("Error getting client conversations:", error);
+      res.status(500).json({ message: "Failed to get conversations" });
+    }
+  });
+
+  app.get("/api/chat/conversations/admin/:adminId", async (req, res) => {
+    try {
+      const { adminId } = req.params;
+      const conversations = await storage.getConversationsByAdmin(adminId);
+      res.json(conversations);
+    } catch (error) {
+      console.error("Error getting admin conversations:", error);
+      res.status(500).json({ message: "Failed to get conversations" });
+    }
+  });
+
+  app.get("/api/chat/conversations", async (req, res) => {
+    try {
+      const conversations = await storage.getAllConversations();
+      res.json(conversations);
+    } catch (error) {
+      console.error("Error getting all conversations:", error);
+      res.status(500).json({ message: "Failed to get conversations" });
+    }
+  });
+
+  app.get("/api/chat/conversations/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const conversation = await storage.getConversationById(id);
+      if (!conversation) {
+        return res.status(404).json({ message: "Conversation not found" });
+      }
+      res.json(conversation);
+    } catch (error) {
+      console.error("Error getting conversation:", error);
+      res.status(500).json({ message: "Failed to get conversation" });
+    }
+  });
+
+  app.put("/api/chat/conversations/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const conversation = await storage.updateConversation(id, req.body);
+      if (!conversation) {
+        return res.status(404).json({ message: "Conversation not found" });
+      }
+      res.json(conversation);
+    } catch (error) {
+      console.error("Error updating conversation:", error);
+      res.status(500).json({ message: "Failed to update conversation" });
+    }
+  });
+
+  app.post("/api/chat/messages", async (req, res) => {
+    try {
+      const message = await storage.createChatMessage(req.body);
+      res.status(201).json(message);
+    } catch (error) {
+      console.error("Error creating message:", error);
+      res.status(500).json({ message: "Failed to create message" });
+    }
+  });
+
+  app.get("/api/chat/messages/:conversationId", async (req, res) => {
+    try {
+      const { conversationId } = req.params;
+      const messages = await storage.getMessagesByConversation(conversationId);
+      res.json(messages);
+    } catch (error) {
+      console.error("Error getting messages:", error);
+      res.status(500).json({ message: "Failed to get messages" });
+    }
+  });
+
+  app.put("/api/chat/messages/read/:conversationId/:userId", async (req, res) => {
+    try {
+      const { conversationId, userId } = req.params;
+      await storage.markMessagesAsRead(conversationId, userId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error marking messages as read:", error);
+      res.status(500).json({ message: "Failed to mark messages as read" });
+    }
+  });
+
+  app.get("/api/chat/unread/:userId", async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const count = await storage.getUnreadMessageCount(userId);
+      res.json({ count });
+    } catch (error) {
+      console.error("Error getting unread message count:", error);
+      res.status(500).json({ message: "Failed to get unread count" });
+    }
+  });
+
+  app.delete("/api/chat/messages/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteChatMessage(id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting message:", error);
+      res.status(500).json({ message: "Failed to delete message" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

@@ -60,7 +60,13 @@ import {
   jobCompletionOTPs,
   notifications,
   type Notification,
-  type InsertNotification
+  type InsertNotification,
+  chatMessages,
+  chatConversations,
+  type ChatMessage,
+  type ChatConversation,
+  type InsertChatMessage,
+  type InsertChatConversation
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, sql, desc, ilike, inArray, or, isNull, lt } from "drizzle-orm";
@@ -1711,6 +1717,134 @@ export class DatabaseStorage implements IStorage {
 
   async deleteNotification(notificationId: string): Promise<void> {
     await db.delete(notifications).where(eq(notifications.id, notificationId));
+  }
+
+  // Chat methods
+  async createConversation(conversation: InsertChatConversation): Promise<ChatConversation> {
+    const [created] = await db.insert(chatConversations)
+      .values(conversation)
+      .returning();
+    return created;
+  }
+
+  async getConversationsByClient(clientId: string): Promise<ChatConversation[]> {
+    return await db.select()
+      .from(chatConversations)
+      .where(eq(chatConversations.clientId, clientId))
+      .orderBy(desc(chatConversations.lastMessageAt));
+  }
+
+  async getConversationsByAdmin(adminId: string): Promise<ChatConversation[]> {
+    return await db.select()
+      .from(chatConversations)
+      .where(eq(chatConversations.adminId, adminId))
+      .orderBy(desc(chatConversations.lastMessageAt));
+  }
+
+  async getAllConversations(): Promise<(ChatConversation & { clientName: string, adminName?: string })[]> {
+    return await db.select({
+      id: chatConversations.id,
+      clientId: chatConversations.clientId,
+      adminId: chatConversations.adminId,
+      subject: chatConversations.subject,
+      status: chatConversations.status,
+      priority: chatConversations.priority,
+      lastMessageAt: chatConversations.lastMessageAt,
+      createdAt: chatConversations.createdAt,
+      updatedAt: chatConversations.updatedAt,
+      clientName: sql<string>`CONCAT(${users.firstName}, ' ', ${users.lastName})`,
+      adminName: sql<string>`CASE WHEN ${chatConversations.adminId} IS NOT NULL THEN CONCAT(admin_user.first_name, ' ', admin_user.last_name) ELSE NULL END`,
+    })
+    .from(chatConversations)
+    .leftJoin(users, eq(chatConversations.clientId, users.id))
+    .leftJoin(users.alias('admin_user'), eq(chatConversations.adminId, sql`admin_user.id`))
+    .orderBy(desc(chatConversations.lastMessageAt));
+  }
+
+  async getConversationById(conversationId: string): Promise<ChatConversation | undefined> {
+    const [conversation] = await db.select()
+      .from(chatConversations)
+      .where(eq(chatConversations.id, conversationId));
+    return conversation;
+  }
+
+  async updateConversation(conversationId: string, updates: Partial<ChatConversation>): Promise<ChatConversation | undefined> {
+    const [updated] = await db.update(chatConversations)
+      .set({
+        ...updates,
+        updatedAt: sql`NOW()`,
+      })
+      .where(eq(chatConversations.id, conversationId))
+      .returning();
+    return updated;
+  }
+
+  async createChatMessage(message: InsertChatMessage): Promise<ChatMessage> {
+    const [created] = await db.insert(chatMessages)
+      .values(message)
+      .returning();
+
+    // Update conversation's last message timestamp
+    await db.update(chatConversations)
+      .set({
+        lastMessageAt: sql`NOW()`,
+        updatedAt: sql`NOW()`,
+      })
+      .where(eq(chatConversations.id, message.conversationId));
+
+    return created;
+  }
+
+  async getMessagesByConversation(conversationId: string): Promise<(ChatMessage & { senderName: string })[]> {
+    return await db.select({
+      id: chatMessages.id,
+      conversationId: chatMessages.conversationId,
+      senderId: chatMessages.senderId,
+      recipientId: chatMessages.recipientId,
+      message: chatMessages.message,
+      messageType: chatMessages.messageType,
+      attachmentUrl: chatMessages.attachmentUrl,
+      isRead: chatMessages.isRead,
+      readAt: chatMessages.readAt,
+      createdAt: chatMessages.createdAt,
+      updatedAt: chatMessages.updatedAt,
+      senderName: sql<string>`CONCAT(${users.firstName}, ' ', ${users.lastName})`,
+    })
+    .from(chatMessages)
+    .leftJoin(users, eq(chatMessages.senderId, users.id))
+    .where(eq(chatMessages.conversationId, conversationId))
+    .orderBy(chatMessages.createdAt);
+  }
+
+  async markMessagesAsRead(conversationId: string, userId: string): Promise<void> {
+    await db.update(chatMessages)
+      .set({
+        isRead: true,
+        readAt: sql`NOW()`,
+        updatedAt: sql`NOW()`,
+      })
+      .where(and(
+        eq(chatMessages.conversationId, conversationId),
+        eq(chatMessages.recipientId, userId),
+        eq(chatMessages.isRead, false)
+      ));
+  }
+
+  async getUnreadMessageCount(userId: string): Promise<number> {
+    const [result] = await db.select({ 
+      count: sql<number>`count(*)::int` 
+    })
+    .from(chatMessages)
+    .where(and(
+      eq(chatMessages.recipientId, userId),
+      eq(chatMessages.isRead, false)
+    ));
+    
+    return result?.count || 0;
+  }
+
+  async deleteChatMessage(messageId: string): Promise<void> {
+    await db.delete(chatMessages).where(eq(chatMessages.id, messageId));
   }
 }
 
