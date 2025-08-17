@@ -4334,24 +4334,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Get user details for location fallback
         const user = await storage.getUserById(userId);
         
-        // Check if we have location info from voice or user profile
-        const hasLocationInfo = voiceResult.extractedData?.location?.area || 
-                               voiceResult.extractedData?.location?.district ||
-                               voiceResult.extractedData?.location?.state ||
-                               user?.district || user?.state;
-
-        if (!hasLocationInfo) {
-          // Return for location confirmation step
-          return res.json({
-            success: true,
-            requiresLocationConfirmation: true,
-            message: "Please confirm your job location",
-            extractedData: voiceResult.extractedData,
-            transcription: voiceResult.transcription,
-            originalText: voiceResult.originalText,
-            processingTime: voiceResult.processingTime
-          });
-        }
+        // Always require location confirmation for voice posts to show original language
+        // This ensures users can see both Tamil original and English translation
+        return res.json({
+          success: true,
+          requiresLocationConfirmation: true,
+          message: "Please confirm your job location",
+          extractedData: voiceResult.extractedData,
+          transcription: voiceResult.transcription,
+          originalText: voiceResult.originalText,
+          processingTime: voiceResult.processingTime
+        });
 
         // Determine job ID format matching existing pattern
         const timestamp = new Date().toISOString().split('T')[0].replace(/-/g, '');
