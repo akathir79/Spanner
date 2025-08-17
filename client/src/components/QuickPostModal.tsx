@@ -16,6 +16,20 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
   const { user, loginWithOtp, verifyOtp, signupClient } = useAuth();
   const { toast } = useToast();
 
+  // Language names mapping
+  const languageNames: Record<string, string> = {
+    'en': 'English',
+    'hi': 'Hindi (हिंदी)',
+    'ta': 'Tamil (தமிழ்)',
+    'te': 'Telugu (తెలుగు)',
+    'bn': 'Bengali (বাংলা)',
+    'ml': 'Malayalam (മലയാളം)',
+    'kn': 'Kannada (ಕನ್ನಡ)',
+    'gu': 'Gujarati (ગુજરાતી)',
+    'mr': 'Marathi (मराठी)',
+    'pa': 'Punjabi (ਪੰਜਾਬੀ)'
+  };
+
   // Simple state management
   const [currentStep, setCurrentStep] = useState<'auth-check' | 'login' | 'register' | 'language' | 'recording' | 'preview' | 'manual-input' | 'success' | 'location-confirmation'>('auth-check');
   const [selectedLanguage, setSelectedLanguage] = useState<string>('en');
