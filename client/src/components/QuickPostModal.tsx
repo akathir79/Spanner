@@ -1115,9 +1115,9 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
           <div className="space-y-4">
             <div className="text-center">
               <div className="text-6xl">📍</div>
-              <h3 className="text-xl font-semibold">Confirm Job Location</h3>
+              <h3 className="text-xl font-semibold">Confirm Job Details & Location</h3>
               <p className="text-muted-foreground">
-                Please confirm where the work needs to be done
+                Please confirm the job details and specify the work location
               </p>
             </div>
 
@@ -1130,12 +1130,12 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
                     <p><strong>Description:</strong></p>
                     <div className="bg-white rounded p-2 mt-1 space-y-1">
                       <p className="text-blue-800"><strong>Tamil:</strong> {processedTranscription}</p>
-                      <p className="text-green-800"><strong>English:</strong> {extractedData.jobDescription || 'Auto-translated description'}</p>
+                      <p className="text-green-800"><strong>English:</strong> {extractedData.jobDescription || 'Professional service required'}</p>
                     </div>
                   </div>
                   <p><strong>Service:</strong> {extractedData.serviceCategory || 'General Services'}</p>
                   <p><strong>Urgency:</strong> {extractedData.urgency || 'medium'}</p>
-                  <p><strong>Requirements:</strong> {extractedData.requirements?.join(', ') || 'None specified'}</p>
+                  <p><strong>Requirements:</strong> {extractedData.requirements?.join(', ') || 'Experience in the service category'}</p>
                 </div>
               </div>
             )}
@@ -1269,35 +1269,44 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
               <h4 className="font-semibold text-gray-800">Job Details:</h4>
               
               <div>
-                <span className="font-medium">Title:</span> {processedResult.jobPost?.title || 'N/A'}
+                <span className="font-medium">Title:</span> {processedResult.jobPost?.title || 'Voice-Generated Job Request'}
               </div>
               
               <div>
-                <span className="font-medium">Description:</span> {processedResult.jobPost?.description || 'N/A'}
-              </div>
-              
-              <div>
-                <span className="font-medium">Budget:</span> ₹{processedResult.jobPost?.budget?.min || 0} - ₹{processedResult.jobPost?.budget?.max || 0}
-              </div>
-              
-              <div>
-                <span className="font-medium">Location:</span> {processedResult.jobPost?.location || 'N/A'}
-              </div>
-              
-              {processedResult.transcription && (
-                <div>
-                  <span className="font-medium">Voice Transcription:</span>
-                  <p className="text-sm text-gray-600 italic mt-1">"{processedResult.transcription}"</p>
+                <span className="font-medium">Description:</span>
+                <div className="bg-white rounded p-2 mt-1 space-y-1">
+                  <p className="text-blue-800"><strong>Tamil:</strong> {processedResult.transcription || 'Voice recording processed'}</p>
+                  <p className="text-green-800"><strong>English:</strong> {processedResult.extractedData?.jobDescription || processedResult.jobPost?.description || 'Professional service required'}</p>
                 </div>
-              )}
+              </div>
+              
+              <div>
+                <span className="font-medium">Service:</span> {processedResult.extractedData?.serviceCategory || 'General Services'}
+              </div>
+              
+              <div>
+                <span className="font-medium">Budget:</span> ₹{processedResult.extractedData?.budget?.min || processedResult.jobPost?.budgetMin || 1000} - ₹{processedResult.extractedData?.budget?.max || processedResult.jobPost?.budgetMax || 5000}
+              </div>
+              
+              <div>
+                <span className="font-medium">Location:</span> {processedResult.jobPost?.serviceAddress || `${user?.areaName || 'Area'}, ${user?.district || 'District'}, ${user?.state || 'State'}`}
+              </div>
+              
+              <div>
+                <span className="font-medium">Requirements:</span> {processedResult.extractedData?.requirements?.join(', ') || 'Experience in the service category'}
+              </div>
+              
+              <div>
+                <span className="font-medium">Voice Transcription:</span>
+                <p className="text-sm text-gray-600 italic mt-1">"{processedResult.transcription}"</p>
+              </div>
             </div>
 
             <div className="flex gap-3">
-              <Button onClick={onClose} className="flex-1 bg-green-600 hover:bg-green-700">
-                Post Another Job
+              <Button onClick={onClose} className="flex-1 bg-blue-600 hover:bg-blue-700">
+                Close
               </Button>
               <Button 
-                variant="outline" 
                 onClick={() => {
                   setCurrentStep('language');
                   setProcessedResult(null);
@@ -1306,8 +1315,17 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
                     URL.revokeObjectURL(audioUrl);
                     setAudioUrl('');
                   }
+                  // Reset location data with user profile
+                  setLocationData({
+                    area: user?.areaName || '',
+                    district: user?.district || '', 
+                    state: user?.state || '',
+                    fullAddress: user?.fullAddress || '',
+                    budgetMin: '',
+                    budgetMax: ''
+                  });
                 }}
-                className="flex-1"
+                className="flex-1 bg-green-600 hover:bg-green-700"
               >
                 Create Another Job
               </Button>
