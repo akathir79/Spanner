@@ -2109,7 +2109,7 @@ export default function WorkerDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 pt-20 pb-8">
+    <div className="min-h-screen bg-white pt-20 pb-8">
       <div className="container mx-auto px-4">
         {/* Wallet and Advertisement Section - Top Welcome Area */}
         <div className="mb-8">
