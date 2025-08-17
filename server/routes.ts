@@ -4322,7 +4322,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
 
         // Get user details for location fallback
-        const user = await storage.findUserById(userId);
+        const user = await storage.getUserById(userId);
         
         // Create the job post with extracted details
         const jobPostData = {
