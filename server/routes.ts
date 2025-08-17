@@ -4342,9 +4342,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
         }
 
-        // Determine job ID format
+        // Determine job ID format matching existing pattern
         const timestamp = new Date().toISOString().split('T')[0].replace(/-/g, '');
-        const jobId = `${userId}/VOICE/${timestamp}`;
+        const jobCount = Math.floor(Math.random() * 999) + 1;
+        const jobId = `${userId}/${jobCount.toString().padStart(3, '0')}/${timestamp}`;
         
         // Create the job post with extracted details
         const jobPostData = {
@@ -4359,7 +4360,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           budget: voiceResult.extractedData?.budget || { min: 1000, max: 5000 },
           urgency: voiceResult.extractedData?.urgency || "medium" as const,
           userId: userId,
-          createdAt: new Date().toISOString(),
+          createdAt: new Date(),
           requirements: voiceResult.extractedData?.requirements || [],
           timeframe: voiceResult.extractedData?.timeframe || "To be discussed"
         };
@@ -4438,7 +4439,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         budget: extractedData.budget || { min: 1000, max: 5000 },
         urgency: extractedData.urgency || "medium" as const,
         userId: userId,
-        createdAt: new Date().toISOString(),
+        createdAt: new Date(),
         requirements: extractedData.requirements || [],
         timeframe: extractedData.timeframe || "To be discussed"
       };
