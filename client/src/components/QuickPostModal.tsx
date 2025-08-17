@@ -71,6 +71,17 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
     budgetMax: ''
   });
 
+  const [customLocationData, setCustomLocationData] = useState({
+    houseNumber: '',
+    streetName: '',
+    areaName: '',
+    district: '',
+    state: '',
+    pincode: ''
+  });
+
+  const [showCustomLocationForm, setShowCustomLocationForm] = useState(false);
+
   // Refs
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -281,7 +292,8 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
             ...locationData,
             budgetMin: parseInt(locationData.budgetMin) || extractedData?.budget?.min || 1000,
             budgetMax: parseInt(locationData.budgetMax) || extractedData?.budget?.max || 5000
-          }
+          },
+          customLocationData: showCustomLocationForm ? customLocationData : null
         })
       });
 
@@ -311,7 +323,7 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
     } finally {
       setIsProcessing(false);
     }
-  }, [extractedData, processedTranscription, locationData, user, toast, onClose]);
+  }, [extractedData, processedTranscription, locationData, customLocationData, showCustomLocationForm, user, toast, onClose]);
 
   // Process recording function
   const processRecording = useCallback(async (audioBlob: Blob) => {
@@ -1193,6 +1205,87 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
                   onChange={(e) => setLocationData(prev => ({ ...prev, state: e.target.value }))}
                 />
               </div>
+
+              {/* Add New Work Location Button */}
+              <div className="flex items-center justify-between">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowCustomLocationForm(!showCustomLocationForm)}
+                  className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                  data-testid="button-add-custom-location"
+                >
+                  {showCustomLocationForm ? 'Use Current Location' : '+ Add New Work Location'}
+                </Button>
+                <p className="text-xs text-muted-foreground">Need different work address?</p>
+              </div>
+
+              {/* Custom Location Form */}
+              {showCustomLocationForm && (
+                <div className="bg-blue-50 rounded-lg p-4 space-y-3 border border-blue-200">
+                  <h5 className="font-medium text-blue-800">Enter Custom Work Location</h5>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">House Number</label>
+                      <Input
+                        placeholder="123, Building name"
+                        value={customLocationData.houseNumber}
+                        onChange={(e) => setCustomLocationData(prev => ({ ...prev, houseNumber: e.target.value }))}
+                        data-testid="input-custom-house-number"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">Street Name</label>
+                      <Input
+                        placeholder="Main street, road name"
+                        value={customLocationData.streetName}
+                        onChange={(e) => setCustomLocationData(prev => ({ ...prev, streetName: e.target.value }))}
+                        data-testid="input-custom-street-name"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-700">Area/Locality</label>
+                    <Input
+                      placeholder="Area or locality name"
+                      value={customLocationData.areaName}
+                      onChange={(e) => setCustomLocationData(prev => ({ ...prev, areaName: e.target.value }))}
+                      data-testid="input-custom-area-name"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">District</label>
+                      <Input
+                        placeholder="District name"
+                        value={customLocationData.district}
+                        onChange={(e) => setCustomLocationData(prev => ({ ...prev, district: e.target.value }))}
+                        data-testid="input-custom-district"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">State</label>
+                      <Input
+                        placeholder="State name"
+                        value={customLocationData.state}
+                        onChange={(e) => setCustomLocationData(prev => ({ ...prev, state: e.target.value }))}
+                        data-testid="input-custom-state"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-700">Pincode</label>
+                    <Input
+                      placeholder="6-digit pincode"
+                      maxLength={6}
+                      value={customLocationData.pincode}
+                      onChange={(e) => setCustomLocationData(prev => ({ ...prev, pincode: e.target.value }))}
+                      data-testid="input-custom-pincode"
+                    />
+                  </div>
+                </div>
+              )}
               
               <div>
                 <label className="text-sm font-medium">Budget Range (₹) *Required</label>

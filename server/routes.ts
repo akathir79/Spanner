@@ -4437,7 +4437,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Voice job posting confirmation endpoint (when location info is missing)
   app.post("/api/voice/confirm-job-posting", async (req, res) => {
     try {
-      const { userId, extractedData, transcription, locationData } = req.body;
+      const { userId, extractedData, transcription, locationData, customLocationData } = req.body;
 
       if (!userId || !extractedData) {
         return res.status(400).json({
@@ -4450,6 +4450,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const timestamp = new Date().toISOString().split('T')[0].replace(/-/g, '');
       const jobId = `${userId}/VOICE/${timestamp}`;
       
+      // Use custom location data if provided, otherwise use default location data
+      const finalLocationData = customLocationData && customLocationData.areaName ? {
+        area: customLocationData.areaName,
+        district: customLocationData.district,
+        state: customLocationData.state,
+        fullAddress: `${customLocationData.houseNumber}, ${customLocationData.streetName}, ${customLocationData.areaName}, ${customLocationData.district}, ${customLocationData.state} - ${customLocationData.pincode}`.replace(/^,\s*|,\s*,/g, ', ').replace(/,\s*$/, '')
+      } : {
+        area: locationData.area,
+        district: locationData.district,
+        state: locationData.state,
+        fullAddress: locationData.fullAddress || `${locationData.area || ''}, ${locationData.district || ''}, ${locationData.state || ''}`.replace(/^, |, $/, '')
+      };
+
       // Create the job post with confirmed details including user-provided budget
       const jobPostData = {
         id: jobId,
@@ -4457,9 +4470,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         title: extractedData.jobTitle || "Voice-Generated Job Request",
         description: extractedData.jobDescription || transcription || "Job details extracted from voice recording",
         serviceCategory: extractedData.serviceCategory || "General Services",
-        serviceAddress: locationData.fullAddress || `${locationData.area || ''}, ${locationData.district || ''}, ${locationData.state || ''}`.replace(/^, |, $/, ''),
-        district: locationData.district || "Not specified",
-        state: locationData.state || "Not specified",
+        serviceAddress: finalLocationData.fullAddress,
+        district: finalLocationData.district || "Not specified",
+        state: finalLocationData.state || "Not specified",
         budgetMin: locationData.budgetMin || extractedData.budget?.min || 1000,
         budgetMax: locationData.budgetMax || extractedData.budget?.max || 5000,
         requirements: extractedData.requirements || [],
