@@ -26,6 +26,7 @@ function cleanAndParseJSON(responseText: string): any {
 
 export interface VoiceTranscriptionResult {
   text: string;
+  originalText?: string | null;
   detectedLanguage: string;
   confidence: number;
 }
@@ -75,24 +76,27 @@ export async function transcribeAudioWithLanguageDetection(
     const prompt = `
     Please transcribe this audio file with multilingual support for Indian languages.
     
-    CRITICAL REQUIREMENTS:
-    1. If audio is in Tamil, Hindi, Telugu, Bengali, Malayalam, Kannada, Gujarati, Marathi, or Punjabi:
-       - First transcribe in the original language
-       - Then provide clear English translation
-       - Preserve job/service context and technical terms
-       - Convert local place names to standard English spellings
+    CRITICAL TRANSLATION REQUIREMENTS:
+    1. If audio is NOT in English:
+       - ALWAYS provide the English translation in the "text" field
+       - DO NOT copy the original language text to the English field
+       - Translate the meaning clearly and professionally
+       - Convert service terms properly (e.g., "பிளம்பர்" → "plumber", "मिस्त्री" → "mechanic")
     2. Detect the actual spoken language accurately
-    3. For job-related content, translate service categories to English
+    3. For job-related content, translate service categories to standard English terms
     
     Respond in JSON format:
     {
-      "text": "English translation of the transcribed content (or original if already English)",
+      "text": "MUST BE ENGLISH TRANSLATION (never original language text)",
+      "originalText": "original language transcription if not English",
       "detectedLanguage": "ISO 639-1 code (en, hi, ta, te, bn, ml, kn, gu, mr, pa)",
       "confidence": 0.95
     }
     
-    Example: If Tamil audio says "எனக்கு கிச்சனில் பைப் ரிப்பேர் வேண்டும்", 
-    respond with text: "I need pipe repair in the kitchen"
+    EXAMPLES:
+    - Tamil "எனக்கு பிளம்பர் வேண்டும்" → text: "I need a plumber", originalText: "எனக்கு பிளம்பர் வேண்டும்"
+    - Hindi "मुझे इलेक्ट्रीशियन चाहिए" → text: "I need an electrician", originalText: "मुझे इलेक्ट्रीशियन चाहिए"
+    - English "I need a plumber" → text: "I need a plumber", originalText: null
     `;
 
     const result = await model.generateContent([
@@ -112,6 +116,7 @@ export async function transcribeAudioWithLanguageDetection(
     
     return {
       text: jsonResponse.text || "",
+      originalText: jsonResponse.originalText || null,
       detectedLanguage: jsonResponse.detectedLanguage || "en",
       confidence: jsonResponse.confidence || 0.0
     };
@@ -386,6 +391,7 @@ export async function processVoiceJobPosting(
       success: true,
       message: "Voice job posting processed successfully",
       transcription: transcriptionResult.text,
+      originalText: transcriptionResult.originalText,
       extractedData: {
         title: jobExtractionResult.jobTitle,
         description: jobExtractionResult.jobDescription,

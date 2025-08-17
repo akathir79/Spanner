@@ -4348,6 +4348,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             message: "Please confirm your job location",
             extractedData: voiceResult.extractedData,
             transcription: voiceResult.transcription,
+            originalText: voiceResult.originalText,
             processingTime: voiceResult.processingTime
           });
         }

@@ -61,6 +61,7 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
   // Location confirmation states
   const [extractedData, setExtractedData] = useState<any>(null);
   const [processedTranscription, setProcessedTranscription] = useState('');
+  const [originalTranscription, setOriginalTranscription] = useState('');
   const [locationData, setLocationData] = useState({
     area: '',
     district: '',
@@ -368,7 +369,8 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
       if (result.success && result.requiresLocationConfirmation) {
         // Voice processed but needs location confirmation
         setExtractedData(result.extractedData);
-        setProcessedTranscription(result.transcription);
+        setProcessedTranscription(result.transcription); // English translation
+        setOriginalTranscription(result.originalText || result.transcription); // Original language
         
         // Initialize location data with extracted or user profile data
         const extractedLoc = result.extractedData?.location;
@@ -1141,8 +1143,8 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
                   <div>
                     <p><strong>Description:</strong></p>
                     <div className="bg-white rounded p-2 mt-1 space-y-1">
-                      <p className="text-blue-800"><strong>Tamil:</strong> {processedTranscription}</p>
-                      <p className="text-green-800"><strong>English:</strong> {extractedData.jobDescription || 'Professional service required'}</p>
+                      <p className="text-blue-800"><strong>{supportedLanguages.find(l => l.code === selectedLanguage)?.name || 'Original'}:</strong> {originalTranscription}</p>
+                      <p className="text-green-800"><strong>English:</strong> {processedTranscription}</p>
                     </div>
                   </div>
                   <p><strong>Service:</strong> {extractedData.serviceCategory || 'General Services'}</p>
