@@ -4350,19 +4350,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Create the job post with extracted details
         const jobPostData = {
           id: jobId,
+          clientId: userId,
           title: voiceResult.extractedData?.jobTitle || "Voice-Generated Job Request",
           description: voiceResult.extractedData?.jobDescription || voiceResult.transcription || "Job details extracted from voice recording",
           serviceCategory: voiceResult.extractedData?.serviceCategory || "General Services",
-          location: voiceResult.extractedData?.location?.fullAddress || 
+          serviceAddress: voiceResult.extractedData?.location?.fullAddress || 
                    `${voiceResult.extractedData?.location?.area || ''}, ${voiceResult.extractedData?.location?.district || user?.district || ''}, ${voiceResult.extractedData?.location?.state || user?.state || ''}`.replace(/^, |, $/, ''),
           district: voiceResult.extractedData?.location?.district || user?.district || "Not specified",
           state: voiceResult.extractedData?.location?.state || user?.state || "Not specified",
-          budget: voiceResult.extractedData?.budget || { min: 1000, max: 5000 },
-          urgency: voiceResult.extractedData?.urgency || "medium" as const,
-          userId: userId,
-          createdAt: new Date(),
+          budgetMin: voiceResult.extractedData?.budget?.min || 1000,
+          budgetMax: voiceResult.extractedData?.budget?.max || 5000,
           requirements: voiceResult.extractedData?.requirements || [],
-          timeframe: voiceResult.extractedData?.timeframe || "To be discussed"
+          createdAt: new Date(),
+          updatedAt: new Date()
         };
 
         // Actually create the job posting in the database
@@ -4430,18 +4430,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Create the job post with confirmed details
       const jobPostData = {
         id: jobId,
+        clientId: userId,
         title: extractedData.jobTitle || "Voice-Generated Job Request",
         description: extractedData.jobDescription || transcription || "Job details extracted from voice recording",
         serviceCategory: extractedData.serviceCategory || "General Services",
-        location: locationData.fullAddress || `${locationData.area || ''}, ${locationData.district || ''}, ${locationData.state || ''}`.replace(/^, |, $/, ''),
+        serviceAddress: locationData.fullAddress || `${locationData.area || ''}, ${locationData.district || ''}, ${locationData.state || ''}`.replace(/^, |, $/, ''),
         district: locationData.district || "Not specified",
         state: locationData.state || "Not specified",
-        budget: extractedData.budget || { min: 1000, max: 5000 },
-        urgency: extractedData.urgency || "medium" as const,
-        userId: userId,
-        createdAt: new Date(),
+        budgetMin: extractedData.budget?.min || 1000,
+        budgetMax: extractedData.budget?.max || 5000,
         requirements: extractedData.requirements || [],
-        timeframe: extractedData.timeframe || "To be discussed"
+        createdAt: new Date(),
+        updatedAt: new Date()
       };
 
       // Create the job posting in the database
