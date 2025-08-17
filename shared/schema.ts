@@ -143,6 +143,8 @@ export const jobPostings = pgTable("job_postings", {
   attachments: jsonb("attachments"), // Array of file URLs
   status: text("status").notNull().default("open"), // open, in_progress, completed, cancelled
   selectedBidId: varchar("selected_bid_id"),
+  completionOTP: text("completion_otp"), // OTP generated when client accepts bid
+  otpGeneratedAt: timestamp("otp_generated_at"), // When OTP was generated
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });

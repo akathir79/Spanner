@@ -837,8 +837,24 @@ const AvailableJobsTab = ({ user }: { user: any }) => {
                             </Button>
                           </CollapsibleTrigger>
                           <CollapsibleContent className="mt-1">
-                            <div className="text-xs text-slate-300 bg-slate-900/50 border border-slate-600/30 p-2 rounded whitespace-pre-line">
-                              {job.serviceAddress || 'Service address not specified'}
+                            <div className="text-xs text-slate-300 bg-slate-900/50 border border-slate-600/30 p-2 rounded">
+                              <div className="space-y-1">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-slate-400">Area:</span>
+                                  <span>{job.serviceAddress?.split(',')[0] || 'Not specified'}</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-slate-400">District:</span>
+                                  <span>{job.district || 'Not specified'}</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-slate-400">State:</span>
+                                  <span>{job.state || 'Not specified'}</span>
+                                </div>
+                                <div className="text-xs text-slate-500 mt-2 italic">
+                                  Full address shared after job acceptance
+                                </div>
+                              </div>
                             </div>
                           </CollapsibleContent>
                         </Collapsible>
@@ -934,35 +950,52 @@ const AvailableJobsTab = ({ user }: { user: any }) => {
                         {(() => {
                           const existingBid = myBids.find((bid: any) => bid.jobPosting?.id === job.id);
                           
-                          return existingBid ? (
+                          if (existingBid) {
+                            return (
+                              <div className="flex items-center gap-2">
+                                <Badge variant="outline" className="text-xs bg-yellow-900/20 text-yellow-400 border-yellow-500/30">
+                                  Bid Submitted
+                                </Badge>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="text-xs text-blue-400 border-blue-500/30 hover:bg-blue-900/20"
+                                  onClick={() => {
+                                    // Switch to My Bids tab to edit
+                                    const tabsElement = document.querySelector('[value="my-bids"]') as HTMLElement;
+                                    if (tabsElement) tabsElement.click();
+                                  }}
+                                >
+                                  Edit in My Bids
+                                </Button>
+                              </div>
+                            );
+                          }
+                          
+                          // Check if worker has 2 or more active jobs
+                          const activeJobs = myBids.filter((bid: any) => bid.status === 'accepted').length;
+                          const isAtJobLimit = activeJobs >= 2;
+                          
+                          return (
                             <div className="flex items-center gap-2">
-                              <Badge variant="outline" className="text-xs bg-yellow-900/20 text-yellow-400 border-yellow-500/30">
-                                Bid Submitted
-                              </Badge>
+                              {isAtJobLimit && (
+                                <div className="text-xs text-orange-400 bg-orange-900/20 border border-orange-500/30 rounded px-2 py-1">
+                                  Job Limit Reached (2/2)
+                                </div>
+                              )}
                               <Button
                                 size="sm"
-                                variant="outline"
-                                className="text-xs text-blue-400 border-blue-500/30 hover:bg-blue-900/20"
+                                className="bg-blue-600 hover:bg-blue-700 text-white"
+                                disabled={isAtJobLimit}
                                 onClick={() => {
-                                  // Switch to My Bids tab to edit
-                                  const tabsElement = document.querySelector('[value="my-bids"]') as HTMLElement;
-                                  if (tabsElement) tabsElement.click();
+                                  setSelectedJob(job);
+                                  setIsBidModalOpen(true);
                                 }}
+                                title={isAtJobLimit ? "Complete an existing job to bid on new ones" : "Place your bid for this job"}
                               >
-                                Edit in My Bids
+                                Place Bid
                               </Button>
                             </div>
-                          ) : (
-                            <Button
-                              size="sm"
-                              className="bg-blue-600 hover:bg-blue-700 text-white"
-                              onClick={() => {
-                                setSelectedJob(job);
-                                setIsBidModalOpen(true);
-                              }}
-                            >
-                              Submit Bid
-                            </Button>
                           );
                         })()}
                       </div>
@@ -1048,6 +1081,9 @@ const MyBidsTab = ({ user }: { user: any }) => {
     estimatedDuration: "",
     proposal: "",
   });
+  const [showOTPModal, setShowOTPModal] = useState(false);
+  const [completingBid, setCompletingBid] = useState<any>(null);
+  const [generatedOTP, setGeneratedOTP] = useState<string>("");
 
   // Fetch worker's bids
   const { data: myBids = [] } = useQuery<any[]>({
@@ -1131,6 +1167,77 @@ const MyBidsTab = ({ user }: { user: any }) => {
     });
   };
 
+  // Mark job as complete mutation
+  const markCompleteOTPMutation = useMutation({
+    mutationFn: async (bookingId: string) => {
+      const response = await fetch(`/api/bookings/${bookingId}/worker-complete`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+      
+      if (!response.ok) {
+        throw new Error("Failed to mark job as complete");
+      }
+      
+      return response.json();
+    },
+    onSuccess: (data) => {
+      setGeneratedOTP(data.otp);
+      setShowOTPModal(true);
+      toast({
+        title: "Job Marked Complete",
+        description: `OTP ${data.otp} generated. Share this with the client for verification.`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/bids/worker", user?.id] });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to mark job as complete. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleMarkJobComplete = async (bid: any) => {
+    if (!bid.jobPosting?.id) {
+      toast({
+        title: "Error",
+        description: "Job information not found",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      // Find the booking for this job and worker
+      const bookingsResponse = await fetch(`/api/bookings/user/${user?.id}`);
+      const bookings = await bookingsResponse.json();
+      
+      const booking = bookings.find((b: any) => 
+        b.jobPostingId === bid.jobPosting.id && b.workerId === user?.id
+      );
+      
+      if (!booking) {
+        toast({
+          title: "Error",
+          description: "Booking not found for this job",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setCompletingBid(bid);
+      markCompleteOTPMutation.mutate(booking.id);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to find booking information",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* My Bids */}
@@ -1185,6 +1292,17 @@ const MyBidsTab = ({ user }: { user: any }) => {
                               </div>
                             )}
                           </div>
+                          {/* Mark as Complete button for accepted jobs */}
+                          {bid.status === "accepted" && (
+                            <Button
+                              size="sm"
+                              className="bg-green-600 hover:bg-green-700 text-white"
+                              onClick={() => handleMarkJobComplete(bid)}
+                            >
+                              <CheckCircle className="h-3 w-3 mr-1" />
+                              Mark as Complete
+                            </Button>
+                          )}
                           {/* Only allow editing and deleting if bid is pending */}
                           {bid.status === "pending" && (
                             <div className="flex gap-2">
@@ -1416,6 +1534,46 @@ const MyBidsTab = ({ user }: { user: any }) => {
               </Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* OTP Generated Modal */}
+      <Dialog open={showOTPModal} onOpenChange={setShowOTPModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-green-600">Job Marked as Complete!</DialogTitle>
+            <DialogDescription>
+              Share this OTP with the client to verify job completion.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg p-4 text-center">
+              <p className="text-sm text-muted-foreground mb-2">Completion OTP</p>
+              <div className="text-3xl font-bold text-green-600 dark:text-green-400 tracking-wider">
+                {generatedOTP}
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">
+                Client needs this OTP to confirm job completion
+              </p>
+            </div>
+            
+            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg p-3">
+              <div className="flex items-start gap-2">
+                <AlertCircle className="h-4 w-4 text-blue-600 dark:text-blue-400 mt-0.5" />
+                <div className="text-xs text-blue-700 dark:text-blue-300">
+                  <p className="font-medium mb-1">Important:</p>
+                  <p>Only share this OTP with the client after completing all work. The client will use this to verify and finalize the job.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button onClick={() => setShowOTPModal(false)} className="w-full">
+              Got it
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
