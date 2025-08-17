@@ -4391,6 +4391,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           message: "Voice job posting created successfully",
           jobPost: createdJobPost,
           transcription: voiceResult.transcription,
+          originalText: voiceResult.originalText,
           extractedData: {
             language: language || 'en',
             confidence: voiceResult.confidence || 0.85,
