@@ -2287,7 +2287,7 @@ export default function WorkerDashboard() {
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-7">
+          <TabsList className="grid w-full grid-cols-7 [&>*[data-state=active]]:bg-blue-500 [&>*[data-state=active]]:text-white">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="bookings" className="relative">
               Bookings
