@@ -110,6 +110,8 @@ Located in `shared/schema.ts`, the database includes:
 - **Voice-Powered Quick Post System**: Complete multilingual voice job posting system with Google Gemini integration for 10+ Indian languages, real-time speech recognition, intelligent location extraction from partial addresses, automatic account creation flow, and seamless job posting workflow (August 16, 2025)
 - **Quick Post Modal Implementation**: Modal-based voice recording interface with language selection, real-time timer, MediaRecorder integration, comprehensive error handling, and Firefox compatibility improvements with debug fallback options (August 16, 2025)
 - **Quick Post Authentication Flow**: Smart authentication check on voice modal opening - logged-in users proceed directly to voice recording, non-authenticated users see quick login/registration options with OTP verification, development OTP paste buttons, and seamless transition to voice posting after authentication (August 16, 2025)
+- **Voice Message Preview System**: Complete preview functionality allowing users to listen to recorded voice messages before AI processing, with audio playback controls, recording details display, multiple action options (re-record, change language, manual entry), and quality control workflow (August 17, 2025)
+- **Modal Scrollbar Support**: Added vertical scrolling support to QuickPost modal with max-height viewport constraints ensuring all form content is accessible regardless of screen size (August 17, 2025)
 
 ### Language Support
 - English-only interface for India-wide coverage

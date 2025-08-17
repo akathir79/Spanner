@@ -610,7 +610,7 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Volume2 className="w-6 h-6" />
