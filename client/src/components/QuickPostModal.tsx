@@ -65,7 +65,9 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
     area: '',
     district: '',
     state: '',
-    fullAddress: ''
+    fullAddress: '',
+    budgetMin: '',
+    budgetMax: ''
   });
 
   // Refs
@@ -91,7 +93,14 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
   useEffect(() => {
     if (isOpen) {
       if (user) {
-        // User is logged in, go directly to language selection
+        // User is logged in, pre-fill location from profile and go to language selection
+        setLocationData(prev => ({
+          ...prev,
+          area: user.areaName || prev.area,
+          district: user.district || prev.district,
+          state: user.state || prev.state,
+          fullAddress: user.fullAddress || prev.fullAddress
+        }));
         setCurrentStep('language');
       } else {
         // User not logged in, start with auth check
@@ -267,7 +276,11 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
           userId: currentUser?.id,
           extractedData,
           transcription: processedTranscription,
-          locationData
+          locationData: {
+            ...locationData,
+            budgetMin: parseInt(locationData.budgetMin) || extractedData?.budget?.min || 1000,
+            budgetMax: parseInt(locationData.budgetMax) || extractedData?.budget?.max || 5000
+          }
         })
       });
 
@@ -1109,15 +1122,21 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
             </div>
 
             {extractedData && (
-              <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+              <div className="bg-gray-50 rounded-lg p-4 space-y-3">
                 <h4 className="font-medium">Extracted Job Details:</h4>
-                <p><strong>Title:</strong> {extractedData.jobTitle || 'Voice-Generated Job Request'}</p>
-                <p><strong>Description:</strong> {extractedData.jobDescription || processedTranscription}</p>
-                <p><strong>Service:</strong> {extractedData.serviceCategory || 'General Services'}</p>
-                <p><strong>Urgency:</strong> {extractedData.urgency || 'medium'}</p>
-                {extractedData.budget && (
-                  <p><strong>Budget:</strong> ₹{extractedData.budget.min || 1000} - ₹{extractedData.budget.max || 5000}</p>
-                )}
+                <div className="space-y-2">
+                  <p><strong>Title:</strong> {extractedData.jobTitle || 'Voice-Generated Job Request'}</p>
+                  <div>
+                    <p><strong>Description:</strong></p>
+                    <div className="bg-white rounded p-2 mt-1 space-y-1">
+                      <p className="text-blue-800"><strong>Tamil:</strong> {processedTranscription}</p>
+                      <p className="text-green-800"><strong>English:</strong> {extractedData.jobDescription || 'Auto-translated description'}</p>
+                    </div>
+                  </div>
+                  <p><strong>Service:</strong> {extractedData.serviceCategory || 'General Services'}</p>
+                  <p><strong>Urgency:</strong> {extractedData.urgency || 'medium'}</p>
+                  <p><strong>Requirements:</strong> {extractedData.requirements?.join(', ') || 'None specified'}</p>
+                </div>
               </div>
             )}
 
@@ -1150,6 +1169,25 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
               </div>
               
               <div>
+                <label className="text-sm font-medium">Budget Range (₹)</label>
+                <div className="flex gap-2">
+                  <Input
+                    type="number"
+                    placeholder="Min amount"
+                    value={locationData.budgetMin || ''}
+                    onChange={(e) => setLocationData(prev => ({ ...prev, budgetMin: e.target.value }))}
+                  />
+                  <span className="self-center">-</span>
+                  <Input
+                    type="number"
+                    placeholder="Max amount"
+                    value={locationData.budgetMax || ''}
+                    onChange={(e) => setLocationData(prev => ({ ...prev, budgetMax: e.target.value }))}
+                  />
+                </div>
+              </div>
+              
+              <div>
                 <label className="text-sm font-medium">Full Address (Optional)</label>
                 <Input
                   placeholder="Enter complete address"
@@ -1170,15 +1208,15 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
               <Button 
                 onClick={confirmJobPosting}
                 disabled={!locationData.area || !locationData.district || !locationData.state || isProcessing}
-                className="flex-1"
+                className="flex-1 bg-green-600 hover:bg-green-700"
               >
                 {isProcessing ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Creating Job...
+                    Posting Job...
                   </>
                 ) : (
-                  'Confirm & Post Job'
+                  'Post Job'
                 )}
               </Button>
             </div>
@@ -1255,8 +1293,8 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
             </div>
 
             <div className="flex gap-3">
-              <Button onClick={onClose} className="flex-1">
-                Close
+              <Button onClick={onClose} className="flex-1 bg-green-600 hover:bg-green-700">
+                Post Another Job
               </Button>
               <Button 
                 variant="outline" 

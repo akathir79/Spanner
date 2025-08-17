@@ -4427,7 +4427,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const timestamp = new Date().toISOString().split('T')[0].replace(/-/g, '');
       const jobId = `${userId}/VOICE/${timestamp}`;
       
-      // Create the job post with confirmed details
+      // Create the job post with confirmed details including user-provided budget
       const jobPostData = {
         id: jobId,
         clientId: userId,
@@ -4437,9 +4437,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         serviceAddress: locationData.fullAddress || `${locationData.area || ''}, ${locationData.district || ''}, ${locationData.state || ''}`.replace(/^, |, $/, ''),
         district: locationData.district || "Not specified",
         state: locationData.state || "Not specified",
-        budgetMin: extractedData.budget?.min || 1000,
-        budgetMax: extractedData.budget?.max || 5000,
+        budgetMin: locationData.budgetMin || extractedData.budget?.min || 1000,
+        budgetMax: locationData.budgetMax || extractedData.budget?.max || 5000,
         requirements: extractedData.requirements || [],
+        originalTranscription: transcription,
+        originalLanguage: extractedData.originalLanguage || 'ta',
         createdAt: new Date(),
         updatedAt: new Date()
       };
