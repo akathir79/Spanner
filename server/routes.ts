@@ -18,7 +18,8 @@ import {
   insertPaymentSchema,
   insertMessageSchema,
   insertTransferHistorySchema,
-  insertAdvertisementSchema
+  insertAdvertisementSchema,
+  insertWorkerReviewSchema
 } from "@shared/schema";
 
 // Job completion OTP schema

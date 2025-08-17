@@ -22,6 +22,7 @@ import { useLanguage } from "@/components/LanguageProvider";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import JobCompletionModal from "@/components/JobCompletionModal";
 import ReviewModal from "@/components/ReviewModal";
+import WorkerRatingModal from "@/components/WorkerRatingModal";
 import { useToast } from "@/hooks/use-toast";
 import { 
   User, 
@@ -2096,8 +2097,10 @@ export default function Dashboard() {
   // Job completion and review modals
   const [jobCompletionModalOpen, setJobCompletionModalOpen] = useState(false);
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
+  const [ratingModalOpen, setRatingModalOpen] = useState(false);
   const [completionBooking, setCompletionBooking] = useState<any>(null);
   const [reviewBooking, setReviewBooking] = useState<any>(null);
+  const [ratingBooking, setRatingBooking] = useState<any>(null);
   
   // Removed dashboard customization state
 
@@ -3280,7 +3283,7 @@ export default function Dashboard() {
                                     </div>
                                   </div>
                                   
-                                  {booking.clientRating && (
+                                  {booking.clientRating ? (
                                     <div className="mt-3 p-2 bg-green-50 border border-green-200 rounded-lg">
                                       <div className="flex items-center space-x-2 text-green-700">
                                         <Star className="h-4 w-4" />
@@ -3293,6 +3296,21 @@ export default function Dashboard() {
                                           "{booking.clientReview}"
                                         </p>
                                       )}
+                                    </div>
+                                  ) : (
+                                    <div className="mt-3">
+                                      <Button
+                                        size="sm"
+                                        onClick={() => {
+                                          setRatingBooking(booking);
+                                          setRatingModalOpen(true);
+                                        }}
+                                        className="bg-blue-600 hover:bg-blue-700 text-white"
+                                        data-testid={`button-rate-${booking.id}`}
+                                      >
+                                        <Star className="h-4 w-4 mr-2" />
+                                        Rate Worker
+                                      </Button>
                                     </div>
                                   )}
                                   
@@ -4723,6 +4741,18 @@ export default function Dashboard() {
           setReviewBooking(null);
         }}
         userRole="client"
+      />
+
+      {/* Worker Rating Modal for Completed Jobs */}
+      <WorkerRatingModal
+        isOpen={ratingModalOpen}
+        onClose={() => {
+          setRatingModalOpen(false);
+          setRatingBooking(null);
+        }}
+        booking={ratingBooking}
+        workerId={ratingBooking?.workerId}
+        clientId={user?.id}
       />
     </div>
   );
