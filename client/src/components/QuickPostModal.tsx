@@ -371,7 +371,13 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
         console.log("Voice processing result:", {
           transcription: result.transcription,
           originalText: result.originalText,
-          extractedData: result.extractedData
+          extractedData: result.extractedData,
+          requiresLocationConfirmation: result.requiresLocationConfirmation
+        });
+        
+        console.log("Setting transcriptions:", {
+          processedTranscription: result.transcription,
+          originalTranscription: result.originalText
         });
         
         setExtractedData(result.extractedData);
@@ -1149,7 +1155,7 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
                   <div>
                     <p><strong>Description:</strong></p>
                     <div className="bg-white rounded p-2 mt-1 space-y-1">
-                      <p className="text-blue-800"><strong>{supportedLanguages.find(l => l.code === selectedLanguage)?.name || 'Original'}:</strong> {originalTranscription || processedTranscription}</p>
+                      <p className="text-blue-800"><strong>{supportedLanguages.find(l => l.code === selectedLanguage)?.name || 'Original'}:</strong> {originalTranscription || "Original language not available"}</p>
                       <p className="text-green-800"><strong>English:</strong> {processedTranscription}</p>
                     </div>
                   </div>
