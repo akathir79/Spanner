@@ -91,8 +91,8 @@ export async function transcribeAudioWithLanguageDetection(
       "confidence": 0.95
     }
     
-    Example: If Tamil audio says "நான் ஒரு பிளம்பர் வேலை செய்ய வேண்டும்", 
-    respond with text: "I need a plumber job done"
+    Example: If Tamil audio says "எனக்கு கிச்சனில் பைப் ரிப்பேர் வேண்டும்", 
+    respond with text: "I need pipe repair in the kitchen"
     `;
 
     const result = await model.generateContent([
@@ -139,20 +139,22 @@ export async function extractJobInformation(
     
     The text is in language: ${detectedLanguage}
     
+    This is a CLIENT posting a job to HIRE WORKERS for services they need.
+    
     Please extract and translate to English:
-    1. Job title/service needed
-    2. Detailed job description
+    1. Service needed/job title (what service the client wants to hire someone for)
+    2. Detailed job description (what work needs to be done)
     3. Service category (plumbing, electrical, painting, cleaning, carpentry, mechanics, appliance repair, security, gardening)
     4. Urgency level (low, medium, high)
-    5. Budget range if mentioned (in Indian Rupees)
-    6. Location details (area, district, state)
-    7. Specific requirements
-    8. Time frame/deadline
+    5. Budget range if mentioned (in Indian Rupees - what client is willing to pay)
+    6. Location details (where the work needs to be done)
+    7. Specific requirements (what the client expects from workers)
+    8. Time frame/deadline (when client needs the work completed)
     
     Respond in this JSON format:
     {
-      "jobTitle": "extracted and translated job title",
-      "jobDescription": "detailed description in English",
+      "jobTitle": "Service needed (e.g., 'Plumber needed for kitchen repair')",
+      "jobDescription": "What work the client needs done in English",
       "serviceCategory": "matching category from list above",
       "urgency": "low/medium/high",
       "budget": {
@@ -160,13 +162,13 @@ export async function extractJobInformation(
         "max": 2000
       },
       "location": {
-        "area": "area name if mentioned",
-        "district": "district name if mentioned", 
-        "state": "state name if mentioned",
-        "fullAddress": "complete address if available"
+        "area": "where the work needs to be done - area name",
+        "district": "where the work needs to be done - district name", 
+        "state": "where the work needs to be done - state name",
+        "fullAddress": "complete work location address if available"
       },
-      "requirements": ["requirement 1", "requirement 2"],
-      "timeframe": "when they need it done",
+      "requirements": ["what client expects from workers", "qualifications needed"],
+      "timeframe": "when client needs the work completed",
       "originalLanguage": "${detectedLanguage}"
     }
     

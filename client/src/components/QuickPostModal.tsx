@@ -537,7 +537,7 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Volume2 className="w-6 h-6" />
-            Quick Post with Voice
+            Quick Job Post with Voice
           </DialogTitle>
         </DialogHeader>
 
@@ -547,7 +547,7 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
             <div className="text-6xl">🔐</div>
             <h3 className="text-xl font-semibold">Quick Post Authentication</h3>
             <p className="text-muted-foreground">
-              To create a voice job post, you need to be logged in.
+              To post a job and hire workers using voice, you need to be logged in.
             </p>
             <div className="grid grid-cols-2 gap-2">
               <Button onClick={() => setCurrentStep('login')} className="w-full">
@@ -887,10 +887,10 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
                 <div className="text-6xl">🎤</div>
                 <h3 className="text-xl font-semibold">Ready to Record</h3>
                 <p className="text-muted-foreground">
-                  Speak about your job requirements in <strong>{supportedLanguages.find(l => l.code === selectedLanguage)?.name}</strong>
+                  Describe what work you need done in <strong>{supportedLanguages.find(l => l.code === selectedLanguage)?.name}</strong>
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  Example: "I need a plumber to fix my kitchen sink in Anna Nagar, Chennai. Budget is around 2000 rupees. It's urgent."
+                  Example: "I need a plumber to fix my kitchen tap leak in Anna Nagar, Chennai. My budget is 2000 rupees. Please come today."
                 </p>
                 <Button 
                   size="lg" 

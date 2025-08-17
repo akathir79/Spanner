@@ -38,16 +38,17 @@ Preferred communication style: Simple, everyday language.
 ## Key Components
 
 ### Voice-Powered Quick Post System
-Complete multilingual voice job posting feature accessible via green 🎤 button in navbar:
+Complete multilingual voice job posting feature for **CLIENTS to post jobs and hire workers** via green 🎤 button in navbar:
+- **Client-Focused Design**: Specifically designed for clients posting jobs to find and hire skilled workers for services they need
 - **Real-time Voice Recognition**: Google Gemini-powered speech-to-text with automatic language detection
 - **Multilingual Support**: Supports 10+ Indian languages (Hindi, Tamil, Telugu, Bengali, Malayalam, Kannada, Gujarati, Marathi, Punjabi, English)
-- **Smart Information Extraction**: AI automatically extracts job title, description, service category, urgency, budget, location, requirements, and timeframe from voice
-- **Intelligent Location Resolution**: Users can mention just area name - system intelligently resolves full district and state information
-- **Automatic Account Creation**: For new users, extracts personal information from voice and creates account automatically
-- **Seamless Integration**: Posts directly to existing job system with all extracted information
-- **User Flow**: Welcome → Voice Recording → Processing → Review → Job Posted
+- **Smart Information Extraction**: AI automatically extracts service needed, work description, service category, urgency, client budget, work location, worker requirements, and completion timeframe from voice
+- **Intelligent Location Resolution**: Clients can mention just area name - system intelligently resolves full district and state information for work location
+- **Automatic Account Creation**: For new clients, extracts personal information from voice and creates account automatically
+- **Seamless Integration**: Posts directly to existing job system with all extracted information for workers to bid on
+- **User Flow**: Welcome → Voice Recording → Processing → Review → Job Posted for Worker Bidding
 - **Real-time Processing**: Live transcription display with detected language indicator
-- **Fallback Support**: Graceful fallback to demo mode if API services are unavailable
+- **Fallback Support**: Graceful fallback to manual job posting form if AI services are unavailable
 
 ### Database Backup & Restore System
 Complete database backup and restore utilities in `database/` folder:
