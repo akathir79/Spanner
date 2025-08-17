@@ -6,6 +6,24 @@ if (!process.env.GEMINI_API_KEY) {
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
+// Helper function to clean and parse JSON responses from Gemini
+function cleanAndParseJSON(responseText: string): any {
+  console.log("Raw Gemini response:", responseText);
+  
+  // Clean up response - remove markdown code blocks
+  let cleanedText = responseText.replace(/^```json\s*/, '').replace(/\s*```$/, '').trim();
+  
+  // Try to extract JSON from the response if it contains additional text
+  const jsonMatch = cleanedText.match(/\{[\s\S]*\}/);
+  if (jsonMatch) {
+    cleanedText = jsonMatch[0];
+  }
+  
+  console.log("Cleaned JSON:", cleanedText);
+  
+  return JSON.parse(cleanedText);
+}
+
 export interface VoiceTranscriptionResult {
   text: string;
   detectedLanguage: string;
@@ -90,10 +108,7 @@ export async function transcribeAudioWithLanguageDetection(
     const response = await result.response;
     let responseText = response.text();
     
-    // Clean up response - remove markdown code blocks if present
-    responseText = responseText.replace(/^```json\s*/, '').replace(/\s*```$/, '').trim();
-    
-    const jsonResponse = JSON.parse(responseText);
+    const jsonResponse = cleanAndParseJSON(responseText);
     
     return {
       text: jsonResponse.text || "",
@@ -161,12 +176,8 @@ export async function extractJobInformation(
 
     const result = await model.generateContent(prompt);
     const response = await result.response;
-    let responseText = response.text();
     
-    // Clean up response - remove markdown code blocks if present
-    responseText = responseText.replace(/^```json\s*/, '').replace(/\s*```$/, '').trim();
-    
-    return JSON.parse(responseText);
+    return cleanAndParseJSON(response.text());
   } catch (error) {
     console.error('Error extracting job information:', error);
     throw new Error('Failed to extract job information');
@@ -216,12 +227,8 @@ export async function extractUserInformation(
 
     const result = await model.generateContent(prompt);
     const response = await result.response;
-    let responseText = response.text();
     
-    // Clean up response - remove markdown code blocks if present
-    responseText = responseText.replace(/^```json\s*/, '').replace(/\s*```$/, '').trim();
-    
-    return JSON.parse(responseText);
+    return cleanAndParseJSON(response.text());
   } catch (error) {
     console.error('Error extracting user information:', error);
     throw new Error('Failed to extract user information');
@@ -266,12 +273,8 @@ export async function resolveLocationFromPartialAddress(
 
     const result = await model.generateContent(prompt);
     const response = await result.response;
-    let responseText = response.text();
     
-    // Clean up response - remove markdown code blocks if present
-    responseText = responseText.replace(/^```json\s*/, '').replace(/\s*```$/, '').trim();
-    
-    return JSON.parse(responseText);
+    return cleanAndParseJSON(response.text());
   } catch (error) {
     console.error('Error resolving location:', error);
     return {
@@ -305,12 +308,8 @@ export async function detectLanguage(text: string): Promise<{language: string; c
 
     const result = await model.generateContent(prompt);
     const response = await result.response;
-    let responseText = response.text();
     
-    // Clean up response - remove markdown code blocks if present
-    responseText = responseText.replace(/^```json\s*/, '').replace(/\s*```$/, '').trim();
-    
-    return JSON.parse(responseText);
+    return cleanAndParseJSON(response.text());
   } catch (error) {
     console.error('Error detecting language:', error);
     return { language: "en", confidence: 0.5 };
