@@ -17,7 +17,7 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
   const { toast } = useToast();
 
   // Simple state management
-  const [currentStep, setCurrentStep] = useState<'auth-check' | 'login' | 'register' | 'language' | 'recording' | 'manual-input' | 'success'>('auth-check');
+  const [currentStep, setCurrentStep] = useState<'auth-check' | 'login' | 'register' | 'language' | 'recording' | 'manual-input' | 'success' | 'location-confirmation'>('auth-check');
   const [selectedLanguage, setSelectedLanguage] = useState<string>('en');
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -43,6 +43,16 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
   const [otpSent, setOtpSent] = useState(false);
   const [otp, setOtp] = useState('');
   const [generatedOtp, setGeneratedOtp] = useState('');
+  
+  // Location confirmation states
+  const [extractedData, setExtractedData] = useState<any>(null);
+  const [processedTranscription, setProcessedTranscription] = useState('');
+  const [locationData, setLocationData] = useState({
+    area: '',
+    district: '',
+    state: '',
+    fullAddress: ''
+  });
 
   // Refs
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -228,6 +238,53 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
     }
   }, [isRecording]);
 
+  // Confirm job posting with location
+  const confirmJobPosting = useCallback(async () => {
+    setIsProcessing(true);
+    try {
+      const currentUser = user || (localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')!) : null);
+      
+      const response = await fetch('/api/voice/confirm-job-posting', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: currentUser?.id,
+          extractedData,
+          transcription: processedTranscription,
+          locationData
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Server error: ${response.status}`);
+      }
+
+      const result = await response.json();
+      
+      if (result.success) {
+        toast({
+          title: "Job Posted Successfully!",
+          description: `Your job "${result.jobPost.title}" has been created and is now live.`
+        });
+        onClose();
+        window.location.reload();
+      } else {
+        throw new Error(result.message || 'Failed to create job posting');
+      }
+    } catch (error: any) {
+      console.error("Job confirmation error:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create job posting",
+        variant: "destructive"
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  }, [extractedData, processedTranscription, locationData, user, toast, onClose]);
+
   // Process recording function
   const processRecording = useCallback(async (audioBlob: Blob) => {
     console.log("Processing recording, blob size:", audioBlob.size);
@@ -281,7 +338,13 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
 
       const result = await response.json();
       
-      if (result.success && result.jobPost) {
+      if (result.success && result.requiresLocationConfirmation) {
+        // Voice processed but needs location confirmation
+        setExtractedData(result.extractedData);
+        setProcessedTranscription(result.transcription);
+        setCurrentStep('location-confirmation');
+      } else if (result.success && result.jobPost) {
+        // Job posting created successfully
         setProcessedResult(result);
         toast({
           title: "Job Posted Successfully!",
@@ -927,6 +990,94 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
                 </Button>
               </>
             )}
+          </div>
+        )}
+
+        {/* Location Confirmation Step */}
+        {currentStep === 'location-confirmation' && (
+          <div className="space-y-4">
+            <div className="text-center">
+              <div className="text-6xl">📍</div>
+              <h3 className="text-xl font-semibold">Confirm Job Location</h3>
+              <p className="text-muted-foreground">
+                Please confirm where the work needs to be done
+              </p>
+            </div>
+
+            {extractedData && (
+              <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+                <h4 className="font-medium">Extracted Job Details:</h4>
+                <p><strong>Title:</strong> {extractedData.jobTitle || 'Voice-Generated Job Request'}</p>
+                <p><strong>Description:</strong> {extractedData.jobDescription || processedTranscription}</p>
+                <p><strong>Service:</strong> {extractedData.serviceCategory || 'General Services'}</p>
+                <p><strong>Urgency:</strong> {extractedData.urgency || 'medium'}</p>
+                {extractedData.budget && (
+                  <p><strong>Budget:</strong> ₹{extractedData.budget.min || 1000} - ₹{extractedData.budget.max || 5000}</p>
+                )}
+              </div>
+            )}
+
+            <div className="space-y-3">
+              <div>
+                <label className="text-sm font-medium">Area/Locality</label>
+                <Input
+                  placeholder="Enter area or locality name"
+                  value={locationData.area}
+                  onChange={(e) => setLocationData(prev => ({ ...prev, area: e.target.value }))}
+                />
+              </div>
+              
+              <div>
+                <label className="text-sm font-medium">District</label>
+                <Input
+                  placeholder="Enter district name"
+                  value={locationData.district}
+                  onChange={(e) => setLocationData(prev => ({ ...prev, district: e.target.value }))}
+                />
+              </div>
+              
+              <div>
+                <label className="text-sm font-medium">State</label>
+                <Input
+                  placeholder="Enter state name"
+                  value={locationData.state}
+                  onChange={(e) => setLocationData(prev => ({ ...prev, state: e.target.value }))}
+                />
+              </div>
+              
+              <div>
+                <label className="text-sm font-medium">Full Address (Optional)</label>
+                <Input
+                  placeholder="Enter complete address"
+                  value={locationData.fullAddress}
+                  onChange={(e) => setLocationData(prev => ({ ...prev, fullAddress: e.target.value }))}
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <Button 
+                variant="outline"
+                onClick={() => setCurrentStep('recording')}
+                className="flex-1"
+              >
+                ← Back to Recording
+              </Button>
+              <Button 
+                onClick={confirmJobPosting}
+                disabled={!locationData.area || !locationData.district || !locationData.state || isProcessing}
+                className="flex-1"
+              >
+                {isProcessing ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Creating Job...
+                  </>
+                ) : (
+                  'Confirm & Post Job'
+                )}
+              </Button>
+            </div>
           </div>
         )}
 

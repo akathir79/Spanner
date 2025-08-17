@@ -4324,15 +4324,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Get user details for location fallback
         const user = await storage.getUserById(userId);
         
+        // Check if we have location info from voice or user profile
+        const hasLocationInfo = voiceResult.extractedData?.location?.area || 
+                               voiceResult.extractedData?.location?.district ||
+                               voiceResult.extractedData?.location?.state ||
+                               user?.district || user?.state;
+
+        if (!hasLocationInfo) {
+          // Return for location confirmation step
+          return res.json({
+            success: true,
+            requiresLocationConfirmation: true,
+            message: "Please confirm your job location",
+            extractedData: voiceResult.extractedData,
+            transcription: voiceResult.transcription,
+            processingTime: voiceResult.processingTime
+          });
+        }
+
+        // Determine job ID format
+        const timestamp = new Date().toISOString().split('T')[0].replace(/-/g, '');
+        const jobId = `${userId}/VOICE/${timestamp}`;
+        
         // Create the job post with extracted details
         const jobPostData = {
-          id: `VOICE-${Date.now()}`,
-          title: voiceResult.extractedData?.title || "Voice-Generated Job Request",
-          description: voiceResult.extractedData?.description || voiceResult.transcription || "Job details extracted from voice recording",
+          id: jobId,
+          title: voiceResult.extractedData?.jobTitle || "Voice-Generated Job Request",
+          description: voiceResult.extractedData?.jobDescription || voiceResult.transcription || "Job details extracted from voice recording",
           serviceCategory: voiceResult.extractedData?.serviceCategory || "General Services",
-          location: voiceResult.extractedData?.location || user?.fullAddress || "Location to be confirmed",
-          district: voiceResult.extractedData?.district || user?.district || "Not specified",
-          state: voiceResult.extractedData?.state || user?.state || "Not specified",
+          location: voiceResult.extractedData?.location?.fullAddress || 
+                   `${voiceResult.extractedData?.location?.area || ''}, ${voiceResult.extractedData?.location?.district || user?.district || ''}, ${voiceResult.extractedData?.location?.state || user?.state || ''}`.replace(/^, |, $/, ''),
+          district: voiceResult.extractedData?.location?.district || user?.district || "Not specified",
+          state: voiceResult.extractedData?.location?.state || user?.state || "Not specified",
           budget: voiceResult.extractedData?.budget || { min: 1000, max: 5000 },
           urgency: voiceResult.extractedData?.urgency || "medium" as const,
           userId: userId,
@@ -4341,19 +4364,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
           timeframe: voiceResult.extractedData?.timeframe || "To be discussed"
         };
 
-        console.log("Voice job posting processed:", {
-          audioSize: audioData.length,
-          mimeType,
-          language,
-          userId: userId,
-          transcription: voiceResult.transcription?.substring(0, 100) + "...",
-          extractedTitle: jobPostData.title
+        // Actually create the job posting in the database
+        const createdJobPost = await storage.createJobPosting(jobPostData);
+
+        console.log("Voice job posting created successfully:", {
+          jobId: createdJobPost.id,
+          title: createdJobPost.title,
+          location: createdJobPost.location,
+          userId: userId
         });
 
         res.json({
           success: true,
-          message: "Voice job posting processed successfully",
-          jobPost: jobPostData,
+          message: "Voice job posting created successfully",
+          jobPost: createdJobPost,
           transcription: voiceResult.transcription,
           extractedData: {
             language: language || 'en',
@@ -4382,6 +4406,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({
         success: false,
         message: "Failed to process voice recording: " + error.message
+      });
+    }
+  });
+
+  // Voice job posting confirmation endpoint (when location info is missing)
+  app.post("/api/voice/confirm-job-posting", async (req, res) => {
+    try {
+      const { userId, extractedData, transcription, locationData } = req.body;
+
+      if (!userId || !extractedData) {
+        return res.status(400).json({
+          success: false,
+          message: "Missing required data"
+        });
+      }
+
+      // Determine job ID format
+      const timestamp = new Date().toISOString().split('T')[0].replace(/-/g, '');
+      const jobId = `${userId}/VOICE/${timestamp}`;
+      
+      // Create the job post with confirmed details
+      const jobPostData = {
+        id: jobId,
+        title: extractedData.jobTitle || "Voice-Generated Job Request",
+        description: extractedData.jobDescription || transcription || "Job details extracted from voice recording",
+        serviceCategory: extractedData.serviceCategory || "General Services",
+        location: locationData.fullAddress || `${locationData.area || ''}, ${locationData.district || ''}, ${locationData.state || ''}`.replace(/^, |, $/, ''),
+        district: locationData.district || "Not specified",
+        state: locationData.state || "Not specified",
+        budget: extractedData.budget || { min: 1000, max: 5000 },
+        urgency: extractedData.urgency || "medium" as const,
+        userId: userId,
+        createdAt: new Date().toISOString(),
+        requirements: extractedData.requirements || [],
+        timeframe: extractedData.timeframe || "To be discussed"
+      };
+
+      // Create the job posting in the database
+      const createdJobPost = await storage.createJobPosting(jobPostData);
+
+      console.log("Voice job posting confirmed and created:", {
+        jobId: createdJobPost.id,
+        title: createdJobPost.title,
+        location: createdJobPost.location,
+        userId: userId
+      });
+
+      res.json({
+        success: true,
+        message: "Voice job posting created successfully",
+        jobPost: createdJobPost
+      });
+
+    } catch (error: any) {
+      console.error("Voice job confirmation error:", error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to create job posting: " + error.message
       });
     }
   });
