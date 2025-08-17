@@ -135,45 +135,61 @@ export async function extractJobInformation(
     });
 
     const prompt = `
-    Extract job posting information from this text: "${text}"
+    CRITICAL: Extract job posting information from this text: "${text}"
     
     The text is in language: ${detectedLanguage}
     
     This is a CLIENT posting a job to HIRE WORKERS for services they need.
     
-    Please extract and translate to English:
-    1. Service needed/job title (what service the client wants to hire someone for)
-    2. Detailed job description (what work needs to be done)
-    3. Service category (plumbing, electrical, painting, cleaning, carpentry, mechanics, appliance repair, security, gardening)
+    MANDATORY TRANSLATION RULES:
+    1. ALL jobDescription and requirements MUST be translated to proper English
+    2. NEVER keep original language text in jobDescription or requirements
+    3. Use clear, professional English for all extracted content
+    4. Convert Indian language service terms to standard English (e.g., "பிளம்பர்" → "plumber")
+    
+    STRICT BUDGET EXTRACTION RULES:
+    1. Extract budget ONLY if explicit numbers are mentioned (e.g., "1000 rupees", "500 to 2000", "thousand rupees")
+    2. If NO budget numbers mentioned, set budget to null
+    3. Be conservative - do not assume or infer budget amounts
+    
+    LOCATION EXTRACTION RULES:
+    1. Extract ONLY if specific place names are mentioned
+    2. If no location mentioned, set all location fields to null
+    3. Do not assume locations
+    
+    Extract and translate to English:
+    1. Service needed/job title (translate to English)
+    2. Detailed job description (translate to clear English)
+    3. Service category (plumbing, electrical, painting, cleaning, carpentry, mechanics, appliance_repair, security, gardening)
     4. Urgency level (low, medium, high)
-    5. Budget range if mentioned (in Indian Rupees - what client is willing to pay)
-    6. Location details (where the work needs to be done)
-    7. Specific requirements (what the client expects from workers)
-    8. Time frame/deadline (when client needs the work completed)
+    5. Budget range if explicitly mentioned with numbers
+    6. Location details if specifically mentioned
+    7. Requirements (translate to English)
+    8. Time frame if mentioned
     
     Respond in this JSON format:
     {
-      "jobTitle": "Service needed (e.g., 'Plumber needed for kitchen repair')",
-      "jobDescription": "What work the client needs done in English",
-      "serviceCategory": "matching category from list above",
+      "jobTitle": "Service needed in English (e.g., 'Plumber needed for kitchen repair')",
+      "jobDescription": "What work the client needs done - MUST be in English",
+      "serviceCategory": "exact match from category list above",
       "urgency": "low/medium/high",
-      "budget": {
-        "min": 500,
-        "max": 2000
-      },
+      "budget": null,
       "location": {
-        "area": "where the work needs to be done - area name",
-        "district": "where the work needs to be done - district name", 
-        "state": "where the work needs to be done - state name",
-        "fullAddress": "complete work location address if available"
+        "area": null,
+        "district": null, 
+        "state": null,
+        "fullAddress": null
       },
-      "requirements": ["what client expects from workers", "qualifications needed"],
-      "timeframe": "when client needs the work completed",
+      "requirements": ["client expectations in English"],
+      "timeframe": null,
       "originalLanguage": "${detectedLanguage}"
     }
     
-    If budget is not mentioned, set budget to null.
-    If location details are partial, include only what's available.
+    EXAMPLES:
+    - If Tamil: "எனக்கு பிளம்பர் வேண்டும்" → jobDescription: "I need a plumber"
+    - If Hindi: "मुझे इलेक्ट्रीशियन चाहिए" → jobDescription: "I need an electrician"
+    - Only set budget if numbers mentioned: "1000 रुपये" → budget: {"min": 1000, "max": 1000}
+    - Only set location if place mentioned: "Chennai में" → location: {"area": null, "district": "Chennai", "state": null, "fullAddress": null}
     `;
 
     const result = await model.generateContent(prompt);

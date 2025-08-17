@@ -369,6 +369,18 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
         // Voice processed but needs location confirmation
         setExtractedData(result.extractedData);
         setProcessedTranscription(result.transcription);
+        
+        // Initialize location data with extracted or user profile data
+        const extractedLoc = result.extractedData?.location;
+        setLocationData({
+          area: extractedLoc?.area || user?.area || '',
+          district: extractedLoc?.district || user?.district || '',
+          state: extractedLoc?.state || user?.state || '',
+          budgetMin: result.extractedData?.budget?.min?.toString() || '',
+          budgetMax: result.extractedData?.budget?.max?.toString() || '',
+          fullAddress: extractedLoc?.fullAddress || ''
+        });
+        
         setCurrentStep('location-confirmation');
       } else if (result.success && result.jobPost) {
         // Job posting created successfully
@@ -1169,31 +1181,58 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
               </div>
               
               <div>
-                <label className="text-sm font-medium">Budget Range (₹)</label>
-                <div className="flex gap-2">
-                  <Input
-                    type="number"
-                    placeholder="Min amount"
-                    value={locationData.budgetMin || ''}
-                    onChange={(e) => setLocationData(prev => ({ ...prev, budgetMin: e.target.value }))}
-                  />
-                  <span className="self-center">-</span>
-                  <Input
-                    type="number"
-                    placeholder="Max amount"
-                    value={locationData.budgetMax || ''}
-                    onChange={(e) => setLocationData(prev => ({ ...prev, budgetMax: e.target.value }))}
-                  />
+                <label className="text-sm font-medium">Budget Range (₹) *Required</label>
+                <div className="space-y-2">
+                  {extractedData?.budget ? (
+                    <div className="bg-blue-50 border border-blue-200 rounded p-2 text-sm">
+                      <span className="text-blue-800">Detected Budget: ₹{extractedData.budget.min} - ₹{extractedData.budget.max}</span>
+                    </div>
+                  ) : (
+                    <div className="bg-yellow-50 border border-yellow-200 rounded p-2 text-sm">
+                      <span className="text-yellow-800">No budget mentioned in voice. Please enter your budget range:</span>
+                    </div>
+                  )}
+                  <div className="flex gap-2">
+                    <Input
+                      type="number"
+                      placeholder="Min amount (₹)"
+                      value={locationData.budgetMin || (extractedData?.budget?.min ? extractedData.budget.min.toString() : '')}
+                      onChange={(e) => setLocationData(prev => ({ ...prev, budgetMin: e.target.value }))}
+                      required
+                    />
+                    <span className="self-center">-</span>
+                    <Input
+                      type="number"
+                      placeholder="Max amount (₹)"
+                      value={locationData.budgetMax || (extractedData?.budget?.max ? extractedData.budget.max.toString() : '')}
+                      onChange={(e) => setLocationData(prev => ({ ...prev, budgetMax: e.target.value }))}
+                      required
+                    />
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    Enter the amount you're willing to pay for this service
+                  </p>
                 </div>
               </div>
               
               <div>
-                <label className="text-sm font-medium">Full Address (Optional)</label>
-                <Input
-                  placeholder="Enter complete address"
-                  value={locationData.fullAddress}
-                  onChange={(e) => setLocationData(prev => ({ ...prev, fullAddress: e.target.value }))}
-                />
+                <label className="text-sm font-medium">Work Location</label>
+                <div className="space-y-2">
+                  {extractedData?.location && (extractedData.location.area || extractedData.location.district || extractedData.location.state) ? (
+                    <div className="bg-green-50 border border-green-200 rounded p-2 text-sm">
+                      <span className="text-green-800">Detected Location: {[extractedData.location.area, extractedData.location.district, extractedData.location.state].filter(Boolean).join(', ')}</span>
+                    </div>
+                  ) : (
+                    <div className="bg-blue-50 border border-blue-200 rounded p-2 text-sm">
+                      <span className="text-blue-800">Using your profile address. You can modify the location above if needed.</span>
+                    </div>
+                  )}
+                  <Input
+                    placeholder="Additional address details (optional)"
+                    value={locationData.fullAddress}
+                    onChange={(e) => setLocationData(prev => ({ ...prev, fullAddress: e.target.value }))}
+                  />
+                </div>
               </div>
             </div>
 
@@ -1207,7 +1246,7 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
               </Button>
               <Button 
                 onClick={confirmJobPosting}
-                disabled={!locationData.area || !locationData.district || !locationData.state || isProcessing}
+                disabled={!locationData.area || !locationData.district || !locationData.state || !locationData.budgetMin || !locationData.budgetMax || isProcessing}
                 className="flex-1 bg-green-600 hover:bg-green-700"
               >
                 {isProcessing ? (
