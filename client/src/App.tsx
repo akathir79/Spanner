@@ -29,6 +29,7 @@ import AdvertisementManagement from "@/pages/AdvertisementManagement";
 import MessagesSupport from "@/pages/MessagesSupport";
 import FinancialManagementPage from "@/pages/FinancialManagementPage";
 import QuickPostPage from "@/pages/QuickPostPage";
+import BudgetAnalytics from "@/pages/BudgetAnalytics";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -61,6 +62,7 @@ function Router() {
           <Route path="/admin/messages" component={MessagesSupport} />
           <Route path="/admin/financial" component={FinancialManagementPage} />
           <Route path="/quick-post" component={QuickPostPage} />
+          <Route path="/budget-analytics" component={BudgetAnalytics} />
           <Route component={NotFound} />
         </Switch>
 

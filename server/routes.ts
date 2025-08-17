@@ -1,6 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { budgetAnalyticsService } from "./budget-analytics";
 import statesDistrictsData from "@shared/states-districts.json";
 import { z } from "zod";
 import { 
@@ -4467,6 +4468,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({
         success: false,
         message: "Failed to create job posting: " + error.message
+      });
+    }
+  });
+
+  // Budget Analytics Routes
+  app.get("/api/budget-analytics/heat-map", async (req, res) => {
+    try {
+      const analytics = await budgetAnalyticsService.getBudgetHeatMapData();
+      res.json(analytics);
+    } catch (error: any) {
+      console.error("Error fetching budget heat map data:", error);
+      res.status(500).json({ 
+        message: "Failed to fetch budget analytics",
+        error: error.message 
+      });
+    }
+  });
+
+  app.get("/api/budget-analytics/trends", async (req, res) => {
+    try {
+      const { state, serviceCategory } = req.query;
+      const trends = await budgetAnalyticsService.getRegionalBudgetTrends(
+        state as string, 
+        serviceCategory as string
+      );
+      res.json(trends);
+    } catch (error: any) {
+      console.error("Error fetching budget trends:", error);
+      res.status(500).json({ 
+        message: "Failed to fetch budget trends",
+        error: error.message 
       });
     }
   });
