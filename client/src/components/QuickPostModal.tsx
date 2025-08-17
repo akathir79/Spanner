@@ -17,7 +17,7 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
   const { toast } = useToast();
 
   // Simple state management
-  const [currentStep, setCurrentStep] = useState<'auth-check' | 'login' | 'register' | 'language' | 'recording' | 'manual-input' | 'success' | 'location-confirmation'>('auth-check');
+  const [currentStep, setCurrentStep] = useState<'auth-check' | 'login' | 'register' | 'language' | 'recording' | 'preview' | 'manual-input' | 'success' | 'location-confirmation'>('auth-check');
   const [selectedLanguage, setSelectedLanguage] = useState<string>('en');
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -166,10 +166,10 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
         
         stream.getTracks().forEach(track => track.stop());
         
-        // Auto-process after a brief delay to show the recording is complete
+        // Transition to preview step instead of auto-processing
         setTimeout(() => {
-          processRecording(audioBlob);
-        }, 1500);
+          setCurrentStep('preview');
+        }, 500);
       };
 
       mediaRecorder.onstart = () => {
@@ -990,6 +990,96 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
                 </Button>
               </>
             )}
+          </div>
+        )}
+
+        {/* Preview Step */}
+        {currentStep === 'preview' && recordedAudio && (
+          <div className="space-y-4">
+            <div className="text-center">
+              <div className="text-6xl">🎧</div>
+              <h3 className="text-xl font-semibold">Review Your Voice Message</h3>
+              <p className="text-muted-foreground">
+                Listen to your recording before processing
+              </p>
+            </div>
+
+            {/* Audio Playback */}
+            <div className="bg-blue-50 rounded-lg p-4 space-y-3">
+              <h4 className="font-semibold text-blue-800">Your Voice Recording:</h4>
+              <audio controls className="w-full">
+                <source src={audioUrl} type="audio/webm" />
+                <source src={audioUrl} type="audio/mp4" />
+                Your browser does not support the audio element.
+              </audio>
+              
+              {/* Recording Details */}
+              <div className="text-sm text-gray-600 space-y-1">
+                <p><strong>Language:</strong> {languageNames[selectedLanguage] || 'English'}</p>
+                <p><strong>Duration:</strong> {Math.floor(recordingDuration / 60)}:{(recordingDuration % 60).toString().padStart(2, '0')}</p>
+                <p><strong>Size:</strong> {(recordedAudio.size / 1024).toFixed(1)} KB</p>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="space-y-3">
+              <Button 
+                onClick={() => {
+                  if (recordedAudio) {
+                    processRecording(recordedAudio);
+                  }
+                }}
+                disabled={isProcessing}
+                className="w-full bg-green-600 hover:bg-green-700"
+              >
+                {isProcessing ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Processing Voice...
+                  </>
+                ) : (
+                  <>
+                    <Mic className="w-4 h-4 mr-2" />
+                    Process Voice & Create Job
+                  </>
+                )}
+              </Button>
+              
+              <div className="flex gap-3">
+                <Button 
+                  variant="outline"
+                  onClick={() => {
+                    // Re-record: go back to recording step
+                    setCurrentStep('recording');
+                    setRecordedAudio(null);
+                    if (audioUrl) {
+                      URL.revokeObjectURL(audioUrl);
+                      setAudioUrl('');
+                    }
+                    setRecordingDuration(0);
+                  }}
+                  className="flex-1"
+                >
+                  🎙️ Record Again
+                </Button>
+                
+                <Button 
+                  variant="outline"
+                  onClick={() => setCurrentStep('language')}
+                  className="flex-1"
+                >
+                  🌐 Change Language
+                </Button>
+              </div>
+              
+              <Button 
+                variant="outline"
+                onClick={() => setCurrentStep('manual-input')}
+                className="w-full"
+              >
+                📝 Switch to Manual Entry
+              </Button>
+            </div>
           </div>
         )}
 
