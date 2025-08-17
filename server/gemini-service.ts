@@ -66,15 +66,22 @@ export interface UserInfoExtractionResult {
 // Transcribe audio and detect language
 export async function transcribeAudioWithLanguageDetection(
   audioBase64: string,
-  mimeType: string = "audio/webm"
+  mimeType: string = "audio/webm",
+  expectedLanguage?: string
 ): Promise<VoiceTranscriptionResult> {
   try {
     const model = genAI.getGenerativeModel({ 
       model: "gemini-1.5-flash",
     });
 
+    const languageInstruction = expectedLanguage 
+      ? `The user has selected "${expectedLanguage}" as their language. PRIORITIZE transcribing in this language even if you detect differently.`
+      : `Detect the actual spoken language accurately.`;
+
     const prompt = `
     Please transcribe this audio file with multilingual support for Indian languages.
+    
+    ${languageInstruction}
     
     CRITICAL TRANSLATION REQUIREMENTS:
     1. If audio is NOT in English:
@@ -82,14 +89,14 @@ export async function transcribeAudioWithLanguageDetection(
        - DO NOT copy the original language text to the English field
        - Translate the meaning clearly and professionally
        - Convert service terms properly (e.g., "பிளம்பர்" → "plumber", "मिस्त्री" → "mechanic")
-    2. Detect the actual spoken language accurately
-    3. For job-related content, translate service categories to standard English terms
+    2. For job-related content, translate service categories to standard English terms
+    3. The "originalText" field should be in the user's selected language (${expectedLanguage || 'detected language'})
     
     Respond in JSON format:
     {
       "text": "MUST BE ENGLISH TRANSLATION (never original language text)",
-      "originalText": "original language transcription if not English",
-      "detectedLanguage": "ISO 639-1 code (en, hi, ta, te, bn, ml, kn, gu, mr, pa)",
+      "originalText": "original language transcription in ${expectedLanguage || 'detected language'}",
+      "detectedLanguage": "${expectedLanguage || 'auto-detect'}: ISO 639-1 code (en, hi, ta, te, bn, ml, kn, gu, mr, pa)",
       "confidence": 0.95
     }
     
@@ -371,7 +378,7 @@ export async function processVoiceJobPosting(
   try {
     // Step 1: Transcribe the audio
     console.log("Processing voice recording for job posting...");
-    const transcriptionResult = await transcribeAudioWithLanguageDetection(audioBase64, mimeType);
+    const transcriptionResult = await transcribeAudioWithLanguageDetection(audioBase64, mimeType, language);
     
     if (!transcriptionResult.text || transcriptionResult.text.trim().length === 0) {
       return {
