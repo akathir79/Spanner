@@ -4336,11 +4336,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Always require location confirmation for voice posts to show original language
         // This ensures users can see both Tamil original and English translation
+        // Pre-populate with user's profile address data
+        const userProfileLocation = {
+          area: user?.areaName || '',
+          district: user?.district || '',
+          state: user?.state || '',
+          fullAddress: user?.fullAddress || ''
+        };
+        
         return res.json({
           success: true,
           requiresLocationConfirmation: true,
           message: "Please confirm your job location",
-          extractedData: voiceResult.extractedData,
+          extractedData: {
+            ...voiceResult.extractedData,
+            location: {
+              ...voiceResult.extractedData?.location,
+              // Use voice-extracted location if available, otherwise use profile data
+              area: voiceResult.extractedData?.location?.area || userProfileLocation.area,
+              district: voiceResult.extractedData?.location?.district || userProfileLocation.district,
+              state: voiceResult.extractedData?.location?.state || userProfileLocation.state,
+              fullAddress: voiceResult.extractedData?.location?.fullAddress || userProfileLocation.fullAddress
+            }
+          },
           transcription: voiceResult.transcription,
           originalText: voiceResult.originalText,
           processingTime: voiceResult.processingTime

@@ -387,12 +387,12 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
         // Initialize location data with extracted or user profile data
         const extractedLoc = result.extractedData?.location;
         setLocationData({
-          area: extractedLoc?.area || user?.area || '',
+          area: extractedLoc?.area || user?.areaName || '',
           district: extractedLoc?.district || user?.district || '',
           state: extractedLoc?.state || user?.state || '',
           budgetMin: result.extractedData?.budget?.min?.toString() || '',
           budgetMax: result.extractedData?.budget?.max?.toString() || '',
-          fullAddress: extractedLoc?.fullAddress || ''
+          fullAddress: extractedLoc?.fullAddress || user?.fullAddress || ''
         });
         
         setCurrentStep('location-confirmation');
