@@ -785,7 +785,7 @@ const AvailableJobsTab = ({ user }: { user: any }) => {
                 return (
                   <Card 
                     key={job.id} 
-                    className="bg-gradient-to-br from-slate-800 via-slate-700 to-slate-800 border border-slate-600 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:border-blue-400"
+                    className="bg-gradient-to-br from-slate-800/90 via-slate-700/80 to-slate-800/90 border border-slate-600/50 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:border-blue-400/60 backdrop-blur-sm"
                   >
                     <CardContent className="p-6 space-y-4">
                       {/* Top Header with ID, Posted Date, Budget, Status Badge */}
@@ -841,18 +841,18 @@ const AvailableJobsTab = ({ user }: { user: any }) => {
                               <div className="space-y-1">
                                 <div className="flex items-center gap-2">
                                   <span className="text-slate-400">Area:</span>
-                                  <span>{job.serviceAddress?.split(',')[0] || 'Not specified'}</span>
+                                  <span className="text-amber-300">{job.serviceAddress?.split(',')[0] || 'Not specified'}</span>
                                 </div>
                                 <div className="flex items-center gap-2">
                                   <span className="text-slate-400">District:</span>
-                                  <span>{job.district || 'Not specified'}</span>
+                                  <span className="text-blue-300">{job.district || 'Not specified'}</span>
                                 </div>
                                 <div className="flex items-center gap-2">
                                   <span className="text-slate-400">State:</span>
-                                  <span>{job.state || 'Not specified'}</span>
+                                  <span className="text-green-300">{job.state || 'Not specified'}</span>
                                 </div>
-                                <div className="text-xs text-slate-500 mt-2 italic">
-                                  Full address shared after job acceptance
+                                <div className="text-xs text-slate-500 mt-2 italic bg-amber-900/20 p-1.5 rounded border border-amber-500/20">
+                                  🔒 Full address with house number & street shared after bid acceptance
                                 </div>
                               </div>
                             </div>
@@ -1362,6 +1362,31 @@ const MyBidsTab = ({ user }: { user: any }) => {
                       {/* Job Details from Client */}
                       {job && (
                         <>
+                          {/* Client Contact Info for Accepted Bids */}
+                          {bid.status === "accepted" && (
+                            <div className="bg-green-900/20 border border-green-500/30 rounded-lg p-4 mb-3">
+                              <h4 className="text-sm font-semibold text-green-300 mb-2 flex items-center gap-2">
+                                <Phone className="h-4 w-4" />
+                                Client Contact Information
+                              </h4>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <div className="flex items-center gap-2 text-sm">
+                                  <Phone className="h-4 w-4 text-green-400" />
+                                  <span className="text-slate-300">Phone: </span>
+                                  <span className="font-bold text-green-400">{job.clientMobile || bid.jobPosting?.clientMobile || 'Contact via platform'}</span>
+                                </div>
+                                <div className="flex items-center gap-2 text-sm">
+                                  <User className="h-4 w-4 text-blue-400" />
+                                  <span className="text-slate-300">Client: </span>
+                                  <span className="text-blue-400">{bid.jobPosting?.clientFirstName ? `${bid.jobPosting.clientFirstName} ${bid.jobPosting.clientLastName || ''}`.trim() : 'Client'}</span>
+                                </div>
+                              </div>
+                              <div className="mt-2 text-xs text-green-300 bg-green-900/30 p-2 rounded border border-green-500/20">
+                                💡 Contact the client directly to coordinate the service. Financial model activated - commission and payments will be processed automatically.
+                              </div>
+                            </div>
+                          )}
+                          
                           {/* Service Address & Media */}
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-3">
                             {/* Service Address */}
@@ -1376,8 +1401,38 @@ const MyBidsTab = ({ user }: { user: any }) => {
                                 </Button>
                               </CollapsibleTrigger>
                               <CollapsibleContent className="mt-1">
-                                <div className="text-xs text-slate-300 bg-slate-900/50 border border-slate-600/30 p-2 rounded whitespace-pre-line">
-                                  {job.serviceAddress || 'Service address not specified'}
+                                <div className="text-xs text-slate-300 bg-slate-900/50 border border-slate-600/30 p-2 rounded">
+                                  {bid.status === "accepted" ? (
+                                    // Show full address for accepted bids
+                                    <div className="space-y-2">
+                                      <div className="text-green-400 font-medium flex items-center gap-2">
+                                        <CheckCircle className="h-3 w-3" />
+                                        Full Service Address (Bid Accepted)
+                                      </div>
+                                      <div className="whitespace-pre-line text-slate-200 bg-green-900/20 p-2 rounded border border-green-500/30">
+                                        {job.serviceAddress || 'Service address not specified'}
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    // Show limited address for pending/rejected bids
+                                    <div className="space-y-1">
+                                      <div className="flex items-center gap-2">
+                                        <span className="text-slate-400">Area:</span>
+                                        <span>{job.serviceAddress?.split(',')[0] || 'Not specified'}</span>
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                        <span className="text-slate-400">District:</span>
+                                        <span>{job.district || 'Not specified'}</span>
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                        <span className="text-slate-400">State:</span>
+                                        <span>{job.state || 'Not specified'}</span>
+                                      </div>
+                                      <div className="text-xs text-slate-500 mt-2 italic">
+                                        Full address shared after bid acceptance
+                                      </div>
+                                    </div>
+                                  )}
                                 </div>
                               </CollapsibleContent>
                             </Collapsible>
@@ -2054,7 +2109,7 @@ export default function WorkerDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-muted/30 pt-20 pb-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 pt-20 pb-8">
       <div className="container mx-auto px-4">
         {/* Wallet and Advertisement Section - Top Welcome Area */}
         <div className="mb-8">

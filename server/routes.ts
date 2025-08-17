@@ -2434,7 +2434,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { workerId } = req.params;
       const bids = await storage.getBidsByWorker(workerId);
-      res.json(bids);
+      
+      // Enhance accepted bids with client information for privacy model
+      const enhancedBids = await Promise.all(
+        bids.map(async (bid: any) => {
+          if (bid.status === 'accepted' && bid.jobPosting?.clientId) {
+            // Fetch client details only for accepted bids (Financial model activated)
+            const client = await storage.getUser(bid.jobPosting.clientId);
+            if (client) {
+              // Include client mobile and name only for accepted bids
+              return {
+                ...bid,
+                jobPosting: {
+                  ...bid.jobPosting,
+                  clientMobile: client.mobile,
+                  clientFirstName: client.firstName,
+                  clientLastName: client.lastName,
+                  clientFullName: `${client.firstName} ${client.lastName || ''}`.trim()
+                }
+              };
+            }
+          }
+          return bid;
+        })
+      );
+      
+      res.json(enhancedBids);
     } catch (error) {
       console.error("Error fetching worker bids:", error);
       res.status(500).json({ message: "Failed to fetch bids" });
