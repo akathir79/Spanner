@@ -137,6 +137,15 @@ async function generateJobId(clientId: string): Promise<string> {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Add cache control headers to prevent browser caching issues
+  app.use((req, res, next) => {
+    if (req.path.includes('/quick-post') || req.path.includes('/static/')) {
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+    }
+    next();
+  });
   
   // District API endpoint - serves authentic Indian district data from local JSON file
   app.get("/api/districts/:stateName", async (req, res) => {
