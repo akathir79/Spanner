@@ -21,16 +21,17 @@ export const JobCompletionModal = ({ booking, isOpen, onClose, userRole }: JobCo
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Worker marks job as complete
-  const workerCompleteMutation = useMutation({
+  // Worker completes job with client's OTP (new flow)
+  const workerCompleteWithOTPMutation = useMutation({
     mutationFn: async () => {
-      return apiRequest(`/api/bookings/${booking.id}/worker-complete`, "POST", {
+      return apiRequest(`/api/bookings/${booking.id}/complete-with-otp`, "POST", {
         workerId: booking.workerId,
+        otp: otp.trim(),
       });
     },
     onSuccess: async (data) => {
       // Send notification to client about job completion
-      await NotificationService.notifyOTPCompletion({
+      await NotificationService.notifyJobCompletion({
         recipientId: booking.clientId,
         senderId: booking.workerId,
         bookingId: booking.id,
@@ -39,8 +40,8 @@ export const JobCompletionModal = ({ booking, isOpen, onClose, userRole }: JobCo
       });
 
       toast({
-        title: "Job Marked Complete",
-        description: "OTP has been sent to the client for verification.",
+        title: "Job Completed Successfully!",
+        description: "Job completed using client's OTP. Payment processing initiated.",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/bookings/user"] });
       onClose();
@@ -48,7 +49,7 @@ export const JobCompletionModal = ({ booking, isOpen, onClose, userRole }: JobCo
     onError: (error: any) => {
       toast({
         title: "Error",
-        description: error.message || "Failed to mark job as complete",
+        description: error.message || "Invalid OTP or completion failed",
         variant: "destructive",
       });
     },
@@ -88,8 +89,16 @@ export const JobCompletionModal = ({ booking, isOpen, onClose, userRole }: JobCo
     },
   });
 
-  const handleWorkerComplete = () => {
-    workerCompleteMutation.mutate();
+  const handleWorkerCompleteWithOTP = () => {
+    if (!otp.trim() || otp.length !== 6) {
+      toast({
+        title: "Invalid OTP",
+        description: "Please enter the 6-digit OTP provided by the client",
+        variant: "destructive",
+      });
+      return;
+    }
+    workerCompleteWithOTPMutation.mutate();
   };
 
   const handleClientVerify = () => {
@@ -107,10 +116,10 @@ export const JobCompletionModal = ({ booking, isOpen, onClose, userRole }: JobCo
   const renderWorkerView = () => (
     <div className="space-y-4">
       <div className="text-center">
-        <CheckCircle className="w-12 h-12 text-green-600 mx-auto mb-4" />
-        <h3 className="text-lg font-semibold mb-2">Mark Job as Complete</h3>
+        <CheckCircle className="w-12 h-12 text-blue-600 mx-auto mb-4" />
+        <h3 className="text-lg font-semibold mb-2">Complete Job with Client's OTP</h3>
         <p className="text-sm text-muted-foreground">
-          Once you mark this job as complete, an OTP will be sent to the client for verification.
+          Enter the 6-digit OTP provided by the client to complete this job.
         </p>
       </div>
       
@@ -126,17 +135,36 @@ export const JobCompletionModal = ({ booking, isOpen, onClose, userRole }: JobCo
         </div>
       )}
 
-      <div className="flex space-x-2 justify-end">
-        <Button variant="outline" onClick={onClose} disabled={workerCompleteMutation.isPending}>
-          Cancel
-        </Button>
-        <Button 
-          onClick={handleWorkerComplete} 
-          disabled={workerCompleteMutation.isPending}
-          data-testid="button-complete-job"
-        >
-          {workerCompleteMutation.isPending ? "Marking Complete..." : "Mark as Complete"}
-        </Button>
+      <div className="space-y-3">
+        <div>
+          <Label htmlFor="client-otp">Client's OTP</Label>
+          <Input
+            id="client-otp"
+            type="text"
+            placeholder="Enter 6-digit OTP from client"
+            value={otp}
+            onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+            maxLength={6}
+            data-testid="input-client-otp"
+            className="mt-1"
+          />
+          <p className="text-xs text-muted-foreground mt-1">
+            Ask the client for their completion OTP to finish the job.
+          </p>
+        </div>
+
+        <div className="flex space-x-2 justify-end">
+          <Button variant="outline" onClick={onClose} disabled={workerCompleteWithOTPMutation.isPending}>
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleWorkerCompleteWithOTP} 
+            disabled={workerCompleteWithOTPMutation.isPending}
+            data-testid="button-complete-job"
+          >
+            {workerCompleteWithOTPMutation.isPending ? "Completing..." : "Complete Job"}
+          </Button>
+        </div>
       </div>
     </div>
   );
@@ -202,7 +230,7 @@ export const JobCompletionModal = ({ booking, isOpen, onClose, userRole }: JobCo
           </DialogTitle>
           <DialogDescription>
             {userRole === "worker" 
-              ? "Mark this job as completed and notify the client."
+              ? "Enter the client's OTP to complete this job."
               : "Verify the job completion with the OTP sent to your phone."
             }
           </DialogDescription>

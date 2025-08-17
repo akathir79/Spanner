@@ -2537,6 +2537,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Worker acknowledges awarded job (with financial model detection)
+  app.post("/api/bookings/:id/acknowledge", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { workerId } = req.body;
+      
+      if (!workerId) {
+        return res.status(400).json({ message: "Worker ID is required" });
+      }
+      
+      const result = await storage.acknowledgeJob(id, workerId);
+      
+      res.json({
+        success: true,
+        message: "Job acknowledged successfully",
+        data: result
+      });
+    } catch (error) {
+      console.error("Error acknowledging job:", error);
+      res.status(500).json({ 
+        message: error.message || "Failed to acknowledge job" 
+      });
+    }
+  });
+
   // Location Tracking API Routes
   
   // Create location tracking entry
@@ -2623,11 +2648,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Worker marks job as complete - generates OTP for client
-  app.post("/api/bookings/:id/worker-complete", async (req, res) => {
+  // Worker completes job by entering client's OTP (final step)
+  app.post("/api/bookings/:id/complete-with-otp", async (req, res) => {
     try {
       const { id } = req.params;
-      const { workerId } = req.body;
+      const { workerId, otp } = req.body;
 
       // Get booking details
       const booking = await storage.getBookingById(id);
@@ -2640,35 +2665,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       if (booking.status !== "in_progress") {
-        return res.status(400).json({ message: "Job must be in progress to mark as complete" });
+        return res.status(400).json({ message: "Job must be in progress to complete" });
       }
 
-      // Generate completion OTP
-      const otp = generateCompletionOTP();
-      const expiresAt = addMinutes(new Date(), 15); // OTP expires in 15 minutes
+      // Verify OTP (client's OTP generated during job award)
+      if (!booking.completionOTP || booking.completionOTP !== otp) {
+        return res.status(400).json({ message: "Invalid completion OTP" });
+      }
 
-      // Update booking status and OTP
+      // Check if OTP is expired (24 hours as set in acceptBid)
+      const otpAge = new Date().getTime() - new Date(booking.otpGeneratedAt).getTime();
+      if (otpAge > 24 * 60 * 60 * 1000) { // 24 hours
+        return res.status(400).json({ message: "OTP has expired" });
+      }
+
+      // Update booking to completed status
       await storage.updateBooking(id, {
-        status: "worker_completed",
-        completionOTP: otp,
-        otpGeneratedAt: new Date(),
+        status: "completed",
+        otpVerifiedAt: new Date(),
         workerCompletedAt: new Date(),
+        clientConfirmedAt: new Date(),
       });
-
-      // Get client details to send OTP
-      const client = await storage.getUserById(booking.clientId);
-      if (client) {
-        const message = `Your SPANNER job completion OTP is: ${otp}. Share this with your worker to confirm job completion. Valid for 15 minutes.`;
-        await sendSMS(client.mobile, message);
-        console.log(`Job completion OTP for ${client.mobile}: ${otp}`);
-      }
 
       res.json({ 
-        message: "Job marked as complete. OTP sent to client.",
-        status: "worker_completed"
+        message: "Job completed successfully using client's OTP.",
+        status: "completed"
       });
     } catch (error) {
-      console.error("Worker complete job error:", error);
+      console.error("Complete job with OTP error:", error);
       res.status(500).json({ message: "Internal server error" });
     }
   });

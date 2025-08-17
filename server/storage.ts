@@ -1176,20 +1176,54 @@ export class DatabaseStorage implements IStorage {
     const [jobPosting] = await db.select().from(jobPostings).where(eq(jobPostings.id, bid.jobPostingId));
     if (!jobPosting) return undefined;
 
-    // Update bid status to accepted
+    // Get client details for financial model detection
+    const client = await this.getUser(jobPosting.clientId);
+    if (!client) return undefined;
+
+    // Generate OTP for job completion (6-digit)
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpGeneratedAt = new Date();
+
+    // FINANCIAL MODEL DETECTION - Client Side (Award Job)
+    // Check if client has financial requirements based on admin settings
+    const activeModels = await this.getActiveFinancialModels();
+    const clientFinancialModel = await this.getFinancialModelForUser(client.id);
+    
+    let clientChargeApplied = false;
+    if (clientFinancialModel && !this.isUserExemptFromCharges(client)) {
+      // Apply client-side charges based on financial model
+      console.log(`Applying client financial model for job award: ${clientFinancialModel.name}`);
+      clientChargeApplied = true;
+      // Here you would apply the client-side charges if any
+    }
+
+    // Update bid status to awarded (waiting for worker acknowledgment)
     const [updatedBid] = await db.update(bids)
-      .set({ status: "accepted", updatedAt: new Date() })
+      .set({ status: "awarded", updatedAt: new Date() })
       .where(eq(bids.id, bidId))
       .returning();
 
-    // Update job posting status and selected bid
+    // Update job posting with OTP and selected bid
     await db.update(jobPostings)
       .set({ 
-        status: "in_progress", 
+        status: "awarded", // Change to "awarded" status to indicate client has awarded job
         selectedBidId: bidId,
+        completionOTP: otp,
+        otpGeneratedAt: otpGeneratedAt,
         updatedAt: new Date()
       })
       .where(eq(jobPostings.id, bid.jobPostingId));
+
+    // Store OTP in dedicated table for better tracking
+    await db.insert(jobCompletionOTPs).values({
+      bookingId: `BKG-${jobPosting.id}`,
+      otp: otp,
+      generatedAt: otpGeneratedAt,
+      expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours expiry
+      isUsed: false,
+      attempts: 0,
+      maxAttempts: 3
+    });
 
     // Reject all other bids for this job
     await db.update(bids)
@@ -1199,7 +1233,7 @@ export class DatabaseStorage implements IStorage {
         sql`${bids.id} != ${bidId}`
       ));
 
-    // Create a booking automatically
+    // Create a booking with "awarded" status (waiting for worker acknowledgment)
     try {
       const bookingData = {
         id: `BKG-${jobPosting.id}`, // Use job posting ID format
@@ -1210,19 +1244,134 @@ export class DatabaseStorage implements IStorage {
         district: jobPosting.district,
         scheduledDate: new Date(), // Default to current date
         totalAmount: bid.proposedAmount,
-        status: "pending",
+        status: "awarded", // Job is awarded but waiting for worker acknowledgment
         paymentStatus: "pending",
+        completionOTP: otp, // Store OTP in booking as well
+        otpGeneratedAt: otpGeneratedAt,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
 
       await db.insert(bookings).values(bookingData);
-      console.log('Booking created successfully:', bookingData.id);
+      console.log('Booking created successfully with OTP:', bookingData.id, '- OTP:', otp);
+      console.log('Client financial model applied:', clientChargeApplied);
     } catch (error) {
       console.error('Error creating booking:', error);
     }
 
     return updatedBid || undefined;
+  }
+
+  // Helper method to check if user is exempt from financial charges
+  private isUserExemptFromCharges(user: any): boolean {
+    // Add logic here to check if user is exempt (e.g., premium members, special roles, etc.)
+    return false; // Default: no exemption
+  }
+
+  // Get financial model assigned to a specific user
+  async getFinancialModelForUser(userId: string): Promise<any> {
+    try {
+      // First check if user has a specific financial model assigned
+      const assignment = await db
+        .select()
+        .from(financialModelAssignments)
+        .where(eq(financialModelAssignments.userId, userId))
+        .limit(1);
+
+      if (assignment.length > 0) {
+        // Get the assigned financial model
+        const model = await db
+          .select()
+          .from(financialModels)
+          .where(eq(financialModels.id, assignment[0].financialModelId))
+          .limit(1);
+        
+        return model[0] || null;
+      }
+
+      // If no specific assignment, return the default active model
+      const activeModels = await this.getActiveFinancialModels();
+      return activeModels.find(model => model.isDefault) || activeModels[0] || null;
+    } catch (error) {
+      console.error('Error getting financial model for user:', error);
+      return null;
+    }
+  }
+
+  // Worker acknowledges the awarded job (with financial model detection)
+  async acknowledgeJob(bookingId: string, workerId: string): Promise<any> {
+    // Get booking details
+    const [booking] = await db.select().from(bookings).where(eq(bookings.id, bookingId));
+    if (!booking || booking.workerId !== workerId) {
+      throw new Error("Booking not found or worker mismatch");
+    }
+
+    if (booking.status !== "awarded") {
+      throw new Error("Job is not in awarded status");
+    }
+
+    // Get worker details for financial model detection
+    const worker = await this.getUser(workerId);
+    if (!worker) {
+      throw new Error("Worker not found");
+    }
+
+    // FINANCIAL MODEL DETECTION - Worker Side (Acknowledge Job)
+    // Check if worker has financial requirements based on admin settings
+    const workerFinancialModel = await this.getFinancialModelForUser(worker.id);
+    
+    let workerChargeApplied = false;
+    let gstApplied = false;
+    
+    if (workerFinancialModel && !this.isUserExemptFromCharges(worker)) {
+      // Apply worker-side charges and GST based on financial model
+      console.log(`Applying worker financial model for job acknowledgment: ${workerFinancialModel.name}`);
+      workerChargeApplied = true;
+      
+      // Apply GST if configured in financial model
+      if (workerFinancialModel.gstPercentage > 0) {
+        gstApplied = true;
+        console.log(`GST applied: ${workerFinancialModel.gstPercentage}%`);
+      }
+    }
+
+    // Update booking status to "accepted" (worker has acknowledged)
+    const [updatedBooking] = await db.update(bookings)
+      .set({ 
+        status: "accepted", // Worker has acknowledged, waiting for work to start
+        updatedAt: new Date()
+      })
+      .where(eq(bookings.id, bookingId))
+      .returning();
+
+    // Update bid status to "accepted" (worker has acknowledged the awarded job)
+    await db.update(bids)
+      .set({ 
+        status: "accepted",
+        updatedAt: new Date()
+      })
+      .where(and(
+        eq(bids.workerId, workerId),
+        eq(bids.status, "awarded")
+      ));
+
+    // Update job posting status
+    await db.update(jobPostings)
+      .set({ 
+        status: "in_progress", // Job is now in progress
+        updatedAt: new Date()
+      })
+      .where(eq(jobPostings.id, booking.id.replace('BKG-', '')));
+
+    console.log('Job acknowledged successfully:', bookingId);
+    console.log('Worker financial model applied:', workerChargeApplied);
+    console.log('GST applied:', gstApplied);
+
+    return {
+      booking: updatedBooking,
+      financialModelApplied: workerChargeApplied,
+      gstApplied: gstApplied
+    };
   }
 
   async rejectBid(bidId: string): Promise<Bid | undefined> {

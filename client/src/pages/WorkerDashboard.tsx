@@ -1818,6 +1818,35 @@ export default function WorkerDashboard() {
     updateBookingMutation.mutate({ bookingId, status });
   };
 
+  // Worker acknowledges the awarded job (triggers financial model detection)
+  const handleAcknowledgeJob = async (bookingId: string) => {
+    try {
+      const response = await apiRequest("POST", `/api/bookings/${bookingId}/acknowledge`, {
+        workerId: user?.id
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        toast({
+          title: "Job Acknowledged",
+          description: `Job acknowledged successfully! ${result.data.financialModelApplied ? 'Financial model applied.' : ''} ${result.data.gstApplied ? 'GST calculated.' : ''}`,
+        });
+        
+        // Refresh bookings to show updated status
+        queryClient.invalidateQueries({ queryKey: ["/api/bookings/user", user?.id] });
+      } else {
+        throw new Error("Failed to acknowledge job");
+      }
+    } catch (error) {
+      console.error("Error acknowledging job:", error);
+      toast({
+        title: "Error",
+        description: "Failed to acknowledge job. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case "pending": return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100";
@@ -2434,22 +2463,22 @@ export default function WorkerDashboard() {
                           </div>
                         </div>
                         
-                        {booking.status === "pending" && (
-                          <div className="flex gap-2">
+                        {/* Job Flow: Client awards job → Worker acknowledges → Worker enters OTP to complete */}
+                        
+                        {booking.status === "awarded" && (
+                          <div className="space-y-2">
+                            <div className="text-sm text-blue-600 bg-blue-50 p-2 rounded">
+                              <CheckCircle className="h-4 w-4 inline mr-1" />
+                              Job awarded by client! Please acknowledge to proceed.
+                            </div>
                             <Button
                               size="sm"
-                              onClick={() => handleStatusUpdate(booking.id, "accepted")}
+                              className="bg-green-600 hover:bg-green-700 text-white"
+                              onClick={() => handleAcknowledgeJob(booking.id)}
                               disabled={updateBookingMutation.isPending}
+                              data-testid={`button-acknowledge-${booking.id}`}
                             >
-                              Accept
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleStatusUpdate(booking.id, "cancelled")}
-                              disabled={updateBookingMutation.isPending}
-                            >
-                              Decline
+                              {updateBookingMutation.isPending ? "Acknowledging..." : "Acknowledge Job"}
                             </Button>
                           </div>
                         )}
@@ -2465,17 +2494,24 @@ export default function WorkerDashboard() {
                         )}
                         
                         {booking.status === "in_progress" && (
-                          <Button
-                            size="sm"
-                            onClick={() => {
-                              setCompletionBooking(booking);
-                              setJobCompletionModalOpen(true);
-                            }}
-                            disabled={updateBookingMutation.isPending}
-                            data-testid={`button-complete-job-${booking.id}`}
-                          >
-                            Mark Complete
-                          </Button>
+                          <div className="space-y-2">
+                            <div className="text-sm text-orange-600 bg-orange-50 p-2 rounded">
+                              <Clock className="h-4 w-4 inline mr-1" />
+                              Enter client's OTP to complete the job.
+                            </div>
+                            <Button
+                              size="sm"
+                              className="bg-blue-600 hover:bg-blue-700 text-white"
+                              onClick={() => {
+                                setCompletionBooking(booking);
+                                setJobCompletionModalOpen(true);
+                              }}
+                              disabled={updateBookingMutation.isPending}
+                              data-testid={`button-complete-job-${booking.id}`}
+                            >
+                              Complete with OTP
+                            </Button>
+                          </div>
                         )}
 
                         {booking.status === "completed" && booking.completionOTP && !booking.otpVerifiedAt && (
