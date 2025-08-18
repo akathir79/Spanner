@@ -8,6 +8,7 @@ import { LanguageProvider } from "@/components/LanguageProvider";
 import { AuthProvider } from "@/hooks/useAuth";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import SitelinksData from "@/components/SitelinksData";
 
 import Home from "@/pages/Home";
 
@@ -91,6 +92,7 @@ function App() {
         <LanguageProvider>
           <AuthProvider>
             <TooltipProvider>
+              <SitelinksData />
               <Toaster />
               <Router />
             </TooltipProvider>

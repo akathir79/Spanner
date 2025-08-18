@@ -38,7 +38,7 @@ User-agent: Slurp
 Crawl-delay: 3
 
 # Sitemap location
-Sitemap: https://spanner.replit.app/sitemap.xml
+Sitemap: https://spanner.co.in/sitemap.xml
 Sitemap: https://spanner.replit.app/sitemap-services.xml
 Sitemap: https://spanner.replit.app/sitemap-locations.xml
 Sitemap: https://spanner.replit.app/sitemap-workers.xml
