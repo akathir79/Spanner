@@ -39,9 +39,10 @@ Crawl-delay: 3
 
 # Sitemap location
 Sitemap: https://spanner.co.in/sitemap.xml
-Sitemap: https://spanner.replit.app/sitemap-services.xml
-Sitemap: https://spanner.replit.app/sitemap-locations.xml
-Sitemap: https://spanner.replit.app/sitemap-workers.xml
+Sitemap: https://spanner.co.in/sitemap-services.xml
+Sitemap: https://spanner.co.in/sitemap-locations.xml
+Sitemap: https://spanner.co.in/sitemap-workers.xml
+Sitemap: https://spanner.co.in/sitemap-faq.xml
 
 # Host directive
 Host: https://spanner.replit.app
