@@ -107,8 +107,8 @@ export default function MobileDemoFullscreen() {
   };
 
   return (
-    <div className="fixed inset-0 bg-gray-50 overflow-hidden z-[9999]">
-      <div className="max-w-sm mx-auto h-full relative bg-white shadow-2xl">
+    <div className="fixed inset-0 bg-black overflow-hidden z-[9999]">
+      <div className="max-w-sm mx-auto h-full relative bg-white shadow-2xl border-l border-r border-gray-300">
         {/* Mobile Status Bar */}
         <div className="bg-black text-white text-xs px-4 py-1 flex justify-between">
           <span>9:41 AM</span>
@@ -116,7 +116,7 @@ export default function MobileDemoFullscreen() {
         </div>
 
         {/* App Header */}
-        <div className="bg-blue-600 text-white p-4">
+        <div className="bg-blue-600 text-white p-4 relative">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <Wrench className="h-6 w-6" />
@@ -125,13 +125,13 @@ export default function MobileDemoFullscreen() {
             <Button 
               variant="ghost" 
               size="sm"
-              className="text-white hover:bg-blue-700"
-              onClick={() => window.history.back()}
+              className="text-white hover:bg-blue-700 absolute top-2 right-2"
+              onClick={() => window.location.href = '/'}
             >
               ✕
             </Button>
           </div>
-          <p className="text-blue-100 text-sm">Blue-collar services</p>
+          <p className="text-blue-100 text-sm">Blue-collar service marketplace</p>
         </div>
 
         {/* Success Message */}
@@ -144,8 +144,8 @@ export default function MobileDemoFullscreen() {
           </div>
         )}
 
-        {/* Content */}
-        <div className="h-[calc(100vh-140px)] overflow-y-auto p-4 pb-20">
+        {/* Content - Full mobile height */}
+        <div className="h-[calc(100vh-160px)] overflow-y-auto p-4 pb-20 bg-gray-50">
           {state.currentPage === 'home' && (
             <div className="space-y-4">
               <Card>
