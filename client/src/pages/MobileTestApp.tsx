@@ -12,6 +12,7 @@ import { Wrench, Home, User, Settings, Phone, CheckCircle, Search, Plus, Briefca
 import { useAuth } from '@/hooks/useAuth';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export default function MobileTestApp() {
   const { user } = useAuth();
@@ -77,7 +78,7 @@ export default function MobileTestApp() {
     },
   });
 
-  const handleAddNewService = () => {
+  const handleAddNewService = async () => {
     if (!newServiceName.trim()) {
       toast({
         title: "Service name required",
@@ -88,18 +89,39 @@ export default function MobileTestApp() {
     }
 
     // Check if service already exists
-    if (Array.isArray(services) && services.some((service: any) => 
-      service.name.toLowerCase() === newServiceName.toLowerCase().trim()
-    )) {
+    const serviceExists = Array.isArray(services) && services.some((service: any) => 
+      service.name.toLowerCase() === newServiceName.trim().toLowerCase()
+    );
+
+    if (serviceExists) {
       toast({
-        title: "Service already exists",
-        description: "This service is already in the list.",
+        title: "Service exists",
+        description: "This service already exists. Please select it from the dropdown.",
         variant: "destructive",
       });
       return;
     }
 
-    createServiceMutation.mutate(newServiceName.trim());
+    try {
+      await createServiceMutation.mutateAsync(newServiceName.trim());
+      // Set the newly created service as selected
+      setSelectedService(newServiceName.trim());
+      // Reset the input and hide it
+      setNewServiceName("");
+      setShowNewServiceInput(false);
+    } catch (error) {
+      // Error is handled by the mutation's onError
+    }
+  };
+
+  // Handler for service selection (like AuthModal)
+  const handleServiceSelect = (value: string) => {
+    if (value === "ADD_NEW_SERVICE") {
+      setShowNewServiceInput(true);
+      return;
+    }
+    setSelectedService(value);
+    setShowNewServiceInput(false);
   };
 
   const handleTestApp = () => {
@@ -370,91 +392,81 @@ export default function MobileTestApp() {
                       placeholder="+91 98765 43210"
                       className="h-12"
                     />
-                    {/* Enhanced Primary Service Field */}
+                    {/* Enhanced Primary Service Field - Matches AuthModal Implementation */}
                     <div className="space-y-2">
                       <label className="text-sm font-medium text-gray-700">Primary Service</label>
                       
                       {!showNewServiceInput ? (
-                        <div className="space-y-2">
-                          <select 
-                            className="w-full h-12 px-3 border rounded-lg bg-white"
-                            value={selectedService}
-                            onChange={(e) => {
-                              if (e.target.value === "add_new") {
-                                setShowNewServiceInput(true);
-                              } else {
-                                setSelectedService(e.target.value);
-                              }
-                            }}
-                          >
-                            <option value="">Select Your Service</option>
+                        <Select 
+                          value={selectedService} 
+                          onValueChange={handleServiceSelect}
+                        >
+                          <SelectTrigger className="h-12">
+                            <SelectValue placeholder="Select primary service" />
+                          </SelectTrigger>
+                          <SelectContent>
                             {Array.isArray(services) ? services.map((service: any) => (
-                              <option key={service.id} value={service.name}>
+                              <SelectItem key={service.id} value={service.name}>
                                 {service.name}
-                              </option>
+                              </SelectItem>
                             )) : [
-                              <option key="plumbing" value="Plumbing">Plumbing</option>,
-                              <option key="electrical" value="Electrical">Electrical</option>,
-                              <option key="painting" value="Painting">Painting</option>,
-                              <option key="cleaning" value="Cleaning">Cleaning</option>,
-                              <option key="carpentry" value="Carpentry">Carpentry</option>,
-                              <option key="ac-repair" value="AC Repair">AC Repair</option>
+                              <SelectItem key="plumbing" value="Plumbing">Plumbing</SelectItem>,
+                              <SelectItem key="electrical" value="Electrical">Electrical</SelectItem>,
+                              <SelectItem key="painting" value="Painting">Painting</SelectItem>,
+                              <SelectItem key="cleaning" value="Cleaning">Cleaning</SelectItem>,
+                              <SelectItem key="carpentry" value="Carpentry">Carpentry</SelectItem>,
+                              <SelectItem key="ac-repair" value="AC Repair">AC Repair</SelectItem>
                             ]}
-                            <option value="add_new" className="text-blue-600 font-medium">
-                              + Add New Service
-                            </option>
-                          </select>
-                          
-                          {!selectedService && (
-                            <p className="text-xs text-gray-500">
-                              Don't see your service? Select "Add New Service" to create one!
-                            </p>
-                          )}
-                        </div>
+                            <SelectItem value="ADD_NEW_SERVICE" className="text-blue-600 font-medium">
+                              <div className="flex items-center gap-2">
+                                <Plus className="h-4 w-4" />
+                                Add New Service
+                              </div>
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
                       ) : (
                         <div className="space-y-2">
-                          <div className="flex space-x-2">
+                          <div className="space-y-2">
                             <Input
-                              type="text"
-                              placeholder="Enter new service name (e.g., Bike Repair)"
                               value={newServiceName}
                               onChange={(e) => setNewServiceName(e.target.value)}
-                              className="h-12 flex-1"
+                              placeholder="Enter new service name (e.g., Home Repair, HVAC Service)"
+                              className="w-full h-12"
                               onKeyPress={(e) => {
                                 if (e.key === 'Enter') {
+                                  e.preventDefault();
                                   handleAddNewService();
                                 }
                               }}
                             />
-                            <Button
-                              onClick={handleAddNewService}
-                              disabled={createServiceMutation.isPending || !newServiceName.trim()}
-                              className="h-12 bg-blue-600 text-white px-4"
-                            >
-                              {createServiceMutation.isPending ? (
-                                <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full" />
-                              ) : (
-                                "Add"
-                              )}
-                            </Button>
+                            <div className="flex gap-2">
+                              <Button
+                                type="button"
+                                size="sm"
+                                onClick={handleAddNewService}
+                                disabled={createServiceMutation.isPending || !newServiceName.trim()}
+                                className="flex-1"
+                              >
+                                {createServiceMutation.isPending ? "Adding..." : "Add Service"}
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setShowNewServiceInput(false);
+                                  setNewServiceName("");
+                                }}
+                                className="flex-1"
+                              >
+                                Cancel
+                              </Button>
+                            </div>
                           </div>
-                          
-                          <div className="flex space-x-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                setShowNewServiceInput(false);
-                                setNewServiceName('');
-                              }}
-                              className="text-xs"
-                            >
-                              Cancel
-                            </Button>
-                            <p className="text-xs text-gray-500 flex-1">
-                              This will add your service to the platform for all users.
-                            </p>
-                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            Add a new service that doesn't exist in the current list
+                          </p>
                         </div>
                       )}
                     </div>
