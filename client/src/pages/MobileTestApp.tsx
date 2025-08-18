@@ -8,11 +8,14 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Wrench, Home, User, Settings, Phone, CheckCircle, Search, Plus, Briefcase } from 'lucide-react';
+import { Wrench, Home, User, Settings, Phone, CheckCircle, Search, Plus, Briefcase, Lock } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function MobileTestApp() {
+  const { user } = useAuth();
   const [currentPage, setCurrentPage] = useState('welcome');
   const [showSuccess, setShowSuccess] = useState(false);
+  const [showAuthPrompt, setShowAuthPrompt] = useState(false);
 
   const handleTestApp = () => {
     setShowSuccess(true);
@@ -102,12 +105,27 @@ export default function MobileTestApp() {
                       🚀 Quick Join
                     </Button>
                     <Button 
-                      onClick={() => setCurrentPage('quick-post')}
+                      onClick={() => {
+                        if (!user) {
+                          setShowAuthPrompt(true);
+                        } else {
+                          setCurrentPage('quick-post');
+                        }
+                      }}
                       className="h-12 bg-green-600 text-white"
                     >
                       📝 Quick Post
                     </Button>
                   </div>
+                  
+                  {user && (
+                    <div className="text-center mb-4 p-3 bg-blue-50 rounded-lg">
+                      <p className="text-sm text-blue-800">
+                        Welcome back, <strong>{user.firstName}!</strong>
+                      </p>
+                      <Badge variant="outline" className="mt-1">{user.role}</Badge>
+                    </div>
+                  )}
                   
                   <div className="grid grid-cols-2 gap-3 mb-6">
                     <Button 
@@ -378,7 +396,13 @@ export default function MobileTestApp() {
               </button>
               
               <button 
-                onClick={() => setCurrentPage('quick-post')}
+                onClick={() => {
+                  if (!user) {
+                    setShowAuthPrompt(true);
+                  } else {
+                    setCurrentPage('quick-post');
+                  }
+                }}
                 className={`flex flex-col items-center space-y-1 ${currentPage === 'quick-post' ? 'text-green-600' : 'text-gray-500'}`}
               >
                 <Plus className="h-5 w-5" />
@@ -395,6 +419,50 @@ export default function MobileTestApp() {
             </div>
           </div>
         </div>
+
+        {/* Authentication Prompt Modal */}
+        {showAuthPrompt && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 m-4 max-w-sm w-full">
+              <div className="text-center mb-4">
+                <Lock className="h-12 w-12 text-yellow-500 mx-auto mb-3" />
+                <h3 className="text-lg font-semibold">Quick Post Authentication</h3>
+                <p className="text-gray-600 text-sm mt-2">
+                  To post a job and hire workers using voice, you need to be logged in.
+                </p>
+              </div>
+              
+              <div className="space-y-3">
+                <Button 
+                  onClick={() => {
+                    setShowAuthPrompt(false);
+                    setCurrentPage('login');
+                  }}
+                  className="w-full bg-blue-600 text-white"
+                >
+                  I Have an Account
+                </Button>
+                <Button 
+                  onClick={() => {
+                    setShowAuthPrompt(false);
+                    setCurrentPage('register');
+                  }}
+                  variant="outline"
+                  className="w-full"
+                >
+                  Create New Account
+                </Button>
+                <Button 
+                  onClick={() => setShowAuthPrompt(false)}
+                  variant="ghost"
+                  className="w-full text-gray-500"
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </>
   );

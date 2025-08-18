@@ -31,6 +31,11 @@ interface MobileState {
 }
 
 export default function MobileDemo() {
+  // Redirect to the new mobile test interface
+  React.useEffect(() => {
+    window.location.href = '/mobile-test';
+  }, []);
+
   const { user, login, logout } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
