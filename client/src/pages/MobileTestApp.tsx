@@ -28,9 +28,23 @@ export default function MobileTestApp() {
   const [selectedService, setSelectedService] = useState('');
 
   // Fetch services for worker registration
-  const { data: services } = useQuery({
+  const { data: services, isLoading: servicesLoading, error: servicesError } = useQuery({
     queryKey: ["/api/services"],
+    enabled: true, // Always enabled for mobile app
   });
+
+  // Debug services loading (remove after testing)
+  if (currentPage === 'quick-join') {
+    console.log("Mobile App Quick Join Services:", { 
+      services, 
+      servicesLoading, 
+      servicesError,
+      isArray: Array.isArray(services),
+      length: Array.isArray(services) ? services.length : 0,
+      selectedService,
+      showNewServiceInput
+    });
+  }
 
   // Mutation to create new service
   const createServiceMutation = useMutation({
@@ -405,24 +419,42 @@ export default function MobileTestApp() {
                             <SelectValue placeholder="Select primary service" />
                           </SelectTrigger>
                           <SelectContent>
-                            {Array.isArray(services) ? services.map((service: any) => (
-                              <SelectItem key={service.id} value={service.name}>
-                                {service.name}
-                              </SelectItem>
-                            )) : [
-                              <SelectItem key="plumbing" value="Plumbing">Plumbing</SelectItem>,
-                              <SelectItem key="electrical" value="Electrical">Electrical</SelectItem>,
-                              <SelectItem key="painting" value="Painting">Painting</SelectItem>,
-                              <SelectItem key="cleaning" value="Cleaning">Cleaning</SelectItem>,
-                              <SelectItem key="carpentry" value="Carpentry">Carpentry</SelectItem>,
-                              <SelectItem key="ac-repair" value="AC Repair">AC Repair</SelectItem>
-                            ]}
-                            <SelectItem value="ADD_NEW_SERVICE" className="text-blue-600 font-medium">
-                              <div className="flex items-center gap-2">
-                                <Plus className="h-4 w-4" />
-                                Add New Service
-                              </div>
-                            </SelectItem>
+                            {servicesLoading ? (
+                              <SelectItem value="loading" disabled>Loading services...</SelectItem>
+                            ) : Array.isArray(services) && services.length > 0 ? (
+                              <>
+                                {services.map((service: any) => (
+                                  <SelectItem key={service.id} value={service.name}>
+                                    {service.name}
+                                  </SelectItem>
+                                ))}
+                                <SelectItem value="ADD_NEW_SERVICE" className="text-blue-600 font-medium">
+                                  <div className="flex items-center gap-2">
+                                    <Plus className="h-4 w-4" />
+                                    Add New Service
+                                  </div>
+                                </SelectItem>
+                              </>
+                            ) : (
+                              <>
+                                {/* Fallback services when API is loading or fails */}
+                                <SelectItem value="Plumbing">Plumbing</SelectItem>
+                                <SelectItem value="Electrical">Electrical</SelectItem>
+                                <SelectItem value="Painting">Painting</SelectItem>
+                                <SelectItem value="Cleaning">Cleaning</SelectItem>
+                                <SelectItem value="Carpentry">Carpentry</SelectItem>
+                                <SelectItem value="AC Repair">AC Repair</SelectItem>
+                                <SelectItem value="Mechanic">Mechanic</SelectItem>
+                                <SelectItem value="Gardening">Gardening</SelectItem>
+                                <SelectItem value="BathRoom cleaning">BathRoom cleaning</SelectItem>
+                                <SelectItem value="ADD_NEW_SERVICE" className="text-blue-600 font-medium">
+                                  <div className="flex items-center gap-2">
+                                    <Plus className="h-4 w-4" />
+                                    Add New Service
+                                  </div>
+                                </SelectItem>
+                              </>
+                            )}
                           </SelectContent>
                         </Select>
                       ) : (
