@@ -1,10 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
@@ -27,7 +30,12 @@ import {
   Briefcase,
   DollarSign,
   TrendingUp,
-  UserCheck
+  UserCheck,
+  Key,
+  Eye,
+  EyeOff,
+  Save,
+  Trash2
 } from "lucide-react";
 
 export default function PlatformSettings() {
@@ -36,6 +44,23 @@ export default function PlatformSettings() {
   const [, setLocation] = useLocation();
   
   const [isLoading, setIsLoading] = useState(false);
+  const [keyManagementOpen, setKeyManagementOpen] = useState(false);
+  const [showKeys, setShowKeys] = useState<{ [key: string]: boolean }>({});
+  const [apiKeys, setApiKeys] = useState({
+    smsApiKey: '',
+    smsApiSecret: '',
+    whatsappApiKey: '',
+    whatsappBusinessId: '',
+    stripePublicKey: '',
+    stripeSecretKey: '',
+    gpayMerchantId: '',
+    gpayMerchantKey: '',
+    phonePeMerchantId: '',
+    phonePeMerchantKey: '',
+    emailApiKey: '',
+    emailServiceUrl: '',
+    emailFromAddress: ''
+  });
 
   // Fetch admin counts
   const { data: adminCounts, isLoading: adminCountsLoading } = useQuery({
@@ -60,6 +85,54 @@ export default function PlatformSettings() {
     queryKey: ['/api/admin/service-counts'],
     refetchInterval: 30000, // Refresh every 30 seconds for file-based data
   });
+
+  // Load existing API keys when dialog opens
+  useEffect(() => {
+    if (keyManagementOpen) {
+      loadApiKeys();
+    }
+  }, [keyManagementOpen]);
+
+  const loadApiKeys = async () => {
+    try {
+      const response = await fetch("/api/admin/api-keys");
+      if (!response.ok) {
+        throw new Error("Failed to fetch API keys");
+      }
+      
+      const existingKeys = await response.json();
+      
+      // Transform backend data to frontend format
+      const keyMap: Record<string, string> = {};
+      existingKeys.forEach((key: any) => {
+        const keyIdentifier = `${key.keyType}_${key.keyName}`;
+        keyMap[keyIdentifier] = key.keyValue;
+      });
+
+      setApiKeys({
+        smsApiKey: keyMap['sms_api_key'] || "",
+        smsApiSecret: keyMap['sms_secret_key'] || "",
+        whatsappApiKey: keyMap['whatsapp_api_key'] || "",
+        whatsappBusinessId: keyMap['whatsapp_business_id'] || "",
+        stripePublicKey: keyMap['stripe_public_key'] || "",
+        stripeSecretKey: keyMap['stripe_secret_key'] || "",
+        gpayMerchantId: keyMap['gpay_merchant_id'] || "",
+        gpayMerchantKey: keyMap['gpay_merchant_key'] || "",
+        phonePeMerchantId: keyMap['phonepe_merchant_id'] || "",
+        phonePeMerchantKey: keyMap['phonepe_merchant_key'] || "",
+        emailApiKey: keyMap['email_api_key'] || "",
+        emailServiceUrl: keyMap['email_service_url'] || "",
+        emailFromAddress: keyMap['email_from_address'] || "",
+      });
+    } catch (error) {
+      console.error("Failed to load API keys:", error);
+      toast({
+        title: "Warning",
+        description: "Could not load existing API keys.",
+        variant: "destructive",
+      });
+    }
+  };
 
   // Only super admins can access platform settings
   if (!user || user.role !== "super_admin") {
@@ -243,13 +316,390 @@ export default function PlatformSettings() {
               </CardContent>
             </Card>
 
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-              <CardContent className="p-6 text-center">
-                <UserCheck className="w-12 h-12 mx-auto mb-4 text-cyan-600" />
-                <h3 className="font-semibold mb-2">Super Admin Profile</h3>
-                <p className="text-sm text-muted-foreground">Manage super admin account and permissions</p>
-              </CardContent>
-            </Card>
+            <Dialog open={keyManagementOpen} onOpenChange={setKeyManagementOpen}>
+              <DialogTrigger asChild>
+                <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+                  <CardContent className="p-6 text-center">
+                    <Key className="w-12 h-12 mx-auto mb-4 text-cyan-600" />
+                    <h3 className="font-semibold mb-2">Key Management</h3>
+                    <p className="text-sm text-muted-foreground">Manage API keys for SMS, WhatsApp, payments, and email services</p>
+                  </CardContent>
+                </Card>
+              </DialogTrigger>
+              <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <Key className="w-5 h-5 text-cyan-600" />
+                    API Key Management
+                  </DialogTitle>
+                </DialogHeader>
+                
+                <div className="space-y-6 mt-4">
+                  {/* SMS API Configuration */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        <Bell className="w-5 h-5 text-blue-600" />
+                        SMS API Configuration
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="smsApiKey">SMS API Key</Label>
+                          <div className="relative">
+                            <Input
+                              id="smsApiKey"
+                              type={showKeys['smsApiKey'] ? 'text' : 'password'}
+                              value={apiKeys.smsApiKey}
+                              onChange={(e) => setApiKeys(prev => ({ ...prev, smsApiKey: e.target.value }))}
+                              placeholder="Enter SMS API Key"
+                            />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="absolute right-0 top-0 h-full px-3"
+                              onClick={() => setShowKeys(prev => ({ ...prev, smsApiKey: !prev.smsApiKey }))}
+                            >
+                              {showKeys['smsApiKey'] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                            </Button>
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="smsApiSecret">SMS API Secret</Label>
+                          <div className="relative">
+                            <Input
+                              id="smsApiSecret"
+                              type={showKeys['smsApiSecret'] ? 'text' : 'password'}
+                              value={apiKeys.smsApiSecret}
+                              onChange={(e) => setApiKeys(prev => ({ ...prev, smsApiSecret: e.target.value }))}
+                              placeholder="Enter SMS API Secret"
+                            />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="absolute right-0 top-0 h-full px-3"
+                              onClick={() => setShowKeys(prev => ({ ...prev, smsApiSecret: !prev.smsApiSecret }))}
+                            >
+                              {showKeys['smsApiSecret'] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* WhatsApp Bulk API Configuration */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        <Users className="w-5 h-5 text-green-600" />
+                        WhatsApp Bulk API Configuration
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="whatsappApiKey">WhatsApp API Key</Label>
+                          <div className="relative">
+                            <Input
+                              id="whatsappApiKey"
+                              type={showKeys['whatsappApiKey'] ? 'text' : 'password'}
+                              value={apiKeys.whatsappApiKey}
+                              onChange={(e) => setApiKeys(prev => ({ ...prev, whatsappApiKey: e.target.value }))}
+                              placeholder="Enter WhatsApp API Key"
+                            />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="absolute right-0 top-0 h-full px-3"
+                              onClick={() => setShowKeys(prev => ({ ...prev, whatsappApiKey: !prev.whatsappApiKey }))}
+                            >
+                              {showKeys['whatsappApiKey'] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                            </Button>
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="whatsappBusinessId">WhatsApp Business ID</Label>
+                          <Input
+                            id="whatsappBusinessId"
+                            value={apiKeys.whatsappBusinessId}
+                            onChange={(e) => setApiKeys(prev => ({ ...prev, whatsappBusinessId: e.target.value }))}
+                            placeholder="Enter WhatsApp Business ID"
+                          />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Stripe Payment Configuration */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        <DollarSign className="w-5 h-5 text-purple-600" />
+                        Stripe Payment Configuration
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="stripePublicKey">Stripe Public Key</Label>
+                          <Input
+                            id="stripePublicKey"
+                            value={apiKeys.stripePublicKey}
+                            onChange={(e) => setApiKeys(prev => ({ ...prev, stripePublicKey: e.target.value }))}
+                            placeholder="pk_live_..."
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="stripeSecretKey">Stripe Secret Key</Label>
+                          <div className="relative">
+                            <Input
+                              id="stripeSecretKey"
+                              type={showKeys['stripeSecretKey'] ? 'text' : 'password'}
+                              value={apiKeys.stripeSecretKey}
+                              onChange={(e) => setApiKeys(prev => ({ ...prev, stripeSecretKey: e.target.value }))}
+                              placeholder="sk_live_..."
+                            />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="absolute right-0 top-0 h-full px-3"
+                              onClick={() => setShowKeys(prev => ({ ...prev, stripeSecretKey: !prev.stripeSecretKey }))}
+                            >
+                              {showKeys['stripeSecretKey'] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* GPay Configuration */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        <Briefcase className="w-5 h-5 text-indigo-600" />
+                        Google Pay Configuration
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="gpayMerchantId">GPay Merchant ID</Label>
+                          <Input
+                            id="gpayMerchantId"
+                            value={apiKeys.gpayMerchantId}
+                            onChange={(e) => setApiKeys(prev => ({ ...prev, gpayMerchantId: e.target.value }))}
+                            placeholder="Enter GPay Merchant ID"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="gpayMerchantKey">GPay Merchant Key</Label>
+                          <div className="relative">
+                            <Input
+                              id="gpayMerchantKey"
+                              type={showKeys['gpayMerchantKey'] ? 'text' : 'password'}
+                              value={apiKeys.gpayMerchantKey}
+                              onChange={(e) => setApiKeys(prev => ({ ...prev, gpayMerchantKey: e.target.value }))}
+                              placeholder="Enter GPay Merchant Key"
+                            />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="absolute right-0 top-0 h-full px-3"
+                              onClick={() => setShowKeys(prev => ({ ...prev, gpayMerchantKey: !prev.gpayMerchantKey }))}
+                            >
+                              {showKeys['gpayMerchantKey'] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* PhonePe Configuration */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        <Zap className="w-5 h-5 text-orange-600" />
+                        PhonePe Configuration
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="phonePeMerchantId">PhonePe Merchant ID</Label>
+                          <Input
+                            id="phonePeMerchantId"
+                            value={apiKeys.phonePeMerchantId}
+                            onChange={(e) => setApiKeys(prev => ({ ...prev, phonePeMerchantId: e.target.value }))}
+                            placeholder="Enter PhonePe Merchant ID"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="phonePeMerchantKey">PhonePe Merchant Key</Label>
+                          <div className="relative">
+                            <Input
+                              id="phonePeMerchantKey"
+                              type={showKeys['phonePeMerchantKey'] ? 'text' : 'password'}
+                              value={apiKeys.phonePeMerchantKey}
+                              onChange={(e) => setApiKeys(prev => ({ ...prev, phonePeMerchantKey: e.target.value }))}
+                              placeholder="Enter PhonePe Merchant Key"
+                            />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="absolute right-0 top-0 h-full px-3"
+                              onClick={() => setShowKeys(prev => ({ ...prev, phonePeMerchantKey: !prev.phonePeMerchantKey }))}
+                            >
+                              {showKeys['phonePeMerchantKey'] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Email API Configuration */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        <Bell className="w-5 h-5 text-red-600" />
+                        Email API Configuration (Forgot Password)
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="emailApiKey">Email API Key</Label>
+                          <div className="relative">
+                            <Input
+                              id="emailApiKey"
+                              type={showKeys['emailApiKey'] ? 'text' : 'password'}
+                              value={apiKeys.emailApiKey}
+                              onChange={(e) => setApiKeys(prev => ({ ...prev, emailApiKey: e.target.value }))}
+                              placeholder="Enter Email API Key"
+                            />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="absolute right-0 top-0 h-full px-3"
+                              onClick={() => setShowKeys(prev => ({ ...prev, emailApiKey: !prev.emailApiKey }))}
+                            >
+                              {showKeys['emailApiKey'] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                            </Button>
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="emailServiceUrl">Email Service URL</Label>
+                          <Input
+                            id="emailServiceUrl"
+                            value={apiKeys.emailServiceUrl}
+                            onChange={(e) => setApiKeys(prev => ({ ...prev, emailServiceUrl: e.target.value }))}
+                            placeholder="https://api.emailservice.com"
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="emailFromAddress">From Email Address</Label>
+                        <Input
+                          id="emailFromAddress"
+                          type="email"
+                          value={apiKeys.emailFromAddress}
+                          onChange={(e) => setApiKeys(prev => ({ ...prev, emailFromAddress: e.target.value }))}
+                          placeholder="noreply@spanner.co.in"
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Action Buttons */}
+                  <div className="flex justify-end gap-3 pt-4 border-t">
+                    <Button
+                      variant="outline"
+                      onClick={() => setKeyManagementOpen(false)}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={async () => {
+                        try {
+                          setIsLoading(true);
+                          
+                          // Transform apiKeys object to match backend format
+                          const transformedKeys = {
+                            sms: {
+                              api_key: apiKeys.smsApiKey,
+                              secret_key: apiKeys.smsApiSecret
+                            },
+                            whatsapp: {
+                              api_key: apiKeys.whatsappApiKey,
+                              business_id: apiKeys.whatsappBusinessId
+                            },
+                            stripe: {
+                              public_key: apiKeys.stripePublicKey,
+                              secret_key: apiKeys.stripeSecretKey
+                            },
+                            gpay: {
+                              merchant_id: apiKeys.gpayMerchantId,
+                              merchant_key: apiKeys.gpayMerchantKey
+                            },
+                            phonepe: {
+                              merchant_id: apiKeys.phonePeMerchantId,
+                              merchant_key: apiKeys.phonePeMerchantKey
+                            },
+                            email: {
+                              api_key: apiKeys.emailApiKey,
+                              service_url: apiKeys.emailServiceUrl,
+                              from_address: apiKeys.emailFromAddress
+                            }
+                          };
+
+                          const response = await fetch("/api/admin/api-keys", {
+                            method: "POST",
+                            headers: {
+                              "Content-Type": "application/json",
+                            },
+                            body: JSON.stringify({ apiKeys: transformedKeys }),
+                          });
+
+                          if (!response.ok) {
+                            throw new Error("Failed to save API keys");
+                          }
+
+                          toast({
+                            title: "API Keys Saved",
+                            description: "All API keys have been securely saved to the system.",
+                          });
+                          setKeyManagementOpen(false);
+                        } catch (error) {
+                          toast({
+                            title: "Error",
+                            description: "Failed to save API keys. Please try again.",
+                            variant: "destructive",
+                          });
+                        } finally {
+                          setIsLoading(false);
+                        }
+                      }}
+                      disabled={isLoading}
+                      className="bg-cyan-600 hover:bg-cyan-700"
+                    >
+                      <Save className="w-4 h-4 mr-2" />
+                      {isLoading ? "Saving..." : "Save All Keys"}
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
 
             <Card className="hover:shadow-lg transition-shadow cursor-pointer">
               <CardContent className="p-6 text-center">

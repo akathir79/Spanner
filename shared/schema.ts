@@ -1017,3 +1017,23 @@ export const insertPaymentIntentSchema = createInsertSchema(paymentIntents).omit
 });
 export type PaymentIntent = typeof paymentIntents.$inferSelect;
 export type InsertPaymentIntent = z.infer<typeof insertPaymentIntentSchema>;
+
+// API Keys table for centralized key management
+export const apiKeys = pgTable("api_keys", {
+  id: text("id").primaryKey().$defaultFn(() => generateId()),
+  keyType: text("key_type").notNull(), // 'sms', 'whatsapp', 'stripe', 'gpay', 'phonepe', 'email'
+  keyName: text("key_name").notNull(), // 'api_key', 'secret_key', 'merchant_id', etc.
+  keyValue: text("key_value").notNull(), // encrypted key value
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Schema exports for API keys
+export const insertApiKeySchema = createInsertSchema(apiKeys).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type ApiKey = typeof apiKeys.$inferSelect;
+export type InsertApiKey = z.infer<typeof insertApiKeySchema>;

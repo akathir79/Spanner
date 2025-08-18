@@ -17,6 +17,7 @@ import {
   messages,
   transferHistory,
   financialStatements,
+  apiKeys,
   type User, 
   type InsertUser,
   type WorkerProfile,
@@ -50,6 +51,8 @@ import {
   type InsertTransferHistory,
   type FinancialStatement,
   type InsertFinancialStatement,
+  type ApiKey,
+  type InsertApiKey,
   advertisements,
   type Advertisement,
   type InsertAdvertisement,
@@ -288,6 +291,13 @@ export interface IStorage {
   createPaymentIntent(intent: InsertPaymentIntent): Promise<PaymentIntent>;
   getPaymentIntentByStripeId(stripeId: string): Promise<PaymentIntent | undefined>;
   updatePaymentIntentStatus(stripeId: string, status: string): Promise<PaymentIntent | undefined>;
+
+  // API Key Management
+  createApiKey(apiKey: InsertApiKey): Promise<ApiKey>;
+  getAllApiKeys(): Promise<ApiKey[]>;
+  getApiKey(keyType: string, keyName: string): Promise<ApiKey | undefined>;
+  updateApiKey(id: string, updates: Partial<ApiKey>): Promise<ApiKey | undefined>;
+  deleteApiKey(id: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -2388,6 +2398,42 @@ export class DatabaseStorage implements IStorage {
       .where(eq(paymentIntents.stripePaymentIntentId, stripeId))
       .returning();
     return updatedIntent || undefined;
+  }
+
+  // API Key Management implementation
+  async createApiKey(apiKey: InsertApiKey): Promise<ApiKey> {
+    const [newApiKey] = await db.insert(apiKeys).values(apiKey).returning();
+    return newApiKey;
+  }
+
+  async getAllApiKeys(): Promise<ApiKey[]> {
+    return await db.select().from(apiKeys)
+      .where(eq(apiKeys.isActive, true))
+      .orderBy(apiKeys.keyType, apiKeys.keyName);
+  }
+
+  async getApiKey(keyType: string, keyName: string): Promise<ApiKey | undefined> {
+    const [apiKey] = await db.select().from(apiKeys)
+      .where(and(
+        eq(apiKeys.keyType, keyType),
+        eq(apiKeys.keyName, keyName),
+        eq(apiKeys.isActive, true)
+      ));
+    return apiKey || undefined;
+  }
+
+  async updateApiKey(id: string, updates: Partial<ApiKey>): Promise<ApiKey | undefined> {
+    const [updatedApiKey] = await db.update(apiKeys)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(apiKeys.id, id))
+      .returning();
+    return updatedApiKey || undefined;
+  }
+
+  async deleteApiKey(id: string): Promise<void> {
+    await db.update(apiKeys)
+      .set({ isActive: false, updatedAt: new Date() })
+      .where(eq(apiKeys.id, id));
   }
 }
 

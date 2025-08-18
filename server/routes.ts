@@ -20,7 +20,8 @@ import {
   insertMessageSchema,
   insertTransferHistorySchema,
   insertAdvertisementSchema,
-  insertWorkerReviewSchema
+  insertWorkerReviewSchema,
+  insertApiKeySchema
 } from "@shared/schema";
 
 // Job completion OTP schema
@@ -4592,6 +4593,106 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register SEO sitemap routes
   registerSitemapRoutes(app);
   
+  // API Key Management Routes (Super Admin Only)
+  
+  // Get all API keys
+  app.get("/api/admin/api-keys", async (req, res) => {
+    try {
+      const apiKeys = await storage.getAllApiKeys();
+      res.json(apiKeys);
+    } catch (error) {
+      console.error("Error fetching API keys:", error);
+      res.status(500).json({ message: "Failed to fetch API keys" });
+    }
+  });
+
+  // Save/Update API keys (bulk operation)
+  app.post("/api/admin/api-keys", async (req, res) => {
+    try {
+      const { apiKeys: keysData } = req.body;
+      
+      const savedKeys = [];
+      
+      // Save each API key
+      for (const [keyType, keyValues] of Object.entries(keysData)) {
+        if (typeof keyValues === 'object' && keyValues !== null) {
+          for (const [keyName, keyValue] of Object.entries(keyValues)) {
+            if (keyValue && keyValue.trim()) {
+              const apiKeyData = {
+                keyType,
+                keyName,
+                keyValue: keyValue.trim(),
+                isActive: true
+              };
+              
+              // Check if key already exists
+              const existingKey = await storage.getApiKey(keyType, keyName);
+              if (existingKey) {
+                await storage.updateApiKey(existingKey.id, { keyValue: keyValue.trim() });
+              } else {
+                const savedKey = await storage.createApiKey(apiKeyData);
+                savedKeys.push(savedKey);
+              }
+            }
+          }
+        } else if (keyValues && keyValues.trim()) {
+          // Handle simple string values
+          const apiKeyData = {
+            keyType,
+            keyName: 'default',
+            keyValue: keyValues.trim(),
+            isActive: true
+          };
+          
+          const existingKey = await storage.getApiKey(keyType, 'default');
+          if (existingKey) {
+            await storage.updateApiKey(existingKey.id, { keyValue: keyValues.trim() });
+          } else {
+            const savedKey = await storage.createApiKey(apiKeyData);
+            savedKeys.push(savedKey);
+          }
+        }
+      }
+      
+      res.json({ 
+        message: "API keys saved successfully",
+        savedKeys
+      });
+    } catch (error) {
+      console.error("Error saving API keys:", error);
+      res.status(500).json({ message: "Failed to save API keys" });
+    }
+  });
+
+  // Delete API key
+  app.delete("/api/admin/api-keys/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteApiKey(id);
+      res.json({ message: "API key deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting API key:", error);
+      res.status(500).json({ message: "Failed to delete API key" });
+    }
+  });
+
+  // Get specific API key by type and name
+  app.get("/api/admin/api-keys/:keyType/:keyName", async (req, res) => {
+    try {
+      const { keyType, keyName } = req.params;
+      const apiKey = await storage.getApiKey(keyType, keyName);
+      
+      if (!apiKey) {
+        return res.status(404).json({ message: "API key not found" });
+      }
+      
+      res.json(apiKey);
+    } catch (error) {
+      console.error("Error fetching API key:", error);
+      res.status(500).json({ message: "Failed to fetch API key" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
