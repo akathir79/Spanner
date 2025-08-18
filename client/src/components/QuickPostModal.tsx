@@ -77,7 +77,9 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
     areaName: '',
     district: '',
     state: '',
-    pincode: ''
+    pincode: '',
+    currentLocationUsed: false,
+    profileAddressUsed: false,
   });
 
   const [showCustomLocationForm, setShowCustomLocationForm] = useState(false);

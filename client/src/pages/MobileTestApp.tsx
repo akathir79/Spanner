@@ -416,7 +416,7 @@ export default function MobileTestApp() {
               </div>
             )}
 
-            {/* Quick Join Client Registration */}
+            {/* Quick Join Client Registration - Simplified */}
             {currentPage === 'quick-join-client' && (
               <div className="space-y-4">
                 <Button 
@@ -431,26 +431,25 @@ export default function MobileTestApp() {
                 <Card>
                   <CardHeader className="text-center">
                     <CardTitle className="text-purple-600">👤 Client Registration</CardTitle>
-                    <CardDescription>Register to hire workers in 30 seconds</CardDescription>
+                    <CardDescription>Quick signup - just first name and mobile</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <Input 
                       type="text" 
-                      placeholder="Your Full Name"
+                      placeholder="Your First Name"
                       className="h-12"
                     />
                     <Input 
                       type="tel" 
-                      placeholder="+91 98765 43210"
+                      placeholder="10-digit mobile number"
                       className="h-12"
+                      maxLength={10}
                     />
-                    <select className="w-full h-12 px-3 border rounded-lg bg-white">
-                      <option>Select Your Location</option>
-                      <option>Chennai</option>
-                      <option>Coimbatore</option>
-                      <option>Madurai</option>
-                      <option>Salem</option>
-                    </select>
+                    <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                      <p className="text-xs text-blue-700 text-center">
+                        📍 Your address will be collected when you post your first job for security and accurate service delivery.
+                      </p>
+                    </div>
                     <Button 
                       onClick={handleTestApp}
                       className="w-full h-12 bg-purple-600 text-white"
@@ -462,7 +461,7 @@ export default function MobileTestApp() {
               </div>
             )}
 
-            {/* Quick Join Worker Registration */}
+            {/* Quick Join Worker Registration - Simplified */}
             {currentPage === 'quick-join-worker' && (
               <div className="space-y-4">
                 <Button 
@@ -477,18 +476,19 @@ export default function MobileTestApp() {
                 <Card>
                   <CardHeader className="text-center">
                     <CardTitle className="text-green-600">🔧 Worker Registration</CardTitle>
-                    <CardDescription>Register to offer services in 30 seconds</CardDescription>
+                    <CardDescription>Quick signup - just name, mobile, and service</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <Input 
                       type="text" 
-                      placeholder="Your Full Name"
+                      placeholder="Your First Name"
                       className="h-12"
                     />
                     <Input 
                       type="tel" 
-                      placeholder="+91 98765 43210"
+                      placeholder="10-digit mobile number"
                       className="h-12"
+                      maxLength={10}
                     />
                     {/* Primary Service Field - Clean Implementation */}
                     <div className="space-y-2">
@@ -567,13 +567,11 @@ export default function MobileTestApp() {
                         </div>
                       )}
                     </div>
-                    <select className="w-full h-12 px-3 border rounded-lg bg-white">
-                      <option>Select Your Location</option>
-                      <option>Chennai</option>
-                      <option>Coimbatore</option>
-                      <option>Madurai</option>
-                      <option>Salem</option>
-                    </select>
+                    <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                      <p className="text-xs text-blue-700 text-center">
+                        📍 Your location will be collected when clients hire you for accurate service delivery.
+                      </p>
+                    </div>
                     <Button 
                       onClick={handleTestApp}
                       className="w-full h-12 bg-green-600 text-white"
