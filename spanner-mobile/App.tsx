@@ -10,6 +10,25 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 // Simple App component for now - will add navigation after dependencies are installed
 export default function App() {
   const [currentScreen, setCurrentScreen] = React.useState('home');
+  const [isLoaded, setIsLoaded] = React.useState(false);
+
+  React.useEffect(() => {
+    // Simulate app initialization
+    const timer = setTimeout(() => {
+      setIsLoaded(true);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (!isLoaded) {
+    return (
+      <View style={[styles.container, styles.loadingContainer]}>
+        <StatusBar style="dark" />
+        <Text style={styles.loadingText}>Loading SPANNER...</Text>
+        <Text style={styles.loadingSubtext}>Getting ready...</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -87,7 +106,7 @@ export default function App() {
           Connecting to SPANNER backend...
         </Text>
         <Text style={styles.footerSubtext}>
-          Backend: {__DEV__ ? 'localhost:5000' : 'production'}
+          Status: Connected to Metro
         </Text>
       </View>
     </View>
@@ -142,13 +161,14 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     width: '100%',
-    gap: 15,
+    marginTop: 20,
   },
   button: {
     paddingVertical: 15,
     paddingHorizontal: 30,
     borderRadius: 8,
     alignItems: 'center',
+    marginBottom: 15,
   },
   primaryButton: {
     backgroundColor: '#3b82f6',
@@ -182,5 +202,19 @@ const styles = StyleSheet.create({
   footerSubtext: {
     fontSize: 12,
     color: '#9ca3af',
+  },
+  loadingContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#3b82f6',
+    marginBottom: 10,
+  },
+  loadingSubtext: {
+    fontSize: 16,
+    color: '#6b7280',
   },
 });
