@@ -33,6 +33,7 @@ Preferred communication style: Simple, everyday language.
 
 ### Core Features
 - **Voice-Powered Quick Post System**: Multilingual (10+ Indian languages) voice job posting for clients using Google Gemini-powered speech-to-text. Extracts service details, location, and budget, with automatic account creation for new users.
+- **Comprehensive SEO Implementation**: Enterprise-level SEO with Schema.org structured data, dynamic sitemaps, robots.txt, Open Graph tags, and client-focused landing pages for maximum Google search visibility.
 - **Database Backup & Restore**: Utilities for exporting/importing complete database to/from JSON.
 - **Comprehensive Database Schema**: Includes users, worker profiles, districts, areas, service categories, bookings (with OTP verification), worker reviews, location tracking, and payments.
 - **Authentication System**: Mobile-based OTP verification (development mock "123456"), role-based access control, multi-step worker registration (including mandatory bank details integration with Razorpay IFSC API), and GPS-based district detection.

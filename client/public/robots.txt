@@ -5,11 +5,13 @@ Allow: /
 
 # Prioritize important pages for crawling
 Allow: /services/*
+Allow: /find-workers
 Allow: /locations/*
 Allow: /workers/*
 Allow: /about
 Allow: /contact
 Allow: /how-it-works
+Allow: /quick-post
 
 # Disallow admin and internal pages
 Disallow: /admin/

@@ -39,23 +39,23 @@ export function Footer() {
             <h6 className="font-semibold mb-4">Services</h6>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link href="#" className="text-muted-foreground hover:text-primary">
-                  Plumbing
+                <Link href="/services" className="text-muted-foreground hover:text-primary">
+                  All Services
+                </Link>
+              </li>
+              <li>
+                <Link href="/find-workers" className="text-muted-foreground hover:text-primary">
+                  Find Workers
+                </Link>
+              </li>
+              <li>
+                <Link href="/quick-post" className="text-muted-foreground hover:text-primary">
+                  Quick Post Job
                 </Link>
               </li>
               <li>
                 <Link href="#" className="text-muted-foreground hover:text-primary">
-                  Electrical
-                </Link>
-              </li>
-              <li>
-                <Link href="#" className="text-muted-foreground hover:text-primary">
-                  Painting
-                </Link>
-              </li>
-              <li>
-                <Link href="#" className="text-muted-foreground hover:text-primary">
-                  Mechanics
+                  Emergency Services
                 </Link>
               </li>
             </ul>

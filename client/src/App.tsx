@@ -33,6 +33,8 @@ import BudgetAnalytics from "@/pages/BudgetAnalytics";
 import AboutPage from "@/pages/AboutPage";
 import HowItWorksPage from "@/pages/HowItWorksPage";
 import ContactPage from "@/pages/ContactPage";
+import FindWorkersPage from "@/pages/FindWorkersPage";
+import ServicesPage from "@/pages/ServicesPage";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -69,6 +71,8 @@ function Router() {
           <Route path="/about" component={AboutPage} />
           <Route path="/how-it-works" component={HowItWorksPage} />
           <Route path="/contact" component={ContactPage} />
+          <Route path="/find-workers" component={FindWorkersPage} />
+          <Route path="/services" component={ServicesPage} />
           <Route component={NotFound} />
         </Switch>
 
