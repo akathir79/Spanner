@@ -75,9 +75,9 @@ export function Navbar() {
             <div className="hidden md:flex items-center justify-center flex-1 gap-4">
               <FloatingRegisterButton />
               <QuickPostButton />
-              <Link href="/mobile" className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2">
+              <Link href="/mobile-demo" className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2">
                 <span>📱</span>
-                <span>Mobile App</span>
+                <span>Mobile Test</span>
               </Link>
             </div>
 
