@@ -60,3 +60,21 @@ Preferred communication style: Simple, everyday language.
 - `vite`: Frontend build tool and development server
 - `tsx`: TypeScript execution for Node.js
 - `@replit/vite-plugin-runtime-error-modal`: Development error handling
+
+## Mobile Application
+
+### SPANNER Mobile App (React Native)
+- **Location**: `spanner-mobile/` directory (separate project)
+- **Framework**: React Native with Expo
+- **Architecture**: Connects to existing SPANNER backend via REST API
+- **Authentication**: Shares same OTP-based mobile verification system
+- **Data Sync**: Real-time synchronization with web app via shared database
+- **Key Features**: 
+  - Native mobile UI for clients and workers
+  - Voice-enabled job posting integration
+  - Real-time booking management
+  - GPS location services
+  - Push notifications (planned)
+  - Offline capability (planned)
+- **Deployment**: Google Play Store and Apple App Store ready
+- **API Integration**: Uses existing Express.js endpoints for seamless data sharing
