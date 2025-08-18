@@ -18,7 +18,7 @@ export default function MobileTestApp() {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [currentPage, setCurrentPage] = useState('welcome');
+  const [currentPage, setCurrentPage] = useState<'welcome' | 'login' | 'register' | 'quick-join-select' | 'quick-join-client' | 'quick-join-worker'>('welcome');
   const [showSuccess, setShowSuccess] = useState(false);
   const [showAuthPrompt, setShowAuthPrompt] = useState(false);
   
@@ -210,7 +210,7 @@ export default function MobileTestApp() {
                   {/* Quick Actions */}
                   <div className="grid grid-cols-2 gap-3 mb-4">
                     <Button 
-                      onClick={() => setCurrentPage('quick-join')}
+                      onClick={() => setCurrentPage('quick-join-select')}
                       className="h-12 bg-purple-600 text-white"
                     >
                       🚀 Quick Join
@@ -369,7 +369,8 @@ export default function MobileTestApp() {
               </div>
             )}
 
-            {currentPage === 'quick-join' && (
+            {/* Quick Join Role Selection - Matches Web App Flow */}
+            {currentPage === 'quick-join-select' && (
               <div className="space-y-4">
                 <Button 
                   variant="ghost" 
@@ -383,12 +384,105 @@ export default function MobileTestApp() {
                 <Card>
                   <CardHeader className="text-center">
                     <CardTitle className="text-purple-600">🚀 Quick Join</CardTitle>
-                    <CardDescription>Register as a Worker in 30 seconds</CardDescription>
+                    <CardDescription>Choose how you want to use SPANNER</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {/* Role Selection Cards - Matching Web App Design */}
+                    <div className="grid grid-cols-1 gap-3">
+                      <Card 
+                        className="cursor-pointer hover:shadow-md transition-shadow border-2 hover:border-purple-300"
+                        onClick={() => setCurrentPage('quick-join-client')}
+                      >
+                        <CardContent className="p-4 text-center bg-pink-50">
+                          <User className="h-8 w-8 mx-auto mb-2 text-purple-600" />
+                          <h3 className="font-semibold text-gray-800">I Need Services</h3>
+                          <p className="text-purple-600 text-sm font-medium">Register as Client</p>
+                        </CardContent>
+                      </Card>
+                      
+                      <Card 
+                        className="cursor-pointer hover:shadow-md transition-shadow border-2 hover:border-green-300"
+                        onClick={() => setCurrentPage('quick-join-worker')}
+                      >
+                        <CardContent className="p-4 text-center bg-green-50">
+                          <Wrench className="h-8 w-8 mx-auto mb-2 text-green-600" />
+                          <h3 className="font-semibold text-gray-800">I Provide Services</h3>
+                          <p className="text-green-600 text-sm font-medium">Register as Worker</p>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+
+            {/* Quick Join Client Registration */}
+            {currentPage === 'quick-join-client' && (
+              <div className="space-y-4">
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => setCurrentPage('quick-join-select')}
+                  className="mb-4"
+                >
+                  ← Back
+                </Button>
+                
+                <Card>
+                  <CardHeader className="text-center">
+                    <CardTitle className="text-purple-600">👤 Client Registration</CardTitle>
+                    <CardDescription>Register to hire workers in 30 seconds</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <Input 
                       type="text" 
-                      placeholder="Your Name"
+                      placeholder="Your Full Name"
+                      className="h-12"
+                    />
+                    <Input 
+                      type="tel" 
+                      placeholder="+91 98765 43210"
+                      className="h-12"
+                    />
+                    <select className="w-full h-12 px-3 border rounded-lg bg-white">
+                      <option>Select Your Location</option>
+                      <option>Chennai</option>
+                      <option>Coimbatore</option>
+                      <option>Madurai</option>
+                      <option>Salem</option>
+                    </select>
+                    <Button 
+                      onClick={handleTestApp}
+                      className="w-full h-12 bg-purple-600 text-white"
+                    >
+                      Register as Client
+                    </Button>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+
+            {/* Quick Join Worker Registration */}
+            {currentPage === 'quick-join-worker' && (
+              <div className="space-y-4">
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => setCurrentPage('quick-join-select')}
+                  className="mb-4"
+                >
+                  ← Back
+                </Button>
+                
+                <Card>
+                  <CardHeader className="text-center">
+                    <CardTitle className="text-green-600">🔧 Worker Registration</CardTitle>
+                    <CardDescription>Register to offer services in 30 seconds</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <Input 
+                      type="text" 
+                      placeholder="Your Full Name"
                       className="h-12"
                     />
                     <Input 
@@ -476,18 +570,16 @@ export default function MobileTestApp() {
                     <select className="w-full h-12 px-3 border rounded-lg bg-white">
                       <option>Select Your Location</option>
                       <option>Chennai</option>
-                      <option>Bangalore</option>
-                      <option>Mumbai</option>
-                      <option>Delhi</option>
-                      <option>Pune</option>
-                      <option>Hyderabad</option>
+                      <option>Coimbatore</option>
+                      <option>Madurai</option>
+                      <option>Salem</option>
                     </select>
-                    <Button className="w-full h-12 bg-purple-600 text-white">
-                      Join as Worker
+                    <Button 
+                      onClick={handleTestApp}
+                      className="w-full h-12 bg-green-600 text-white"
+                    >
+                      Register as Worker
                     </Button>
-                    <p className="text-center text-xs text-gray-600">
-                      Start earning today! Get job notifications instantly.
-                    </p>
                   </CardContent>
                 </Card>
               </div>
@@ -567,8 +659,8 @@ export default function MobileTestApp() {
               </button>
               
               <button 
-                onClick={() => setCurrentPage('quick-join')}
-                className={`flex flex-col items-center space-y-1 ${currentPage === 'quick-join' ? 'text-purple-600' : 'text-gray-500'}`}
+                onClick={() => setCurrentPage('quick-join-select')}
+                className={`flex flex-col items-center space-y-1 ${currentPage.startsWith('quick-join') ? 'text-purple-600' : 'text-gray-500'}`}
               >
                 <User className="h-5 w-5" />
                 <span className="text-xs">Join</span>
