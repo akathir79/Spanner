@@ -33,14 +33,15 @@ export default function MobileTestApp() {
     enabled: true, // Always enabled for mobile app
   });
 
-  // Debug dropdown interaction
-  const handleDropdownDebug = () => {
-    console.log("Dropdown clicked! Services available:", {
-      servicesCount: Array.isArray(services) ? services.length : 0,
-      selectedService,
-      showNewServiceInput,
-      servicesLoading
-    });
+  // Enhanced service selection handler
+  const handleServiceSelect = (value: string) => {
+    console.log("Service selected:", value);
+    if (value === "ADD_NEW_SERVICE") {
+      setShowNewServiceInput(true);
+      return;
+    }
+    setSelectedService(value);
+    setShowNewServiceInput(false);
   };
 
   // Mutation to create new service
@@ -125,15 +126,7 @@ export default function MobileTestApp() {
     }
   };
 
-  // Handler for service selection (like AuthModal)
-  const handleServiceSelect = (value: string) => {
-    if (value === "ADD_NEW_SERVICE") {
-      setShowNewServiceInput(true);
-      return;
-    }
-    setSelectedService(value);
-    setShowNewServiceInput(false);
-  };
+
 
   const handleTestApp = () => {
     setShowSuccess(true);
@@ -403,99 +396,76 @@ export default function MobileTestApp() {
                       placeholder="+91 98765 43210"
                       className="h-12"
                     />
-                    {/* Enhanced Primary Service Field - Matches AuthModal Implementation */}
+                    {/* Primary Service Field - Clean Implementation */}
                     <div className="space-y-2">
                       <label className="text-sm font-medium text-gray-700">Primary Service</label>
                       
                       {!showNewServiceInput ? (
-                        <Select 
-                          value={selectedService} 
-                          onValueChange={handleServiceSelect}
-                          onOpenChange={(open) => {
-                            if (open) handleDropdownDebug();
-                          }}
-                        >
-                          <SelectTrigger className="h-12 bg-white border border-gray-300 flex items-center justify-between w-full">
-                            <SelectValue placeholder="Select primary service" />
-                            <ChevronDown className="h-4 w-4 opacity-50" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {servicesLoading ? (
-                              <SelectItem value="loading" disabled>Loading services...</SelectItem>
-                            ) : Array.isArray(services) && services.length > 0 ? (
-                              <>
-                                {services.map((service: any) => (
-                                  <SelectItem key={service.id} value={service.name}>
-                                    {service.name}
-                                  </SelectItem>
-                                ))}
-                                <SelectItem value="ADD_NEW_SERVICE" className="text-blue-600 font-medium">
-                                  <div className="flex items-center gap-2">
-                                    <Plus className="h-4 w-4" />
-                                    Add New Service
-                                  </div>
-                                </SelectItem>
-                              </>
+                        <div className="relative">
+                          <select 
+                            value={selectedService}
+                            onChange={(e) => handleServiceSelect(e.target.value)}
+                            className="w-full h-12 px-3 border border-gray-300 rounded-md bg-white appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          >
+                            <option value="" disabled>Select primary service</option>
+                            {Array.isArray(services) && services.length > 0 ? (
+                              services.map((service: any) => (
+                                <option key={service.id} value={service.name}>
+                                  {service.name}
+                                </option>
+                              ))
                             ) : (
                               <>
-                                {/* Fallback services when API is loading or fails */}
-                                <SelectItem value="Plumbing">Plumbing</SelectItem>
-                                <SelectItem value="Electrical">Electrical</SelectItem>
-                                <SelectItem value="Painting">Painting</SelectItem>
-                                <SelectItem value="Cleaning">Cleaning</SelectItem>
-                                <SelectItem value="Carpentry">Carpentry</SelectItem>
-                                <SelectItem value="AC Repair">AC Repair</SelectItem>
-                                <SelectItem value="Mechanic">Mechanic</SelectItem>
-                                <SelectItem value="Gardening">Gardening</SelectItem>
-                                <SelectItem value="BathRoom cleaning">BathRoom cleaning</SelectItem>
-                                <SelectItem value="ADD_NEW_SERVICE" className="text-blue-600 font-medium">
-                                  <div className="flex items-center gap-2">
-                                    <Plus className="h-4 w-4" />
-                                    Add New Service
-                                  </div>
-                                </SelectItem>
+                                <option value="Plumbing">Plumbing</option>
+                                <option value="Electrical">Electrical</option>
+                                <option value="Painting">Painting</option>
+                                <option value="Cleaning">Cleaning</option>
+                                <option value="Carpentry">Carpentry</option>
+                                <option value="AC Repair">AC Repair</option>
+                                <option value="Mechanic">Mechanic</option>
+                                <option value="Gardening">Gardening</option>
                               </>
                             )}
-                          </SelectContent>
-                        </Select>
+                            <option value="ADD_NEW_SERVICE" className="text-blue-600">+ Add New Service</option>
+                          </select>
+                          <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+                        </div>
                       ) : (
                         <div className="space-y-2">
-                          <div className="space-y-2">
-                            <Input
-                              value={newServiceName}
-                              onChange={(e) => setNewServiceName(e.target.value)}
-                              placeholder="Enter new service name (e.g., Home Repair, HVAC Service)"
-                              className="w-full h-12"
-                              onKeyPress={(e) => {
-                                if (e.key === 'Enter') {
-                                  e.preventDefault();
-                                  handleAddNewService();
-                                }
+                          <Input
+                            value={newServiceName}
+                            onChange={(e) => setNewServiceName(e.target.value)}
+                            placeholder="Enter new service name (e.g., Home Repair, HVAC Service)"
+                            className="w-full h-12"
+                            onKeyPress={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                                handleAddNewService();
+                              }
+                            }}
+                          />
+                          <div className="flex gap-2">
+                            <Button
+                              type="button"
+                              size="sm"
+                              onClick={handleAddNewService}
+                              disabled={createServiceMutation.isPending || !newServiceName.trim()}
+                              className="flex-1 bg-blue-600 hover:bg-blue-700"
+                            >
+                              {createServiceMutation.isPending ? "Adding..." : "Add Service"}
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setShowNewServiceInput(false);
+                                setNewServiceName("");
                               }}
-                            />
-                            <div className="flex gap-2">
-                              <Button
-                                type="button"
-                                size="sm"
-                                onClick={handleAddNewService}
-                                disabled={createServiceMutation.isPending || !newServiceName.trim()}
-                                className="flex-1"
-                              >
-                                {createServiceMutation.isPending ? "Adding..." : "Add Service"}
-                              </Button>
-                              <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                onClick={() => {
-                                  setShowNewServiceInput(false);
-                                  setNewServiceName("");
-                                }}
-                                className="flex-1"
-                              >
-                                Cancel
-                              </Button>
-                            </div>
+                              className="flex-1"
+                            >
+                              Cancel
+                            </Button>
                           </div>
                           <p className="text-xs text-muted-foreground">
                             Add a new service that doesn't exist in the current list
