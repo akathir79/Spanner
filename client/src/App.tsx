@@ -62,6 +62,7 @@ function Router() {
           <Route path="/admin/pending-verifications" component={PendingVerificationsManagement} />
           <Route path="/admin/analytics" component={AnalyticsManagement} />
           <Route path="/admin/settings" component={PlatformSettings} />
+          <Route path="/admin/platform-settings" component={PlatformSettings} />
           <Route path="/district-manager" component={DistrictManager} />
           <Route path="/payment/:bookingId" component={Payment} />
           <Route path="/service-history" component={ServiceHistory} />
