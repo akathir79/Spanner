@@ -5,20 +5,37 @@
 
 import React from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 
-// Simple App component for now - will add navigation after dependencies are installed
+// Simple App component - stable version for mobile testing
 export default function App() {
   const [currentScreen, setCurrentScreen] = React.useState('home');
   const [isLoaded, setIsLoaded] = React.useState(false);
 
   React.useEffect(() => {
-    // Simulate app initialization
-    const timer = setTimeout(() => {
-      setIsLoaded(true);
-    }, 1000);
-    return () => clearTimeout(timer);
+    // Simple app initialization
+    try {
+      const timer = setTimeout(() => {
+        setIsLoaded(true);
+      }, 500);
+      return () => clearTimeout(timer);
+    } catch (error) {
+      console.log('App initialization error:', error);
+      setIsLoaded(true); // Still show app even if error
+    }
   }, []);
+
+  const handleButtonPress = (screen: string) => {
+    try {
+      if (screen === 'test') {
+        Alert.alert('SPANNER Mobile', 'App is working correctly!');
+      } else {
+        setCurrentScreen(screen);
+      }
+    } catch (error) {
+      console.log('Button press error:', error);
+    }
+  };
 
   if (!isLoaded) {
     return (
@@ -52,14 +69,21 @@ export default function App() {
             <View style={styles.buttonContainer}>
               <TouchableOpacity 
                 style={[styles.button, styles.primaryButton]}
-                onPress={() => setCurrentScreen('login')}
+                onPress={() => handleButtonPress('test')}
               >
-                <Text style={styles.buttonText}>Login</Text>
+                <Text style={styles.buttonText}>Test App</Text>
               </TouchableOpacity>
               
               <TouchableOpacity 
                 style={[styles.button, styles.secondaryButton]}
-                onPress={() => setCurrentScreen('register')}
+                onPress={() => handleButtonPress('login')}
+              >
+                <Text style={styles.secondaryButtonText}>Login</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                style={[styles.button, styles.secondaryButton]}
+                onPress={() => handleButtonPress('register')}
               >
                 <Text style={styles.secondaryButtonText}>Register</Text>
               </TouchableOpacity>
@@ -76,7 +100,7 @@ export default function App() {
             
             <TouchableOpacity 
               style={[styles.button, styles.secondaryButton]}
-              onPress={() => setCurrentScreen('home')}
+              onPress={() => handleButtonPress('home')}
             >
               <Text style={styles.secondaryButtonText}>← Back to Home</Text>
             </TouchableOpacity>
@@ -92,7 +116,7 @@ export default function App() {
             
             <TouchableOpacity 
               style={[styles.button, styles.secondaryButton]}
-              onPress={() => setCurrentScreen('home')}
+              onPress={() => handleButtonPress('home')}
             >
               <Text style={styles.secondaryButtonText}>← Back to Home</Text>
             </TouchableOpacity>
