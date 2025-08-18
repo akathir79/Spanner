@@ -33,18 +33,15 @@ export default function MobileTestApp() {
     enabled: true, // Always enabled for mobile app
   });
 
-  // Debug services loading (remove after testing)
-  if (currentPage === 'quick-join') {
-    console.log("Mobile App Quick Join Services:", { 
-      services, 
-      servicesLoading, 
-      servicesError,
-      isArray: Array.isArray(services),
-      length: Array.isArray(services) ? services.length : 0,
+  // Debug dropdown interaction
+  const handleDropdownDebug = () => {
+    console.log("Dropdown clicked! Services available:", {
+      servicesCount: Array.isArray(services) ? services.length : 0,
       selectedService,
-      showNewServiceInput
+      showNewServiceInput,
+      servicesLoading
     });
-  }
+  };
 
   // Mutation to create new service
   const createServiceMutation = useMutation({
@@ -414,9 +411,13 @@ export default function MobileTestApp() {
                         <Select 
                           value={selectedService} 
                           onValueChange={handleServiceSelect}
+                          onOpenChange={(open) => {
+                            if (open) handleDropdownDebug();
+                          }}
                         >
-                          <SelectTrigger className="h-12">
+                          <SelectTrigger className="h-12 bg-white border border-gray-300 flex items-center justify-between w-full">
                             <SelectValue placeholder="Select primary service" />
+                            <ChevronDown className="h-4 w-4 opacity-50" />
                           </SelectTrigger>
                           <SelectContent>
                             {servicesLoading ? (
