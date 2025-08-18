@@ -1,0 +1,45 @@
+# Robots.txt for SPANNER - India's Blue Collar Service Marketplace
+
+User-agent: *
+Allow: /
+
+# Prioritize important pages for crawling
+Allow: /services/*
+Allow: /locations/*
+Allow: /workers/*
+Allow: /about
+Allow: /contact
+Allow: /how-it-works
+
+# Disallow admin and internal pages
+Disallow: /admin/
+Disallow: /dashboard/
+Disallow: /worker-dashboard/
+Disallow: /api/
+Disallow: /payment/
+Disallow: /login
+Disallow: /register
+Disallow: /otp-verification
+Disallow: /search?*
+Disallow: /*?*utm_*
+Disallow: /*?*session*
+Disallow: /*?*token*
+
+# Specific crawl delays for different bots
+User-agent: Googlebot
+Crawl-delay: 1
+
+User-agent: Bingbot
+Crawl-delay: 2
+
+User-agent: Slurp
+Crawl-delay: 3
+
+# Sitemap location
+Sitemap: https://spanner.replit.app/sitemap.xml
+Sitemap: https://spanner.replit.app/sitemap-services.xml
+Sitemap: https://spanner.replit.app/sitemap-locations.xml
+Sitemap: https://spanner.replit.app/sitemap-workers.xml
+
+# Host directive
+Host: https://spanner.replit.app

@@ -1,5 +1,6 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import { registerSitemapRoutes } from "./routes-sitemap";
 import { storage } from "./storage";
 import { budgetAnalyticsService } from "./budget-analytics";
 import statesDistrictsData from "@shared/states-districts.json";
@@ -4588,6 +4589,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Register SEO sitemap routes
+  registerSitemapRoutes(app);
+  
   const httpServer = createServer(app);
   return httpServer;
 }

@@ -24,6 +24,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Search, CheckCircle, Shield, Clock, Users, MapPin, Star, Handshake, ChevronDown, X, MapPinIcon } from "lucide-react";
 import { VoiceInput } from "@/components/VoiceInput";
 import { VoiceAssistant } from "@/components/VoiceAssistant";
+import { SEOHead } from "@/components/SEOHead";
 import rajeshAvatar from "@assets/Babu_1753861985304.png";
 import arjunAvatar from "@assets/krishnan_1753861985304.png";
 import sureshAvatar from "@assets/veni_1753861985304.png";
@@ -607,8 +608,47 @@ export default function Home() {
     return null; // Will redirect via useEffect
   }
 
+  // SEO schema data for home page
+  const homePageSchema = {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "SPANNER - India's #1 Blue Collar Service Marketplace",
+    "description": "Find verified skilled workers across India on SPANNER. Connect with plumbers, electricians, painters, mechanics, carpenters, cleaning services, and more.",
+    "url": "https://spanner.replit.app",
+    "isPartOf": {
+      "@type": "WebSite",
+      "name": "SPANNER",
+      "url": "https://spanner.replit.app"
+    },
+    "primaryImageOfPage": {
+      "@type": "ImageObject",
+      "url": "https://spanner.replit.app/og-image.jpg"
+    },
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://spanner.replit.app"
+        }
+      ]
+    }
+  };
+
   return (
     <div className="min-h-screen">
+      <SEOHead
+        title="SPANNER - India's #1 Blue Collar Service Marketplace | Find Skilled Workers Near You"
+        description="Find verified skilled workers across India on SPANNER. Connect with plumbers, electricians, painters, mechanics, carpenters, cleaning services, and more. Instant booking, secure payments, GPS tracking. Available in 1000+ cities nationwide."
+        keywords="blue collar services India, skilled workers near me, plumber electrician carpenter, home services marketplace, worker booking app, service providers India, local handyman services, verified skilled workers, instant service booking, home maintenance India, SPANNER marketplace, blue collar jobs India"
+        canonical="https://spanner.replit.app"
+        ogTitle="SPANNER - India's #1 Blue Collar Service Marketplace"
+        ogDescription="Find verified skilled workers across India. Connect with plumbers, electricians, painters, mechanics, carpenters, cleaning services, and more. Available in 1000+ cities nationwide."
+        schemaData={homePageSchema}
+      />
+      
       {/* Hero Section */}
       <section className="relative bg-gradient-to-br from-primary to-blue-600 text-white py-20 mt-16">
         <div className="container mx-auto px-4">

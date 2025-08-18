@@ -30,6 +30,9 @@ import MessagesSupport from "@/pages/MessagesSupport";
 import FinancialManagementPage from "@/pages/FinancialManagementPage";
 import QuickPostPage from "@/pages/QuickPostPage";
 import BudgetAnalytics from "@/pages/BudgetAnalytics";
+import AboutPage from "@/pages/AboutPage";
+import HowItWorksPage from "@/pages/HowItWorksPage";
+import ContactPage from "@/pages/ContactPage";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -63,6 +66,9 @@ function Router() {
           <Route path="/admin/financial" component={FinancialManagementPage} />
           <Route path="/quick-post" component={QuickPostPage} />
           <Route path="/budget-analytics" component={BudgetAnalytics} />
+          <Route path="/about" component={AboutPage} />
+          <Route path="/how-it-works" component={HowItWorksPage} />
+          <Route path="/contact" component={ContactPage} />
           <Route component={NotFound} />
         </Switch>
 
