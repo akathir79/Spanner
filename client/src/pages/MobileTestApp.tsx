@@ -93,6 +93,22 @@ export default function MobileTestApp() {
                     ▶ Test App
                   </Button>
                   
+                  {/* Quick Actions */}
+                  <div className="grid grid-cols-2 gap-3 mb-4">
+                    <Button 
+                      onClick={() => setCurrentPage('quick-join')}
+                      className="h-12 bg-purple-600 text-white"
+                    >
+                      🚀 Quick Join
+                    </Button>
+                    <Button 
+                      onClick={() => setCurrentPage('quick-post')}
+                      className="h-12 bg-green-600 text-white"
+                    >
+                      📝 Quick Post
+                    </Button>
+                  </div>
+                  
                   <div className="grid grid-cols-2 gap-3 mb-6">
                     <Button 
                       onClick={() => setCurrentPage('login')}
@@ -223,6 +239,123 @@ export default function MobileTestApp() {
                 </Card>
               </div>
             )}
+
+            {currentPage === 'quick-join' && (
+              <div className="space-y-4">
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => setCurrentPage('welcome')}
+                  className="mb-4"
+                >
+                  ← Back
+                </Button>
+                
+                <Card>
+                  <CardHeader className="text-center">
+                    <CardTitle className="text-purple-600">🚀 Quick Join</CardTitle>
+                    <CardDescription>Register as a Worker in 30 seconds</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <Input 
+                      type="text" 
+                      placeholder="Your Name"
+                      className="h-12"
+                    />
+                    <Input 
+                      type="tel" 
+                      placeholder="+91 98765 43210"
+                      className="h-12"
+                    />
+                    <select className="w-full h-12 px-3 border rounded-lg bg-white">
+                      <option>Select Your Service</option>
+                      <option>Plumbing</option>
+                      <option>Electrical</option>
+                      <option>Painting</option>
+                      <option>Cleaning</option>
+                      <option>Carpentry</option>
+                      <option>AC Repair</option>
+                    </select>
+                    <select className="w-full h-12 px-3 border rounded-lg bg-white">
+                      <option>Select Your Location</option>
+                      <option>Chennai</option>
+                      <option>Bangalore</option>
+                      <option>Mumbai</option>
+                      <option>Delhi</option>
+                      <option>Pune</option>
+                      <option>Hyderabad</option>
+                    </select>
+                    <Button className="w-full h-12 bg-purple-600 text-white">
+                      Join as Worker
+                    </Button>
+                    <p className="text-center text-xs text-gray-600">
+                      Start earning today! Get job notifications instantly.
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+
+            {currentPage === 'quick-post' && (
+              <div className="space-y-4">
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => setCurrentPage('welcome')}
+                  className="mb-4"
+                >
+                  ← Back
+                </Button>
+                
+                <Card>
+                  <CardHeader className="text-center">
+                    <CardTitle className="text-green-600">📝 Quick Post</CardTitle>
+                    <CardDescription>Post a job in 30 seconds</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <Input 
+                      type="text" 
+                      placeholder="Job Title (e.g., Fix AC)"
+                      className="h-12"
+                    />
+                    <textarea 
+                      placeholder="What work do you need done?"
+                      className="w-full h-20 px-3 py-2 border rounded-lg resize-none"
+                      rows={3}
+                    />
+                    <select className="w-full h-12 px-3 border rounded-lg bg-white">
+                      <option>Select Service Type</option>
+                      <option>Plumbing</option>
+                      <option>Electrical</option>
+                      <option>Painting</option>
+                      <option>Cleaning</option>
+                      <option>Carpentry</option>
+                      <option>AC Repair</option>
+                    </select>
+                    <Input 
+                      type="number" 
+                      placeholder="Budget (₹)"
+                      className="h-12"
+                    />
+                    <select className="w-full h-12 px-3 border rounded-lg bg-white">
+                      <option>Select Location</option>
+                      <option>Chennai</option>
+                      <option>Bangalore</option>
+                      <option>Mumbai</option>
+                      <option>Delhi</option>
+                      <option>Pune</option>
+                      <option>Hyderabad</option>
+                    </select>
+                    <Button className="w-full h-12 bg-green-600 text-white">
+                      Post Job Now
+                    </Button>
+                    <p className="text-center text-xs text-gray-600">
+                      Get quotes from qualified workers instantly!
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
           </div>
 
           {/* Bottom Navigation */}
@@ -237,24 +370,27 @@ export default function MobileTestApp() {
               </button>
               
               <button 
-                onClick={() => setCurrentPage('login')}
-                className={`flex flex-col items-center space-y-1 ${currentPage === 'login' ? 'text-blue-600' : 'text-gray-500'}`}
+                onClick={() => setCurrentPage('quick-join')}
+                className={`flex flex-col items-center space-y-1 ${currentPage === 'quick-join' ? 'text-purple-600' : 'text-gray-500'}`}
               >
                 <User className="h-5 w-5" />
-                <span className="text-xs">Login</span>
+                <span className="text-xs">Join</span>
               </button>
               
               <button 
-                onClick={() => setCurrentPage('register')}
-                className={`flex flex-col items-center space-y-1 ${currentPage === 'register' ? 'text-blue-600' : 'text-gray-500'}`}
+                onClick={() => setCurrentPage('quick-post')}
+                className={`flex flex-col items-center space-y-1 ${currentPage === 'quick-post' ? 'text-green-600' : 'text-gray-500'}`}
               >
-                <Phone className="h-5 w-5" />
-                <span className="text-xs">Register</span>
+                <Plus className="h-5 w-5" />
+                <span className="text-xs">Post</span>
               </button>
               
-              <button className="flex flex-col items-center space-y-1 text-gray-500">
+              <button 
+                onClick={() => setCurrentPage('login')}
+                className={`flex flex-col items-center space-y-1 ${currentPage === 'login' ? 'text-blue-600' : 'text-gray-500'}`}
+              >
                 <Settings className="h-5 w-5" />
-                <span className="text-xs">Settings</span>
+                <span className="text-xs">More</span>
               </button>
             </div>
           </div>
