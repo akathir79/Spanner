@@ -1,6 +1,8 @@
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import BudgetHeatMap from '@/components/BudgetHeatMap';
+import { JobMarketHeatMap } from '@/components/JobMarketHeatMap';
 import { TrendingUp, BarChart3, MapPin, IndianRupee } from 'lucide-react';
 
 export default function BudgetAnalytics() {
@@ -50,8 +52,21 @@ export default function BudgetAnalytics() {
           </Card>
         </div>
 
-        {/* Main Heat Map Component */}
-        <BudgetHeatMap className="w-full" />
+        {/* Analytics Tabs */}
+        <Tabs defaultValue="budget" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="budget">Budget Heat Map</TabsTrigger>
+            <TabsTrigger value="jobs">Job Market Heat Map</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="budget" className="space-y-6">
+            <BudgetHeatMap className="w-full" />
+          </TabsContent>
+          
+          <TabsContent value="jobs" className="space-y-6">
+            <JobMarketHeatMap height={600} autoPlay={true} />
+          </TabsContent>
+        </Tabs>
 
         {/* Additional Insights */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
