@@ -1,283 +1,261 @@
-import { db } from "../server/db";
-import { sql } from "drizzle-orm";
-import { restoreDatabase } from "./backup-restore";
-import path from 'path';
-import fs from 'fs';
-
 /**
- * Auto Database Setup Utility
- * Automatically detects if database is empty and restores from backup
- * Perfect for new deployments and fresh installations
+ * SPANNER Database Auto-Setup
+ * Automatically creates database schema and populates sample data
+ * for Git deployment to new Replit accounts
  */
 
-async function checkDatabaseExists(): Promise<boolean> {
+import { drizzle } from 'drizzle-orm/neon-http';
+import { neon } from '@neondatabase/serverless';
+import * as schema from '../shared/schema';
+import { eq, sql } from 'drizzle-orm';
+
+// Import all table schemas
+const {
+  users,
+  serviceCategories,
+  bookings,
+  advertisements,
+  workerProfiles,
+  apiKeys
+} = schema;
+
+export async function setupDatabase() {
+  if (!process.env.DATABASE_URL) {
+    console.error('❌ DATABASE_URL environment variable is required');
+    return false;
+  }
+
+  const connection = neon(process.env.DATABASE_URL);
+  const db = drizzle(connection, { schema });
+
+  console.log('🚀 Starting database auto-setup...');
+
   try {
-    // Check if service_categories table exists and has data (core table for the platform)
-    const result = await db.execute(sql`
-      SELECT COUNT(*) as count 
-      FROM information_schema.tables 
-      WHERE table_schema = 'public' 
-      AND table_name = 'service_categories'
-    `);
-    
-    const tableExists = (result.rows[0] as any)?.count > 0;
-    
-    if (!tableExists) {
-      return false;
+    // Check if database already has data
+    const existingUsers = await db.select().from(users).limit(1);
+    if (existingUsers.length > 0) {
+      console.log('✅ Database already exists and has data. No setup needed.');
+      return true;
     }
 
-    // Check if service_categories table has data
-    const serviceCount = await db.execute(sql`SELECT COUNT(*) as count FROM service_categories`);
-    const hasData = (serviceCount.rows[0] as any)?.count > 0;
-    
-    return hasData;
+    console.log('📦 Creating database schema and sample data...');
+
+    // 1. Create Service Categories (replaces old services)
+    const sampleServices = [
+      {
+        id: '4423648c-2bb0-4d04-9c29-8e66aac22f1e',
+        name: 'Plumbing',
+        description: 'Water pipe installation, repair, and maintenance',
+        icon: 'Wrench',
+        isActive: true
+      },
+      {
+        id: '5534759d-3cc1-5e15-ad3a-9f77bbd33f2f',
+        name: 'Electrical Work',
+        description: 'Electrical installation, wiring, and repairs',
+        icon: 'Zap',
+        isActive: true
+      },
+      {
+        id: '6645860e-4dd2-6f26-be4b-af88cce44f3g',
+        name: 'Painting',
+        description: 'Interior and exterior painting services',
+        icon: 'Paintbrush',
+        isActive: true
+      },
+      {
+        id: '7756971f-5ee3-7037-cf5c-bg99ddf55f4h',
+        name: 'Carpenter',
+        description: 'Furniture making, repair, and woodwork',
+        icon: 'Hammer',
+        isActive: true
+      },
+      {
+        id: '8867082g-6ff4-8148-dg6d-ch00eeg66g5i',
+        name: 'Mechanic',
+        description: 'Vehicle repair and maintenance services',
+        icon: 'Car',
+        isActive: true
+      }
+    ];
+
+    await db.insert(serviceCategories).values(sampleServices);
+    console.log('✅ Created service categories');
+
+    // 2. Create Sample Users
+    const sampleUsers = [
+      // Admin user
+      {
+        id: 'TN-SALEM-0001-ADMIN',
+        firstName: 'System',
+        lastName: 'Administrator',
+        mobile: '9876543210',
+        email: 'admin@spanner.com',
+        role: 'admin' as const,
+        houseNumber: '1',
+        streetName: 'Admin Street',
+        areaName: 'Anna Nagar',
+        district: 'Salem',
+        state: 'Tamil Nadu',
+        pincode: '636001',
+        fullAddress: '1, Admin Street, Anna Nagar, Salem, Tamil Nadu 636001',
+        isVerified: true,
+
+      },
+      // Sample client
+      {
+        id: 'TN-SALEM-0002-CLIENT',
+        firstName: 'Raj',
+        lastName: 'Kumar',
+        mobile: '9876543211',
+        email: 'raj@example.com',
+        role: 'client' as const,
+        houseNumber: '123',
+        streetName: 'Main Street',
+        areaName: 'Anna Nagar',
+        district: 'Salem',
+        state: 'Tamil Nadu',
+        pincode: '636001',
+        fullAddress: '123, Main Street, Anna Nagar, Salem, Tamil Nadu 636001',
+        isVerified: true,
+
+      },
+      // Sample worker
+      {
+        id: 'TN-SALEM-0003-WORKER',
+        firstName: 'Murugan',
+        lastName: 'S',
+        mobile: '9876543212',
+        email: 'murugan@example.com',
+        role: 'worker' as const,
+        houseNumber: '456',
+        streetName: 'Worker Street',
+        areaName: 'Gandhi Road',
+        district: 'Salem',
+        state: 'Tamil Nadu',
+        pincode: '636002',
+        fullAddress: '456, Worker Street, Gandhi Road, Salem, Tamil Nadu 636002',
+        isVerified: true,
+
+      }
+    ];
+
+    await db.insert(users).values(sampleUsers);
+    console.log('✅ Created sample users');
+
+    // 3. Create Worker Profile for sample worker
+    const sampleWorkerProfile = [
+      {
+        userId: 'TN-SALEM-0003-WORKER',
+        aadhaarNumber: '123456789012',
+        primaryService: 'Plumbing',
+        experienceYears: 5,
+        hourlyRate: '150.00',
+        serviceDistricts: ['Salem', 'Coimbatore'],
+        serviceAreas: ['Anna Nagar', 'Gandhi Road'],
+        serviceAllAreas: false,
+        bio: 'Experienced plumber with 5 years of expertise in residential and commercial plumbing services.',
+        skills: ['Plumbing', 'Electrical Work'],
+        isAvailable: true,
+        rating: '4.80',
+        totalJobs: 25
+      }
+    ];
+
+    await db.insert(workerProfiles).values(sampleWorkerProfile);
+    console.log('✅ Created worker profiles');
+
+    // 4. Create Sample Bookings  
+    const sampleBookings = [
+      {
+        id: 'BOOK-001',
+        clientId: 'TN-SALEM-0002-CLIENT',
+        workerId: 'TN-SALEM-0003-WORKER',
+        serviceCategory: 'Plumbing',
+        description: 'Fix leaking kitchen sink pipe',
+        district: 'Salem',
+        scheduledDate: new Date('2024-08-15T10:00:00Z'),
+        status: 'completed',
+        totalAmount: '500.00',
+        paymentStatus: 'paid',
+        clientRating: 5,
+        clientReview: 'Excellent work! Fixed the pipe perfectly and very professional.',
+        completionOTP: '123456',
+        otpGeneratedAt: new Date('2024-08-01T14:00:00Z'),
+        otpVerifiedAt: new Date('2024-08-01T15:00:00Z'),
+        workerCompletedAt: new Date('2024-08-01T14:30:00Z'),
+        clientConfirmedAt: new Date('2024-08-01T15:00:00Z')
+      }
+    ];
+
+    await db.insert(bookings).values(sampleBookings);
+    console.log('✅ Created sample bookings');
+
+    // 5. Create Sample Advertisements
+    const sampleAds = [
+      {
+        title: 'Welcome to SPANNER',
+        description: 'Find reliable blue-collar workers near you',
+        image: '', // Base64 image will be added later
+        targetAudience: 'client',
+        isActive: true,
+        priority: 1
+      },
+      {
+        title: 'Join as Worker',
+        description: 'Earn money by providing your skills',
+        image: '', // Base64 image will be added later
+        targetAudience: 'worker',
+        isActive: true,
+        priority: 2
+      }
+    ];
+
+    await db.insert(advertisements).values(sampleAds);
+    console.log('✅ Created sample advertisements');
+
+    // 6. Create API Keys Storage
+    const sampleKeys = [
+      {
+        keyType: 'ai_service',
+        keyName: 'GEMINI_API_KEY',
+        keyValue: 'your_gemini_api_key_here',
+        description: 'Google Gemini API key for voice processing',
+        isActive: true
+      },
+      {
+        keyType: 'communication',
+        keyName: 'SMS_API_KEY', 
+        keyValue: 'your_sms_api_key_here',
+        description: 'SMS service API key for OTP',
+        isActive: false
+      }
+    ];
+
+    await db.insert(apiKeys).values(sampleKeys);
+    console.log('✅ Created sample API keys');
+
+    console.log('🎉 Database setup completed successfully!');
+    console.log('');
+    console.log('📊 Summary:');
+    console.log(`   • ${sampleServices.length} service categories created`);
+    console.log(`   • ${sampleUsers.length} users created`);
+    console.log(`   • ${sampleWorkerProfile.length} worker profiles created`);
+    console.log(`   • ${sampleBookings.length} bookings created`);
+    console.log(`   • ${sampleAds.length} advertisements created`);
+    console.log(`   • ${sampleKeys.length} API keys created`);
+    console.log('');
+    console.log('🔐 Default Login Credentials:');
+    console.log('   Admin: 9876543210 (OTP: 123456)');
+    console.log('   Client: 9876543211 (OTP: 123456)');
+    console.log('   Worker: 9876543212 (OTP: 123456)');
+    console.log('');
+    console.log('🚀 Ready to start the application!');
+
+    return true;
+
   } catch (error) {
-    console.log('Database not accessible or doesn\'t exist:', error);
+    console.error('❌ Database setup failed:', error);
     return false;
   }
 }
-
-async function ensureCoreTablesExist(): Promise<void> {
-  try {
-    console.log('🔧 Ensuring core tables exist...');
-    
-    // Create settings table if it doesn't exist
-    await db.execute(sql.raw(`
-      CREATE TABLE IF NOT EXISTS settings (
-        key VARCHAR PRIMARY KEY,
-        value TEXT NOT NULL,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      )
-    `));
-    
-    // Create advertisements table if it doesn't exist
-    await db.execute(sql.raw(`
-      CREATE TABLE IF NOT EXISTS advertisements (
-        id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
-        title TEXT NOT NULL,
-        description TEXT,
-        image TEXT,
-        target_audience TEXT NOT NULL,
-        link TEXT,
-        button_text TEXT,
-        background_color TEXT DEFAULT '#ffffff',
-        text_color TEXT DEFAULT '#000000',
-        display_mode TEXT DEFAULT 'card',
-        is_active BOOLEAN DEFAULT true,
-        priority INTEGER DEFAULT 0,
-        start_date TIMESTAMP,
-        end_date TIMESTAMP,
-        created_by VARCHAR,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      )
-    `));
-    
-    // Create api_keys table if it doesn't exist
-    await db.execute(sql.raw(`
-      CREATE TABLE IF NOT EXISTS api_keys (
-        id VARCHAR PRIMARY KEY,
-        key_type VARCHAR NOT NULL,
-        key_name VARCHAR NOT NULL,
-        key_value TEXT NOT NULL,
-        is_active BOOLEAN DEFAULT true,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        UNIQUE(key_type, key_name)
-      )
-    `));
-    
-    // Create transfer_history table if it doesn't exist
-    await db.execute(sql.raw(`
-      CREATE TABLE IF NOT EXISTS transfer_history (
-        id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
-        worker_id VARCHAR NOT NULL,
-        client_id VARCHAR,
-        amount DECIMAL(10, 2) NOT NULL,
-        transfer_type TEXT NOT NULL,
-        status TEXT DEFAULT 'pending',
-        reference_id TEXT,
-        description TEXT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      )
-    `));
-    
-    // Create financial_models table if it doesn't exist with all current fields
-    await db.execute(sql.raw(`
-      CREATE TABLE IF NOT EXISTS financial_models (
-        id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
-        name TEXT NOT NULL,
-        is_active BOOLEAN DEFAULT false,
-        gst_rate NUMERIC(5,2) DEFAULT '0',
-        admin_commission_percentage NUMERIC(5,2) DEFAULT '0',
-        advance_payment_percentage NUMERIC(5,2) DEFAULT '0',
-        completion_payment_percentage NUMERIC(5,2) DEFAULT '0',
-        client_referral_bonus NUMERIC(10,2) DEFAULT '0',
-        worker_referral_bonus NUMERIC(10,2) DEFAULT '0',
-        worker_commission_percentage NUMERIC(5,2) DEFAULT '0',
-        min_transaction_limit NUMERIC(10,2) DEFAULT '0',
-        max_transaction_limit NUMERIC(10,2) DEFAULT '0',
-        processing_fee_percentage NUMERIC(5,2) DEFAULT '0',
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      )
-    `));
-    
-    // Create api_keys table if it doesn't exist
-    await db.execute(sql.raw(`
-      CREATE TABLE IF NOT EXISTS api_keys (
-        id VARCHAR PRIMARY KEY,
-        key_type VARCHAR NOT NULL,
-        key_name VARCHAR NOT NULL,
-        key_value TEXT NOT NULL,
-        is_active BOOLEAN DEFAULT true,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        UNIQUE(key_type, key_name)
-      )
-    `));
-    
-    console.log('✅ Core tables verified/created!');
-  } catch (error) {
-    console.error('❌ Core table creation failed:', error);
-  }
-}
-
-async function ensureSchemaUpdated(): Promise<void> {
-  try {
-    console.log('🔧 Ensuring database schema is up to date...');
-    
-    // Check and add missing columns that might not exist in older databases
-    const missingColumns = [
-      { table: 'users', column: 'house_number', type: 'TEXT' },
-      { table: 'users', column: 'street_name', type: 'TEXT' },
-      { table: 'users', column: 'area_name', type: 'TEXT' },
-      { table: 'users', column: 'full_address', type: 'TEXT' },
-      { table: 'users', column: 'bank_address', type: 'TEXT' },
-      { table: 'users', column: 'bank_micr', type: 'TEXT' },
-      { table: 'users', column: 'is_suspended', type: 'BOOLEAN DEFAULT false' },
-      { table: 'users', column: 'suspended_at', type: 'TIMESTAMP' },
-      { table: 'users', column: 'suspended_by', type: 'VARCHAR' },
-      { table: 'users', column: 'suspension_reason', type: 'TEXT' },
-      { table: 'users', column: 'rejoin_requested_at', type: 'TIMESTAMP' },
-      { table: 'users', column: 'rejoin_request_reason', type: 'TEXT' },
-      { table: 'users', column: 'has_rejoin_request', type: 'BOOLEAN DEFAULT false' },
-      { table: 'users', column: 'verification_comment', type: 'TEXT' },
-      { table: 'users', column: 'verified_at', type: 'TIMESTAMP' },
-      { table: 'users', column: 'verified_by', type: 'VARCHAR' },
-      { table: 'users', column: 'approved_at', type: 'TIMESTAMP' },
-      { table: 'users', column: 'approved_by', type: 'VARCHAR' },
-      { table: 'users', column: 'last_login_at', type: 'TIMESTAMP' },
-      { table: 'financial_models', column: 'worker_commission_percentage', type: 'NUMERIC(5,2) DEFAULT \'0\'' }
-    ];
-
-    for (const { table, column, type } of missingColumns) {
-      try {
-        // Check if column exists
-        const columnCheck = await db.execute(sql.raw(`
-          SELECT COUNT(*) as count 
-          FROM information_schema.columns 
-          WHERE table_name = '${table}' 
-          AND column_name = '${column}'
-        `));
-        
-        const columnExists = (columnCheck.rows[0] as any)?.count > 0;
-        
-        if (!columnExists) {
-          console.log(`  Adding missing column: ${table}.${column}`);
-          await db.execute(sql.raw(`ALTER TABLE ${table} ADD COLUMN ${column} ${type}`));
-        }
-      } catch (error) {
-        // Column might already exist or there might be a constraint issue
-        console.log(`  Column ${table}.${column} already exists or has constraint issues`);
-      }
-    }
-
-    console.log('✅ Database schema update completed!');
-  } catch (error) {
-    console.error('❌ Database schema update failed:', error);
-    throw error;
-  }
-}
-
-async function runDatabaseMigrations(): Promise<void> {
-  try {
-    console.log('🔧 Running database migrations...');
-    
-    // Create any missing tables first
-    await ensureCoreTablesExist();
-    
-    // First try to create tables using drizzle-kit push in non-interactive mode
-    try {
-      const { execSync } = await import('child_process');
-      // Use --yes flag to auto-confirm all prompts
-      execSync('yes | npm run db:push', { stdio: 'ignore', timeout: 30000 });
-    } catch (error) {
-      // If drizzle push fails, continue with manual schema updates
-      console.log('📝 Drizzle push completed or skipped, continuing with schema updates...');
-    }
-    
-    // Ensure all schema updates are applied
-    await ensureSchemaUpdated();
-    
-    console.log('✅ Database migrations completed!');
-  } catch (error) {
-    console.error('❌ Database migrations failed:', error);
-    throw error;
-  }
-}
-
-async function autoSetupDatabase(): Promise<void> {
-  try {
-    console.log('🚀 Starting auto database setup...');
-    
-    // Check if database exists and has data
-    const databaseReady = await checkDatabaseExists();
-    
-    if (databaseReady) {
-      console.log('✅ Database already exists and has data. No setup needed.');
-      return;
-    }
-
-    console.log('📦 Database is empty or doesn\'t exist. Setting up from backup...');
-    
-    // Run migrations first to create tables
-    await runDatabaseMigrations();
-    
-    // Check if backup file exists
-    const backupDir = path.join(process.cwd(), 'database', 'backups');
-    const latestBackupPath = path.join(backupDir, 'latest-backup.json');
-    
-    if (!fs.existsSync(latestBackupPath)) {
-      console.log('⚠️  No backup file found. Database will be empty.');
-      console.log('📝 You can manually import data or create a backup from another instance.');
-      return;
-    }
-
-    // Restore from backup
-    console.log('📁 Found backup file. Restoring data...');
-    await restoreDatabase(latestBackupPath);
-    
-    console.log('🎉 Auto database setup completed successfully!');
-    
-  } catch (error) {
-    console.error('💥 Auto database setup failed:', error);
-    throw error;
-  }
-}
-
-// Run auto setup if called directly
-if (import.meta.url === `file://${process.argv[1]}`) {
-  autoSetupDatabase()
-    .then(() => {
-      console.log('✨ Database setup process completed!');
-      process.exit(0);
-    })
-    .catch((error) => {
-      console.error('💥 Database setup process failed:', error);
-      process.exit(1);
-    });
-}
-
-export { autoSetupDatabase, checkDatabaseExists };
