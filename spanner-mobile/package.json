@@ -2,7 +2,7 @@
   "name": "spanner-mobile",
   "version": "1.0.0",
   "description": "SPANNER Mobile App - React Native client for the India Blue-Collar Service Marketplace",
-  "main": "index.ts",
+  "main": "App.tsx",
   "scripts": {
     "start": "expo start",
     "android": "expo start --android",
@@ -24,7 +24,6 @@
   "devDependencies": {
     "@babel/core": "^7.20.0",
     "@types/react": "~18.2.45",
-    "@types/react-native": "^0.73.0",
     "typescript": "~5.3.3"
   },
   "keywords": [
