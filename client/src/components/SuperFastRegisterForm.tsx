@@ -7,12 +7,12 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { INDIAN_STATES_AND_UTS } from "@shared/constants";
 
-import { ChevronLeft, MapPin, User, Satellite, Radio, ChevronDown } from "lucide-react";
+import { ChevronLeft, MapPin, User, Satellite, Radio, ChevronDown, Plus } from "lucide-react";
 // Removed unused import
 
 // Super fast registration schema
@@ -54,7 +54,10 @@ export function SuperFastRegisterForm({ role, onComplete, onBack, onStepChange, 
   const [districtSearchInput, setDistrictSearchInput] = useState("");
   const [apiDistricts, setApiDistricts] = useState<Array<{id: string, name: string, tamilName?: string}>>([]);
   const [isLoadingDistricts, setIsLoadingDistricts] = useState(false);
+  const [showNewServiceInput, setShowNewServiceInput] = useState(false);
+  const [newServiceName, setNewServiceName] = useState("");
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const schema = role === "client" ? fastClientSchema : fastWorkerSchema;
   
@@ -78,6 +81,93 @@ export function SuperFastRegisterForm({ role, onComplete, onBack, onStepChange, 
     queryKey: ["/api/services"],
     enabled: role === "worker",
   });
+
+  // Mutation to create new service
+  const createServiceMutation = useMutation({
+    mutationFn: async (serviceName: string) => {
+      const response = await fetch('/api/services', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: serviceName,
+          description: `${serviceName} services`,
+          icon: 'wrench',
+          isActive: true
+        })
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to create service');
+      }
+      
+      return response.json();
+    },
+    onSuccess: (newService) => {
+      // Invalidate and refetch services
+      queryClient.invalidateQueries({ queryKey: ["/api/services"] });
+      
+      // Set the newly created service as selected
+      form.setValue("primaryService", newService.name);
+      
+      // Reset form
+      setNewServiceName('');
+      setShowNewServiceInput(false);
+      
+      toast({
+        title: "Service added successfully!",
+        description: `${newService.name} has been added to the service list.`,
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to add service",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleAddNewService = async () => {
+    if (!newServiceName.trim()) {
+      toast({
+        title: "Service name required",
+        description: "Please enter a service name.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Check if service already exists
+    const serviceExists = Array.isArray(services) && services.some((service: any) => 
+      service.name.toLowerCase() === newServiceName.trim().toLowerCase()
+    );
+
+    if (serviceExists) {
+      toast({
+        title: "Service exists",
+        description: "This service already exists. Please select it from the dropdown.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      await createServiceMutation.mutateAsync(newServiceName.trim());
+    } catch (error) {
+      // Error is handled by the mutation's onError
+    }
+  };
+
+  // Handler for service selection (like AuthModal)
+  const handleServiceSelect = (value: string) => {
+    if (value === "ADD_NEW_SERVICE") {
+      setShowNewServiceInput(true);
+      return;
+    }
+    form.setValue("primaryService", value);
+    setShowNewServiceInput(false);
+  };
 
   // Watch for state changes
   const selectedState = form.watch("state");
@@ -256,7 +346,7 @@ export function SuperFastRegisterForm({ role, onComplete, onBack, onStepChange, 
             experienceYears: 1, // Default - to be updated in dashboard  
             hourlyRate: 100, // Default rate - to be updated in dashboard
             serviceDistricts: [data.district || "Salem"], // Use selected district
-            skills: [data.primaryService || "General"], // Use primary service as default skill
+            skills: [(data as FastWorkerData).primaryService || "General"], // Use primary service as default skill
           })
         }),
       });
@@ -344,7 +434,7 @@ export function SuperFastRegisterForm({ role, onComplete, onBack, onStepChange, 
             )}
           />
 
-          {/* Service Type for Worker */}
+          {/* Service Type for Worker - Enhanced with Add New Service */}
           {role === "worker" && (
             <FormField
               control={form.control}
@@ -352,20 +442,81 @@ export function SuperFastRegisterForm({ role, onComplete, onBack, onStepChange, 
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Primary Service</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select your primary service" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {Array.isArray(services) ? services.map((service: any) => (
-                        <SelectItem key={service.id} value={service.name}>
-                          {service.name}
+                  {!showNewServiceInput ? (
+                    <Select 
+                      value={field.value} 
+                      onValueChange={handleServiceSelect}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select your primary service" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {Array.isArray(services) ? services.map((service: any) => (
+                          <SelectItem key={service.id} value={service.name}>
+                            {service.name}
+                          </SelectItem>
+                        )) : [
+                          <SelectItem key="plumbing" value="Plumbing">Plumbing</SelectItem>,
+                          <SelectItem key="electrical" value="Electrical">Electrical</SelectItem>,
+                          <SelectItem key="painting" value="Painting">Painting</SelectItem>,
+                          <SelectItem key="cleaning" value="Cleaning">Cleaning</SelectItem>,
+                          <SelectItem key="carpentry" value="Carpentry">Carpentry</SelectItem>,
+                          <SelectItem key="ac-repair" value="AC Repair">AC Repair</SelectItem>
+                        ]}
+                        <SelectItem value="ADD_NEW_SERVICE" className="text-blue-600 font-medium">
+                          <div className="flex items-center gap-2">
+                            <Plus className="h-4 w-4" />
+                            Add New Service
+                          </div>
                         </SelectItem>
-                      )) : []}
-                    </SelectContent>
-                  </Select>
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <div className="space-y-2">
+                      <div className="space-y-2">
+                        <Input
+                          value={newServiceName}
+                          onChange={(e) => setNewServiceName(e.target.value)}
+                          placeholder="Enter new service name (e.g., Home Repair, HVAC Service)"
+                          className="w-full"
+                          onKeyPress={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              handleAddNewService();
+                            }
+                          }}
+                        />
+                        <div className="flex gap-2">
+                          <Button
+                            type="button"
+                            size="sm"
+                            onClick={handleAddNewService}
+                            disabled={createServiceMutation.isPending || !newServiceName.trim()}
+                            className="flex-1"
+                          >
+                            {createServiceMutation.isPending ? "Adding..." : "Add Service"}
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setShowNewServiceInput(false);
+                              setNewServiceName("");
+                            }}
+                            className="flex-1"
+                          >
+                            Cancel
+                          </Button>
+                        </div>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Add a new service that doesn't exist in the current list
+                      </p>
+                    </div>
+                  )}
                   <FormMessage />
                 </FormItem>
               )}
