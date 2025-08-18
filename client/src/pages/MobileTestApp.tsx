@@ -334,23 +334,29 @@ export default function MobileTestApp() {
                 <Card>
                   <CardHeader className="text-center">
                     <CardTitle>Join SPANNER</CardTitle>
-                    <CardDescription>Create your account</CardDescription>
+                    <CardDescription>Quick and simple signup</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <Input 
                       type="text" 
-                      placeholder="Full Name"
+                      placeholder="First Name"
                       className="h-12"
                     />
                     <Input 
                       type="tel" 
-                      placeholder="+91 98765 43210"
+                      placeholder="10-digit mobile number"
                       className="h-12"
+                      maxLength={10}
                     />
                     <select className="w-full h-12 px-3 border rounded-lg bg-white">
                       <option>I need services (Client)</option>
                       <option>I provide services (Worker)</option>
                     </select>
+                    <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                      <p className="text-xs text-blue-700 text-center">
+                        📍 Your address will be collected when you post your first job for security and accurate service delivery.
+                      </p>
+                    </div>
                     <Button className="w-full h-12 bg-blue-600 text-white">
                       Create Account
                     </Button>

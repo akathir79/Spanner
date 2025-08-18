@@ -47,11 +47,10 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
     urgency: 'medium' as const
   });
   
-  // Quick auth states
+  // Quick auth states - simplified to match Quick Join flow
   const [quickAuthData, setQuickAuthData] = useState({
     mobile: '',
     firstName: '',
-    lastName: '',
     role: 'client' as 'client' | 'worker'
   });
   const [otpSent, setOtpSent] = useState(false);
@@ -129,7 +128,6 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
       setQuickAuthData({
         mobile: '',
         firstName: '',
-        lastName: '',
         role: 'client'
       });
     }
@@ -604,10 +602,10 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
   }, [otp, quickAuthData.mobile, verifyOtp, toast]);
 
   const handleQuickRegister = useCallback(async () => {
-    if (!quickAuthData.firstName || !quickAuthData.lastName || !quickAuthData.mobile) {
+    if (!quickAuthData.firstName || !quickAuthData.mobile) {
       toast({
         title: "Missing Information",
-        description: "Please fill in all required fields",
+        description: "Please fill in your first name and mobile number",
         variant: "destructive"
       });
       return;
@@ -615,17 +613,53 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
 
     setIsProcessing(true);
     try {
-      const result = await signupClient({
-        firstName: quickAuthData.firstName,
-        lastName: quickAuthData.lastName,
-        mobile: quickAuthData.mobile,
-        role: quickAuthData.role
+      // Use simplified registration with only first name and mobile
+      const endpoint = quickAuthData.role === "client" ? "/api/auth/signup/client" : "/api/auth/signup/worker";
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          firstName: quickAuthData.firstName,
+          mobile: quickAuthData.mobile,
+          role: quickAuthData.role,
+          lastName: "UPDATE_REQUIRED", // Mark for update
+          // Address will be collected during job posting
+          houseNumber: "COLLECT_DURING_POSTING",
+          streetName: "COLLECT_DURING_POSTING", 
+          areaName: "COLLECT_DURING_POSTING",
+          district: "COLLECT_DURING_POSTING",
+          state: "COLLECT_DURING_POSTING",
+          pincode: "COLLECT_DURING_POSTING",
+          email: "", // Will be requested in dashboard
+          fullAddress: "COLLECT_DURING_POSTING",
+          // Worker-specific required fields with defaults for quick registration
+          ...(quickAuthData.role === "worker" && {
+            aadhaarNumber: "000000000000", // Placeholder - to be updated in dashboard
+            experienceYears: 1, // Default - to be updated in dashboard  
+            hourlyRate: 100, // Default rate - to be updated in dashboard
+            serviceDistricts: ["Salem"], // Default district - will be updated during job posting
+            skills: ["General"], // Default skill - will be updated in dashboard
+          })
+        }),
       });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        let errorMessage = "Registration failed";
+        try {
+          const errorData = JSON.parse(errorText);
+          errorMessage = errorData.message || errorMessage;
+        } catch {
+          errorMessage = errorText || errorMessage;
+        }
+        throw new Error(errorMessage);
+      }
+      const result = await response.json();
       
       if (result.success && result.user) {
         toast({
           title: "Registration Successful",
-          description: `Welcome ${result.user.firstName}! Account created successfully.`
+          description: `Welcome ${result.user.firstName}! You can now post jobs. Your address will be collected during your first job posting.`
         });
         setCurrentStep('language');
       } else {
@@ -809,25 +843,14 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
             </div>
             
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="text-sm font-medium">First Name</label>
-                  <Input
-                    type="text"
-                    placeholder="First name"
-                    value={quickAuthData.firstName}
-                    onChange={(e) => setQuickAuthData(prev => ({ ...prev, firstName: e.target.value }))}
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium">Last Name</label>
-                  <Input
-                    type="text"
-                    placeholder="Last name"
-                    value={quickAuthData.lastName}
-                    onChange={(e) => setQuickAuthData(prev => ({ ...prev, lastName: e.target.value }))}
-                  />
-                </div>
+              <div>
+                <label className="text-sm font-medium">First Name</label>
+                <Input
+                  type="text"
+                  placeholder="Enter your first name"
+                  value={quickAuthData.firstName}
+                  onChange={(e) => setQuickAuthData(prev => ({ ...prev, firstName: e.target.value }))}
+                />
               </div>
               
               <div>
@@ -859,6 +882,13 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
                     Worker (Find Jobs)
                   </Button>
                 </div>
+              </div>
+
+              {/* Simplified registration note */}
+              <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                <p className="text-xs text-blue-700 text-center">
+                  📍 Your address will be collected when you post your first job for security and accurate service delivery.
+                </p>
               </div>
               
               <Button 
