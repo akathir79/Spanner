@@ -7,7 +7,8 @@ import {
   bookings,
   jobPostings,
   bids,
-  workerBankDetails
+  workerBankDetails,
+  apiKeys
 } from "../shared/schema";
 import fs from 'fs';
 import path from 'path';
@@ -32,6 +33,7 @@ interface DatabaseBackup {
     jobPostings: any[];
     bids: any[];
     workerBankDetails: any[];
+    apiKeys: any[];
   };
 }
 
@@ -55,7 +57,8 @@ async function exportDatabase(): Promise<void> {
       bookingsData,
       jobPostingsData,
       bidsData,
-      workerBankDetailsData
+      workerBankDetailsData,
+      apiKeysData
     ] = await Promise.all([
       db.select().from(users),
       db.select().from(serviceCategories),
@@ -63,7 +66,8 @@ async function exportDatabase(): Promise<void> {
       db.select().from(bookings),
       db.select().from(jobPostings),
       db.select().from(bids),
-      db.select().from(workerBankDetails)
+      db.select().from(workerBankDetails),
+      db.select().from(apiKeys)
     ]);
 
     // Create backup object
@@ -81,7 +85,8 @@ async function exportDatabase(): Promise<void> {
         bookings: bookingsData,
         jobPostings: jobPostingsData,
         bids: bidsData,
-        workerBankDetails: workerBankDetailsData
+        workerBankDetails: workerBankDetailsData,
+        apiKeys: apiKeysData
       }
     };
 
@@ -111,6 +116,7 @@ async function exportDatabase(): Promise<void> {
     console.log(`- Job Postings: ${backup.schema.jobPostings.length}`);
     console.log(`- Bids: ${backup.schema.bids.length}`);
     console.log(`- Worker Bank Details: ${backup.schema.workerBankDetails.length}`);
+    console.log(`- API Keys: ${backup.schema.apiKeys.length}`);
 
   } catch (error) {
     console.error('❌ Database export failed:', error);

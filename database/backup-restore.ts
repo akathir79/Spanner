@@ -7,7 +7,8 @@ import {
   bookings,
   jobPostings,
   bids,
-  workerBankDetails
+  workerBankDetails,
+  apiKeys
 } from "../shared/schema";
 import fs from 'fs';
 import path from 'path';
@@ -50,6 +51,7 @@ interface DatabaseBackup {
     jobPostings: any[];
     bids: any[];
     workerBankDetails: any[];
+    apiKeys?: any[];
     // Legacy fields (no longer used - districts/areas now via API)
     districts?: any[];
     areas?: any[];
@@ -95,7 +97,8 @@ async function restoreDatabase(backupFilePath?: string): Promise<void> {
       db.delete(workerBankDetails),
       db.delete(workerProfiles),
       db.delete(users),
-      db.delete(serviceCategories)
+      db.delete(serviceCategories),
+      db.delete(apiKeys)
     ]);
 
     // Restore data in correct order (respecting foreign key constraints)
@@ -152,6 +155,13 @@ async function restoreDatabase(backupFilePath?: string): Promise<void> {
       await db.insert(bids).values(backup.schema.bids);
     }
 
+    // 11. API Keys (no dependencies)
+    if (backup.schema.apiKeys && backup.schema.apiKeys.length > 0) {
+      console.log(`🔑 Restoring ${backup.schema.apiKeys.length} API keys...`);
+      const transformedApiKeys = transformTimestampFields(backup.schema.apiKeys);
+      await db.insert(apiKeys).values(transformedApiKeys);
+    }
+
     console.log('✅ Database restore completed successfully!');
     
     // Print summary
@@ -164,6 +174,9 @@ async function restoreDatabase(backupFilePath?: string): Promise<void> {
     console.log(`- Job Postings: ${backup.schema.jobPostings.length}`);
     console.log(`- Bids: ${backup.schema.bids.length}`);
     console.log(`- Worker Bank Details: ${backup.schema.workerBankDetails.length}`);
+    if (backup.schema.apiKeys) {
+      console.log(`- API Keys: ${backup.schema.apiKeys.length}`);
+    }
     if (backup.schema.districts) {
       console.log(`- Districts (legacy): ${backup.schema.districts.length}`);
     }

@@ -41,6 +41,7 @@ Preferred communication style: Simple, everyday language.
 - **Job Completion System**: OTP-verified job completion workflow with detailed review and rating system.
 - **Advertisement System**: Admin-managed sliding carousel ads with targeted display.
 - **Financial Model**: 5-tier system with real-time wallets, GST calculations, admin commission, referral rewards, and mock payment processing, ready for Stripe integration.
+- **Centralized Key Management**: Secure API key storage system for managing all platform integrations (SMS, WhatsApp, Stripe, GPay, PhonePe, email services) with super admin access control, database persistence, and backup/restore integration.
 
 ## External Dependencies
 

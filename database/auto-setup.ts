@@ -73,6 +73,20 @@ async function ensureCoreTablesExist(): Promise<void> {
       )
     `));
     
+    // Create api_keys table if it doesn't exist
+    await db.execute(sql.raw(`
+      CREATE TABLE IF NOT EXISTS api_keys (
+        id VARCHAR PRIMARY KEY,
+        key_type VARCHAR NOT NULL,
+        key_name VARCHAR NOT NULL,
+        key_value TEXT NOT NULL,
+        is_active BOOLEAN DEFAULT true,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(key_type, key_name)
+      )
+    `));
+    
     // Create transfer_history table if it doesn't exist
     await db.execute(sql.raw(`
       CREATE TABLE IF NOT EXISTS transfer_history (
@@ -107,6 +121,20 @@ async function ensureCoreTablesExist(): Promise<void> {
         processing_fee_percentage NUMERIC(5,2) DEFAULT '0',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `));
+    
+    // Create api_keys table if it doesn't exist
+    await db.execute(sql.raw(`
+      CREATE TABLE IF NOT EXISTS api_keys (
+        id VARCHAR PRIMARY KEY,
+        key_type VARCHAR NOT NULL,
+        key_name VARCHAR NOT NULL,
+        key_value TEXT NOT NULL,
+        is_active BOOLEAN DEFAULT true,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(key_type, key_name)
       )
     `));
     
