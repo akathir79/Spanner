@@ -8,14 +8,99 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Wrench, Home, User, Settings, Phone, CheckCircle, Search, Plus, Briefcase, Lock } from 'lucide-react';
+import { Wrench, Home, User, Settings, Phone, CheckCircle, Search, Plus, Briefcase, Lock, ChevronDown } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useToast } from '@/hooks/use-toast';
 
 export default function MobileTestApp() {
   const { user } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [currentPage, setCurrentPage] = useState('welcome');
   const [showSuccess, setShowSuccess] = useState(false);
   const [showAuthPrompt, setShowAuthPrompt] = useState(false);
+  
+  // Service management states for Quick Join
+  const [showNewServiceInput, setShowNewServiceInput] = useState(false);
+  const [newServiceName, setNewServiceName] = useState('');
+  const [selectedService, setSelectedService] = useState('');
+
+  // Fetch services for worker registration
+  const { data: services } = useQuery({
+    queryKey: ["/api/services"],
+  });
+
+  // Mutation to create new service
+  const createServiceMutation = useMutation({
+    mutationFn: async (serviceName: string) => {
+      const response = await fetch('/api/services', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: serviceName,
+          description: `${serviceName} services`,
+          icon: 'wrench',
+          isActive: true
+        })
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to create service');
+      }
+      
+      return response.json();
+    },
+    onSuccess: (newService) => {
+      // Invalidate and refetch services
+      queryClient.invalidateQueries({ queryKey: ["/api/services"] });
+      
+      // Select the newly created service
+      setSelectedService(newService.name);
+      
+      // Reset form
+      setNewServiceName('');
+      setShowNewServiceInput(false);
+      
+      toast({
+        title: "Service added successfully!",
+        description: `${newService.name} has been added to the service list.`,
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to add service",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleAddNewService = () => {
+    if (!newServiceName.trim()) {
+      toast({
+        title: "Service name required",
+        description: "Please enter a service name.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Check if service already exists
+    if (Array.isArray(services) && services.some((service: any) => 
+      service.name.toLowerCase() === newServiceName.toLowerCase().trim()
+    )) {
+      toast({
+        title: "Service already exists",
+        description: "This service is already in the list.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    createServiceMutation.mutate(newServiceName.trim());
+  };
 
   const handleTestApp = () => {
     setShowSuccess(true);
@@ -285,15 +370,94 @@ export default function MobileTestApp() {
                       placeholder="+91 98765 43210"
                       className="h-12"
                     />
-                    <select className="w-full h-12 px-3 border rounded-lg bg-white">
-                      <option>Select Your Service</option>
-                      <option>Plumbing</option>
-                      <option>Electrical</option>
-                      <option>Painting</option>
-                      <option>Cleaning</option>
-                      <option>Carpentry</option>
-                      <option>AC Repair</option>
-                    </select>
+                    {/* Enhanced Primary Service Field */}
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-gray-700">Primary Service</label>
+                      
+                      {!showNewServiceInput ? (
+                        <div className="space-y-2">
+                          <select 
+                            className="w-full h-12 px-3 border rounded-lg bg-white"
+                            value={selectedService}
+                            onChange={(e) => {
+                              if (e.target.value === "add_new") {
+                                setShowNewServiceInput(true);
+                              } else {
+                                setSelectedService(e.target.value);
+                              }
+                            }}
+                          >
+                            <option value="">Select Your Service</option>
+                            {Array.isArray(services) ? services.map((service: any) => (
+                              <option key={service.id} value={service.name}>
+                                {service.name}
+                              </option>
+                            )) : [
+                              <option key="plumbing" value="Plumbing">Plumbing</option>,
+                              <option key="electrical" value="Electrical">Electrical</option>,
+                              <option key="painting" value="Painting">Painting</option>,
+                              <option key="cleaning" value="Cleaning">Cleaning</option>,
+                              <option key="carpentry" value="Carpentry">Carpentry</option>,
+                              <option key="ac-repair" value="AC Repair">AC Repair</option>
+                            ]}
+                            <option value="add_new" className="text-blue-600 font-medium">
+                              + Add New Service
+                            </option>
+                          </select>
+                          
+                          {!selectedService && (
+                            <p className="text-xs text-gray-500">
+                              Don't see your service? Select "Add New Service" to create one!
+                            </p>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          <div className="flex space-x-2">
+                            <Input
+                              type="text"
+                              placeholder="Enter new service name (e.g., Bike Repair)"
+                              value={newServiceName}
+                              onChange={(e) => setNewServiceName(e.target.value)}
+                              className="h-12 flex-1"
+                              onKeyPress={(e) => {
+                                if (e.key === 'Enter') {
+                                  handleAddNewService();
+                                }
+                              }}
+                            />
+                            <Button
+                              onClick={handleAddNewService}
+                              disabled={createServiceMutation.isPending || !newServiceName.trim()}
+                              className="h-12 bg-blue-600 text-white px-4"
+                            >
+                              {createServiceMutation.isPending ? (
+                                <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full" />
+                              ) : (
+                                "Add"
+                              )}
+                            </Button>
+                          </div>
+                          
+                          <div className="flex space-x-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setShowNewServiceInput(false);
+                                setNewServiceName('');
+                              }}
+                              className="text-xs"
+                            >
+                              Cancel
+                            </Button>
+                            <p className="text-xs text-gray-500 flex-1">
+                              This will add your service to the platform for all users.
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                     <select className="w-full h-12 px-3 border rounded-lg bg-white">
                       <option>Select Your Location</option>
                       <option>Chennai</option>
