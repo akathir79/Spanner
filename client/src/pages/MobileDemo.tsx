@@ -107,7 +107,7 @@ export default function MobileDemo() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 max-w-sm mx-auto relative">
+    <div className="min-h-screen bg-gray-50 max-w-sm mx-auto relative mt-20">
       {/* Mobile Status Bar */}
       <div className="bg-black text-white text-xs px-4 py-1 flex justify-between">
         <span>9:41 AM</span>
@@ -125,7 +125,7 @@ export default function MobileDemo() {
 
       {/* Success Message */}
       {state.showSuccess && (
-        <div className="absolute top-20 left-4 right-4 bg-green-500 text-white p-3 rounded-lg shadow-lg z-50">
+        <div className="absolute top-16 left-4 right-4 bg-green-500 text-white p-3 rounded-lg shadow-lg z-50">
           <div className="flex items-center space-x-2">
             <CheckCircle className="h-5 w-5" />
             <span>App is working perfectly!</span>

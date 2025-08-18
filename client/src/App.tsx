@@ -39,6 +39,7 @@ import ServicesPage from "@/pages/ServicesPage";
 import JobMarketDashboard from "@/pages/JobMarketDashboard";
 import MobileApp from "@/pages/MobileApp";
 import MobileDemo from "@/pages/MobileDemo";
+import MobileDemoFullscreen from "@/pages/MobileDemoFullscreen";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -81,6 +82,7 @@ function Router() {
           <Route path="/job-market" component={JobMarketDashboard} />
           <Route path="/mobile" component={MobileApp} />
           <Route path="/mobile-demo" component={MobileDemo} />
+          <Route path="/mobile-fullscreen" component={MobileDemoFullscreen} />
           <Route component={NotFound} />
         </Switch>
 
