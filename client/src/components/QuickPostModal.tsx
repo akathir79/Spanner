@@ -632,14 +632,7 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
           pincode: "COLLECT_DURING_POSTING",
           email: "", // Will be requested in dashboard
           fullAddress: "COLLECT_DURING_POSTING",
-          // Worker-specific required fields with defaults for quick registration
-          ...(quickAuthData.role === "worker" && {
-            aadhaarNumber: "000000000000", // Placeholder - to be updated in dashboard
-            experienceYears: 1, // Default - to be updated in dashboard  
-            hourlyRate: 100, // Default rate - to be updated in dashboard
-            serviceDistricts: ["Salem"], // Default district - will be updated during job posting
-            skills: ["General"], // Default skill - will be updated in dashboard
-          })
+          // Quick Post is only for clients - no worker-specific fields needed
         }),
       });
       
@@ -745,24 +738,11 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
                   />
                 </div>
                 
-                <div>
-                  <label className="text-sm font-medium">User Type</label>
-                  <div className="grid grid-cols-2 gap-2 mt-2">
-                    <Button
-                      variant={quickAuthData.role === 'client' ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setQuickAuthData(prev => ({ ...prev, role: 'client' }))}
-                    >
-                      Client
-                    </Button>
-                    <Button
-                      variant={quickAuthData.role === 'worker' ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setQuickAuthData(prev => ({ ...prev, role: 'worker' }))}
-                    >
-                      Worker
-                    </Button>
-                  </div>
+                {/* Quick Post is only for clients - no user type selection needed */}
+                <div className="p-3 bg-green-50 rounded-lg border border-green-200">
+                  <p className="text-xs text-green-700 text-center">
+                    ✅ Logging in as client to post jobs
+                  </p>
                 </div>
                 
                 <Button 
@@ -864,24 +844,11 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
                 />
               </div>
               
-              <div>
-                <label className="text-sm font-medium">Account Type</label>
-                <div className="grid grid-cols-2 gap-2 mt-2">
-                  <Button
-                    variant={quickAuthData.role === 'client' ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setQuickAuthData(prev => ({ ...prev, role: 'client' }))}
-                  >
-                    Client (Post Jobs)
-                  </Button>
-                  <Button
-                    variant={quickAuthData.role === 'worker' ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setQuickAuthData(prev => ({ ...prev, role: 'worker' }))}
-                  >
-                    Worker (Find Jobs)
-                  </Button>
-                </div>
+              {/* Quick Post is only for clients - no account type selection needed */}
+              <div className="p-3 bg-green-50 rounded-lg border border-green-200">
+                <p className="text-xs text-green-700 text-center">
+                  ✅ Creating a client account to post jobs and hire workers
+                </p>
               </div>
 
               {/* Simplified registration note */}

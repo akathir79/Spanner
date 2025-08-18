@@ -348,10 +348,12 @@ export default function MobileTestApp() {
                       className="h-12"
                       maxLength={10}
                     />
-                    <select className="w-full h-12 px-3 border rounded-lg bg-white">
-                      <option>I need services (Client)</option>
-                      <option>I provide services (Worker)</option>
-                    </select>
+                    {/* Quick Post is only for clients - no account type selection needed */}
+                    <div className="p-3 bg-green-50 rounded-lg border border-green-200">
+                      <p className="text-xs text-green-700 text-center">
+                        ✅ Creating a client account to post jobs and hire workers
+                      </p>
+                    </div>
                     <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
                       <p className="text-xs text-blue-700 text-center">
                         📍 Your address will be collected when you post your first job for security and accurate service delivery.
@@ -703,7 +705,7 @@ export default function MobileTestApp() {
                 <Lock className="h-12 w-12 text-yellow-500 mx-auto mb-3" />
                 <h3 className="text-lg font-semibold">Quick Post Authentication</h3>
                 <p className="text-gray-600 text-sm mt-2">
-                  To post a job and hire workers using voice, you need to be logged in.
+                  To post a job and hire workers using voice, you need to be logged in as a client.
                 </p>
               </div>
               
