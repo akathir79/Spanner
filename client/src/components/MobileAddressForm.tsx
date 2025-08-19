@@ -53,34 +53,6 @@ export function MobileAddressForm({
   // Extract states from districts data
   const availableStates = districtsData ? Object.keys(districtsData) : [];
 
-  // Update available districts when state changes
-  useEffect(() => {
-    if (values.state && districtsData && districtsData[values.state]) {
-      const stateData = districtsData[values.state] as any;
-      setAvailableDistricts(stateData.districts || []);
-      // Reset district selection when state changes if current district is not in new state
-      if (values.district && !stateData.districts?.includes(values.district)) {
-        onChange('district', '');
-      }
-    } else {
-      setAvailableDistricts([]);
-    }
-  }, [values.state, districtsData, values.district, onChange]);
-
-  // Auto-detect location when component mounts (like AuthModal)
-  useEffect(() => {
-    if (autoDetectOnMount && !hasAutoDetected && !disabled) {
-      // Start auto-detection after a short delay to allow component to render
-      const timer = setTimeout(() => {
-        console.log("Auto-detecting location for mobile address form...");
-        handleAutoDetectLocation();
-        setHasAutoDetected(true);
-      }, 1000);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [autoDetectOnMount, hasAutoDetected, disabled, handleAutoDetectLocation]);
-
   // Auto-detect location function
   const handleAutoDetectLocation = useCallback(() => {
     if (!navigator.geolocation) {
@@ -172,6 +144,34 @@ export function MobileAddressForm({
       { timeout: 10000 }
     );
   }, [onDetect, districtsData, onChange, toast]);
+
+  // Update available districts when state changes
+  useEffect(() => {
+    if (values.state && districtsData && districtsData[values.state]) {
+      const stateData = districtsData[values.state] as any;
+      setAvailableDistricts(stateData.districts || []);
+      // Reset district selection when state changes if current district is not in new state
+      if (values.district && !stateData.districts?.includes(values.district)) {
+        onChange('district', '');
+      }
+    } else {
+      setAvailableDistricts([]);
+    }
+  }, [values.state, districtsData, values.district, onChange]);
+
+  // Auto-detect location when component mounts (like AuthModal)
+  useEffect(() => {
+    if (autoDetectOnMount && !hasAutoDetected && !disabled) {
+      // Start auto-detection after a short delay to allow component to render
+      const timer = setTimeout(() => {
+        console.log("Auto-detecting location for mobile address form...");
+        handleAutoDetectLocation();
+        setHasAutoDetected(true);
+      }, 1000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [autoDetectOnMount, hasAutoDetected, disabled, handleAutoDetectLocation]);
 
   return (
     <div className={`space-y-4 ${className}`}>

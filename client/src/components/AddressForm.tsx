@@ -47,35 +47,6 @@ export function AddressForm({
   // Extract states from districts data
   const availableStates = districtsData ? Object.keys(districtsData) : [];
 
-  // Update available districts when state changes
-  const selectedState = form.watch("state");
-  useEffect(() => {
-    if (selectedState && districtsData && districtsData[selectedState]) {
-      const stateData = districtsData[selectedState] as any;
-      setAvailableDistricts(stateData.districts || []);
-      // Reset district selection when state changes
-      if (form.getValues("district") && !stateData.districts?.includes(form.getValues("district"))) {
-        form.setValue("district", "");
-      }
-    } else {
-      setAvailableDistricts([]);
-    }
-  }, [selectedState, districtsData, form]);
-
-  // Auto-detect location when component mounts (like AuthModal)
-  useEffect(() => {
-    if (autoDetectOnMount && !hasAutoDetected && !disabled) {
-      // Start auto-detection after a short delay to allow component to render
-      const timer = setTimeout(() => {
-        console.log("Auto-detecting location for address form...");
-        handleAutoDetectLocation();
-        setHasAutoDetected(true);
-      }, 1000);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [autoDetectOnMount, hasAutoDetected, disabled, handleAutoDetectLocation]);
-
   // Auto-detect location function
   const handleAutoDetectLocation = useCallback(() => {
     if (!navigator.geolocation) {
@@ -167,6 +138,35 @@ export function AddressForm({
       { timeout: 10000 }
     );
   }, [onDetect, districtsData, form, toast]);
+
+  // Update available districts when state changes
+  const selectedState = form.watch("state");
+  useEffect(() => {
+    if (selectedState && districtsData && districtsData[selectedState]) {
+      const stateData = districtsData[selectedState] as any;
+      setAvailableDistricts(stateData.districts || []);
+      // Reset district selection when state changes
+      if (form.getValues("district") && !stateData.districts?.includes(form.getValues("district"))) {
+        form.setValue("district", "");
+      }
+    } else {
+      setAvailableDistricts([]);
+    }
+  }, [selectedState, districtsData, form]);
+
+  // Auto-detect location when component mounts (like AuthModal)
+  useEffect(() => {
+    if (autoDetectOnMount && !hasAutoDetected && !disabled) {
+      // Start auto-detection after a short delay to allow component to render
+      const timer = setTimeout(() => {
+        console.log("Auto-detecting location for address form...");
+        handleAutoDetectLocation();
+        setHasAutoDetected(true);
+      }, 1000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [autoDetectOnMount, hasAutoDetected, disabled, handleAutoDetectLocation]);
 
   return (
     <div className={`space-y-4 ${className}`}>
