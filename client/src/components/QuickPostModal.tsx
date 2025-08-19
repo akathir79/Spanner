@@ -1413,8 +1413,7 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
                   <div>
                     <p><strong>Description:</strong></p>
                     <div className="bg-white rounded p-2 mt-1 space-y-1">
-                      <p className="text-blue-800"><strong>{supportedLanguages.find(l => l.code === selectedLanguage)?.name || 'Original'}:</strong> {originalTranscription || "Original language not available"}</p>
-                      <p className="text-green-800"><strong>English:</strong> {processedTranscription}</p>
+                      <p className="text-green-800"><strong>Description:</strong> {processedTranscription}</p>
                     </div>
                   </div>
                   <p><strong>Service:</strong> {extractedData.serviceCategory || 'General Services'}</p>

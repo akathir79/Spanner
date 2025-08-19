@@ -264,12 +264,12 @@ export default function QuickPostModal({ visible, onClose }: QuickPostModalProps
                     Tap start when you're ready to describe your job in {supportedLanguages.find(l => l.code === selectedLanguage)?.name}
                   </Text>
                   
-                  <TouchableOpacity onPress={startRecording} style={styles.startButton}>
-                    <Text style={styles.startButtonText}>🎤 Start Recording</Text>
+                  <TouchableOpacity onPress={startRecording} style={styles.startRecordingButton}>
+                    <Text style={styles.startRecordingButtonText}>🎤 Start Recording</Text>
                   </TouchableOpacity>
                   
-                  <TouchableOpacity onPress={() => setCurrentStep('language')} style={styles.changeLanguageButton}>
-                    <Text style={styles.changeLanguageButtonText}>Change Language</Text>
+                  <TouchableOpacity onPress={() => setCurrentStep('language')} style={styles.changeLanguageBtn}>
+                    <Text style={styles.changeLanguageBtnText}>Change Language</Text>
                   </TouchableOpacity>
                 </View>
               )}
@@ -648,7 +648,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     paddingHorizontal: 20,
   },
-  startButton: {
+  startRecordingButton: {
     backgroundColor: '#16a34a',
     paddingVertical: 15,
     paddingHorizontal: 30,
@@ -656,13 +656,13 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     width: '80%',
   },
-  startButtonText: {
+  startRecordingButtonText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
     textAlign: 'center',
   },
-  changeLanguageButton: {
+  changeLanguageBtn: {
     borderWidth: 1,
     borderColor: '#d1d5db',
     paddingVertical: 12,
@@ -670,7 +670,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     width: '80%',
   },
-  changeLanguageButtonText: {
+  changeLanguageBtnText: {
     color: '#374151',
     fontSize: 14,
     textAlign: 'center',
