@@ -1457,16 +1457,133 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
                 <AddressForm 
                   form={addressForm}
                   autoDetectOnMount={false}
-                  onDetect={() => {
-                    // Sync form values with locationData for backend compatibility
-                    const formValues = addressForm.getValues();
-                    setLocationData(prev => ({
-                      ...prev,
-                      area: formValues.areaName,
-                      district: formValues.district,
-                      state: formValues.state,
-                      fullAddress: `${formValues.houseNumber || ''} ${formValues.streetName || ''} ${formValues.areaName}, ${formValues.district}, ${formValues.state} ${formValues.pincode || ''}`.trim()
-                    }));
+                  isDetecting={isProcessing}
+                  onDetect={async () => {
+                    setIsProcessing(true);
+                    
+                    if (!navigator.geolocation) {
+                      toast({
+                        title: "Location not supported",
+                        description: "Your browser doesn't support location detection. Please enter manually.",
+                        variant: "destructive",
+                      });
+                      setIsProcessing(false);
+                      return;
+                    }
+
+                    navigator.geolocation.getCurrentPosition(
+                      async (position) => {
+                        try {
+                          const { latitude, longitude } = position.coords;
+                          console.log("SuperFast GPS coordinates:", { latitude, longitude });
+                          
+                          // Use Nominatim API for reverse geocoding
+                          const response = await fetch(
+                            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1&accept-language=en`
+                          );
+                          
+                          if (!response.ok) throw new Error('Failed to get location data');
+                          
+                          const data = await response.json();
+                          console.log("SuperFast Nominatim data:", data);
+                          
+                          if (data && data.address) {
+                            const locationData = data.address;
+                            
+                            // Extract address components
+                            const houseNumber = locationData.house_number || '';
+                            const streetName = locationData.road || '';
+                            const areaName = locationData.village || locationData.suburb || locationData.neighbourhood || '';
+                            const detectedPincode = locationData.postcode || '';
+                            
+                            // Set individual address fields
+                            if (houseNumber) {
+                              addressForm.setValue("houseNumber", houseNumber);
+                            }
+                            if (streetName) {
+                              addressForm.setValue("streetName", streetName);
+                            }
+                            if (areaName) {
+                              addressForm.setValue("areaName", areaName);
+                            }
+                            if (detectedPincode) {
+                              addressForm.setValue("pincode", detectedPincode);
+                            }
+                            
+                            // Fetch districts data and match district/state
+                            const districtsResponse = await fetch('/api/districts');
+                            if (districtsResponse.ok) {
+                              const districtsData = await districtsResponse.json();
+                              console.log("SuperFast: Districts loaded, now matching...", Object.keys(districtsData).length);
+                              
+                              // Find matching district
+                              const detectedLocation = locationData.state_district || 
+                                                     locationData.county || 
+                                                     locationData.city || 
+                                                     locationData.town ||
+                                                     locationData.village;
+                              
+                              // Match state
+                              const stateNames = Object.keys(districtsData);
+                              const matchedState = stateNames.find(stateName => 
+                                stateName.toLowerCase().includes(locationData.state?.toLowerCase() || '') ||
+                                (locationData.state?.toLowerCase() || '').includes(stateName.toLowerCase())
+                              );
+                              
+                              if (matchedState) {
+                                addressForm.setValue("state", matchedState);
+                                
+                                // Match district within the state
+                                const stateDistricts = districtsData[matchedState]?.districts || [];
+                                const matchedDistrict = stateDistricts.find((dist: any) =>
+                                  dist.name.toLowerCase().includes(detectedLocation?.toLowerCase() || '') ||
+                                  (detectedLocation?.toLowerCase() || '').includes(dist.name.toLowerCase())
+                                );
+                                
+                                if (matchedDistrict) {
+                                  console.log("SuperFast: District set:", matchedDistrict.name);
+                                  addressForm.setValue("district", matchedDistrict.name);
+                                }
+                              }
+                            }
+                            
+                            // Sync with locationData for backend compatibility
+                            const finalFormValues = addressForm.getValues();
+                            setLocationData(prev => ({
+                              ...prev,
+                              area: finalFormValues.areaName,
+                              district: finalFormValues.district,
+                              state: finalFormValues.state,
+                              fullAddress: `${finalFormValues.houseNumber || ''} ${finalFormValues.streetName || ''} ${finalFormValues.areaName}, ${finalFormValues.district}, ${finalFormValues.state} ${finalFormValues.pincode || ''}`.trim()
+                            }));
+                            
+                            toast({
+                              title: "Location detected successfully",
+                              description: "Address fields have been auto-filled",
+                            });
+                          }
+                        } catch (error) {
+                          console.error("Location detection error:", error);
+                          toast({
+                            title: "Location detection failed",
+                            description: "Please enter your address manually.",
+                            variant: "destructive",
+                          });
+                        } finally {
+                          setIsProcessing(false);
+                        }
+                      },
+                      (error) => {
+                        console.error("Geolocation error:", error);
+                        toast({
+                          title: "Location access denied",
+                          description: "Please enable location access and try again.",
+                          variant: "destructive",
+                        });
+                        setIsProcessing(false);
+                      },
+                      { timeout: 10000, enableHighAccuracy: true }
+                    );
                   }}
                 />
               </form>
