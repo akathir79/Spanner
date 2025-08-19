@@ -3,9 +3,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
 import { Mic, MicOff, Volume2, Loader2, Globe, Square } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { AddressForm } from '@/components/AddressForm';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 
 interface QuickPostModalProps {
   isOpen: boolean;
@@ -73,6 +78,30 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
     fullAddress: '',
     budgetMin: '',
     budgetMax: ''
+  });
+
+  // Address form schema matching QuickJoin registration
+  const addressSchema = z.object({
+    houseNumber: z.string().optional(),
+    streetName: z.string().optional(),
+    areaName: z.string().min(1, "Area is required"),
+    district: z.string().min(1, "District is required"),
+    state: z.string().min(1, "State is required"),
+    pincode: z.string().optional(),
+    fullAddress: z.string().optional(),
+  });
+
+  const addressForm = useForm({
+    resolver: zodResolver(addressSchema),
+    defaultValues: {
+      houseNumber: '',
+      streetName: '',
+      areaName: '',
+      district: '',
+      state: '',
+      pincode: '',
+      fullAddress: '',
+    },
   });
 
   const [customLocationData, setCustomLocationData] = useState({
@@ -1423,97 +1452,25 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
               </div>
             )}
 
-            <div className="space-y-3">
-              {/* Auto-detect button */}
-              <Button 
-                variant="outline" 
-                onClick={() => {
-                  if (navigator.geolocation) {
-                    navigator.geolocation.getCurrentPosition(
-                      (position) => {
-                        // For demo - you'd use a geocoding API here
-                        setLocationData(prev => ({
-                          ...prev,
-                          area: "Anna Nagar",
-                          district: "Chennai", 
-                          state: "Tamil Nadu"
-                        }));
-                        toast({
-                          title: "Location detected",
-                          description: "Address has been auto-filled"
-                        });
-                      },
-                      () => {
-                        toast({
-                          title: "Location access denied",
-                          description: "Please enter location manually",
-                          variant: "destructive"
-                        });
-                      }
-                    );
-                  }
-                }}
-                className="w-full"
-              >
-                📍 Auto-detect Current Location
-              </Button>
-              
-              <div className="text-sm text-center text-muted-foreground">or enter manually</div>
-              
-              <div>
-                <label className="text-sm font-medium">Area/Locality *</label>
-                <Input
-                  placeholder="e.g., Anna Nagar, Koramangala"
-                  value={locationData.area}
-                  onChange={(e) => setLocationData(prev => ({ ...prev, area: e.target.value }))}
-                  required
+            <Form {...addressForm}>
+              <form className="space-y-4">
+                <AddressForm 
+                  form={addressForm}
+                  autoDetectOnMount={false}
+                  onDetect={() => {
+                    // Sync form values with locationData for backend compatibility
+                    const formValues = addressForm.getValues();
+                    setLocationData(prev => ({
+                      ...prev,
+                      area: formValues.areaName,
+                      district: formValues.district,
+                      state: formValues.state,
+                      fullAddress: `${formValues.houseNumber || ''} ${formValues.streetName || ''} ${formValues.areaName}, ${formValues.district}, ${formValues.state} ${formValues.pincode || ''}`.trim()
+                    }));
+                  }}
                 />
-              </div>
-              
-              <div>
-                <label className="text-sm font-medium">District *</label>
-                <Select 
-                  value={locationData.district} 
-                  onValueChange={(value) => setLocationData(prev => ({ ...prev, district: value }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select district" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Chennai">Chennai</SelectItem>
-                    <SelectItem value="Bangalore Urban">Bangalore Urban</SelectItem>
-                    <SelectItem value="Hyderabad">Hyderabad</SelectItem>
-                    <SelectItem value="Mumbai">Mumbai</SelectItem>
-                    <SelectItem value="Delhi">Delhi</SelectItem>
-                    <SelectItem value="Kolkata">Kolkata</SelectItem>
-                    <SelectItem value="Pune">Pune</SelectItem>
-                    <SelectItem value="Ahmedabad">Ahmedabad</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div>
-                <label className="text-sm font-medium">State *</label>
-                <Select 
-                  value={locationData.state} 
-                  onValueChange={(value) => setLocationData(prev => ({ ...prev, state: value }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select state" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Tamil Nadu">Tamil Nadu</SelectItem>
-                    <SelectItem value="Karnataka">Karnataka</SelectItem>
-                    <SelectItem value="Telangana">Telangana</SelectItem>
-                    <SelectItem value="Maharashtra">Maharashtra</SelectItem>
-                    <SelectItem value="Delhi">Delhi</SelectItem>
-                    <SelectItem value="West Bengal">West Bengal</SelectItem>
-                    <SelectItem value="Gujarat">Gujarat</SelectItem>
-                    <SelectItem value="Rajasthan">Rajasthan</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+              </form>
+            </Form>
 
               {/* Add New Work Location Button */}
               <div className="flex items-center justify-between">
@@ -1680,8 +1637,29 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
                 ← Back to Recording
               </Button>
               <Button 
-                onClick={confirmJobPosting}
-                disabled={!locationData.area || !locationData.district || !locationData.state || !locationData.budgetMin || !locationData.budgetMax || isProcessing}
+                onClick={() => {
+                  // Sync address form values before posting
+                  const formValues = addressForm.getValues();
+                  if (!formValues.areaName || !formValues.district || !formValues.state) {
+                    toast({
+                      title: "Address Required",
+                      description: "Please complete all required address fields",
+                      variant: "destructive"
+                    });
+                    return;
+                  }
+                  
+                  setLocationData(prev => ({
+                    ...prev,
+                    area: formValues.areaName,
+                    district: formValues.district,
+                    state: formValues.state,
+                    fullAddress: `${formValues.houseNumber || ''} ${formValues.streetName || ''} ${formValues.areaName}, ${formValues.district}, ${formValues.state} ${formValues.pincode || ''}`.trim()
+                  }));
+                  
+                  confirmJobPosting();
+                }}
+                disabled={!addressForm.getValues().areaName || !addressForm.getValues().district || !addressForm.getValues().state || !locationData.budgetMin || !locationData.budgetMax || isProcessing}
                 className="flex-1 bg-green-600 hover:bg-green-700"
               >
                 {isProcessing ? (
