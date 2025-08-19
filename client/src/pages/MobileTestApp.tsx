@@ -692,6 +692,7 @@ export default function MobileTestApp() {
                         // Reset loading state after timeout
                         setTimeout(() => setIsDetectingLocation(false), 8000);
                       }}
+                      autoDetectOnMount={true}
                       className="border rounded-lg p-3 bg-gray-50"
                     />
 

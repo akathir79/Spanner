@@ -338,6 +338,7 @@ export function SuperFastRegisterForm({ role, onComplete, onBack, onStepChange, 
               form={form}
               isDetecting={isDetectingLocation}
               onDetect={handleLocationDetection}
+              autoDetectOnMount={true}
               className="border rounded-lg p-4 bg-gray-50"
             />
           )}

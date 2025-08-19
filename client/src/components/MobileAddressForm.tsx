@@ -3,7 +3,7 @@
  * Provides consistent address input fields for mobile interfaces
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { MapPin, Loader2, RotateCcw, ChevronDown } from 'lucide-react';
@@ -26,6 +26,7 @@ interface MobileAddressFormProps {
   showReDetect?: boolean;
   disabled?: boolean;
   className?: string;
+  autoDetectOnMount?: boolean; // New prop to enable automatic detection when component mounts
 }
 
 export function MobileAddressForm({ 
@@ -36,9 +37,11 @@ export function MobileAddressForm({
   onReDetect, 
   showReDetect = false,
   disabled = false,
-  className = ""
+  className = "",
+  autoDetectOnMount = false
 }: MobileAddressFormProps) {
   const [availableDistricts, setAvailableDistricts] = useState<string[]>([]);
+  const [hasAutoDetected, setHasAutoDetected] = useState(false);
   const { toast } = useToast();
 
   // Fetch districts data
@@ -64,8 +67,22 @@ export function MobileAddressForm({
     }
   }, [values.state, districtsData, values.district, onChange]);
 
+  // Auto-detect location when component mounts (like AuthModal)
+  useEffect(() => {
+    if (autoDetectOnMount && !hasAutoDetected && !disabled) {
+      // Start auto-detection after a short delay to allow component to render
+      const timer = setTimeout(() => {
+        console.log("Auto-detecting location for mobile address form...");
+        handleAutoDetectLocation();
+        setHasAutoDetected(true);
+      }, 1000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [autoDetectOnMount, hasAutoDetected, disabled, handleAutoDetectLocation]);
+
   // Auto-detect location function
-  const handleAutoDetectLocation = () => {
+  const handleAutoDetectLocation = useCallback(() => {
     if (!navigator.geolocation) {
       toast({
         title: "Location not supported",
@@ -154,7 +171,7 @@ export function MobileAddressForm({
       },
       { timeout: 10000 }
     );
-  };
+  }, [onDetect, districtsData, onChange, toast]);
 
   return (
     <div className={`space-y-4 ${className}`}>

@@ -3,7 +3,7 @@
  * Provides consistent address input fields with auto-detection across the application
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -21,6 +21,7 @@ interface AddressFormProps {
   showReDetect?: boolean;
   disabled?: boolean;
   className?: string;
+  autoDetectOnMount?: boolean; // New prop to enable automatic detection when component mounts
 }
 
 export function AddressForm({ 
@@ -30,9 +31,11 @@ export function AddressForm({
   onReDetect, 
   showReDetect = false,
   disabled = false,
-  className = ""
+  className = "",
+  autoDetectOnMount = false
 }: AddressFormProps) {
   const [availableDistricts, setAvailableDistricts] = useState<string[]>([]);
+  const [hasAutoDetected, setHasAutoDetected] = useState(false);
   const { toast } = useToast();
 
   // Fetch districts data
@@ -59,8 +62,22 @@ export function AddressForm({
     }
   }, [selectedState, districtsData, form]);
 
+  // Auto-detect location when component mounts (like AuthModal)
+  useEffect(() => {
+    if (autoDetectOnMount && !hasAutoDetected && !disabled) {
+      // Start auto-detection after a short delay to allow component to render
+      const timer = setTimeout(() => {
+        console.log("Auto-detecting location for address form...");
+        handleAutoDetectLocation();
+        setHasAutoDetected(true);
+      }, 1000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [autoDetectOnMount, hasAutoDetected, disabled, handleAutoDetectLocation]);
+
   // Auto-detect location function
-  const handleAutoDetectLocation = () => {
+  const handleAutoDetectLocation = useCallback(() => {
     if (!navigator.geolocation) {
       toast({
         title: "Location not supported",
@@ -149,7 +166,7 @@ export function AddressForm({
       },
       { timeout: 10000 }
     );
-  };
+  }, [onDetect, districtsData, form, toast]);
 
   return (
     <div className={`space-y-4 ${className}`}>
