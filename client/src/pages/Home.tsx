@@ -22,8 +22,8 @@ import { useLanguage } from "@/components/LanguageProvider";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Search, CheckCircle, Shield, Clock, Users, MapPin, Star, Handshake, ChevronDown, X, MapPinIcon } from "lucide-react";
-import { VoiceInput } from "@/components/VoiceInput";
-import { VoiceAssistant } from "@/components/VoiceAssistant";
+
+
 import { SEOHead } from "@/components/SEOHead";
 import rajeshAvatar from "@assets/Babu_1753861985304.png";
 import arjunAvatar from "@assets/krishnan_1753861985304.png";
@@ -570,9 +570,7 @@ export default function Home() {
   };
 
   // Voice input handler
-  const handleVoiceTranscript = (transcript: string) => {
-    setSearchForm(prev => ({ ...prev, description: transcript }));
-  };
+
 
   const handleServiceClick = (serviceId: string) => {
     console.log("Service clicked:", serviceId);
@@ -717,14 +715,6 @@ export default function Home() {
                     <h3 className="text-xl font-bold text-foreground flex-1">
                       Find Services Near You
                     </h3>
-                    <VoiceAssistant
-                      onServiceSelect={(serviceId) => setSearchForm(prev => ({ ...prev, service: serviceId }))}
-                      onStateSelect={(stateName) => setSearchForm(prev => ({ ...prev, state: stateName }))}
-                      onDistrictSelect={(districtName) => setSearchForm(prev => ({ ...prev, district: districtName }))}
-                      onDescriptionUpdate={(description) => setSearchForm(prev => ({ ...prev, description }))}
-                      services={services || []}
-                      className="h-10 w-10 p-2 rounded-full"
-                    />
                   </div>
                   
                   <form onSubmit={handleSearch} className="space-y-4">
@@ -938,24 +928,11 @@ export default function Home() {
                         <label className="block text-sm font-medium mb-1 text-foreground">
                           Description
                         </label>
-                        <div className="relative">
-                          <Input
-                            placeholder="Describe your service requirement..."
-                            value={searchForm.description}
-                            onChange={(e) => setSearchForm(prev => ({ ...prev, description: e.target.value }))}
-                            className="pr-14"
-                          />
-                          <div className="absolute right-2 top-1/2 -translate-y-1/2 z-10">
-                            <VoiceInput 
-                              onTranscript={handleVoiceTranscript}
-                              language="en-US"
-                              size="sm"
-                              className="h-9 w-9 p-1.5 rounded-lg font-medium"
-                              showStatus={false}
-                              supportedLanguages={["en-US", "ta-IN", "hi-IN", "en-IN"]}
-                            />
-                          </div>
-                        </div>
+                        <Input
+                          placeholder="Describe your service requirement..."
+                          value={searchForm.description}
+                          onChange={(e) => setSearchForm(prev => ({ ...prev, description: e.target.value }))}
+                        />
                       </div>
                     </div>
                     
