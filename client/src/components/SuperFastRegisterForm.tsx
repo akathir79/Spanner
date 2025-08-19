@@ -42,6 +42,7 @@ export function SuperFastRegisterForm({ role, onComplete, onBack, onStepChange, 
   const [showNewServiceInput, setShowNewServiceInput] = useState(false);
   const [newServiceName, setNewServiceName] = useState("");
   const [isDetectingLocation, setIsDetectingLocation] = useState(false);
+  const [mobileAvailability, setMobileAvailability] = useState<"checking" | "available" | "not-available" | "">("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -70,7 +71,38 @@ export function SuperFastRegisterForm({ role, onComplete, onBack, onStepChange, 
     enabled: role === "worker",
   });
 
+  // Mobile availability checking function
+  const checkMobileAvailability = async (mobile: string) => {
+    try {
+      const response = await fetch("/api/auth/check-availability", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mobile, email: "", aadhaarNumber: "", role }),
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        setMobileAvailability(result.mobile ? "available" : "not-available");
+      }
+    } catch (error) {
+      console.error("Error checking mobile availability:", error);
+      setMobileAvailability("");
+    }
+  };
 
+  // Watch for mobile number changes and check availability
+  const mobileValue = form.watch("mobile");
+  useEffect(() => {
+    if (mobileValue && mobileValue.length === 10) {
+      setMobileAvailability("checking");
+      const timer = setTimeout(() => {
+        checkMobileAvailability(mobileValue);
+      }, 500);
+      return () => clearTimeout(timer);
+    } else {
+      setMobileAvailability("");
+    }
+  }, [mobileValue, role]);
 
   // Service selection handler
   const handleServiceSelect = (value: string) => {
@@ -334,7 +366,28 @@ export function SuperFastRegisterForm({ role, onComplete, onBack, onStepChange, 
   });
 
   const onSubmit = (data: FastClientData | FastWorkerData) => {
-    onStepChange?.("contact-info");
+    // Additional validation for mobile availability
+    if (mobileAvailability === "not-available") {
+      toast({
+        title: "Mobile number not available",
+        description: "This mobile number is already registered. Please use a different number.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (mobileAvailability === "checking") {
+      toast({
+        title: "Please wait",
+        description: "Still checking mobile number availability...",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (onStepChange) {
+      onStepChange("completion");
+    }
     registerMutation.mutate(data);
   };
 
@@ -379,8 +432,33 @@ export function SuperFastRegisterForm({ role, onComplete, onBack, onStepChange, 
               <FormItem>
                 <FormLabel>Mobile Number</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter 10-digit mobile number" {...field} />
+                  <div className="relative">
+                    <Input 
+                      placeholder="Enter 10-digit mobile number" 
+                      {...field}
+                      className={mobileAvailability === "not-available" ? "border-red-500" : ""}
+                      maxLength={10}
+                    />
+                    {mobileAvailability === "checking" && (
+                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                        <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                      </div>
+                    )}
+                    {mobileAvailability === "available" && (
+                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-green-600">
+                        ✓
+                      </div>
+                    )}
+                    {mobileAvailability === "not-available" && (
+                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-red-600">
+                        ✗
+                      </div>
+                    )}
+                  </div>
                 </FormControl>
+                {mobileAvailability === "not-available" && (
+                  <p className="text-xs text-red-600 mt-1">Mobile number not available</p>
+                )}
                 <FormMessage />
               </FormItem>
             )}
@@ -498,9 +576,20 @@ export function SuperFastRegisterForm({ role, onComplete, onBack, onStepChange, 
           <Button 
             type="submit" 
             className="w-full" 
-            disabled={registerMutation.isPending}
+            disabled={
+              registerMutation.isPending || 
+              mobileAvailability === "not-available" || 
+              mobileAvailability === "checking" ||
+              !mobileValue ||
+              mobileValue.length !== 10
+            }
           >
-            {registerMutation.isPending ? "Creating Account..." : `Join as ${role === "client" ? "Client" : "Worker"}`}
+            {registerMutation.isPending 
+              ? "Creating Account..." 
+              : mobileAvailability === "checking"
+              ? "Checking availability..."
+              : `Join as ${role === "client" ? "Client" : "Worker"}`
+            }
           </Button>
         </form>
       </Form>
