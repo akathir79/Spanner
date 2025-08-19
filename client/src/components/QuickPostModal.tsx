@@ -1513,6 +1513,7 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
                   </SelectContent>
                 </Select>
               </div>
+            </div>
 
               {/* Add New Work Location Button */}
               <div className="flex items-center justify-between">
@@ -1669,9 +1670,8 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
                   />
                 </div>
               </div>
-            </div>
 
-            <div className="flex gap-3">
+            <div className="flex gap-3 mt-4">
               <Button 
                 variant="outline"
                 onClick={() => setCurrentStep('recording')}
