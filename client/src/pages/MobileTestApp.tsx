@@ -24,6 +24,10 @@ export default function MobileTestApp() {
   const [showAuthPrompt, setShowAuthPrompt] = useState(false);
   const [showWorkerRestrictionPrompt, setShowWorkerRestrictionPrompt] = useState(false);
   
+  // Mobile availability checking states
+  const [clientMobileAvailability, setClientMobileAvailability] = useState<"checking" | "available" | "not-available" | "">("");
+  const [workerMobileAvailability, setWorkerMobileAvailability] = useState<"checking" | "available" | "not-available" | "">("");
+  
   // Service management states for Quick Join
   const [showNewServiceInput, setShowNewServiceInput] = useState(false);
   const [newServiceName, setNewServiceName] = useState('');
@@ -39,6 +43,58 @@ export default function MobileTestApp() {
     state: '',
     pincode: '',
   });
+
+  // Mobile availability checking function
+  const checkMobileAvailability = useCallback(async (mobile: string, role: "client" | "worker") => {
+    try {
+      const response = await fetch("/api/auth/check-availability", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mobile, email: "", aadhaarNumber: "", role }),
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        if (role === "client") {
+          setClientMobileAvailability(result.mobile ? "available" : "not-available");
+        } else {
+          setWorkerMobileAvailability(result.mobile ? "available" : "not-available");
+        }
+      }
+    } catch (error) {
+      console.error("Error checking mobile availability:", error);
+      if (role === "client") {
+        setClientMobileAvailability("");
+      } else {
+        setWorkerMobileAvailability("");
+      }
+    }
+  }, []);
+
+  // Watch for mobile number changes and check availability
+  useEffect(() => {
+    if (clientFormData.mobile && clientFormData.mobile.length >= 10) {
+      setClientMobileAvailability("checking");
+      const timer = setTimeout(() => {
+        checkMobileAvailability(clientFormData.mobile, "client");
+      }, 500);
+      return () => clearTimeout(timer);
+    } else {
+      setClientMobileAvailability("");
+    }
+  }, [clientFormData.mobile, checkMobileAvailability]);
+
+  useEffect(() => {
+    if (workerFormData.mobile && workerFormData.mobile.length >= 10) {
+      setWorkerMobileAvailability("checking");
+      const timer = setTimeout(() => {
+        checkMobileAvailability(workerFormData.mobile, "worker");
+      }, 500);
+      return () => clearTimeout(timer);
+    } else {
+      setWorkerMobileAvailability("");
+    }
+  }, [workerFormData.mobile, checkMobileAvailability]);
 
   // Fetch services for worker registration
   const { data: services, isLoading: servicesLoading, error: servicesError } = useQuery({
@@ -203,12 +259,9 @@ export default function MobileTestApp() {
   });
 
   const handleWorkerRegistration = () => {
-    // Get form values from DOM (this is a simplified approach for mobile demo)
-    const firstNameInput = document.querySelector('input[placeholder="Your First Name"]') as HTMLInputElement;
-    const mobileInput = document.querySelector('input[placeholder="10-digit mobile number"]') as HTMLInputElement;
-    
-    const firstName = firstNameInput?.value || '';
-    const mobile = mobileInput?.value || '';
+    // Use state values instead of DOM queries for better reliability
+    const firstName = workerFormData.firstName;
+    const mobile = workerFormData.mobile;
     
     if (!firstName || !mobile || !selectedService || !addressValues.state || !addressValues.district || !addressValues.houseNumber || !addressValues.streetName || !addressValues.areaName || !addressValues.pincode) {
       toast({
@@ -554,13 +607,37 @@ export default function MobileTestApp() {
                       type="text" 
                       placeholder="Your First Name"
                       className="h-12"
+                      value={clientFormData.firstName}
+                      onChange={(e) => setClientFormData(prev => ({ ...prev, firstName: e.target.value }))}
                     />
-                    <Input 
-                      type="tel" 
-                      placeholder="10-digit mobile number"
-                      className="h-12"
-                      maxLength={10}
-                    />
+                    <div className="relative">
+                      <Input 
+                        type="tel" 
+                        placeholder="10-digit mobile number"
+                        className={`h-12 ${clientMobileAvailability === "not-available" ? "border-red-500" : ""}`}
+                        maxLength={10}
+                        value={clientFormData.mobile}
+                        onChange={(e) => setClientFormData(prev => ({ ...prev, mobile: e.target.value }))}
+                      />
+                      {clientMobileAvailability === "checking" && (
+                        <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                          <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                        </div>
+                      )}
+                      {clientMobileAvailability === "available" && (
+                        <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-green-600">
+                          ✓
+                        </div>
+                      )}
+                      {clientMobileAvailability === "not-available" && (
+                        <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-red-600">
+                          ✗
+                        </div>
+                      )}
+                    </div>
+                    {clientMobileAvailability === "not-available" && (
+                      <p className="text-xs text-red-600 -mt-2">Not Available</p>
+                    )}
                     <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
                       <p className="text-xs text-blue-700 text-center">
                         📍 Your address will be collected when you post your first job for security and accurate service delivery.
@@ -569,6 +646,7 @@ export default function MobileTestApp() {
                     <Button 
                       onClick={handleTestApp}
                       className="w-full h-12 bg-purple-600 text-white"
+                      disabled={clientMobileAvailability === "not-available" || clientMobileAvailability === "checking" || !clientFormData.firstName || !clientFormData.mobile || clientFormData.mobile.length < 10}
                     >
                       Register as Client
                     </Button>
@@ -599,13 +677,37 @@ export default function MobileTestApp() {
                       type="text" 
                       placeholder="Your First Name"
                       className="h-12"
+                      value={workerFormData.firstName}
+                      onChange={(e) => setWorkerFormData(prev => ({ ...prev, firstName: e.target.value }))}
                     />
-                    <Input 
-                      type="tel" 
-                      placeholder="10-digit mobile number"
-                      className="h-12"
-                      maxLength={10}
-                    />
+                    <div className="relative">
+                      <Input 
+                        type="tel" 
+                        placeholder="10-digit mobile number"
+                        className={`h-12 ${workerMobileAvailability === "not-available" ? "border-red-500" : ""}`}
+                        maxLength={10}
+                        value={workerFormData.mobile}
+                        onChange={(e) => setWorkerFormData(prev => ({ ...prev, mobile: e.target.value }))}
+                      />
+                      {workerMobileAvailability === "checking" && (
+                        <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                          <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                        </div>
+                      )}
+                      {workerMobileAvailability === "available" && (
+                        <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-green-600">
+                          ✓
+                        </div>
+                      )}
+                      {workerMobileAvailability === "not-available" && (
+                        <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-red-600">
+                          ✗
+                        </div>
+                      )}
+                    </div>
+                    {workerMobileAvailability === "not-available" && (
+                      <p className="text-xs text-red-600 -mt-2">Not Available</p>
+                    )}
                     {/* Primary Service Field - Clean Implementation */}
                     <div className="space-y-2">
                       <label className="text-sm font-medium text-gray-700">Primary Service</label>
@@ -841,7 +943,7 @@ export default function MobileTestApp() {
                     </div>
                     <Button 
                       onClick={handleWorkerRegistration}
-                      disabled={!selectedService || !addressValues.state || !addressValues.district || !addressValues.houseNumber || !addressValues.streetName || !addressValues.areaName || !addressValues.pincode || workerRegistrationMutation.isPending}
+                      disabled={!selectedService || !addressValues.state || !addressValues.district || !addressValues.houseNumber || !addressValues.streetName || !addressValues.areaName || !addressValues.pincode || workerRegistrationMutation.isPending || workerMobileAvailability === "not-available" || workerMobileAvailability === "checking" || !workerFormData.firstName || !workerFormData.mobile || workerFormData.mobile.length < 10}
                       className="w-full h-12 bg-green-600 text-white disabled:bg-gray-400 disabled:cursor-not-allowed"
                     >
                       {workerRegistrationMutation.isPending ? (
@@ -849,7 +951,7 @@ export default function MobileTestApp() {
                           <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                           Creating Account...
                         </>
-                      ) : !selectedService || !addressValues.state || !addressValues.district || !addressValues.houseNumber || !addressValues.streetName || !addressValues.areaName || !addressValues.pincode ? (
+                      ) : !selectedService || !addressValues.state || !addressValues.district || !addressValues.houseNumber || !addressValues.streetName || !addressValues.areaName || !addressValues.pincode || workerMobileAvailability === "not-available" || !workerFormData.firstName || !workerFormData.mobile || workerFormData.mobile.length < 10 ? (
                         "Complete all fields to register" 
                       ) : (
                         "Register as Worker"

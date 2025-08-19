@@ -57,6 +57,9 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
   const [otp, setOtp] = useState('');
   const [generatedOtp, setGeneratedOtp] = useState('');
   
+  // Mobile availability checking state
+  const [mobileAvailability, setMobileAvailability] = useState<"checking" | "available" | "not-available" | "">("");
+  
   // Location confirmation states
   const [extractedData, setExtractedData] = useState<any>(null);
   const [processedTranscription, setProcessedTranscription] = useState('');
@@ -80,6 +83,25 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
     currentLocationUsed: false,
     profileAddressUsed: false,
   });
+
+  // Mobile availability checking function
+  const checkMobileAvailability = useCallback(async (mobile: string) => {
+    try {
+      const response = await fetch("/api/auth/check-availability", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mobile, email: "", aadhaarNumber: "", role: "client" }),
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        setMobileAvailability(result.mobile ? "available" : "not-available");
+      }
+    } catch (error) {
+      console.error("Error checking mobile availability:", error);
+      setMobileAvailability("");
+    }
+  }, []);
 
   const [showCustomLocationForm, setShowCustomLocationForm] = useState(false);
 
@@ -136,8 +158,22 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
         firstName: '',
         role: 'client'
       });
+      setMobileAvailability('');
     }
   }, [isOpen, user]);
+
+  // Watch for mobile number changes and check availability
+  useEffect(() => {
+    if (quickAuthData.mobile && quickAuthData.mobile.length >= 10) {
+      setMobileAvailability("checking");
+      const timer = setTimeout(() => {
+        checkMobileAvailability(quickAuthData.mobile);
+      }, 500);
+      return () => clearTimeout(timer);
+    } else {
+      setMobileAvailability("");
+    }
+  }, [quickAuthData.mobile, checkMobileAvailability]);
 
   // Start recording function
   const startRecording = useCallback(async () => {
@@ -735,13 +771,34 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
               <div className="space-y-4">
                 <div>
                   <label className="text-sm font-medium">Mobile Number</label>
-                  <Input
-                    type="tel"
-                    placeholder="Enter 10-digit mobile number"
-                    value={quickAuthData.mobile}
-                    onChange={(e) => setQuickAuthData(prev => ({ ...prev, mobile: e.target.value }))}
-                    maxLength={10}
-                  />
+                  <div className="relative">
+                    <Input
+                      type="tel"
+                      placeholder="Enter 10-digit mobile number"
+                      value={quickAuthData.mobile}
+                      onChange={(e) => setQuickAuthData(prev => ({ ...prev, mobile: e.target.value }))}
+                      maxLength={10}
+                      className={mobileAvailability === "not-available" ? "border-red-500" : ""}
+                    />
+                    {mobileAvailability === "checking" && (
+                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                        <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                      </div>
+                    )}
+                    {mobileAvailability === "available" && (
+                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-green-600">
+                        ✓
+                      </div>
+                    )}
+                    {mobileAvailability === "not-available" && (
+                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-red-600">
+                        ✗
+                      </div>
+                    )}
+                  </div>
+                  {mobileAvailability === "not-available" && (
+                    <p className="text-xs text-red-600 mt-1">Not Available</p>
+                  )}
                 </div>
                 
                 {/* Quick Post is only for clients - no user type selection needed */}
@@ -754,7 +811,7 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
                 <Button 
                   onClick={handleSendOtp} 
                   className="w-full"
-                  disabled={isProcessing}
+                  disabled={isProcessing || mobileAvailability === "not-available" || mobileAvailability === "checking" || !quickAuthData.mobile || quickAuthData.mobile.length < 10}
                 >
                   {isProcessing ? "Sending..." : "Send OTP"}
                 </Button>
@@ -841,13 +898,34 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
               
               <div>
                 <label className="text-sm font-medium">Mobile Number</label>
-                <Input
-                  type="tel"
-                  placeholder="Enter 10-digit mobile number"
-                  value={quickAuthData.mobile}
-                  onChange={(e) => setQuickAuthData(prev => ({ ...prev, mobile: e.target.value }))}
-                  maxLength={10}
-                />
+                <div className="relative">
+                  <Input
+                    type="tel"
+                    placeholder="Enter 10-digit mobile number"
+                    value={quickAuthData.mobile}
+                    onChange={(e) => setQuickAuthData(prev => ({ ...prev, mobile: e.target.value }))}
+                    maxLength={10}
+                    className={mobileAvailability === "not-available" ? "border-red-500" : ""}
+                  />
+                  {mobileAvailability === "checking" && (
+                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                      <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                    </div>
+                  )}
+                  {mobileAvailability === "available" && (
+                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-green-600">
+                      ✓
+                    </div>
+                  )}
+                  {mobileAvailability === "not-available" && (
+                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-red-600">
+                      ✗
+                    </div>
+                  )}
+                </div>
+                {mobileAvailability === "not-available" && (
+                  <p className="text-xs text-red-600 mt-1">Not Available</p>
+                )}
               </div>
               
               {/* Quick Post is only for clients - no account type selection needed */}
@@ -867,7 +945,7 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
               <Button 
                 onClick={handleQuickRegister} 
                 className="w-full"
-                disabled={isProcessing}
+                disabled={isProcessing || mobileAvailability === "not-available" || mobileAvailability === "checking" || !quickAuthData.mobile || !quickAuthData.firstName || quickAuthData.mobile.length < 10}
               >
                 {isProcessing ? "Creating Account..." : "Create Account & Continue"}
               </Button>
