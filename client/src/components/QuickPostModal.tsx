@@ -31,7 +31,7 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
   };
 
   // Simple state management
-  const [currentStep, setCurrentStep] = useState<'auth-check' | 'login' | 'register' | 'language' | 'recording' | 'preview' | 'manual-input' | 'success' | 'location-confirmation'>('auth-check');
+  const [currentStep, setCurrentStep] = useState<'auth-check' | 'role-restriction' | 'login' | 'register' | 'language' | 'recording' | 'preview' | 'manual-input' | 'success' | 'location-confirmation'>('auth-check');
   const [selectedLanguage, setSelectedLanguage] = useState<string>('en');
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -106,15 +106,21 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
   useEffect(() => {
     if (isOpen) {
       if (user) {
-        // User is logged in, pre-fill location from profile and go to language selection
-        setLocationData(prev => ({
-          ...prev,
-          area: user.areaName || prev.area,
-          district: user.district || prev.district,
-          state: user.state || prev.state,
-          fullAddress: user.fullAddress || prev.fullAddress
-        }));
-        setCurrentStep('language');
+        // Check if user is a client - only clients can post jobs
+        if (user.role === 'client') {
+          // User is logged in as client, pre-fill location from profile and go to language selection
+          setLocationData(prev => ({
+            ...prev,
+            area: user.areaName || prev.area,
+            district: user.district || prev.district,
+            state: user.state || prev.state,
+            fullAddress: user.fullAddress || prev.fullAddress
+          }));
+          setCurrentStep('language');
+        } else {
+          // User is logged in but not as client (worker role) - show role restriction
+          setCurrentStep('role-restriction');
+        }
       } else {
         // User not logged in, start with auth check
         setCurrentStep('auth-check');
@@ -874,6 +880,50 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
             >
               ← Back
             </Button>
+          </div>
+        )}
+
+        {/* Role Restriction Step - for workers trying to post jobs */}
+        {currentStep === 'role-restriction' && (
+          <div className="space-y-4">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-semibold text-orange-600 mb-2">Worker Account Detected</h3>
+              <p className="text-muted-foreground mb-4">
+                You're currently logged in as a <strong>Worker</strong>. Only <strong>Client</strong> accounts can post jobs and hire workers.
+              </p>
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                <h4 className="font-medium text-blue-900 mb-2">What you can do:</h4>
+                <ul className="text-sm text-blue-700 space-y-1">
+                  <li>• Create a separate client account to post jobs</li>
+                  <li>• Keep your worker account to receive job opportunities</li>
+                  <li>• Many people have both client and worker accounts</li>
+                </ul>
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Button 
+                onClick={() => {
+                  // Start registration as client
+                  setCurrentStep('register');
+                }} 
+                className="w-full bg-green-600 hover:bg-green-700"
+              >
+                Create Client Account
+              </Button>
+              <Button 
+                onClick={onClose} 
+                variant="outline" 
+                className="w-full"
+              >
+                Cancel
+              </Button>
+            </div>
           </div>
         )}
 

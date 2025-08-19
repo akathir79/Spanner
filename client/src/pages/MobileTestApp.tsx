@@ -22,6 +22,7 @@ export default function MobileTestApp() {
   const [currentPage, setCurrentPage] = useState<'welcome' | 'login' | 'register' | 'quick-join-select' | 'quick-join-client' | 'quick-join-worker'>('welcome');
   const [showSuccess, setShowSuccess] = useState(false);
   const [showAuthPrompt, setShowAuthPrompt] = useState(false);
+  const [showWorkerRestrictionPrompt, setShowWorkerRestrictionPrompt] = useState(false);
   
   // Service management states for Quick Join
   const [showNewServiceInput, setShowNewServiceInput] = useState(false);
@@ -944,6 +945,9 @@ export default function MobileTestApp() {
                 onClick={() => {
                   if (!user) {
                     setShowAuthPrompt(true);
+                  } else if (user.role !== 'client') {
+                    // Show worker role restriction
+                    setShowWorkerRestrictionPrompt(true);
                   } else {
                     setCurrentPage('quick-post');
                   }
@@ -964,6 +968,49 @@ export default function MobileTestApp() {
             </div>
           </div>
         </div>
+
+        {/* Worker Role Restriction Modal */}
+        {showWorkerRestrictionPrompt && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 m-4 max-w-sm w-full">
+              <div className="text-center mb-4">
+                <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-semibold text-orange-600">Worker Account Detected</h3>
+                <p className="text-gray-600 text-sm mt-2">
+                  You're logged in as a <strong>Worker</strong>. Only <strong>Client</strong> accounts can post jobs and hire workers.
+                </p>
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-3">
+                  <p className="text-xs text-blue-700">
+                    💡 You can create a separate client account to post jobs while keeping your worker account for receiving work opportunities.
+                  </p>
+                </div>
+              </div>
+              
+              <div className="space-y-3">
+                <Button 
+                  onClick={() => {
+                    setShowWorkerRestrictionPrompt(false);
+                    setCurrentPage('register');
+                  }}
+                  className="w-full bg-green-600 text-white"
+                >
+                  Create Client Account
+                </Button>
+                <Button 
+                  onClick={() => setShowWorkerRestrictionPrompt(false)}
+                  variant="outline"
+                  className="w-full"
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Authentication Prompt Modal */}
         {showAuthPrompt && (
