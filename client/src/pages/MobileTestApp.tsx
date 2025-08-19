@@ -13,6 +13,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { MobileAddressForm } from '@/components/MobileAddressForm';
 
 export default function MobileTestApp() {
   const { user } = useAuth();
@@ -28,10 +29,15 @@ export default function MobileTestApp() {
   const [selectedService, setSelectedService] = useState('');
   
   // Location states for worker registration
-  const [selectedState, setSelectedState] = useState('');
-  const [selectedDistrict, setSelectedDistrict] = useState('');
   const [isDetectingLocation, setIsDetectingLocation] = useState(false);
-  const [availableDistricts, setAvailableDistricts] = useState<string[]>([]);
+  const [addressValues, setAddressValues] = useState({
+    houseNumber: '',
+    streetName: '',
+    areaName: '',
+    district: '',
+    state: '',
+    pincode: '',
+  });
 
   // Fetch services for worker registration
   const { data: services, isLoading: servicesLoading, error: servicesError } = useQuery({
@@ -39,110 +45,7 @@ export default function MobileTestApp() {
     enabled: true, // Always enabled for mobile app
   });
 
-  // Fetch districts data
-  const { data: districtsData } = useQuery({
-    queryKey: ["/api/districts"],
-    enabled: true,
-  });
 
-  // Extract states from districts data
-  const availableStates = districtsData ? Object.keys(districtsData) : [];
-
-  // Update available districts when state changes
-  React.useEffect(() => {
-    if (selectedState && districtsData && districtsData[selectedState]) {
-      setAvailableDistricts(districtsData[selectedState].districts || []);
-      // Reset district selection when state changes
-      if (selectedDistrict && !districtsData[selectedState].districts?.includes(selectedDistrict)) {
-        setSelectedDistrict('');
-      }
-    } else {
-      setAvailableDistricts([]);
-    }
-  }, [selectedState, districtsData, selectedDistrict]);
-
-  // Auto-detect location function
-  const handleAutoDetectLocation = () => {
-    if (!navigator.geolocation) {
-      toast({
-        title: "Location not supported",
-        description: "Your browser doesn't support location detection. Please select manually.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsDetectingLocation(true);
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        try {
-          const { latitude, longitude } = position.coords;
-          
-          // Use reverse geocoding to get state and district
-          const response = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`);
-          const data = await response.json();
-          
-          // Extract state and district from the response
-          const detectedState = data.principalSubdivision || data.countryName;
-          const detectedDistrict = data.city || data.locality || data.principalSubdivisionCode;
-          
-          // Find matching state in our districts data
-          if (districtsData && detectedState) {
-            const matchedState = Object.keys(districtsData).find(state => 
-              state.toLowerCase().includes(detectedState.toLowerCase()) ||
-              detectedState.toLowerCase().includes(state.toLowerCase())
-            );
-            
-            if (matchedState) {
-              setSelectedState(matchedState);
-              
-              // Find matching district
-              const stateDistricts = districtsData[matchedState].districts || [];
-              const matchedDistrict = stateDistricts.find(district =>
-                district.toLowerCase().includes(detectedDistrict.toLowerCase()) ||
-                detectedDistrict.toLowerCase().includes(district.toLowerCase())
-              );
-              
-              if (matchedDistrict) {
-                setSelectedDistrict(matchedDistrict);
-                toast({
-                  title: "Location detected!",
-                  description: `Set to ${matchedState}, ${matchedDistrict}`,
-                });
-              } else {
-                toast({
-                  title: "State detected",
-                  description: `Set to ${matchedState}. Please select your district manually.`,
-                });
-              }
-            } else {
-              toast({
-                title: "Location detected",
-                description: "Please select your state and district manually from the detected location.",
-              });
-            }
-          }
-        } catch (error) {
-          toast({
-            title: "Location detection failed",
-            description: "Please select your state and district manually.",
-            variant: "destructive",
-          });
-        } finally {
-          setIsDetectingLocation(false);
-        }
-      },
-      (error) => {
-        setIsDetectingLocation(false);
-        toast({
-          title: "Location access denied",
-          description: "Please select your state and district manually.",
-          variant: "destructive",
-        });
-      },
-      { timeout: 10000 }
-    );
-  };
 
   // Enhanced service selection handler
   const handleServiceSelect = (value: string) => {
@@ -245,8 +148,12 @@ export default function MobileTestApp() {
       firstName: string;
       mobile: string;
       primaryService: string;
+      houseNumber: string;
+      streetName: string;
+      areaName: string;
       state: string;
       district: string;
+      pincode: string;
     }) => {
       const response = await fetch("/api/auth/signup/worker", {
         method: "POST",
@@ -255,14 +162,14 @@ export default function MobileTestApp() {
           ...data,
           role: "worker",
           lastName: "UPDATE_REQUIRED",
-          houseNumber: "COLLECT_DURING_POSTING",
-          streetName: "COLLECT_DURING_POSTING", 
-          areaName: "COLLECT_DURING_POSTING",
+          houseNumber: data.houseNumber,
+          streetName: data.streetName, 
+          areaName: data.areaName,
           district: data.district,
           state: data.state,
-          pincode: "COLLECT_DURING_POSTING",
+          pincode: data.pincode,
           email: "",
-          fullAddress: "COLLECT_DURING_POSTING",
+          fullAddress: `${data.houseNumber}, ${data.streetName}, ${data.areaName}, ${data.district}, ${data.state} - ${data.pincode}`,
           aadhaarNumber: "000000000000",
           experienceYears: 1,
           hourlyRate: 100,
@@ -302,10 +209,10 @@ export default function MobileTestApp() {
     const firstName = firstNameInput?.value || '';
     const mobile = mobileInput?.value || '';
     
-    if (!firstName || !mobile || !selectedService || !selectedState || !selectedDistrict) {
+    if (!firstName || !mobile || !selectedService || !addressValues.state || !addressValues.district || !addressValues.houseNumber || !addressValues.streetName || !addressValues.areaName || !addressValues.pincode) {
       toast({
         title: "Missing information",
-        description: "Please fill in all required fields.",
+        description: "Please fill in all required fields including complete address.",
         variant: "destructive",
       });
       return;
@@ -324,8 +231,7 @@ export default function MobileTestApp() {
       firstName,
       mobile,
       primaryService: selectedService,
-      state: selectedState,
-      district: selectedDistrict,
+      ...addressValues,
     });
   };
 
@@ -776,73 +682,18 @@ export default function MobileTestApp() {
                         </div>
                       )}
                     </div>
-                    {/* Location Fields */}
-                    <div className="space-y-3">
-                      {/* Auto-detect Location Button */}
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={handleAutoDetectLocation}
-                        disabled={isDetectingLocation}
-                        className="w-full h-12"
-                      >
-                        {isDetectingLocation ? (
-                          <>
-                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                            Detecting Location...
-                          </>
-                        ) : (
-                          <>
-                            <MapPin className="h-4 w-4 mr-2" />
-                            Auto-Detect Location
-                          </>
-                        )}
-                      </Button>
-
-                      {/* State Selection */}
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium text-gray-700">State</label>
-                        <div className="relative">
-                          <select 
-                            value={selectedState}
-                            onChange={(e) => setSelectedState(e.target.value)}
-                            className="w-full h-12 px-3 border border-gray-300 rounded-md bg-white appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                          >
-                            <option value="" disabled>Select your state</option>
-                            {availableStates.map((state) => (
-                              <option key={state} value={state}>
-                                {state}
-                              </option>
-                            ))}
-                          </select>
-                          <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
-                        </div>
-                      </div>
-
-                      {/* District Selection */}
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium text-gray-700">District</label>
-                        <div className="relative">
-                          <select 
-                            value={selectedDistrict}
-                            onChange={(e) => setSelectedDistrict(e.target.value)}
-                            disabled={!selectedState}
-                            className="w-full h-12 px-3 border border-gray-300 rounded-md bg-white appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
-                          >
-                            <option value="" disabled>
-                              {selectedState ? "Select your district" : "Select state first"}
-                            </option>
-                            {availableDistricts.map((district) => (
-                              <option key={district} value={district}>
-                                {district}
-                              </option>
-                            ))}
-                          </select>
-                          <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
-                        </div>
-                      </div>
-                    </div>
+                    {/* Address Form */}
+                    <MobileAddressForm
+                      values={addressValues}
+                      onChange={(field, value) => setAddressValues(prev => ({ ...prev, [field]: value }))}
+                      isDetecting={isDetectingLocation}
+                      onDetect={() => {
+                        setIsDetectingLocation(true);
+                        // Reset loading state after timeout
+                        setTimeout(() => setIsDetectingLocation(false), 8000);
+                      }}
+                      className="border rounded-lg p-3 bg-gray-50"
+                    />
 
                     <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
                       <p className="text-xs text-blue-700 text-center">
@@ -851,7 +702,7 @@ export default function MobileTestApp() {
                     </div>
                     <Button 
                       onClick={handleWorkerRegistration}
-                      disabled={!selectedService || !selectedState || !selectedDistrict || workerRegistrationMutation.isPending}
+                      disabled={!selectedService || !addressValues.state || !addressValues.district || !addressValues.houseNumber || !addressValues.streetName || !addressValues.areaName || !addressValues.pincode || workerRegistrationMutation.isPending}
                       className="w-full h-12 bg-green-600 text-white disabled:bg-gray-400 disabled:cursor-not-allowed"
                     >
                       {workerRegistrationMutation.isPending ? (
@@ -859,7 +710,7 @@ export default function MobileTestApp() {
                           <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                           Creating Account...
                         </>
-                      ) : !selectedService || !selectedState || !selectedDistrict ? (
+                      ) : !selectedService || !addressValues.state || !addressValues.district || !addressValues.houseNumber || !addressValues.streetName || !addressValues.areaName || !addressValues.pincode ? (
                         "Complete all fields to register" 
                       ) : (
                         "Register as Worker"

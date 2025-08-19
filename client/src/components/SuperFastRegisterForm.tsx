@@ -8,7 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ChevronLeft, Plus, MapPin, Loader2 } from "lucide-react";
+import { ChevronLeft, Plus } from "lucide-react";
+import { AddressForm } from "@/components/AddressForm";
 
 // Simplified Quick Join schema - only first name, mobile number, and service for workers
 const fastClientSchema = z.object({
@@ -18,8 +19,12 @@ const fastClientSchema = z.object({
 
 const fastWorkerSchema = fastClientSchema.extend({
   primaryService: z.string().min(1, "Primary service is required"),
+  houseNumber: z.string().min(1, "House number is required"),
+  streetName: z.string().min(1, "Street name is required"),
+  areaName: z.string().min(1, "Area name is required"),
   state: z.string().min(1, "State is required"),
   district: z.string().min(1, "District is required"),
+  pincode: z.string().length(6, "PIN code must be exactly 6 digits").regex(/^\d+$/, "PIN code must contain only digits"),
 });
 
 type FastClientData = z.infer<typeof fastClientSchema>;
@@ -37,7 +42,6 @@ export function SuperFastRegisterForm({ role, onComplete, onBack, onStepChange, 
   const [showNewServiceInput, setShowNewServiceInput] = useState(false);
   const [newServiceName, setNewServiceName] = useState("");
   const [isDetectingLocation, setIsDetectingLocation] = useState(false);
-  const [availableDistricts, setAvailableDistricts] = useState<string[]>([]);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -50,8 +54,12 @@ export function SuperFastRegisterForm({ role, onComplete, onBack, onStepChange, 
       mobile: "",
       ...(role === "worker" && { 
         primaryService: "",
+        houseNumber: "",
+        streetName: "",
+        areaName: "",
         state: "",
         district: "",
+        pincode: "",
       }),
     },
   });
@@ -62,28 +70,7 @@ export function SuperFastRegisterForm({ role, onComplete, onBack, onStepChange, 
     enabled: role === "worker",
   });
 
-  // Fetch districts data for worker registration
-  const { data: districtsData } = useQuery({
-    queryKey: ["/api/districts"],
-    enabled: role === "worker",
-  });
 
-  // Extract states from districts data
-  const availableStates = districtsData ? Object.keys(districtsData) : [];
-
-  // Update available districts when state changes
-  const selectedState = form.watch("state");
-  useEffect(() => {
-    if (selectedState && districtsData && districtsData[selectedState]) {
-      setAvailableDistricts(districtsData[selectedState].districts || []);
-      // Reset district selection when state changes
-      if (form.getValues("district") && !districtsData[selectedState].districts?.includes(form.getValues("district"))) {
-        form.setValue("district", "");
-      }
-    } else {
-      setAvailableDistricts([]);
-    }
-  }, [selectedState, districtsData, form]);
 
   // Service selection handler
   const handleServiceSelect = (value: string) => {
@@ -133,88 +120,15 @@ export function SuperFastRegisterForm({ role, onComplete, onBack, onStepChange, 
     createServiceMutation.mutate(newServiceName.trim());
   };
 
-  // Auto-detect location using geolocation API
-  const handleAutoDetectLocation = () => {
-    if (!navigator.geolocation) {
-      toast({
-        title: "Location not supported",
-        description: "Your browser doesn't support location detection. Please select manually.",
-        variant: "destructive",
-      });
-      return;
-    }
-
+  // Custom location detection handler for AddressForm
+  const handleLocationDetection = () => {
     setIsDetectingLocation(true);
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        try {
-          const { latitude, longitude } = position.coords;
-          
-          // Use reverse geocoding to get state and district
-          const response = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`);
-          const data = await response.json();
-          
-          // Extract state and district from the response
-          const detectedState = data.principalSubdivision || data.countryName;
-          const detectedDistrict = data.city || data.locality || data.principalSubdivisionCode;
-          
-          // Find matching state in our districts data
-          if (districtsData && detectedState) {
-            const matchedState = Object.keys(districtsData).find(state => 
-              state.toLowerCase().includes(detectedState.toLowerCase()) ||
-              detectedState.toLowerCase().includes(state.toLowerCase())
-            );
-            
-            if (matchedState) {
-              form.setValue("state", matchedState);
-              
-              // Find matching district
-              const stateDistricts = districtsData[matchedState].districts || [];
-              const matchedDistrict = stateDistricts.find(district =>
-                district.toLowerCase().includes(detectedDistrict.toLowerCase()) ||
-                detectedDistrict.toLowerCase().includes(district.toLowerCase())
-              );
-              
-              if (matchedDistrict) {
-                form.setValue("district", matchedDistrict);
-                toast({
-                  title: "Location detected!",
-                  description: `Set to ${matchedState}, ${matchedDistrict}`,
-                });
-              } else {
-                toast({
-                  title: "State detected",
-                  description: `Set to ${matchedState}. Please select your district manually.`,
-                });
-              }
-            } else {
-              toast({
-                title: "Location detected",
-                description: "Please select your state and district manually from the detected location.",
-              });
-            }
-          }
-        } catch (error) {
-          toast({
-            title: "Location detection failed",
-            description: "Please select your state and district manually.",
-            variant: "destructive",
-          });
-        } finally {
-          setIsDetectingLocation(false);
-        }
-      },
-      (error) => {
-        setIsDetectingLocation(false);
-        toast({
-          title: "Location access denied",
-          description: "Please select your state and district manually.",
-          variant: "destructive",
-        });
-      },
-      { timeout: 10000 }
-    );
+    // AddressForm handles the actual geolocation logic
+    // We manage the loading state here
+    setTimeout(() => setIsDetectingLocation(false), 8000); // Reset after geolocation timeout
   };
+
+
 
   // Registration mutation
   const registerMutation = useMutation({
@@ -227,15 +141,16 @@ export function SuperFastRegisterForm({ role, onComplete, onBack, onStepChange, 
           ...data,
           role,
           lastName: "UPDATE_REQUIRED", // Mark for update
-          // Address will be collected during job posting
-          houseNumber: "COLLECT_DURING_POSTING",
-          streetName: "COLLECT_DURING_POSTING", 
-          areaName: "COLLECT_DURING_POSTING",
+          // Address will be collected during job posting for clients, from form for workers
+          houseNumber: role === "worker" ? (data as FastWorkerData).houseNumber : "COLLECT_DURING_POSTING",
+          streetName: role === "worker" ? (data as FastWorkerData).streetName : "COLLECT_DURING_POSTING", 
+          areaName: role === "worker" ? (data as FastWorkerData).areaName : "COLLECT_DURING_POSTING",
           district: role === "worker" ? (data as FastWorkerData).district : "COLLECT_DURING_POSTING",
           state: role === "worker" ? (data as FastWorkerData).state : "COLLECT_DURING_POSTING",
-          pincode: "COLLECT_DURING_POSTING",
+          pincode: role === "worker" ? (data as FastWorkerData).pincode : "COLLECT_DURING_POSTING",
+          fullAddress: role === "worker" ? `${(data as FastWorkerData).houseNumber}, ${(data as FastWorkerData).streetName}, ${(data as FastWorkerData).areaName}, ${(data as FastWorkerData).district}, ${(data as FastWorkerData).state} - ${(data as FastWorkerData).pincode}` : "COLLECT_DURING_POSTING",
           email: "", // Will be requested in dashboard
-          fullAddress: "COLLECT_DURING_POSTING", // Address will be collected during job posting
+
           // Worker-specific required fields with defaults for quick registration
           ...(role === "worker" && {
             aadhaarNumber: "000000000000", // Placeholder - to be updated in dashboard
@@ -417,85 +332,14 @@ export function SuperFastRegisterForm({ role, onComplete, onBack, onStepChange, 
             />
           )}
 
-          {/* Location Fields for Worker */}
+          {/* Address Form for Worker */}
           {role === "worker" && (
-            <>
-              {/* Auto-detect Location Button */}
-              <div className="flex justify-center">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={handleAutoDetectLocation}
-                  disabled={isDetectingLocation}
-                  className="w-full"
-                >
-                  {isDetectingLocation ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Detecting Location...
-                    </>
-                  ) : (
-                    <>
-                      <MapPin className="h-4 w-4 mr-2" />
-                      Auto-Detect Location
-                    </>
-                  )}
-                </Button>
-              </div>
-
-              {/* State Selection */}
-              <FormField
-                control={form.control}
-                name="state"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>State</FormLabel>
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select your state" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {availableStates.map((state) => (
-                          <SelectItem key={state} value={state}>
-                            {state}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* District Selection */}
-              <FormField
-                control={form.control}
-                name="district"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>District</FormLabel>
-                    <Select value={field.value} onValueChange={field.onChange} disabled={!selectedState}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder={selectedState ? "Select your district" : "Select state first"} />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {availableDistricts.map((district) => (
-                          <SelectItem key={district} value={district}>
-                            {district}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </>
+            <AddressForm
+              form={form}
+              isDetecting={isDetectingLocation}
+              onDetect={handleLocationDetection}
+              className="border rounded-lg p-4 bg-gray-50"
+            />
           )}
 
           {/* Registration note */}
