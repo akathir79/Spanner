@@ -57,8 +57,9 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
   const [otp, setOtp] = useState('');
   const [generatedOtp, setGeneratedOtp] = useState('');
   
-  // Mobile availability checking state
+  // Mobile availability checking state - for both login and registration flows
   const [mobileAvailability, setMobileAvailability] = useState<"checking" | "available" | "not-available" | "">("");
+  const [isLoginFlow, setIsLoginFlow] = useState(false); // Track if we're in login or registration flow
   
   // Location confirmation states
   const [extractedData, setExtractedData] = useState<any>(null);
@@ -159,6 +160,7 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
         role: 'client'
       });
       setMobileAvailability('');
+      setIsLoginFlow(false);
     }
   }, [isOpen, user]);
 
@@ -386,7 +388,7 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
     try {
       // Convert audio blob to base64
       const arrayBuffer = await audioBlob.arrayBuffer();
-      const base64Audio = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+      const base64Audio = btoa(String.fromCharCode(...Array.from(new Uint8Array(arrayBuffer))));
       
       // Get current user (check localStorage if useAuth hasn't updated yet)
       const storedUser = localStorage.getItem('user');
@@ -749,10 +751,16 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
               To post a job and hire workers using voice, you need to be logged in.
             </p>
             <div className="grid grid-cols-2 gap-2">
-              <Button onClick={() => setCurrentStep('login')} className="w-full">
+              <Button onClick={() => {
+                setIsLoginFlow(true);
+                setCurrentStep('login');
+              }} className="w-full">
                 I Have an Account
               </Button>
-              <Button onClick={() => setCurrentStep('register')} variant="outline" className="w-full">
+              <Button onClick={() => {
+                setIsLoginFlow(false);
+                setCurrentStep('register');
+              }} variant="outline" className="w-full">
                 Create New Account
               </Button>
             </div>
@@ -778,26 +786,45 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
                       value={quickAuthData.mobile}
                       onChange={(e) => setQuickAuthData(prev => ({ ...prev, mobile: e.target.value }))}
                       maxLength={10}
-                      className={mobileAvailability === "not-available" ? "border-red-500" : ""}
+                      className={
+                        isLoginFlow 
+                          ? (mobileAvailability === "available" ? "border-red-500" : "") 
+                          : (mobileAvailability === "not-available" ? "border-red-500" : "")
+                      }
                     />
                     {mobileAvailability === "checking" && (
                       <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
                         <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
                       </div>
                     )}
-                    {mobileAvailability === "available" && (
+                    {/* Show checkmark based on login vs registration flow */}
+                    {mobileAvailability === "available" && !isLoginFlow && (
                       <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-green-600">
                         ✓
                       </div>
                     )}
-                    {mobileAvailability === "not-available" && (
+                    {mobileAvailability === "not-available" && isLoginFlow && (
+                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-green-600">
+                        ✓
+                      </div>
+                    )}
+                    {mobileAvailability === "available" && isLoginFlow && (
+                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-red-600">
+                        ✗
+                      </div>
+                    )}
+                    {mobileAvailability === "not-available" && !isLoginFlow && (
                       <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-red-600">
                         ✗
                       </div>
                     )}
                   </div>
-                  {mobileAvailability === "not-available" && (
-                    <p className="text-xs text-red-600 mt-1">Not Available</p>
+                  {/* Show appropriate message based on login vs registration flow */}
+                  {mobileAvailability === "available" && isLoginFlow && (
+                    <p className="text-xs text-red-600 mt-1">Mobile number not registered. Please register first.</p>
+                  )}
+                  {mobileAvailability === "not-available" && !isLoginFlow && (
+                    <p className="text-xs text-red-600 mt-1">Mobile number already registered. Please login instead.</p>
                   )}
                 </div>
                 
@@ -811,7 +838,14 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
                 <Button 
                   onClick={handleSendOtp} 
                   className="w-full"
-                  disabled={isProcessing || mobileAvailability === "not-available" || mobileAvailability === "checking" || !quickAuthData.mobile || quickAuthData.mobile.length < 10}
+                  disabled={
+                    isProcessing || 
+                    mobileAvailability === "checking" || 
+                    !quickAuthData.mobile || 
+                    quickAuthData.mobile.length < 10 ||
+                    (isLoginFlow && mobileAvailability === "available") ||
+                    (!isLoginFlow && mobileAvailability === "not-available")
+                  }
                 >
                   {isProcessing ? "Sending..." : "Send OTP"}
                 </Button>
@@ -905,26 +939,45 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
                     value={quickAuthData.mobile}
                     onChange={(e) => setQuickAuthData(prev => ({ ...prev, mobile: e.target.value }))}
                     maxLength={10}
-                    className={mobileAvailability === "not-available" ? "border-red-500" : ""}
+                    className={
+                      isLoginFlow 
+                        ? (mobileAvailability === "available" ? "border-red-500" : "") 
+                        : (mobileAvailability === "not-available" ? "border-red-500" : "")
+                    }
                   />
                   {mobileAvailability === "checking" && (
                     <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
                       <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
                     </div>
                   )}
-                  {mobileAvailability === "available" && (
+                  {/* Show checkmark based on login vs registration flow */}
+                  {mobileAvailability === "available" && !isLoginFlow && (
                     <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-green-600">
                       ✓
                     </div>
                   )}
-                  {mobileAvailability === "not-available" && (
+                  {mobileAvailability === "not-available" && isLoginFlow && (
+                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-green-600">
+                      ✓
+                    </div>
+                  )}
+                  {mobileAvailability === "available" && isLoginFlow && (
+                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-red-600">
+                      ✗
+                    </div>
+                  )}
+                  {mobileAvailability === "not-available" && !isLoginFlow && (
                     <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-red-600">
                       ✗
                     </div>
                   )}
                 </div>
-                {mobileAvailability === "not-available" && (
-                  <p className="text-xs text-red-600 mt-1">Not Available</p>
+                {/* Show appropriate message based on login vs registration flow */}
+                {mobileAvailability === "available" && isLoginFlow && (
+                  <p className="text-xs text-red-600 mt-1">Mobile number not registered. Please register first.</p>
+                )}
+                {mobileAvailability === "not-available" && !isLoginFlow && (
+                  <p className="text-xs text-red-600 mt-1">Mobile number already registered. Please login instead.</p>
                 )}
               </div>
               
@@ -945,7 +998,15 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
               <Button 
                 onClick={handleQuickRegister} 
                 className="w-full"
-                disabled={isProcessing || mobileAvailability === "not-available" || mobileAvailability === "checking" || !quickAuthData.mobile || !quickAuthData.firstName || quickAuthData.mobile.length < 10}
+                disabled={
+                  isProcessing || 
+                  mobileAvailability === "checking" || 
+                  !quickAuthData.mobile || 
+                  !quickAuthData.firstName || 
+                  quickAuthData.mobile.length < 10 ||
+                  (isLoginFlow && mobileAvailability === "available") ||
+                  (!isLoginFlow && mobileAvailability === "not-available")
+                }
               >
                 {isProcessing ? "Creating Account..." : "Create Account & Continue"}
               </Button>
