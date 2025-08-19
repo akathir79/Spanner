@@ -1482,7 +1482,7 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
                   className="text-blue-600 border-blue-200 hover:bg-blue-50"
                   data-testid="button-add-custom-location"
                 >
-                  {showCustomLocationForm ? 'Use Current Location' : '+ Add New Work Location'}
+                  {showCustomLocationForm ? 'Use Address Above' : '+ Add New Work Location'}
                 </Button>
                 <p className="text-xs text-muted-foreground">Need different work address?</p>
               </div>
@@ -1531,12 +1531,130 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
                           <SelectValue placeholder="Select district" />
                         </SelectTrigger>
                         <SelectContent>
+                          <SelectItem value="Ariyalur">Ariyalur</SelectItem>
+                          <SelectItem value="Chengalpattu">Chengalpattu</SelectItem>
                           <SelectItem value="Chennai">Chennai</SelectItem>
+                          <SelectItem value="Coimbatore">Coimbatore</SelectItem>
+                          <SelectItem value="Cuddalore">Cuddalore</SelectItem>
+                          <SelectItem value="Dharmapuri">Dharmapuri</SelectItem>
+                          <SelectItem value="Dindigul">Dindigul</SelectItem>
+                          <SelectItem value="Erode">Erode</SelectItem>
+                          <SelectItem value="Kallakurichi">Kallakurichi</SelectItem>
+                          <SelectItem value="Kanchipuram">Kanchipuram</SelectItem>
+                          <SelectItem value="Kanyakumari">Kanyakumari</SelectItem>
+                          <SelectItem value="Karur">Karur</SelectItem>
+                          <SelectItem value="Krishnagiri">Krishnagiri</SelectItem>
+                          <SelectItem value="Madurai">Madurai</SelectItem>
+                          <SelectItem value="Mayiladuthurai">Mayiladuthurai</SelectItem>
+                          <SelectItem value="Nagapattinam">Nagapattinam</SelectItem>
+                          <SelectItem value="Namakkal">Namakkal</SelectItem>
+                          <SelectItem value="Nilgiris">Nilgiris</SelectItem>
+                          <SelectItem value="Perambalur">Perambalur</SelectItem>
+                          <SelectItem value="Pudukkottai">Pudukkottai</SelectItem>
+                          <SelectItem value="Ramanathapuram">Ramanathapuram</SelectItem>
+                          <SelectItem value="Ranipet">Ranipet</SelectItem>
+                          <SelectItem value="Salem">Salem</SelectItem>
+                          <SelectItem value="Sivaganga">Sivaganga</SelectItem>
+                          <SelectItem value="Tenkasi">Tenkasi</SelectItem>
+                          <SelectItem value="Thanjavur">Thanjavur</SelectItem>
+                          <SelectItem value="Theni">Theni</SelectItem>
+                          <SelectItem value="Thoothukudi">Thoothukudi</SelectItem>
+                          <SelectItem value="Tiruchirappalli">Tiruchirappalli</SelectItem>
+                          <SelectItem value="Tirunelveli">Tirunelveli</SelectItem>
+                          <SelectItem value="Tirupathur">Tirupathur</SelectItem>
+                          <SelectItem value="Tiruppur">Tiruppur</SelectItem>
+                          <SelectItem value="Tiruvallur">Tiruvallur</SelectItem>
+                          <SelectItem value="Tiruvannamalai">Tiruvannamalai</SelectItem>
+                          <SelectItem value="Tiruvarur">Tiruvarur</SelectItem>
+                          <SelectItem value="Vellore">Vellore</SelectItem>
+                          <SelectItem value="Viluppuram">Viluppuram</SelectItem>
+                          <SelectItem value="Virudhunagar">Virudhunagar</SelectItem>
                           <SelectItem value="Bangalore Urban">Bangalore Urban</SelectItem>
+                          <SelectItem value="Bangalore Rural">Bangalore Rural</SelectItem>
+                          <SelectItem value="Mysore">Mysore</SelectItem>
+                          <SelectItem value="Tumkur">Tumkur</SelectItem>
+                          <SelectItem value="Mandya">Mandya</SelectItem>
+                          <SelectItem value="Hassan">Hassan</SelectItem>
+                          <SelectItem value="Shimoga">Shimoga</SelectItem>
+                          <SelectItem value="Chitradurga">Chitradurga</SelectItem>
+                          <SelectItem value="Davangere">Davangere</SelectItem>
+                          <SelectItem value="Bellary">Bellary</SelectItem>
+                          <SelectItem value="Bagalkot">Bagalkot</SelectItem>
+                          <SelectItem value="Vijayapura">Vijayapura</SelectItem>
+                          <SelectItem value="Bidar">Bidar</SelectItem>
+                          <SelectItem value="Kalaburagi">Kalaburagi</SelectItem>
+                          <SelectItem value="Raichur">Raichur</SelectItem>
+                          <SelectItem value="Koppal">Koppal</SelectItem>
+                          <SelectItem value="Gadag">Gadag</SelectItem>
+                          <SelectItem value="Dharwad">Dharwad</SelectItem>
+                          <SelectItem value="Haveri">Haveri</SelectItem>
+                          <SelectItem value="Uttara Kannada">Uttara Kannada</SelectItem>
+                          <SelectItem value="Belagavi">Belagavi</SelectItem>
+                          <SelectItem value="Udupi">Udupi</SelectItem>
+                          <SelectItem value="Dakshina Kannada">Dakshina Kannada</SelectItem>
+                          <SelectItem value="Kodagu">Kodagu</SelectItem>
+                          <SelectItem value="Chikkaballapur">Chikkaballapur</SelectItem>
+                          <SelectItem value="Kolar">Kolar</SelectItem>
+                          <SelectItem value="Chikkamagaluru">Chikkamagaluru</SelectItem>
+                          <SelectItem value="Chamarajanagar">Chamarajanagar</SelectItem>
+                          <SelectItem value="Yadgir">Yadgir</SelectItem>
                           <SelectItem value="Hyderabad">Hyderabad</SelectItem>
+                          <SelectItem value="Secunderabad">Secunderabad</SelectItem>
+                          <SelectItem value="Warangal Urban">Warangal Urban</SelectItem>
+                          <SelectItem value="Warangal Rural">Warangal Rural</SelectItem>
+                          <SelectItem value="Khammam">Khammam</SelectItem>
+                          <SelectItem value="Nalgonda">Nalgonda</SelectItem>
+                          <SelectItem value="Mahbubnagar">Mahbubnagar</SelectItem>
+                          <SelectItem value="Rangareddy">Rangareddy</SelectItem>
+                          <SelectItem value="Medchal">Medchal</SelectItem>
+                          <SelectItem value="Sangareddy">Sangareddy</SelectItem>
+                          <SelectItem value="Vikarabad">Vikarabad</SelectItem>
                           <SelectItem value="Mumbai">Mumbai</SelectItem>
+                          <SelectItem value="Pune">Pune</SelectItem>
+                          <SelectItem value="Nagpur">Nagpur</SelectItem>
+                          <SelectItem value="Thane">Thane</SelectItem>
+                          <SelectItem value="Aurangabad">Aurangabad</SelectItem>
+                          <SelectItem value="Solapur">Solapur</SelectItem>
+                          <SelectItem value="Ahmednagar">Ahmednagar</SelectItem>
+                          <SelectItem value="Kolhapur">Kolhapur</SelectItem>
+                          <SelectItem value="Sangli">Sangli</SelectItem>
+                          <SelectItem value="Satara">Satara</SelectItem>
+                          <SelectItem value="Ratnagiri">Ratnagiri</SelectItem>
+                          <SelectItem value="Sindhudurg">Sindhudurg</SelectItem>
                           <SelectItem value="Delhi">Delhi</SelectItem>
+                          <SelectItem value="New Delhi">New Delhi</SelectItem>
+                          <SelectItem value="North Delhi">North Delhi</SelectItem>
+                          <SelectItem value="South Delhi">South Delhi</SelectItem>
+                          <SelectItem value="East Delhi">East Delhi</SelectItem>
+                          <SelectItem value="West Delhi">West Delhi</SelectItem>
+                          <SelectItem value="Central Delhi">Central Delhi</SelectItem>
+                          <SelectItem value="North East Delhi">North East Delhi</SelectItem>
+                          <SelectItem value="North West Delhi">North West Delhi</SelectItem>
+                          <SelectItem value="South East Delhi">South East Delhi</SelectItem>
+                          <SelectItem value="South West Delhi">South West Delhi</SelectItem>
                           <SelectItem value="Kolkata">Kolkata</SelectItem>
+                          <SelectItem value="Howrah">Howrah</SelectItem>
+                          <SelectItem value="North 24 Parganas">North 24 Parganas</SelectItem>
+                          <SelectItem value="South 24 Parganas">South 24 Parganas</SelectItem>
+                          <SelectItem value="Hooghly">Hooghly</SelectItem>
+                          <SelectItem value="Nadia">Nadia</SelectItem>
+                          <SelectItem value="Murshidabad">Murshidabad</SelectItem>
+                          <SelectItem value="Birbhum">Birbhum</SelectItem>
+                          <SelectItem value="Burdwan">Burdwan</SelectItem>
+                          <SelectItem value="Ahmedabad">Ahmedabad</SelectItem>
+                          <SelectItem value="Surat">Surat</SelectItem>
+                          <SelectItem value="Vadodara">Vadodara</SelectItem>
+                          <SelectItem value="Rajkot">Rajkot</SelectItem>
+                          <SelectItem value="Bhavnagar">Bhavnagar</SelectItem>
+                          <SelectItem value="Jamnagar">Jamnagar</SelectItem>
+                          <SelectItem value="Junagadh">Junagadh</SelectItem>
+                          <SelectItem value="Gandhinagar">Gandhinagar</SelectItem>
+                          <SelectItem value="Anand">Anand</SelectItem>
+                          <SelectItem value="Mehsana">Mehsana</SelectItem>
+                          <SelectItem value="Patan">Patan</SelectItem>
+                          <SelectItem value="Sabarkantha">Sabarkantha</SelectItem>
+                          <SelectItem value="Banaskantha">Banaskantha</SelectItem>
+                          <SelectItem value="Kutch">Kutch</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -1550,12 +1668,42 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
                           <SelectValue placeholder="Select state" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="Tamil Nadu">Tamil Nadu</SelectItem>
+                          <SelectItem value="Andhra Pradesh">Andhra Pradesh</SelectItem>
+                          <SelectItem value="Arunachal Pradesh">Arunachal Pradesh</SelectItem>
+                          <SelectItem value="Assam">Assam</SelectItem>
+                          <SelectItem value="Bihar">Bihar</SelectItem>
+                          <SelectItem value="Chhattisgarh">Chhattisgarh</SelectItem>
+                          <SelectItem value="Goa">Goa</SelectItem>
+                          <SelectItem value="Gujarat">Gujarat</SelectItem>
+                          <SelectItem value="Haryana">Haryana</SelectItem>
+                          <SelectItem value="Himachal Pradesh">Himachal Pradesh</SelectItem>
+                          <SelectItem value="Jharkhand">Jharkhand</SelectItem>
                           <SelectItem value="Karnataka">Karnataka</SelectItem>
-                          <SelectItem value="Telangana">Telangana</SelectItem>
+                          <SelectItem value="Kerala">Kerala</SelectItem>
+                          <SelectItem value="Madhya Pradesh">Madhya Pradesh</SelectItem>
                           <SelectItem value="Maharashtra">Maharashtra</SelectItem>
-                          <SelectItem value="Delhi">Delhi</SelectItem>
+                          <SelectItem value="Manipur">Manipur</SelectItem>
+                          <SelectItem value="Meghalaya">Meghalaya</SelectItem>
+                          <SelectItem value="Mizoram">Mizoram</SelectItem>
+                          <SelectItem value="Nagaland">Nagaland</SelectItem>
+                          <SelectItem value="Odisha">Odisha</SelectItem>
+                          <SelectItem value="Punjab">Punjab</SelectItem>
+                          <SelectItem value="Rajasthan">Rajasthan</SelectItem>
+                          <SelectItem value="Sikkim">Sikkim</SelectItem>
+                          <SelectItem value="Tamil Nadu">Tamil Nadu</SelectItem>
+                          <SelectItem value="Telangana">Telangana</SelectItem>
+                          <SelectItem value="Tripura">Tripura</SelectItem>
+                          <SelectItem value="Uttar Pradesh">Uttar Pradesh</SelectItem>
+                          <SelectItem value="Uttarakhand">Uttarakhand</SelectItem>
                           <SelectItem value="West Bengal">West Bengal</SelectItem>
+                          <SelectItem value="Andaman and Nicobar Islands">Andaman and Nicobar Islands</SelectItem>
+                          <SelectItem value="Chandigarh">Chandigarh</SelectItem>
+                          <SelectItem value="Dadra and Nagar Haveli and Daman and Diu">Dadra and Nagar Haveli and Daman and Diu</SelectItem>
+                          <SelectItem value="Delhi">Delhi</SelectItem>
+                          <SelectItem value="Jammu and Kashmir">Jammu and Kashmir</SelectItem>
+                          <SelectItem value="Ladakh">Ladakh</SelectItem>
+                          <SelectItem value="Lakshadweep">Lakshadweep</SelectItem>
+                          <SelectItem value="Puducherry">Puducherry</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
