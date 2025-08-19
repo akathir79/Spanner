@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Wrench, Home, User, Settings, Phone, CheckCircle, Search, Plus, Briefcase, Lock, ChevronDown } from 'lucide-react';
+import { Wrench, Home, User, Settings, Phone, CheckCircle, Search, Plus, Briefcase, Lock, ChevronDown, MapPin, Loader2 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
@@ -26,12 +26,123 @@ export default function MobileTestApp() {
   const [showNewServiceInput, setShowNewServiceInput] = useState(false);
   const [newServiceName, setNewServiceName] = useState('');
   const [selectedService, setSelectedService] = useState('');
+  
+  // Location states for worker registration
+  const [selectedState, setSelectedState] = useState('');
+  const [selectedDistrict, setSelectedDistrict] = useState('');
+  const [isDetectingLocation, setIsDetectingLocation] = useState(false);
+  const [availableDistricts, setAvailableDistricts] = useState<string[]>([]);
 
   // Fetch services for worker registration
   const { data: services, isLoading: servicesLoading, error: servicesError } = useQuery({
     queryKey: ["/api/services"],
     enabled: true, // Always enabled for mobile app
   });
+
+  // Fetch districts data
+  const { data: districtsData } = useQuery({
+    queryKey: ["/api/districts"],
+    enabled: true,
+  });
+
+  // Extract states from districts data
+  const availableStates = districtsData ? Object.keys(districtsData) : [];
+
+  // Update available districts when state changes
+  React.useEffect(() => {
+    if (selectedState && districtsData && districtsData[selectedState]) {
+      setAvailableDistricts(districtsData[selectedState].districts || []);
+      // Reset district selection when state changes
+      if (selectedDistrict && !districtsData[selectedState].districts?.includes(selectedDistrict)) {
+        setSelectedDistrict('');
+      }
+    } else {
+      setAvailableDistricts([]);
+    }
+  }, [selectedState, districtsData, selectedDistrict]);
+
+  // Auto-detect location function
+  const handleAutoDetectLocation = () => {
+    if (!navigator.geolocation) {
+      toast({
+        title: "Location not supported",
+        description: "Your browser doesn't support location detection. Please select manually.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsDetectingLocation(true);
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const { latitude, longitude } = position.coords;
+          
+          // Use reverse geocoding to get state and district
+          const response = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`);
+          const data = await response.json();
+          
+          // Extract state and district from the response
+          const detectedState = data.principalSubdivision || data.countryName;
+          const detectedDistrict = data.city || data.locality || data.principalSubdivisionCode;
+          
+          // Find matching state in our districts data
+          if (districtsData && detectedState) {
+            const matchedState = Object.keys(districtsData).find(state => 
+              state.toLowerCase().includes(detectedState.toLowerCase()) ||
+              detectedState.toLowerCase().includes(state.toLowerCase())
+            );
+            
+            if (matchedState) {
+              setSelectedState(matchedState);
+              
+              // Find matching district
+              const stateDistricts = districtsData[matchedState].districts || [];
+              const matchedDistrict = stateDistricts.find(district =>
+                district.toLowerCase().includes(detectedDistrict.toLowerCase()) ||
+                detectedDistrict.toLowerCase().includes(district.toLowerCase())
+              );
+              
+              if (matchedDistrict) {
+                setSelectedDistrict(matchedDistrict);
+                toast({
+                  title: "Location detected!",
+                  description: `Set to ${matchedState}, ${matchedDistrict}`,
+                });
+              } else {
+                toast({
+                  title: "State detected",
+                  description: `Set to ${matchedState}. Please select your district manually.`,
+                });
+              }
+            } else {
+              toast({
+                title: "Location detected",
+                description: "Please select your state and district manually from the detected location.",
+              });
+            }
+          }
+        } catch (error) {
+          toast({
+            title: "Location detection failed",
+            description: "Please select your state and district manually.",
+            variant: "destructive",
+          });
+        } finally {
+          setIsDetectingLocation(false);
+        }
+      },
+      (error) => {
+        setIsDetectingLocation(false);
+        toast({
+          title: "Location access denied",
+          description: "Please select your state and district manually.",
+          variant: "destructive",
+        });
+      },
+      { timeout: 10000 }
+    );
+  };
 
   // Enhanced service selection handler
   const handleServiceSelect = (value: string) => {
@@ -127,6 +238,96 @@ export default function MobileTestApp() {
   };
 
 
+
+  // Registration mutation for mobile worker
+  const workerRegistrationMutation = useMutation({
+    mutationFn: async (data: {
+      firstName: string;
+      mobile: string;
+      primaryService: string;
+      state: string;
+      district: string;
+    }) => {
+      const response = await fetch("/api/auth/signup/worker", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...data,
+          role: "worker",
+          lastName: "UPDATE_REQUIRED",
+          houseNumber: "COLLECT_DURING_POSTING",
+          streetName: "COLLECT_DURING_POSTING", 
+          areaName: "COLLECT_DURING_POSTING",
+          district: data.district,
+          state: data.state,
+          pincode: "COLLECT_DURING_POSTING",
+          email: "",
+          fullAddress: "COLLECT_DURING_POSTING",
+          aadhaarNumber: "000000000000",
+          experienceYears: 1,
+          hourlyRate: 100,
+          serviceDistricts: [data.district],
+          skills: [data.primaryService],
+        }),
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || "Registration failed");
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Registration successful!",
+        description: "Welcome to SPANNER! You can now receive job requests from clients.",
+      });
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 3000);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Registration failed",
+        description: error.message || "Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleWorkerRegistration = () => {
+    // Get form values from DOM (this is a simplified approach for mobile demo)
+    const firstNameInput = document.querySelector('input[placeholder="Your First Name"]') as HTMLInputElement;
+    const mobileInput = document.querySelector('input[placeholder="10-digit mobile number"]') as HTMLInputElement;
+    
+    const firstName = firstNameInput?.value || '';
+    const mobile = mobileInput?.value || '';
+    
+    if (!firstName || !mobile || !selectedService || !selectedState || !selectedDistrict) {
+      toast({
+        title: "Missing information",
+        description: "Please fill in all required fields.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (mobile.length !== 10) {
+      toast({
+        title: "Invalid mobile number",
+        description: "Please enter a valid 10-digit mobile number.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    workerRegistrationMutation.mutate({
+      firstName,
+      mobile,
+      primaryService: selectedService,
+      state: selectedState,
+      district: selectedDistrict,
+    });
+  };
 
   const handleTestApp = () => {
     setShowSuccess(true);
@@ -575,16 +776,94 @@ export default function MobileTestApp() {
                         </div>
                       )}
                     </div>
+                    {/* Location Fields */}
+                    <div className="space-y-3">
+                      {/* Auto-detect Location Button */}
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={handleAutoDetectLocation}
+                        disabled={isDetectingLocation}
+                        className="w-full h-12"
+                      >
+                        {isDetectingLocation ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            Detecting Location...
+                          </>
+                        ) : (
+                          <>
+                            <MapPin className="h-4 w-4 mr-2" />
+                            Auto-Detect Location
+                          </>
+                        )}
+                      </Button>
+
+                      {/* State Selection */}
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-gray-700">State</label>
+                        <div className="relative">
+                          <select 
+                            value={selectedState}
+                            onChange={(e) => setSelectedState(e.target.value)}
+                            className="w-full h-12 px-3 border border-gray-300 rounded-md bg-white appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          >
+                            <option value="" disabled>Select your state</option>
+                            {availableStates.map((state) => (
+                              <option key={state} value={state}>
+                                {state}
+                              </option>
+                            ))}
+                          </select>
+                          <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+                        </div>
+                      </div>
+
+                      {/* District Selection */}
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-gray-700">District</label>
+                        <div className="relative">
+                          <select 
+                            value={selectedDistrict}
+                            onChange={(e) => setSelectedDistrict(e.target.value)}
+                            disabled={!selectedState}
+                            className="w-full h-12 px-3 border border-gray-300 rounded-md bg-white appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                          >
+                            <option value="" disabled>
+                              {selectedState ? "Select your district" : "Select state first"}
+                            </option>
+                            {availableDistricts.map((district) => (
+                              <option key={district} value={district}>
+                                {district}
+                              </option>
+                            ))}
+                          </select>
+                          <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+                        </div>
+                      </div>
+                    </div>
+
                     <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
                       <p className="text-xs text-blue-700 text-center">
-                        📍 Your location will be collected when clients hire you for accurate service delivery.
+                        📍 Your state and district help clients find you for local service requests.
                       </p>
                     </div>
                     <Button 
-                      onClick={handleTestApp}
-                      className="w-full h-12 bg-green-600 text-white"
+                      onClick={handleWorkerRegistration}
+                      disabled={!selectedService || !selectedState || !selectedDistrict || workerRegistrationMutation.isPending}
+                      className="w-full h-12 bg-green-600 text-white disabled:bg-gray-400 disabled:cursor-not-allowed"
                     >
-                      Register as Worker
+                      {workerRegistrationMutation.isPending ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Creating Account...
+                        </>
+                      ) : !selectedService || !selectedState || !selectedDistrict ? (
+                        "Complete all fields to register" 
+                      ) : (
+                        "Register as Worker"
+                      )}
                     </Button>
                   </CardContent>
                 </Card>
