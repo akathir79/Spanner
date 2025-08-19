@@ -304,6 +304,55 @@ export default function MobileTestApp() {
     setTimeout(() => setShowSuccess(false), 2000);
   };
 
+  // Handle client registration with proper availability checking
+  const handleClientRegistration = async () => {
+    try {
+      const response = await fetch("/api/auth/signup/client", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          firstName: clientFormData.firstName,
+          lastName: "UPDATE_REQUIRED",
+          mobile: clientFormData.mobile,
+          email: "",
+          role: "client",
+          houseNumber: "",
+          streetName: "",
+          areaName: "",
+          address: "ADDRESS_TO_BE_COLLECTED",
+          district: "",
+          state: "",
+          pincode: "",
+          termsAccepted: true,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Registration failed");
+      }
+
+      toast({
+        title: "Registration successful!",
+        description: "Welcome to SPANNER! You can now post jobs and hire workers.",
+      });
+      
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 3000);
+      
+      // Reset form
+      setClientFormData({ firstName: '', mobile: '' });
+      setClientMobileAvailability('');
+      
+    } catch (error: any) {
+      toast({
+        title: "Registration failed",
+        description: error.message || "Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   // Hide everything else and show only mobile app
   React.useEffect(() => {
     document.body.style.overflow = 'hidden';
@@ -654,11 +703,42 @@ export default function MobileTestApp() {
                       </p>
                     </div>
                     <Button 
-                      onClick={handleTestApp}
+                      onClick={() => {
+                        // Check if mobile is available before proceeding
+                        if (clientMobileAvailability === "not-available") {
+                          toast({
+                            title: "Mobile number not available",
+                            description: "This mobile number is already registered. Please use a different number.",
+                            variant: "destructive",
+                          });
+                          return;
+                        }
+                        
+                        if (clientMobileAvailability === "checking") {
+                          toast({
+                            title: "Please wait",
+                            description: "Checking mobile number availability...",
+                            variant: "destructive",
+                          });
+                          return;
+                        }
+
+                        if (!clientFormData.firstName || !clientFormData.mobile || clientFormData.mobile.length < 10) {
+                          toast({
+                            title: "Missing information",
+                            description: "Please fill in all required fields.",
+                            variant: "destructive",
+                          });
+                          return;
+                        }
+
+                        // Proceed with actual client registration
+                        handleClientRegistration();
+                      }}
                       className="w-full h-12 bg-purple-600 text-white"
                       disabled={clientMobileAvailability === "not-available" || clientMobileAvailability === "checking" || !clientFormData.firstName || !clientFormData.mobile || clientFormData.mobile.length < 10}
                     >
-                      Register as Client
+                      {clientMobileAvailability === "checking" ? "Checking..." : "Register as Client"}
                     </Button>
                   </CardContent>
                 </Card>
