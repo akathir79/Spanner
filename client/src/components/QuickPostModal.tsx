@@ -1510,39 +1510,57 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
                               addressForm.setValue("pincode", detectedPincode);
                             }
                             
-                            // Fetch districts data and match district/state
-                            const districtsResponse = await fetch('/api/districts');
-                            if (districtsResponse.ok) {
-                              const districtsData = await districtsResponse.json();
-                              console.log("SuperFast: Districts loaded, now matching...", Object.keys(districtsData).length);
-                              
-                              // Find matching district
-                              const detectedLocation = locationData.state_district || 
+                            // Find matching state and district using AuthModal logic
+                            const detectedLocation = locationData.state_district || 
                                                      locationData.county || 
                                                      locationData.city || 
                                                      locationData.town ||
                                                      locationData.village;
-                              
-                              // Match state
-                              const stateNames = Object.keys(districtsData);
-                              const matchedState = stateNames.find(stateName => 
-                                stateName.toLowerCase().includes(locationData.state?.toLowerCase() || '') ||
-                                (locationData.state?.toLowerCase() || '').includes(stateName.toLowerCase())
+                            
+                            console.log("Quick Post: Detected location data:", { detectedLocation, state: locationData.state });
+                            
+                            // Helper function to find state (from AuthModal)
+                            const findState = (stateName: string) => {
+                              const states = ["Tamil Nadu", "Karnataka", "Telangana", "Maharashtra", "Delhi", "West Bengal", "Gujarat", "Rajasthan", "Uttar Pradesh", "Madhya Pradesh", "Odisha", "Kerala", "Assam", "Bihar", "Haryana", "Punjab", "Jharkhand", "Chhattisgarh", "Uttarakhand", "Himachal Pradesh", "Goa", "Manipur", "Tripura", "Meghalaya", "Nagaland", "Mizoram", "Sikkim", "Arunachal Pradesh", "Andhra Pradesh"];
+                              return states.find(state => 
+                                state.toLowerCase().includes(stateName.toLowerCase()) ||
+                                stateName.toLowerCase().includes(state.toLowerCase())
                               );
+                            };
+
+                            // Helper function to find district (from AuthModal)
+                            const findDistrict = (districtName: string, stateName: string) => {
+                              const majorDistricts: { [key: string]: string[] } = {
+                                "Tamil Nadu": ["Chennai", "Coimbatore", "Madurai", "Salem", "Tiruchirappalli", "Tirunelveli", "Erode", "Vellore", "Dindigul", "Thanjavur", "Tiruppur", "Kanchipuram", "Krishnagiri", "Cuddalore", "Dharmapuri", "Sivaganga", "Namakkal", "Virudhunagar", "Karur", "Thoothukudi", "Pudukkottai", "Ariyalur", "Perambalur", "Nilgiris", "Theni", "Ramanathapuram", "Tiruvarur", "Nagapattinam", "Kanyakumari", "Viluppuram", "Tiruvannamalai", "Kallakurichi", "Chengalpattu", "Tenkasi", "Tirupathur", "Ranipet", "Mayiladuthurai"],
+                                "Karnataka": ["Bangalore Urban", "Bangalore Rural", "Mysore", "Tumkur", "Mandya", "Hassan", "Shimoga", "Chitradurga", "Davangere", "Bellary", "Bagalkot", "Vijayapura", "Bidar", "Kalaburagi", "Raichur", "Koppal", "Gadag", "Dharwad", "Haveri", "Uttara Kannada", "Belagavi", "Udupi", "Dakshina Kannada", "Kodagu", "Chikkaballapur", "Kolar", "Chikkamagaluru", "Chamarajanagar", "Yadgir"],
+                                "Telangana": ["Hyderabad", "Secunderabad", "Warangal Urban", "Warangal Rural", "Khammam", "Nalgonda", "Mahbubnagar", "Rangareddy", "Medchal", "Sangareddy", "Vikarabad"],
+                                "Maharashtra": ["Mumbai", "Pune", "Nagpur", "Thane", "Aurangabad", "Solapur", "Ahmednagar", "Kolhapur", "Sangli", "Satara", "Ratnagiri", "Sindhudurg"],
+                                "Delhi": ["Central Delhi", "North Delhi", "South Delhi", "East Delhi", "West Delhi", "New Delhi", "North East Delhi", "North West Delhi", "South East Delhi", "South West Delhi", "Shahdara"],
+                                "West Bengal": ["Kolkata", "Howrah", "North 24 Parganas", "South 24 Parganas", "Hooghly", "Nadia", "Murshidabad", "Birbhum", "Burdwan"],
+                                "Gujarat": ["Ahmedabad", "Surat", "Vadodara", "Rajkot", "Bhavnagar", "Jamnagar", "Junagadh", "Gandhinagar", "Anand", "Mehsana", "Patan", "Sabarkantha", "Banaskantha", "Kutch", "Navsari"]
+                              };
                               
+                              const districtNames = majorDistricts[stateName] || [];
+                              return districtNames.find(district =>
+                                district.toLowerCase().includes(districtName.toLowerCase()) ||
+                                districtName.toLowerCase().includes(district.toLowerCase())
+                              );
+                            };
+
+                            // Set state and district using AuthModal matching logic
+                            if (locationData.state) {
+                              const matchedState = findState(locationData.state);
                               if (matchedState) {
                                 addressForm.setValue("state", matchedState);
+                                console.log("Quick Post: State set to:", matchedState);
                                 
-                                // Match district within the state
-                                const stateDistricts = districtsData[matchedState]?.districts || [];
-                                const matchedDistrict = stateDistricts.find((dist: any) =>
-                                  dist.name.toLowerCase().includes(detectedLocation?.toLowerCase() || '') ||
-                                  (detectedLocation?.toLowerCase() || '').includes(dist.name.toLowerCase())
-                                );
-                                
-                                if (matchedDistrict) {
-                                  console.log("SuperFast: District set:", matchedDistrict.name);
-                                  addressForm.setValue("district", matchedDistrict.name);
+                                // Find district within the matched state
+                                if (detectedLocation) {
+                                  const matchedDistrict = findDistrict(detectedLocation, matchedState);
+                                  if (matchedDistrict) {
+                                    addressForm.setValue("district", matchedDistrict);
+                                    console.log("Quick Post: District set to:", matchedDistrict);
+                                  }
                                 }
                               }
                             }

@@ -1,6 +1,6 @@
 /**
  * SPANNER Mobile - Quick Post Modal Component
- * Voice-enabled job posting for React Native
+ * Voice-enabled job posting for React Native with GPS auto-detection
  */
 
 import React, { useState, useRef, useEffect } from 'react';
@@ -14,7 +14,7 @@ import {
   ScrollView,
   Animated,
   TextInput,
-
+  ActivityIndicator,
 } from 'react-native';
 
 interface QuickPostModalProps {
