@@ -240,6 +240,14 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
 
       mediaRecorder.onstop = () => {
         console.log("Recording stopped, creating blob...");
+        
+        // Stop timer immediately
+        if (timerRef.current) {
+          clearInterval(timerRef.current);
+          timerRef.current = null;
+          console.log("Timer stopped");
+        }
+        
         const audioBlob = new Blob(audioChunksRef.current, { 
           type: mediaRecorder.mimeType 
         });
@@ -273,23 +281,27 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
 
       console.log("Starting recording...");
       
+      // Clear any existing timer first
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+      
       // Start recording immediately and set state
       setIsRecording(true);
       setRecordingDuration(0);
       
-      // Start timer immediately (don't wait for onstart event)
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-      }
-      timerRef.current = setInterval(() => {
-        setRecordingDuration(prev => {
-          const newDuration = prev + 1;
-          console.log("Timer tick - Recording duration:", newDuration);
-          return newDuration;
-        });
-      }, 1000);
-      
+      // Start MediaRecorder first
       mediaRecorder.start(1000); // Record in 1-second chunks
+      
+      // Start timer immediately - use a simpler approach
+      console.log("Setting up timer...");
+      let duration = 0;
+      timerRef.current = setInterval(() => {
+        duration++;
+        console.log("Timer tick - Recording duration:", duration);
+        setRecordingDuration(duration);
+      }, 1000);
 
     } catch (error: any) {
       console.error("Recording setup error:", error);
