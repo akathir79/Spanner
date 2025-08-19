@@ -1103,9 +1103,28 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
         {/* Language Selection Step */}
         {currentStep === 'language' && (
           <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <Globe className="w-5 h-5" />
-              <span>Choose your preferred language</span>
+            <div className="text-center space-y-3">
+              <div className="flex items-center justify-center gap-2">
+                <Globe className="w-5 h-5" />
+                <span>Choose your preferred language</span>
+              </div>
+              
+              {/* Helpful guidance */}
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <h4 className="font-medium text-blue-900 mb-2">📋 How Quick Post Works:</h4>
+                <ul className="text-sm text-blue-700 space-y-1 text-left">
+                  <li>• Select your language below</li>
+                  <li>• Record your job requirements (30-60 seconds)</li>
+                  <li>• AI will extract details and create your job post</li>
+                  <li>• Workers in your area will see and bid on your job</li>
+                </ul>
+              </div>
+              
+              <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                <p className="text-sm text-green-700">
+                  💡 <strong>Tip:</strong> Speak clearly and mention your location, budget, and urgency for best results
+                </p>
+              </div>
             </div>
             
             <Select value={selectedLanguage} onValueChange={(value) => {
@@ -1213,9 +1232,24 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
                 <div className="text-xs text-gray-500">
                   Timer: {recordingDuration}s
                 </div>
-                <p className="text-sm text-muted-foreground">
-                  Speak clearly about your job requirements
-                </p>
+                
+                {/* Live recording tips */}
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3 max-w-md">
+                  <p className="text-sm text-red-700">
+                    🗣️ <strong>Recording in progress...</strong>
+                  </p>
+                  <p className="text-xs text-red-600 mt-1">
+                    Speak clearly • Mention location & budget • No rush, take your time
+                  </p>
+                </div>
+                
+                {recordingDuration > 45 && (
+                  <div className="bg-orange-50 border border-orange-200 rounded-lg p-2">
+                    <p className="text-xs text-orange-700">
+                      💭 Good length! You can stop recording now or continue for more details.
+                    </p>
+                  </div>
+                )}
                 <Button 
                   variant="destructive" 
                   size="lg"
@@ -1254,8 +1288,28 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
                 <p className="text-muted-foreground">
                   Describe what work you need done in <strong>{supportedLanguages.find(l => l.code === selectedLanguage)?.name}</strong>
                 </p>
+                
+                {/* Recording guidance */}
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 space-y-3">
+                  <h4 className="font-medium text-amber-900">🎯 What to include in your recording:</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-amber-700">
+                    <div>
+                      <p><strong>✓ Service needed:</strong> "I need a plumber"</p>
+                      <p><strong>✓ Problem details:</strong> "Kitchen tap is leaking"</p>
+                    </div>
+                    <div>
+                      <p><strong>✓ Location:</strong> "Anna Nagar, Chennai"</p>
+                      <p><strong>✓ Budget:</strong> "My budget is 2000 rupees"</p>
+                    </div>
+                    <div>
+                      <p><strong>✓ Urgency:</strong> "Please come today"</p>
+                      <p><strong>✓ Contact time:</strong> "Call me after 6 PM"</p>
+                    </div>
+                  </div>
+                </div>
+                
                 <p className="text-sm text-muted-foreground">
-                  Example: "I need a plumber to fix my kitchen tap leak in Anna Nagar, Chennai. My budget is 2000 rupees. Please come today."
+                  <strong>Example:</strong> "I need a plumber to fix my kitchen tap leak in Anna Nagar, Chennai. My budget is 2000 rupees. Please come today."
                 </p>
                 <Button 
                   size="lg" 

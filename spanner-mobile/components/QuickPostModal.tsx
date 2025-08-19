@@ -164,6 +164,21 @@ export default function QuickPostModal({ visible, onClose }: QuickPostModalProps
                 <Text style={styles.stepTitle}>Choose your preferred language</Text>
               </View>
 
+              {/* Mobile guidance */}
+              <View style={styles.guidanceContainer}>
+                <Text style={styles.guidanceTitle}>📋 How Quick Post Works:</Text>
+                <Text style={styles.guidanceText}>• Select your language below</Text>
+                <Text style={styles.guidanceText}>• Record your job requirements (30-60 seconds)</Text>
+                <Text style={styles.guidanceText}>• AI will extract details and create your job post</Text>
+                <Text style={styles.guidanceText}>• Workers in your area will see and bid on your job</Text>
+              </View>
+              
+              <View style={styles.tipContainer}>
+                <Text style={styles.tipText}>
+                  💡 Tip: Speak clearly and mention your location, budget, and urgency for best results
+                </Text>
+              </View>
+
               {/* Language Dropdown Alternative */}
               <View style={styles.pickerContainer}>
                 <Text style={styles.pickerLabel}>Select language:</Text>
@@ -237,6 +252,17 @@ export default function QuickPostModal({ visible, onClose }: QuickPostModalProps
                   <Text style={styles.readySubtext}>
                     Describe what work you need done in {supportedLanguages.find(l => l.code === selectedLanguage)?.name}
                   </Text>
+                  
+                  {/* Mobile recording guidance */}
+                  <View style={styles.recordingGuidanceContainer}>
+                    <Text style={styles.recordingGuidanceTitle}>🎯 What to include in your recording:</Text>
+                    <Text style={styles.recordingGuidanceText}>✓ Service needed: "I need a plumber"</Text>
+                    <Text style={styles.recordingGuidanceText}>✓ Problem details: "Kitchen tap is leaking"</Text>
+                    <Text style={styles.recordingGuidanceText}>✓ Location: "Anna Nagar, Chennai"</Text>
+                    <Text style={styles.recordingGuidanceText}>✓ Budget: "My budget is 2000 rupees"</Text>
+                    <Text style={styles.recordingGuidanceText}>✓ Urgency: "Please come today"</Text>
+                  </View>
+                  
                   <Text style={styles.exampleText}>
                     Example: "I need a plumber to fix my kitchen tap leak in Anna Nagar, Chennai. My budget is 2000 rupees. Please come today."
                   </Text>
@@ -505,5 +531,56 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 18,
     fontWeight: '600',
+  },
+  // Guidance styles
+  guidanceContainer: {
+    backgroundColor: '#eff6ff',
+    borderWidth: 1,
+    borderColor: '#bfdbfe',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 15,
+  },
+  guidanceTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1e40af',
+    marginBottom: 8,
+  },
+  guidanceText: {
+    fontSize: 12,
+    color: '#1e40af',
+    marginBottom: 2,
+  },
+  tipContainer: {
+    backgroundColor: '#f0fdf4',
+    borderWidth: 1,
+    borderColor: '#bbf7d0',
+    borderRadius: 8,
+    padding: 10,
+    marginBottom: 15,
+  },
+  tipText: {
+    fontSize: 12,
+    color: '#166534',
+  },
+  recordingGuidanceContainer: {
+    backgroundColor: '#fef3c7',
+    borderWidth: 1,
+    borderColor: '#fbbf24',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 15,
+  },
+  recordingGuidanceTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#92400e',
+    marginBottom: 8,
+  },
+  recordingGuidanceText: {
+    fontSize: 11,
+    color: '#92400e',
+    marginBottom: 3,
   },
 });
