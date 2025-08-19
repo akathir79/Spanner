@@ -185,6 +185,23 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
     }
   }, [quickAuthData.mobile, checkMobileAvailability]);
 
+  // Timer effect - runs when recording starts
+  useEffect(() => {
+    if (isRecording && recordingStartTimeRef.current > 0) {
+      console.log("Starting timer effect...");
+      const interval = setInterval(() => {
+        const elapsed = Math.floor((Date.now() - recordingStartTimeRef.current) / 1000);
+        console.log("Timer tick - Recording duration:", elapsed);
+        setRecordingDuration(elapsed);
+      }, 100);
+
+      return () => {
+        console.log("Cleaning up timer effect");
+        clearInterval(interval);
+      };
+    }
+  }, [isRecording]);
+
   // Start recording function
   const startRecording = useCallback(async () => {
     try {
@@ -243,12 +260,8 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
       mediaRecorder.onstop = () => {
         console.log("Recording stopped, creating blob...");
         
-        // Stop timer immediately and calculate final duration
-        if (timerRef.current) {
-          clearInterval(timerRef.current);
-          timerRef.current = null;
-          console.log("Timer stopped");
-        }
+        // Timer cleanup will be handled by useEffect
+        console.log("Recording stopped, timer will cleanup via useEffect");
         
         // Set final duration based on actual elapsed time
         if (recordingStartTimeRef.current > 0) {
@@ -304,13 +317,8 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
       // Start MediaRecorder first
       mediaRecorder.start(1000); // Record in 1-second chunks
       
-      // Start timer with time-based calculation for accuracy
-      console.log("Setting up timer...");
-      timerRef.current = setInterval(() => {
-        const elapsed = Math.floor((Date.now() - recordingStartTimeRef.current) / 1000);
-        console.log("Timer tick - Recording duration:", elapsed);
-        setRecordingDuration(elapsed);
-      }, 100); // Update every 100ms for smooth display
+      // Timer will be handled by useEffect hook
+      console.log("Recording started, timer should start via useEffect");
 
     } catch (error: any) {
       console.error("Recording setup error:", error);
@@ -339,11 +347,7 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
       console.log("Stopping MediaRecorder...");
       mediaRecorderRef.current.stop();
       setIsRecording(false);
-      
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-        timerRef.current = null;
-      }
+      // Timer cleanup will be handled by useEffect
     }
   }, [isRecording]);
 
