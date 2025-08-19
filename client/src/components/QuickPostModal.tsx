@@ -153,6 +153,12 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
       setIsProcessing(false);
       setRecordingDuration(0);
       setOtpSent(false);
+      
+      // Clear any existing timer
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
       setOtp('');
       setQuickAuthData({
         mobile: '',
@@ -272,6 +278,9 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
       setRecordingDuration(0);
       
       // Start timer immediately (don't wait for onstart event)
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
       timerRef.current = setInterval(() => {
         setRecordingDuration(prev => {
           const newDuration = prev + 1;
