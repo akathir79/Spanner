@@ -114,11 +114,11 @@ export default function QuickPostModal({ visible, onClose }: QuickPostModalProps
 
   const handleLanguageSelect = (languageCode: string) => {
     setSelectedLanguage(languageCode);
-    // Auto-proceed to recording and start recording immediately
+    // Directly start recording without intermediate screen
     setTimeout(() => {
       setCurrentStep('recording');
-      setTimeout(() => startRecording(), 1500);
-    }, 300);
+      setTimeout(() => startRecording(), 500);
+    }, 200);
   };
 
   const startRecording = async () => {
@@ -257,33 +257,7 @@ export default function QuickPostModal({ visible, onClose }: QuickPostModalProps
                     <Text style={styles.stopButtonText}>🛑 Stop Recording</Text>
                   </TouchableOpacity>
                 </View>
-              ) : (
-                <View style={styles.readyContainer}>
-                  <Text style={styles.readyIcon}>🎤</Text>
-                  <Text style={styles.readyTitle}>Get Ready to Speak!</Text>
-                  <Text style={styles.readySubtext}>
-                    Recording will start automatically in {supportedLanguages.find(l => l.code === selectedLanguage)?.name}
-                  </Text>
-                  
-                  {/* Mobile recording guidance */}
-                  <View style={styles.recordingGuidanceContainer}>
-                    <Text style={styles.recordingGuidanceTitle}>🎯 What to include in your recording:</Text>
-                    <Text style={styles.recordingGuidanceText}>✓ Service needed: "I need a plumber"</Text>
-                    <Text style={styles.recordingGuidanceText}>✓ Problem details: "Kitchen tap is leaking"</Text>
-                    <Text style={styles.recordingGuidanceText}>✓ Location: "Anna Nagar, Chennai"</Text>
-                    <Text style={styles.recordingGuidanceText}>✓ Budget: "My budget is 2000 rupees"</Text>
-                    <Text style={styles.recordingGuidanceText}>✓ Urgency: "Please come today"</Text>
-                  </View>
-                  
-                  <Text style={styles.exampleText}>
-                    Example: "I need a plumber to fix my kitchen tap leak in Anna Nagar, Chennai. My budget is 2000 rupees. Please come today."
-                  </Text>
-                  
-                  <View style={styles.autoStartContainer}>
-                    <Text style={styles.autoStartText}>⏳ Recording will start in a moment...</Text>
-                  </View>
-                </View>
-              )}
+              ) : null}
             </View>
           )}
 

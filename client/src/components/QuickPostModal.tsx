@@ -1116,11 +1116,11 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
             
             <Select value={selectedLanguage} onValueChange={(value) => {
               setSelectedLanguage(value);
-              // Auto-proceed to recording and start recording immediately
+              // Directly start recording without intermediate screen
               setTimeout(() => {
                 setCurrentStep('recording');
-                setTimeout(() => startRecording(), 1500);
-              }, 300);
+                setTimeout(() => startRecording(), 500);
+              }, 200);
             }}>
               <SelectTrigger>
                 <SelectValue placeholder="Select language" />
@@ -1142,11 +1142,11 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
                   size="sm"
                   onClick={() => {
                     setSelectedLanguage(lang.code);
-                    // Auto-proceed to recording and start recording immediately
+                    // Directly start recording without intermediate screen
                     setTimeout(() => {
                       setCurrentStep('recording');
-                      setTimeout(() => startRecording(), 1500);
-                    }, 300);
+                      setTimeout(() => startRecording(), 500);
+                    }, 200);
                   }}
                   className="justify-start text-sm transition-all duration-200 hover:scale-105"
                   data-testid={`language-btn-${lang.code}`}
@@ -1274,88 +1274,7 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
                   </ul>
                 </div>
               </>
-            ) : (
-              <>
-                <div className="text-6xl">🎤</div>
-                <h3 className="text-xl font-semibold">Ready to Record</h3>
-                <p className="text-muted-foreground">
-                  Describe what work you need done in <strong>{supportedLanguages.find(l => l.code === selectedLanguage)?.name}</strong>
-                </p>
-                
-                {/* Recording guidance */}
-                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 space-y-3">
-                  <h4 className="font-medium text-amber-900">🎯 What to include in your recording:</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-amber-700">
-                    <div>
-                      <p><strong>✓ Service needed:</strong> "I need a plumber"</p>
-                      <p><strong>✓ Problem details:</strong> "Kitchen tap is leaking"</p>
-                    </div>
-                    <div>
-                      <p><strong>✓ Location:</strong> "Anna Nagar, Chennai"</p>
-                      <p><strong>✓ Budget:</strong> "My budget is 2000 rupees"</p>
-                    </div>
-                    <div>
-                      <p><strong>✓ Urgency:</strong> "Please come today"</p>
-                      <p><strong>✓ Contact time:</strong> "Call me after 6 PM"</p>
-                    </div>
-                  </div>
-                </div>
-                
-                <p className="text-sm text-muted-foreground">
-                  <strong>Example:</strong> "I need a plumber to fix my kitchen tap leak in Anna Nagar, Chennai. My budget is 2000 rupees. Please come today."
-                </p>
-                <div className="relative">
-                  <Button 
-                    size="lg" 
-                    onClick={startRecording}
-                    className="w-full bg-green-600 hover:bg-green-700 relative"
-                    data-testid="start-recording-btn"
-                  >
-                    <Mic className="w-5 h-5 mr-2" />
-                    Start Voice Recording
-                  </Button>
-                  
-                  {/* Animated hand pointer guiding user to click */}
-                  <div className="absolute -top-10 right-4 animate-hand-bounce pointer-events-none z-10">
-                    <div className="text-3xl animate-pulse transform rotate-12">👆</div>
-                  </div>
-                  
-                  {/* Subtle pulsing glow effect */}
-                  <div className="absolute inset-0 bg-green-400 rounded-lg opacity-20 animate-ping pointer-events-none"></div>
-                  
-                  {/* Guiding text */}
-                  <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 pointer-events-none">
-                    <div className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded animate-guide-pulse whitespace-nowrap">
-                      👆 Tap here to start recording
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Debug fallback button for testing */}
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => {
-                    console.log("Debug: Force start recording UI");
-                    setIsRecording(true);
-                    setRecordingDuration(0);
-                    timerRef.current = setInterval(() => {
-                      setRecordingDuration(prev => prev + 1);
-                    }, 1000);
-                  }}
-                  className="text-xs"
-                >
-                  Debug: Force Start Timer
-                </Button>
-                <Button 
-                  variant="outline" 
-                  onClick={() => setCurrentStep('language')}
-                  className="w-full"
-                >
-                  Change Language
-                </Button>
-              </>
-            )}
+            ) : null}
           </div>
         )}
 
