@@ -185,17 +185,17 @@ export function AddressForm({
                 form.setValue("state", matchedState);
                 console.log("AddressForm: State set to:", matchedState);
                 
-                // Fetch districts for the matched state
-                await fetchDistrictsFromAPI(matchedState);
-                
-                // Find district within the matched state
-                if (detectedLocation) {
-                  const matchedDistrict = findDistrict(detectedLocation, matchedState);
-                  if (matchedDistrict) {
-                    form.setValue("district", matchedDistrict);
-                    console.log("AddressForm: District set to:", matchedDistrict);
+                // Fetch districts for the matched state and then set district
+                fetchDistrictsFromAPI(matchedState).then(() => {
+                  // Find district within the matched state after districts are loaded
+                  if (detectedLocation) {
+                    const matchedDistrict = findDistrict(detectedLocation, matchedState);
+                    if (matchedDistrict) {
+                      form.setValue("district", matchedDistrict);
+                      console.log("AddressForm: District set to:", matchedDistrict);
+                    }
                   }
-                }
+                });
                 
                 toast({
                   title: "Location detected!",
@@ -361,7 +361,7 @@ export function AddressForm({
 
       {/* District and PIN Code Row */}
       <div className="grid grid-cols-2 gap-4">
-        {/* District - Searchable dropdown like AuthModal */}
+        {/* District - Simple like AuthModal */}
         <FormField
           control={form.control}
           name="district"
@@ -380,6 +380,10 @@ export function AddressForm({
                     >
                       {field.value
                         ? availableDistricts.find(district => district.name === field.value)?.name || field.value
+                        : isLoadingDistricts
+                        ? "Loading districts..."
+                        : !selectedState
+                        ? "Select state first"
                         : "Select district"}
                       <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
@@ -391,9 +395,7 @@ export function AddressForm({
                         value={districtSearchInput}
                         onValueChange={setDistrictSearchInput}
                       />
-                      <CommandEmpty>
-                        {isLoadingDistricts ? "Loading districts..." : "No district found."}
-                      </CommandEmpty>
+                      <CommandEmpty>No district found.</CommandEmpty>
                       <CommandList className="max-h-40 overflow-y-auto">
                         <CommandGroup>
                           {availableDistricts
@@ -410,13 +412,9 @@ export function AddressForm({
                                   setDistrictSearchInput("");
                                 }}
                               >
-                                <Check
-                                  className={cn(
-                                    "mr-2 h-4 w-4",
-                                    field.value === district.name ? "opacity-100" : "opacity-0"
-                                  )}
-                                />
-                                {district.name}
+                                <span className="transition-all duration-150">
+                                  {district.name}
+                                </span>
                               </CommandItem>
                             ))}
                         </CommandGroup>

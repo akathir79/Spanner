@@ -1547,21 +1547,23 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
                               );
                             };
 
-                            // Set state and district using AuthModal matching logic
+                            // Set state first, then district will be populated via form effect
                             if (locationData.state) {
                               const matchedState = findState(locationData.state);
                               if (matchedState) {
                                 addressForm.setValue("state", matchedState);
                                 console.log("Quick Post: State set to:", matchedState);
                                 
-                                // Find district within the matched state
-                                if (detectedLocation) {
-                                  const matchedDistrict = findDistrict(detectedLocation, matchedState);
-                                  if (matchedDistrict) {
-                                    addressForm.setValue("district", matchedDistrict);
-                                    console.log("Quick Post: District set to:", matchedDistrict);
+                                // Wait for districts to load, then set district
+                                setTimeout(() => {
+                                  if (detectedLocation) {
+                                    const matchedDistrict = findDistrict(detectedLocation, matchedState);
+                                    if (matchedDistrict) {
+                                      addressForm.setValue("district", matchedDistrict);
+                                      console.log("Quick Post: District set to:", matchedDistrict);
+                                    }
                                   }
-                                }
+                                }, 500); // Give time for districts to load
                               }
                             }
                             
