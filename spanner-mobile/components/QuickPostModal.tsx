@@ -195,11 +195,7 @@ export default function QuickPostModal({ visible, onClose }: QuickPostModalProps
                 <Text style={styles.guidanceText}>• Workers in your area will see and bid on your job</Text>
               </View>
               
-              <View style={styles.tipContainer}>
-                <Text style={styles.tipText}>
-                  💡 Tip: Speak clearly and mention your location, budget, and urgency for best results
-                </Text>
-              </View>
+
 
               {/* Language Dropdown Alternative */}
               <View style={styles.pickerContainer}>

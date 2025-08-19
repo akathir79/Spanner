@@ -1120,11 +1120,7 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
                 </ul>
               </div>
               
-              <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                <p className="text-sm text-green-700">
-                  💡 <strong>Tip:</strong> Speak clearly and mention your location, budget, and urgency for best results
-                </p>
-              </div>
+
             </div>
             
             <Select value={selectedLanguage} onValueChange={(value) => {
