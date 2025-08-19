@@ -45,6 +45,7 @@ export default function QuickPostModal({ visible, onClose }: QuickPostModalProps
   const recordingStartTimeRef = useRef<number>(0);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const pulseAnim = useRef(new Animated.Value(1)).current;
+  const handBounceAnim = useRef(new Animated.Value(0)).current;
 
   // Timer effect for recording
   useEffect(() => {
@@ -84,6 +85,26 @@ export default function QuickPostModal({ visible, onClose }: QuickPostModalProps
       return () => pulseAnimation.stop();
     }
   }, [isRecording, pulseAnim]);
+
+  // Hand bounce animation for guiding users
+  useEffect(() => {
+    const handAnimation = Animated.loop(
+      Animated.sequence([
+        Animated.timing(handBounceAnim, {
+          toValue: 1,
+          duration: 600,
+          useNativeDriver: true,
+        }),
+        Animated.timing(handBounceAnim, {
+          toValue: 0,
+          duration: 600,
+          useNativeDriver: true,
+        }),
+      ])
+    );
+    handAnimation.start();
+    return () => handAnimation.stop();
+  }, [handBounceAnim]);
 
   const formatDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -266,9 +287,31 @@ export default function QuickPostModal({ visible, onClose }: QuickPostModalProps
                   <Text style={styles.exampleText}>
                     Example: "I need a plumber to fix my kitchen tap leak in Anna Nagar, Chennai. My budget is 2000 rupees. Please come today."
                   </Text>
-                  <TouchableOpacity onPress={startRecording} style={styles.startButton}>
-                    <Text style={styles.startButtonText}>🎤 Start Voice Recording</Text>
-                  </TouchableOpacity>
+                  <View style={styles.startButtonContainer}>
+                    <TouchableOpacity onPress={startRecording} style={styles.startButton}>
+                      <Text style={styles.startButtonText}>🎤 Start Voice Recording</Text>
+                    </TouchableOpacity>
+                    
+                    {/* Animated hand pointer for mobile */}
+                    <Animated.View style={[
+                      styles.handPointer,
+                      {
+                        transform: [{
+                          translateY: handBounceAnim.interpolate({
+                            inputRange: [0, 1],
+                            outputRange: [0, -10]
+                          })
+                        }]
+                      }
+                    ]}>
+                      <Text style={styles.handPointerEmoji}>👆</Text>
+                    </Animated.View>
+                    
+                    {/* Guiding text for mobile */}
+                    <View style={styles.guidingTextContainer}>
+                      <Text style={styles.guidingText}>👆 Tap here to start recording</Text>
+                    </View>
+                  </View>
                 </View>
               )}
             </View>
@@ -494,6 +537,10 @@ const styles = StyleSheet.create({
     marginBottom: 30,
     lineHeight: 18,
   },
+  startButtonContainer: {
+    position: 'relative',
+    alignItems: 'center',
+  },
   startButton: {
     backgroundColor: '#16a34a',
     paddingHorizontal: 24,
@@ -504,6 +551,30 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 18,
     fontWeight: '600',
+  },
+  handPointer: {
+    position: 'absolute',
+    top: -40,
+    right: 20,
+    zIndex: 10,
+  },
+  handPointerEmoji: {
+    fontSize: 28,
+    transform: [{ rotate: '15deg' }],
+  },
+  guidingTextContainer: {
+    position: 'absolute',
+    bottom: -35,
+    alignSelf: 'center',
+  },
+  guidingText: {
+    backgroundColor: '#dcfce7',
+    color: '#166534',
+    fontSize: 11,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+    textAlign: 'center',
   },
   successIcon: {
     fontSize: 80,

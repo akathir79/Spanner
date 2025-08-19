@@ -1025,3 +1025,35 @@
 .animate-status-pulse {
   animation: statusPulse 0.4s ease-in-out;
 }
+
+/* Hand pointer animation for guiding users to click Start Voice Recording */
+@keyframes handBounce {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0) rotate(12deg);
+  }
+  40% {
+    transform: translateY(-10px) rotate(12deg);
+  }
+  60% {
+    transform: translateY(-5px) rotate(12deg);
+  }
+}
+
+@keyframes guidePulse {
+  0%, 100% {
+    opacity: 0.7;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+}
+
+.animate-hand-bounce {
+  animation: handBounce 2s infinite;
+}
+
+.animate-guide-pulse {
+  animation: guidePulse 2s infinite;
+}

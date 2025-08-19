@@ -1311,15 +1311,32 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
                 <p className="text-sm text-muted-foreground">
                   <strong>Example:</strong> "I need a plumber to fix my kitchen tap leak in Anna Nagar, Chennai. My budget is 2000 rupees. Please come today."
                 </p>
-                <Button 
-                  size="lg" 
-                  onClick={startRecording}
-                  className="w-full bg-green-600 hover:bg-green-700"
-                  data-testid="start-recording-btn"
-                >
-                  <Mic className="w-5 h-5 mr-2" />
-                  Start Voice Recording
-                </Button>
+                <div className="relative">
+                  <Button 
+                    size="lg" 
+                    onClick={startRecording}
+                    className="w-full bg-green-600 hover:bg-green-700 relative"
+                    data-testid="start-recording-btn"
+                  >
+                    <Mic className="w-5 h-5 mr-2" />
+                    Start Voice Recording
+                  </Button>
+                  
+                  {/* Animated hand pointer guiding user to click */}
+                  <div className="absolute -top-10 right-4 animate-hand-bounce pointer-events-none z-10">
+                    <div className="text-3xl animate-pulse transform rotate-12">👆</div>
+                  </div>
+                  
+                  {/* Subtle pulsing glow effect */}
+                  <div className="absolute inset-0 bg-green-400 rounded-lg opacity-20 animate-ping pointer-events-none"></div>
+                  
+                  {/* Guiding text */}
+                  <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 pointer-events-none">
+                    <div className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded animate-guide-pulse whitespace-nowrap">
+                      👆 Tap here to start recording
+                    </div>
+                  </div>
+                </div>
                 
                 {/* Debug fallback button for testing */}
                 <Button 
