@@ -6,11 +6,13 @@
 import React from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import QuickPostModal from './components/QuickPostModal';
 
 // Simple App component - stable version for mobile testing
 export default function App() {
   const [currentScreen, setCurrentScreen] = React.useState('home');
   const [isLoaded, setIsLoaded] = React.useState(false);
+  const [showQuickPost, setShowQuickPost] = React.useState(false);
 
   React.useEffect(() => {
     // Simple app initialization
@@ -29,6 +31,8 @@ export default function App() {
     try {
       if (screen === 'test') {
         Alert.alert('SPANNER Mobile', 'App is working correctly!');
+      } else if (screen === 'quick-post') {
+        setShowQuickPost(true);
       } else {
         setCurrentScreen(screen);
       }
@@ -87,6 +91,13 @@ export default function App() {
               >
                 <Text style={styles.secondaryButtonText}>Register</Text>
               </TouchableOpacity>
+              
+              <TouchableOpacity 
+                style={[styles.button, styles.voiceButton]}
+                onPress={() => handleButtonPress('quick-post')}
+              >
+                <Text style={styles.voiceButtonText}>🎤 Quick Job Post</Text>
+              </TouchableOpacity>
             </View>
           </View>
         )}
@@ -133,6 +144,12 @@ export default function App() {
           Status: Connected to Metro
         </Text>
       </View>
+
+      {/* Quick Post Modal */}
+      <QuickPostModal 
+        visible={showQuickPost} 
+        onClose={() => setShowQuickPost(false)} 
+      />
     </View>
   );
 }
@@ -209,6 +226,14 @@ const styles = StyleSheet.create({
   },
   secondaryButtonText: {
     color: '#3b82f6',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  voiceButton: {
+    backgroundColor: '#16a34a',
+  },
+  voiceButtonText: {
+    color: '#fff',
     fontSize: 16,
     fontWeight: '600',
   },

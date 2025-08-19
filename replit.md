@@ -5,6 +5,7 @@ SPANNER is a comprehensive web application designed to connect blue-collar servi
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
+Development approach: All changes must be applied to both web app and mobile app simultaneously.
 
 ## System Architecture
 
