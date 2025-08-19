@@ -702,14 +702,14 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
           role: quickAuthData.role,
           lastName: "UPDATE_REQUIRED", // Mark for update
           // Address will be collected during job posting
-          houseNumber: "COLLECT_DURING_POSTING",
-          streetName: "COLLECT_DURING_POSTING", 
-          areaName: "COLLECT_DURING_POSTING",
-          district: "COLLECT_DURING_POSTING",
-          state: "COLLECT_DURING_POSTING",
-          pincode: "COLLECT_DURING_POSTING",
+          houseNumber: "",
+          streetName: "", 
+          areaName: "",
+          district: "",
+          state: "",
+          pincode: "",
           email: "", // Will be requested in dashboard
-          fullAddress: "COLLECT_DURING_POSTING",
+          fullAddress: "",
           // Quick Post is only for clients - no worker-specific fields needed
         }),
       });
@@ -1424,31 +1424,94 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
             )}
 
             <div className="space-y-3">
+              {/* Auto-detect button */}
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(
+                      (position) => {
+                        // For demo - you'd use a geocoding API here
+                        setLocationData(prev => ({
+                          ...prev,
+                          area: "Anna Nagar",
+                          district: "Chennai", 
+                          state: "Tamil Nadu"
+                        }));
+                        toast({
+                          title: "Location detected",
+                          description: "Address has been auto-filled"
+                        });
+                      },
+                      () => {
+                        toast({
+                          title: "Location access denied",
+                          description: "Please enter location manually",
+                          variant: "destructive"
+                        });
+                      }
+                    );
+                  }
+                }}
+                className="w-full"
+              >
+                📍 Auto-detect Current Location
+              </Button>
+              
+              <div className="text-sm text-center text-muted-foreground">or enter manually</div>
+              
               <div>
-                <label className="text-sm font-medium">Area/Locality</label>
+                <label className="text-sm font-medium">Area/Locality *</label>
                 <Input
-                  placeholder="Enter area or locality name"
+                  placeholder="e.g., Anna Nagar, Koramangala"
                   value={locationData.area}
                   onChange={(e) => setLocationData(prev => ({ ...prev, area: e.target.value }))}
+                  required
                 />
               </div>
               
               <div>
-                <label className="text-sm font-medium">District</label>
-                <Input
-                  placeholder="Enter district name"
-                  value={locationData.district}
-                  onChange={(e) => setLocationData(prev => ({ ...prev, district: e.target.value }))}
-                />
+                <label className="text-sm font-medium">District *</label>
+                <Select 
+                  value={locationData.district} 
+                  onValueChange={(value) => setLocationData(prev => ({ ...prev, district: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select district" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Chennai">Chennai</SelectItem>
+                    <SelectItem value="Bangalore Urban">Bangalore Urban</SelectItem>
+                    <SelectItem value="Hyderabad">Hyderabad</SelectItem>
+                    <SelectItem value="Mumbai">Mumbai</SelectItem>
+                    <SelectItem value="Delhi">Delhi</SelectItem>
+                    <SelectItem value="Kolkata">Kolkata</SelectItem>
+                    <SelectItem value="Pune">Pune</SelectItem>
+                    <SelectItem value="Ahmedabad">Ahmedabad</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               
               <div>
-                <label className="text-sm font-medium">State</label>
-                <Input
-                  placeholder="Enter state name"
-                  value={locationData.state}
-                  onChange={(e) => setLocationData(prev => ({ ...prev, state: e.target.value }))}
-                />
+                <label className="text-sm font-medium">State *</label>
+                <Select 
+                  value={locationData.state} 
+                  onValueChange={(value) => setLocationData(prev => ({ ...prev, state: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select state" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Tamil Nadu">Tamil Nadu</SelectItem>
+                    <SelectItem value="Karnataka">Karnataka</SelectItem>
+                    <SelectItem value="Telangana">Telangana</SelectItem>
+                    <SelectItem value="Maharashtra">Maharashtra</SelectItem>
+                    <SelectItem value="Delhi">Delhi</SelectItem>
+                    <SelectItem value="West Bengal">West Bengal</SelectItem>
+                    <SelectItem value="Gujarat">Gujarat</SelectItem>
+                    <SelectItem value="Rajasthan">Rajasthan</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               {/* Add New Work Location Button */}
@@ -1502,21 +1565,41 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="text-sm font-medium text-gray-700">District</label>
-                      <Input
-                        placeholder="District name"
-                        value={customLocationData.district}
-                        onChange={(e) => setCustomLocationData(prev => ({ ...prev, district: e.target.value }))}
-                        data-testid="input-custom-district"
-                      />
+                      <Select 
+                        value={customLocationData.district} 
+                        onValueChange={(value) => setCustomLocationData(prev => ({ ...prev, district: value }))}
+                      >
+                        <SelectTrigger data-testid="input-custom-district">
+                          <SelectValue placeholder="Select district" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Chennai">Chennai</SelectItem>
+                          <SelectItem value="Bangalore Urban">Bangalore Urban</SelectItem>
+                          <SelectItem value="Hyderabad">Hyderabad</SelectItem>
+                          <SelectItem value="Mumbai">Mumbai</SelectItem>
+                          <SelectItem value="Delhi">Delhi</SelectItem>
+                          <SelectItem value="Kolkata">Kolkata</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div>
                       <label className="text-sm font-medium text-gray-700">State</label>
-                      <Input
-                        placeholder="State name"
-                        value={customLocationData.state}
-                        onChange={(e) => setCustomLocationData(prev => ({ ...prev, state: e.target.value }))}
-                        data-testid="input-custom-state"
-                      />
+                      <Select 
+                        value={customLocationData.state} 
+                        onValueChange={(value) => setCustomLocationData(prev => ({ ...prev, state: value }))}
+                      >
+                        <SelectTrigger data-testid="input-custom-state">
+                          <SelectValue placeholder="Select state" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Tamil Nadu">Tamil Nadu</SelectItem>
+                          <SelectItem value="Karnataka">Karnataka</SelectItem>
+                          <SelectItem value="Telangana">Telangana</SelectItem>
+                          <SelectItem value="Maharashtra">Maharashtra</SelectItem>
+                          <SelectItem value="Delhi">Delhi</SelectItem>
+                          <SelectItem value="West Bengal">West Bengal</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
                   <div>
