@@ -328,8 +328,52 @@ export default function Home() {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    // Implement search functionality
-    console.log("Search:", searchForm);
+    
+    // Check if user is authenticated
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please login as a client to search for workers and post jobs.",
+        variant: "destructive",
+      });
+      
+      // Trigger the login modal with client role
+      const event = new CustomEvent('openLoginModal', { detail: { role: 'client' } });
+      window.dispatchEvent(event);
+      return;
+    }
+    
+    // Check if user is a client
+    if (user.role !== 'client') {
+      toast({
+        title: "Access Restricted",
+        description: "Only clients can search for workers. Workers can view job posts in their dashboard.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Validate search form
+    if (!searchForm.service && !searchForm.state && !searchForm.district && !searchForm.description) {
+      toast({
+        title: "Search Required",
+        description: "Please select at least one search criteria to find workers.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Build search parameters
+    const searchParams = new URLSearchParams();
+    if (searchForm.service) searchParams.set('service', searchForm.service);
+    if (searchForm.state) searchParams.set('state', searchForm.state);
+    if (searchForm.district) searchParams.set('district', searchForm.district);
+    if (searchForm.description) searchParams.set('description', searchForm.description);
+    
+    // Navigate to professional search results page
+    setLocation(`/search-workers?${searchParams.toString()}`);
+    
+    console.log("Authenticated client search:", searchForm);
   };
 
   const handleLocationFinder = () => {
@@ -937,9 +981,13 @@ export default function Home() {
                     </div>
                     
                     <div className="flex gap-2">
-                      <Button type="submit" className="flex-1">
+                      <Button 
+                        type="submit" 
+                        className="flex-1"
+                        disabled={authLoading}
+                      >
                         <Search className="h-4 w-4 mr-2" />
-                        Search Workers
+                        {user ? "Search Workers" : "Login & Search Workers"}
                       </Button>
                       <Button 
                         type="button" 
@@ -950,6 +998,14 @@ export default function Home() {
                         <X className="h-4 w-4" />
                       </Button>
                     </div>
+                    
+                    {!user && (
+                      <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                        <p className="text-xs text-blue-700 text-center">
+                          🔒 Login required to view worker profiles and contact details
+                        </p>
+                      </div>
+                    )}
                   </form>
                 </CardContent>
               </Card>
