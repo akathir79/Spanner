@@ -964,6 +964,16 @@ export function AuthModal({ isOpen, onClose, mode, initialTab, onSwitchToSignup 
       return;
     }
 
+    // Check if Aadhaar is already registered
+    if (workerAadhaarAvailability === "not-available") {
+      toast({
+        title: "Aadhaar Already Registered",
+        description: "This Aadhaar number is already registered with another account. Please use a different Aadhaar number.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     // Generate mock OTP for Aadhaar verification
     const mockOtp = Math.floor(100000 + Math.random() * 900000).toString();
     setGeneratedAadhaarOtp(mockOtp);
@@ -1976,7 +1986,12 @@ export function AuthModal({ isOpen, onClose, mode, initialTab, onSwitchToSignup 
                           variant="outline"
                           size="sm"
                           onClick={handleAadhaarVerificationRequest}
-                          disabled={!workerForm.watch("aadhaarNumber") || workerForm.watch("aadhaarNumber").length !== 12}
+                          disabled={
+                            !workerForm.watch("aadhaarNumber") || 
+                            workerForm.watch("aadhaarNumber").length !== 12 ||
+                            workerAadhaarAvailability === "not-available" ||
+                            workerAadhaarAvailability === "checking"
+                          }
                         >
                           Verify
                         </Button>
