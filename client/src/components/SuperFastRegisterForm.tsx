@@ -120,12 +120,153 @@ export function SuperFastRegisterForm({ role, onComplete, onBack, onStepChange, 
     createServiceMutation.mutate(newServiceName.trim());
   };
 
-  // Custom location detection handler for AddressForm
-  const handleLocationDetection = () => {
+  // Custom location detection handler for AddressForm - same as AuthModal
+  const handleLocationDetection = async () => {
+    if (!navigator.geolocation) {
+      toast({
+        title: "Location not supported",
+        description: "Your browser doesn't support location detection",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsDetectingLocation(true);
-    // AddressForm handles the actual geolocation logic
-    // We manage the loading state here
-    setTimeout(() => setIsDetectingLocation(false), 8000); // Reset after geolocation timeout
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const { latitude, longitude } = position.coords;
+          console.log("SuperFast GPS coordinates:", { latitude, longitude });
+          
+          const response = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1&accept-language=en`
+          );
+          
+          if (!response.ok) throw new Error('Failed to get location data');
+          
+          const data = await response.json();
+          console.log("SuperFast Nominatim data:", data);
+          
+          if (data && data.address) {
+            const locationData = data.address;
+            
+            // Extract address components like AuthModal
+            const houseNumber = locationData.house_number || '';
+            const streetName = locationData.road || '';
+            const areaName = locationData.village || locationData.suburb || locationData.neighbourhood || '';
+            const detectedPincode = locationData.postcode || '';
+            
+            // Set individual address fields immediately using form.setValue
+            if (houseNumber) {
+              form.setValue("houseNumber", houseNumber);
+            }
+            if (streetName) {
+              form.setValue("streetName", streetName);
+            }
+            if (areaName) {
+              form.setValue("areaName", areaName);
+            }
+            if (detectedPincode) {
+              form.setValue("pincode", detectedPincode);
+            }
+            
+            // Detect state from location data
+            const detectedState = locationData.state || "Tamil Nadu"; // Fallback for better detection
+            form.setValue("state", detectedState);
+            
+            // Find matching district
+            const detectedLocation = locationData.state_district || 
+                                   locationData.county || 
+                                   locationData.city || 
+                                   locationData.town ||
+                                   locationData.village;
+            
+            if (detectedState && detectedLocation) {
+              try {
+                // Load districts for the detected state
+                const response = await fetch(`/api/districts/${encodeURIComponent(detectedState)}`);
+                if (response.ok) {
+                  const districtsData = await response.json();
+                  if (Array.isArray(districtsData) && districtsData.length > 0) {
+                    console.log('SuperFast: Districts loaded, now matching...', districtsData.length);
+                    
+                    // Find matching district with improved matching logic - same as AuthModal
+                    const matchingDistrict = districtsData.find((district: any) => {
+                      const districtName = district.name.toLowerCase();
+                      const detectedStateDistrict = locationData.state_district?.toLowerCase() || '';
+                      const detectedCounty = locationData.county?.toLowerCase() || '';
+                      
+                      // Direct matches
+                      if (districtName === detectedStateDistrict || districtName === detectedCounty) {
+                        return true;
+                      }
+                      
+                      // Check if detected location contains district name
+                      if (detectedStateDistrict.includes(districtName) || detectedCounty.includes(districtName)) {
+                        return true;
+                      }
+                      
+                      // Check if district name contains detected location
+                      if (districtName.includes(detectedStateDistrict) || districtName.includes(detectedCounty)) {
+                        return true;
+                      }
+                      
+                      return false;
+                    });
+                    
+                    if (matchingDistrict) {
+                      form.setValue("district", matchingDistrict.name);
+                      console.log("SuperFast: District set:", matchingDistrict.name);
+                      
+                      toast({
+                        title: "Location detected!",
+                        description: `Set to ${detectedState}, ${matchingDistrict.name}`,
+                      });
+                    } else {
+                      toast({
+                        title: "Location detected",
+                        description: "Please verify and adjust the detected location manually.",
+                      });
+                    }
+                  }
+                }
+              } catch (error) {
+                console.error("District loading error:", error);
+                toast({
+                  title: "Location partially detected",
+                  description: "Please select your district manually.",
+                  variant: "destructive",
+                });
+              }
+            }
+          }
+        } catch (error) {
+          console.error("SuperFast location detection error:", error);
+          toast({
+            title: "Location detection failed",
+            description: "Please enter your address manually.",
+            variant: "destructive",
+          });
+        } finally {
+          setIsDetectingLocation(false);
+        }
+      },
+      (error) => {
+        console.error("SuperFast geolocation error:", error);
+        toast({
+          title: "Location access denied",
+          description: "Please enter your address manually.",
+          variant: "destructive",
+        });
+        setIsDetectingLocation(false);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 15000,
+        maximumAge: 300000,
+      }
+    );
   };
 
 
