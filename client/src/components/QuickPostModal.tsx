@@ -1116,10 +1116,9 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
             
             <Select value={selectedLanguage} onValueChange={(value) => {
               setSelectedLanguage(value);
-              // Directly start recording without intermediate screen
+              // Go to recording screen but don't auto-start
               setTimeout(() => {
                 setCurrentStep('recording');
-                setTimeout(() => startRecording(), 500);
               }, 200);
             }}>
               <SelectTrigger>
@@ -1142,10 +1141,9 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
                   size="sm"
                   onClick={() => {
                     setSelectedLanguage(lang.code);
-                    // Directly start recording without intermediate screen
+                    // Go to recording screen but don't auto-start
                     setTimeout(() => {
                       setCurrentStep('recording');
-                      setTimeout(() => startRecording(), 500);
                     }, 200);
                   }}
                   className="justify-start text-sm transition-all duration-200 hover:scale-105"
@@ -1248,8 +1246,9 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
                   size="lg"
                   onClick={stopRecording}
                   disabled={isProcessing}
+                  className="animate-pulse"
                 >
-                  <Square className="w-5 h-5 mr-2" />
+                  <Square className="w-5 h-5 mr-2 animate-bounce" />
                   Stop Recording
                 </Button>
               </>
@@ -1274,7 +1273,34 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
                   </ul>
                 </div>
               </>
-            ) : null}
+            ) : (
+              <>
+                {/* Ready to start recording */}
+                <div className="text-6xl animate-bounce">🎤</div>
+                <h3 className="text-xl font-semibold">Ready to Record</h3>
+                <p className="text-muted-foreground">
+                  Click start when you're ready to describe your job in <strong>{supportedLanguages.find(l => l.code === selectedLanguage)?.name}</strong>
+                </p>
+                
+                <Button 
+                  size="lg" 
+                  onClick={startRecording}
+                  className="w-full bg-green-600 hover:bg-green-700"
+                  data-testid="start-recording-btn"
+                >
+                  <Mic className="w-5 h-5 mr-2" />
+                  Start Recording
+                </Button>
+                
+                <Button 
+                  variant="outline" 
+                  onClick={() => setCurrentStep('language')}
+                  className="w-full"
+                >
+                  Change Language
+                </Button>
+              </>
+            )}
           </div>
         )}
 

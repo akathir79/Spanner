@@ -114,10 +114,9 @@ export default function QuickPostModal({ visible, onClose }: QuickPostModalProps
 
   const handleLanguageSelect = (languageCode: string) => {
     setSelectedLanguage(languageCode);
-    // Directly start recording without intermediate screen
+    // Go to recording screen but don't auto-start
     setTimeout(() => {
       setCurrentStep('recording');
-      setTimeout(() => startRecording(), 500);
     }, 200);
   };
 
@@ -257,7 +256,23 @@ export default function QuickPostModal({ visible, onClose }: QuickPostModalProps
                     <Text style={styles.stopButtonText}>🛑 Stop Recording</Text>
                   </TouchableOpacity>
                 </View>
-              ) : null}
+              ) : (
+                <View style={styles.readyContainer}>
+                  <Text style={styles.readyIcon}>🎤</Text>
+                  <Text style={styles.readyTitle}>Ready to Record</Text>
+                  <Text style={styles.readySubtext}>
+                    Tap start when you're ready to describe your job in {supportedLanguages.find(l => l.code === selectedLanguage)?.name}
+                  </Text>
+                  
+                  <TouchableOpacity onPress={startRecording} style={styles.startButton}>
+                    <Text style={styles.startButtonText}>🎤 Start Recording</Text>
+                  </TouchableOpacity>
+                  
+                  <TouchableOpacity onPress={() => setCurrentStep('language')} style={styles.changeLanguageButton}>
+                    <Text style={styles.changeLanguageButtonText}>Change Language</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
             </View>
           )}
 
@@ -611,5 +626,53 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textAlign: 'center',
     fontWeight: '600',
+  },
+  readyContainer: {
+    alignItems: 'center',
+    paddingVertical: 20,
+  },
+  readyIcon: {
+    fontSize: 60,
+    marginBottom: 15,
+  },
+  readyTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 10,
+  },
+  readySubtext: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 20,
+    paddingHorizontal: 20,
+  },
+  startButton: {
+    backgroundColor: '#16a34a',
+    paddingVertical: 15,
+    paddingHorizontal: 30,
+    borderRadius: 8,
+    marginBottom: 15,
+    width: '80%',
+  },
+  startButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  changeLanguageButton: {
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    width: '80%',
+  },
+  changeLanguageButtonText: {
+    color: '#374151',
+    fontSize: 14,
+    textAlign: 'center',
   },
 });
