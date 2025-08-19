@@ -3,7 +3,7 @@
  * Completely isolated mobile experience without any navigation conflicts
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -19,7 +19,7 @@ export default function MobileTestApp() {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [currentPage, setCurrentPage] = useState<'welcome' | 'login' | 'register' | 'quick-join-select' | 'quick-join-client' | 'quick-join-worker'>('welcome');
+  const [currentPage, setCurrentPage] = useState<'welcome' | 'login' | 'register' | 'quick-join-select' | 'quick-join-client' | 'quick-join-worker' | 'quick-post'>('welcome');
   const [showSuccess, setShowSuccess] = useState(false);
   const [showAuthPrompt, setShowAuthPrompt] = useState(false);
   const [showWorkerRestrictionPrompt, setShowWorkerRestrictionPrompt] = useState(false);
@@ -27,6 +27,16 @@ export default function MobileTestApp() {
   // Mobile availability checking states
   const [clientMobileAvailability, setClientMobileAvailability] = useState<"checking" | "available" | "not-available" | "">("");
   const [workerMobileAvailability, setWorkerMobileAvailability] = useState<"checking" | "available" | "not-available" | "">("");
+  
+  // Form data states for Quick Join flows
+  const [clientFormData, setClientFormData] = useState({
+    firstName: '',
+    mobile: '',
+  });
+  const [workerFormData, setWorkerFormData] = useState({
+    firstName: '',
+    mobile: '',
+  });
   
   // Service management states for Quick Join
   const [showNewServiceInput, setShowNewServiceInput] = useState(false);
