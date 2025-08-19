@@ -149,7 +149,7 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
         // User not logged in, start with auth check
         setCurrentStep('auth-check');
       }
-      setSelectedLanguage('en');
+      setSelectedLanguage(''); // Default to empty for placeholder
       setIsRecording(false);
       setIsProcessing(false);
       setRecordingDuration(0);
@@ -1108,7 +1108,11 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
               <span>Choose your preferred language</span>
             </div>
             
-            <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
+            <Select value={selectedLanguage} onValueChange={(value) => {
+              setSelectedLanguage(value);
+              // Auto-proceed to recording when language is selected from dropdown
+              setTimeout(() => setCurrentStep('recording'), 300);
+            }}>
               <SelectTrigger>
                 <SelectValue placeholder="Select language" />
               </SelectTrigger>
@@ -1127,20 +1131,28 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
                   key={lang.code}
                   variant={selectedLanguage === lang.code ? "default" : "outline"}
                   size="sm"
-                  onClick={() => setSelectedLanguage(lang.code)}
-                  className="justify-start text-sm"
+                  onClick={() => {
+                    setSelectedLanguage(lang.code);
+                    // Auto-proceed to recording when language button is clicked
+                    setTimeout(() => setCurrentStep('recording'), 300);
+                  }}
+                  className="justify-start text-sm transition-all duration-200 hover:scale-105"
+                  data-testid={`language-btn-${lang.code}`}
                 >
                   {lang.flag} {lang.name}
                 </Button>
               ))}
             </div>
 
-            <Button 
-              onClick={() => setCurrentStep('recording')} 
-              className="w-full"
-            >
-              Continue to Voice Recording
-            </Button>
+            {selectedLanguage && (
+              <div className="text-center text-sm text-green-600 animate-fade-in">
+                ✓ {supportedLanguages.find(l => l.code === selectedLanguage)?.name} selected
+                <br />
+                <span className="text-xs text-muted-foreground">Proceeding to voice recording...</span>
+              </div>
+            )}
+
+            {/* Auto-proceed on selection - no continue button needed */}
           </div>
         )}
 
