@@ -275,7 +275,7 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
       timerRef.current = setInterval(() => {
         setRecordingDuration(prev => {
           const newDuration = prev + 1;
-          console.log("Recording duration:", newDuration);
+          console.log("Timer tick - Recording duration:", newDuration);
           return newDuration;
         });
       }, 1000);
@@ -1163,6 +1163,9 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
                 <h3 className="text-xl font-semibold text-red-600">Recording...</h3>
                 <div className="text-2xl font-mono">
                   {formatDuration(recordingDuration)}
+                </div>
+                <div className="text-xs text-gray-500">
+                  Timer: {recordingDuration}s
                 </div>
                 <p className="text-sm text-muted-foreground">
                   Speak clearly about your job requirements
