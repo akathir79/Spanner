@@ -36,6 +36,7 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [recordingDuration, setRecordingDuration] = useState(0);
+  const recordingStartTimeRef = useRef<number>(0);
   const [processedResult, setProcessedResult] = useState<any>(null);
   const [recordedAudio, setRecordedAudio] = useState<Blob | null>(null);
   const [audioUrl, setAudioUrl] = useState<string>('');
@@ -153,6 +154,7 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
       setIsProcessing(false);
       setRecordingDuration(0);
       setOtpSent(false);
+      recordingStartTimeRef.current = 0;
       
       // Clear any existing timer
       if (timerRef.current) {
@@ -241,11 +243,18 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
       mediaRecorder.onstop = () => {
         console.log("Recording stopped, creating blob...");
         
-        // Stop timer immediately
+        // Stop timer immediately and calculate final duration
         if (timerRef.current) {
           clearInterval(timerRef.current);
           timerRef.current = null;
           console.log("Timer stopped");
+        }
+        
+        // Set final duration based on actual elapsed time
+        if (recordingStartTimeRef.current > 0) {
+          const finalDuration = Math.floor((Date.now() - recordingStartTimeRef.current) / 1000);
+          setRecordingDuration(finalDuration);
+          console.log("Final recording duration:", finalDuration);
         }
         
         const audioBlob = new Blob(audioChunksRef.current, { 
@@ -290,18 +299,18 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
       // Start recording immediately and set state
       setIsRecording(true);
       setRecordingDuration(0);
+      recordingStartTimeRef.current = Date.now();
       
       // Start MediaRecorder first
       mediaRecorder.start(1000); // Record in 1-second chunks
       
-      // Start timer immediately - use a simpler approach
+      // Start timer with time-based calculation for accuracy
       console.log("Setting up timer...");
-      let duration = 0;
       timerRef.current = setInterval(() => {
-        duration++;
-        console.log("Timer tick - Recording duration:", duration);
-        setRecordingDuration(duration);
-      }, 1000);
+        const elapsed = Math.floor((Date.now() - recordingStartTimeRef.current) / 1000);
+        console.log("Timer tick - Recording duration:", elapsed);
+        setRecordingDuration(elapsed);
+      }, 100); // Update every 100ms for smooth display
 
     } catch (error: any) {
       console.error("Recording setup error:", error);
