@@ -74,59 +74,86 @@ export function MobileAddressForm({
       async (position) => {
         try {
           const { latitude, longitude } = position.coords;
+          console.log("Mobile GPS coordinates:", { latitude, longitude });
           
-          // Use reverse geocoding to get location details
-          const response = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`);
+          // Use Nominatim API like AuthModal for better Indian address detection
+          const response = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1&accept-language=en`
+          );
+          
+          if (!response.ok) throw new Error('Failed to get location data');
+          
           const data = await response.json();
+          console.log("Mobile Nominatim data:", data);
           
-          // Extract location components
-          const detectedState = data.principalSubdivision || data.countryName;
-          const detectedDistrict = data.city || data.locality || data.principalSubdivisionCode;
-          const detectedArea = data.quarter || data.suburb || data.neighbourhood || "";
-          const detectedPincode = data.postcode || "";
-          
-          // Find matching state in our districts data
-          if (districtsData && detectedState) {
-            const matchedState = Object.keys(districtsData).find(state => 
-              state.toLowerCase().includes(detectedState.toLowerCase()) ||
-              detectedState.toLowerCase().includes(state.toLowerCase())
-            );
+          if (data && data.address) {
+            const locationData = data.address;
             
-            if (matchedState) {
-              onChange('state', matchedState);
-              
-              // Find matching district
-              const stateData = districtsData[matchedState] as any;
-              const stateDistricts = stateData.districts || [];
-              const matchedDistrict = stateDistricts.find((district: string) =>
-                district.toLowerCase().includes(detectedDistrict.toLowerCase()) ||
-                detectedDistrict.toLowerCase().includes(district.toLowerCase())
+            // Extract address components like AuthModal
+            const houseNumber = locationData.house_number || '';
+            const streetName = locationData.road || '';
+            const areaName = locationData.village || locationData.suburb || locationData.neighbourhood || '';
+            const detectedPincode = locationData.postcode || '';
+            
+            // Set individual address fields immediately using onChange
+            if (houseNumber) {
+              onChange('houseNumber', houseNumber);
+            }
+            if (streetName) {
+              onChange('streetName', streetName);
+            }
+            if (areaName) {
+              onChange('areaName', areaName);
+            }
+            if (detectedPincode) {
+              onChange('pincode', detectedPincode);
+            }
+            
+            // Find matching state and district
+            const detectedLocation = locationData.state_district || 
+                                   locationData.county || 
+                                   locationData.city || 
+                                   locationData.town ||
+                                   locationData.village;
+            
+            // Find matching state in our districts data
+            if (districtsData && detectedLocation) {
+              const matchedState = Object.keys(districtsData).find(state => 
+                state.toLowerCase().includes(detectedLocation.toLowerCase()) ||
+                detectedLocation.toLowerCase().includes(state.toLowerCase()) ||
+                locationData.state?.toLowerCase().includes(state.toLowerCase())
               );
               
-              if (matchedDistrict) {
-                onChange('district', matchedDistrict);
+              if (matchedState) {
+                onChange('state', matchedState);
+                
+                // Find matching district
+                const stateData = districtsData[matchedState] as any;
+                const stateDistricts = stateData.districts || [];
+                const matchedDistrict = stateDistricts.find((district: string) =>
+                  district.toLowerCase() === detectedLocation.toLowerCase() ||
+                  district.toLowerCase().includes(detectedLocation.toLowerCase()) ||
+                  detectedLocation.toLowerCase().includes(district.toLowerCase())
+                );
+                
+                if (matchedDistrict) {
+                  onChange('district', matchedDistrict);
+                }
+                
+                toast({
+                  title: "Location detected!",
+                  description: `Set to ${matchedState}${matchedDistrict ? `, ${matchedDistrict}` : ''}`,
+                });
+              } else {
+                toast({
+                  title: "Location detected",
+                  description: "Please verify and adjust the detected location manually.",
+                });
               }
-              
-              // Set other detected fields
-              if (detectedArea) {
-                onChange('areaName', detectedArea);
-              }
-              if (detectedPincode) {
-                onChange('pincode', detectedPincode);
-              }
-              
-              toast({
-                title: "Location detected!",
-                description: `Set to ${matchedState}${matchedDistrict ? `, ${matchedDistrict}` : ''}`,
-              });
-            } else {
-              toast({
-                title: "Location detected",
-                description: "Please verify and adjust the detected location manually.",
-              });
             }
           }
         } catch (error) {
+          console.error("Mobile location detection error:", error);
           toast({
             title: "Location detection failed",
             description: "Please enter your address manually.",
