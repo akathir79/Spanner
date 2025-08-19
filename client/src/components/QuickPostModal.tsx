@@ -1109,16 +1109,7 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
                 <span>Choose your preferred language</span>
               </div>
               
-              {/* Helpful guidance */}
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <h4 className="font-medium text-blue-900 mb-2">📋 How Quick Post Works:</h4>
-                <ul className="text-sm text-blue-700 space-y-1 text-left">
-                  <li>• Select your language below</li>
-                  <li>• Record your job requirements (30-60 seconds)</li>
-                  <li>• AI will extract details and create your job post</li>
-                  <li>• Workers in your area will see and bid on your job</li>
-                </ul>
-              </div>
+
               
 
             </div>

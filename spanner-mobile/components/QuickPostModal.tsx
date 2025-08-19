@@ -187,13 +187,7 @@ export default function QuickPostModal({ visible, onClose }: QuickPostModalProps
               </View>
 
               {/* Mobile guidance */}
-              <View style={styles.guidanceContainer}>
-                <Text style={styles.guidanceTitle}>📋 How Quick Post Works:</Text>
-                <Text style={styles.guidanceText}>• Select your language below</Text>
-                <Text style={styles.guidanceText}>• Record your job requirements (30-60 seconds)</Text>
-                <Text style={styles.guidanceText}>• AI will extract details and create your job post</Text>
-                <Text style={styles.guidanceText}>• Workers in your area will see and bid on your job</Text>
-              </View>
+
               
 
 
