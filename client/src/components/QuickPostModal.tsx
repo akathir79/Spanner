@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Mic, MicOff, Volume2, Loader2, Globe } from 'lucide-react';
+import { Mic, MicOff, Volume2, Loader2, Globe, Square } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
 interface QuickPostModalProps {
@@ -1129,8 +1129,11 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
             
             <Select value={selectedLanguage} onValueChange={(value) => {
               setSelectedLanguage(value);
-              // Auto-proceed to recording when language is selected from dropdown
-              setTimeout(() => setCurrentStep('recording'), 300);
+              // Auto-proceed to recording and start recording immediately
+              setTimeout(() => {
+                setCurrentStep('recording');
+                setTimeout(() => startRecording(), 1500);
+              }, 300);
             }}>
               <SelectTrigger>
                 <SelectValue placeholder="Select language" />
@@ -1152,8 +1155,11 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
                   size="sm"
                   onClick={() => {
                     setSelectedLanguage(lang.code);
-                    // Auto-proceed to recording when language button is clicked
-                    setTimeout(() => setCurrentStep('recording'), 300);
+                    // Auto-proceed to recording and start recording immediately
+                    setTimeout(() => {
+                      setCurrentStep('recording');
+                      setTimeout(() => startRecording(), 1500);
+                    }, 300);
                   }}
                   className="justify-start text-sm transition-all duration-200 hover:scale-105"
                   data-testid={`language-btn-${lang.code}`}
@@ -1167,7 +1173,7 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
               <div className="text-center text-sm text-green-600 animate-fade-in">
                 ✓ {supportedLanguages.find(l => l.code === selectedLanguage)?.name} selected
                 <br />
-                <span className="text-xs text-muted-foreground">Proceeding to voice recording...</span>
+                <span className="text-xs text-muted-foreground">Starting voice recording automatically...</span>
               </div>
             )}
 
@@ -1256,7 +1262,7 @@ export default function QuickPostModal({ isOpen, onClose }: QuickPostModalProps)
                   onClick={stopRecording}
                   disabled={isProcessing}
                 >
-                  <MicOff className="w-5 h-5 mr-2" />
+                  <Square className="w-5 h-5 mr-2" />
                   Stop Recording
                 </Button>
               </>

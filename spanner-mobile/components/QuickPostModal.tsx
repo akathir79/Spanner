@@ -114,9 +114,10 @@ export default function QuickPostModal({ visible, onClose }: QuickPostModalProps
 
   const handleLanguageSelect = (languageCode: string) => {
     setSelectedLanguage(languageCode);
-    // Auto-proceed to recording after language selection
+    // Auto-proceed to recording and start recording immediately
     setTimeout(() => {
       setCurrentStep('recording');
+      setTimeout(() => startRecording(), 1500);
     }, 300);
   };
 
@@ -242,7 +243,7 @@ export default function QuickPostModal({ visible, onClose }: QuickPostModalProps
                     ✓ {supportedLanguages.find(l => l.code === selectedLanguage)?.name} selected
                   </Text>
                   <Text style={styles.confirmationSubtext}>
-                    Proceeding to voice recording...
+                    Starting voice recording automatically...
                   </Text>
                 </View>
               )}
@@ -269,9 +270,9 @@ export default function QuickPostModal({ visible, onClose }: QuickPostModalProps
               ) : (
                 <View style={styles.readyContainer}>
                   <Text style={styles.readyIcon}>🎤</Text>
-                  <Text style={styles.readyTitle}>Ready to Record</Text>
+                  <Text style={styles.readyTitle}>Get Ready to Speak!</Text>
                   <Text style={styles.readySubtext}>
-                    Describe what work you need done in {supportedLanguages.find(l => l.code === selectedLanguage)?.name}
+                    Recording will start automatically in {supportedLanguages.find(l => l.code === selectedLanguage)?.name}
                   </Text>
                   
                   {/* Mobile recording guidance */}
@@ -287,30 +288,9 @@ export default function QuickPostModal({ visible, onClose }: QuickPostModalProps
                   <Text style={styles.exampleText}>
                     Example: "I need a plumber to fix my kitchen tap leak in Anna Nagar, Chennai. My budget is 2000 rupees. Please come today."
                   </Text>
-                  <View style={styles.startButtonContainer}>
-                    <TouchableOpacity onPress={startRecording} style={styles.startButton}>
-                      <Text style={styles.startButtonText}>🎤 Start Voice Recording</Text>
-                    </TouchableOpacity>
-                    
-                    {/* Animated hand pointer for mobile */}
-                    <Animated.View style={[
-                      styles.handPointer,
-                      {
-                        transform: [{
-                          translateY: handBounceAnim.interpolate({
-                            inputRange: [0, 1],
-                            outputRange: [0, -10]
-                          })
-                        }]
-                      }
-                    ]}>
-                      <Text style={styles.handPointerEmoji}>👆</Text>
-                    </Animated.View>
-                    
-                    {/* Guiding text for mobile */}
-                    <View style={styles.guidingTextContainer}>
-                      <Text style={styles.guidingText}>👆 Tap here to start recording</Text>
-                    </View>
+                  
+                  <View style={styles.autoStartContainer}>
+                    <Text style={styles.autoStartText}>⏳ Recording will start in a moment...</Text>
                   </View>
                 </View>
               )}
@@ -653,5 +633,19 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: '#92400e',
     marginBottom: 3,
+  },
+  autoStartContainer: {
+    backgroundColor: '#f0fdf4',
+    borderWidth: 1,
+    borderColor: '#bbf7d0',
+    borderRadius: 8,
+    padding: 12,
+    marginTop: 15,
+  },
+  autoStartText: {
+    color: '#166534',
+    fontSize: 14,
+    textAlign: 'center',
+    fontWeight: '600',
   },
 });
