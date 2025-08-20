@@ -443,9 +443,7 @@ export default function BookingManagement() {
     if (!bookingToDelete) return;
     
     try {
-      await apiRequest(`/api/admin/bookings/${bookingToDelete.id}`, {
-        method: "DELETE"
-      });
+      await apiRequest("DELETE", `/api/bookings/${bookingToDelete.id}`);
       
       queryClient.invalidateQueries({
         queryKey: ["/api/admin/bookings"]
@@ -479,12 +477,9 @@ export default function BookingManagement() {
     setSendingMessage(true);
     
     try {
-      await apiRequest("/api/admin/send-message", {
-        method: "POST",
-        body: JSON.stringify({
-          userId: userToMessage.id,
-          message: messageText.trim()
-        })
+      await apiRequest("POST", "/api/admin/send-message", {
+        userId: userToMessage.id,
+        message: messageText.trim()
       });
       
       toast({
