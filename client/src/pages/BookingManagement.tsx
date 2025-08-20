@@ -262,14 +262,14 @@ export default function BookingManagement() {
           return booking.worker ? 
             `${booking.worker.firstName} ${booking.worker.lastName}`.toLowerCase().includes(query) : false;
         case "location":
-          return booking.location.toLowerCase().includes(query);
+          return booking.location?.toLowerCase().includes(query) || false;
         case "all":
         default:
           return (
             booking.id.toLowerCase().includes(query) ||
             booking.serviceType.toLowerCase().includes(query) ||
             booking.description.toLowerCase().includes(query) ||
-            booking.location.toLowerCase().includes(query) ||
+            (booking.location?.toLowerCase().includes(query)) ||
             (booking.client && `${booking.client.firstName} ${booking.client.lastName}`.toLowerCase().includes(query)) ||
             (booking.worker && `${booking.worker.firstName} ${booking.worker.lastName}`.toLowerCase().includes(query))
           );
@@ -317,7 +317,7 @@ export default function BookingManagement() {
   const filteredDistrictBookings = useMemo(() => {
     if (!selectedDistrict) return [];
     
-    let districtBookings = allBookings.filter((booking: Booking) => booking.location.includes(selectedDistrict));
+    let districtBookings = allBookings.filter((booking: Booking) => booking.location?.includes(selectedDistrict));
     
     // Apply status filter
     if (statusFilter !== "all") {
@@ -341,14 +341,14 @@ export default function BookingManagement() {
           return booking.worker ? 
             `${booking.worker.firstName} ${booking.worker.lastName}`.toLowerCase().includes(query) : false;
         case "location":
-          return booking.location.toLowerCase().includes(query);
+          return booking.location?.toLowerCase().includes(query) || false;
         case "all":
         default:
           return (
             booking.id.toLowerCase().includes(query) ||
             booking.serviceType.toLowerCase().includes(query) ||
             booking.description.toLowerCase().includes(query) ||
-            booking.location.toLowerCase().includes(query) ||
+            (booking.location?.toLowerCase().includes(query)) ||
             (booking.client && `${booking.client.firstName} ${booking.client.lastName}`.toLowerCase().includes(query)) ||
             (booking.worker && `${booking.worker.firstName} ${booking.worker.lastName}`.toLowerCase().includes(query))
           );
@@ -413,11 +413,11 @@ export default function BookingManagement() {
   };
 
   const getBookingCountForState = (state: string): number => {
-    return allBookings.filter((booking: Booking) => booking.location.includes(state)).length;
+    return allBookings.filter((booking: Booking) => booking.location?.includes(state)).length;
   };
 
   const getBookingCountForDistrict = (district: string): number => {
-    return allBookings.filter((booking: Booking) => booking.location.includes(district)).length;
+    return allBookings.filter((booking: Booking) => booking.location?.includes(district)).length;
   };
 
   // Action handlers
