@@ -140,9 +140,14 @@ export default function AdminDashboard() {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+            <h1 className="text-3xl font-bold">
+              {user.role === "super_admin" ? "Super Admin Dashboard" : "Admin Dashboard"}
+            </h1>
             <p className="text-muted-foreground">
-              Manage users, bookings, and platform operations across Tamil Nadu
+              {user.role === "super_admin" 
+                ? "Manage users, bookings, and platform operations across India"
+                : "Manage users, bookings, and platform operations across Tamil Nadu"
+              }
             </p>
           </div>
           <div className="flex items-center space-x-2">
