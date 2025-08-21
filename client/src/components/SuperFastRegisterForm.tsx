@@ -43,6 +43,7 @@ export function SuperFastRegisterForm({ role, onComplete, onBack, onStepChange, 
   const [newServiceName, setNewServiceName] = useState("");
   const [isDetectingLocation, setIsDetectingLocation] = useState(false);
   const [mobileAvailability, setMobileAvailability] = useState<"checking" | "available" | "not-available" | "">("");
+  const [hasAutoDetectedLocation, setHasAutoDetectedLocation] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
