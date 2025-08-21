@@ -77,18 +77,18 @@ export function SuperFastRegisterForm({ role, onComplete, onBack, onStepChange, 
     }
   }, [districts]);
 
-  // Auto-detect location when form opens (like normal registration)
-  useEffect(() => {
-    if (!hasAutoDetectedLocation) {
-      const timer = setTimeout(() => {
-        console.log("Auto-detecting location for Quick Join form...");
-        handleLocationDetection(true); // Pass true for automatic detection
-        setHasAutoDetectedLocation(true);
-      }, 1000);
+  // Auto-detect location when form opens (like normal registration) - temporarily disabled for debugging
+  // useEffect(() => {
+  //   if (!hasAutoDetectedLocation) {
+  //     const timer = setTimeout(() => {
+  //       console.log("Auto-detecting location for Quick Join form...");
+  //       handleLocationDetection(true); // Pass true for automatic detection
+  //       setHasAutoDetectedLocation(true);
+  //     }, 1000);
       
-      return () => clearTimeout(timer);
-    }
-  }, [hasAutoDetectedLocation]);
+  //     return () => clearTimeout(timer);
+  //   }
+  // }, [hasAutoDetectedLocation]);
 
   // Location detection function (same as AuthModal)
   const handleLocationDetection = async (isAutomatic = false) => {
