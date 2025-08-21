@@ -8,17 +8,22 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ChevronLeft, Plus, ChevronDown } from "lucide-react";
+import { ChevronLeft, Plus, ChevronDown, MapPin } from "lucide-react";
 // Removed AddressForm import - using manual fields to prevent infinite loops
-import { detectStateFromLocation } from "@shared/constants";
+import { detectStateFromLocation, INDIAN_STATES_AND_UTS } from "@shared/constants";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
-// Quick Join schema - simplified to essentials with district selection
+// Quick Join schema - complete address like normal registration
 const fastClientSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
   mobile: z.string().length(10, "Mobile number must be exactly 10 digits").regex(/^\d+$/, "Mobile number must contain only digits"),
-  districtId: z.string().min(1, "District is required"),
+  houseNumber: z.string().min(1, "House number is required"),
+  streetName: z.string().min(1, "Street name is required"),
+  areaName: z.string().min(1, "Area name is required"),
+  district: z.string().min(1, "District is required"),
+  state: z.string().min(1, "State is required"),
+  pincode: z.string().length(6, "PIN code must be exactly 6 digits").regex(/^\d+$/, "PIN code must contain only digits"),
 });
 
 const fastWorkerSchema = fastClientSchema.extend({
@@ -44,6 +49,8 @@ export function SuperFastRegisterForm({ role, onComplete, onBack, onStepChange, 
   const [isLoadingDistricts, setIsLoadingDistricts] = useState(false);
   const [districtPopoverOpen, setDistrictPopoverOpen] = useState(false);
   const [districtSearchInput, setDistrictSearchInput] = useState("");
+  const [isDetectingLocation, setIsDetectingLocation] = useState(false);
+  const [hasAutoDetectedLocation, setHasAutoDetectedLocation] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -69,6 +76,152 @@ export function SuperFastRegisterForm({ role, onComplete, onBack, onStepChange, 
       setApiDistricts(districts);
     }
   }, [districts]);
+
+  // Auto-detect location when form opens (like normal registration)
+  useEffect(() => {
+    if (!hasAutoDetectedLocation) {
+      const timer = setTimeout(() => {
+        console.log("Auto-detecting location for Quick Join form...");
+        handleLocationDetection(true); // Pass true for automatic detection
+        setHasAutoDetectedLocation(true);
+      }, 1000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [hasAutoDetectedLocation]);
+
+  // Location detection function (same as AuthModal)
+  const handleLocationDetection = async (isAutomatic = false) => {
+    if (!navigator.geolocation) {
+      if (!isAutomatic) {
+        toast({
+          title: "Location not supported",
+          description: "Your browser doesn't support location detection.",
+          variant: "destructive",
+        });
+      }
+      return;
+    }
+
+    setIsDetectingLocation(true);
+    
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const { latitude, longitude } = position.coords;
+          
+          // Use Nominatim API for reverse geocoding
+          const response = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1`
+          );
+          
+          if (!response.ok) {
+            throw new Error('Location detection failed');
+          }
+          
+          const data = await response.json();
+          console.log("Location detection results:", {
+            detectedLocation: data.address?.state_district || data.address?.county,
+            detectedCounty: data.address?.county,
+            detectedStateDistrict: data.address?.state_district,
+            detectedPincode: data.address?.postcode,
+            allLocationData: data.address
+          });
+
+          if (data.address) {
+            const address = data.address;
+            
+            // Auto-fill location fields
+            if (address.house_number) {
+              form.setValue("houseNumber", address.house_number);
+            }
+            if (address.road) {
+              form.setValue("streetName", address.road);
+            }
+            if (address.quarter || address.suburb || address.neighbourhood) {
+              form.setValue("areaName", address.quarter || address.suburb || address.neighbourhood || "");
+            }
+            if (address.postcode && address.postcode.length === 6) {
+              form.setValue("pincode", address.postcode);
+            }
+            if (address.state === "Tamil Nadu") {
+              form.setValue("state", "Tamil Nadu");
+              
+              // Match district using the same logic as AuthModal
+              const detectedStateDistrict = address.state_district?.toLowerCase();
+              const detectedCounty = address.county?.toLowerCase();
+              
+              console.log("Checking district matching...", { detectedStateDistrict, detectedCounty, availableDistricts: apiDistricts.length });
+              
+              if (apiDistricts.length > 0) {
+                let matchedDistrict = null;
+                
+                // Try to match with state_district first, then county
+                for (const district of apiDistricts) {
+                  const districtName = district.name.toLowerCase();
+                  
+                  if (detectedStateDistrict && 
+                      (districtName === detectedStateDistrict || 
+                       districtName.includes(detectedStateDistrict) || 
+                       detectedStateDistrict.includes(districtName))) {
+                    matchedDistrict = district;
+                    break;
+                  }
+                  
+                  if (detectedCounty && 
+                      (districtName === detectedCounty || 
+                       districtName.includes(detectedCounty) || 
+                       detectedCounty.includes(districtName))) {
+                    matchedDistrict = district;
+                    break;
+                  }
+                }
+                
+                if (matchedDistrict) {
+                  console.log("District set:", matchedDistrict.name, "with ID:", matchedDistrict.id);
+                  form.setValue("district", matchedDistrict.id);
+                }
+              }
+            }
+            
+            if (!isAutomatic) {
+              toast({
+                title: "Location detected",
+                description: "Address fields have been filled automatically.",
+              });
+            }
+          }
+        } catch (error) {
+          console.error("Location detection error:", error);
+          if (!isAutomatic) {
+            toast({
+              title: "Location detection failed",
+              description: "Please fill address manually.",
+              variant: "destructive",
+            });
+          }
+        } finally {
+          setIsDetectingLocation(false);
+        }
+      },
+      (error) => {
+        console.error("Geolocation error:", error);
+        setIsDetectingLocation(false);
+        if (!isAutomatic) {
+          toast({
+            title: "Location access denied",
+            description: "Please allow location access or fill address manually.",
+            variant: "destructive",
+          });
+        }
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 300000
+      }
+    );
+  };
   
   const form = useForm({
     resolver: zodResolver(schema),
@@ -191,14 +344,9 @@ export function SuperFastRegisterForm({ role, onComplete, onBack, onStepChange, 
           ...data,
           role,
           lastName: "UPDATE_REQUIRED", // Mark for update
-          // Address will be collected during job posting for both clients and workers
-          houseNumber: "COLLECT_DURING_POSTING",
-          streetName: "COLLECT_DURING_POSTING", 
-          areaName: "COLLECT_DURING_POSTING",
-          district: apiDistricts.find(d => d.id === data.districtId)?.name || "COLLECT_DURING_POSTING",
-          state: "Tamil Nadu", // Default state
-          pincode: "COLLECT_DURING_POSTING",
-          fullAddress: "COLLECT_DURING_POSTING",
+          // Use complete address data from form
+          district: apiDistricts.find(d => d.id === data.district)?.name || data.district,
+          fullAddress: `${data.houseNumber}, ${data.streetName}, ${data.areaName}, ${apiDistricts.find(d => d.id === data.district)?.name || data.district}, ${data.state} - ${data.pincode}`,
           email: "", // Will be requested in dashboard
 
           // Worker-specific required fields with defaults for quick registration
@@ -206,7 +354,7 @@ export function SuperFastRegisterForm({ role, onComplete, onBack, onStepChange, 
             aadhaarNumber: "000000000000", // Placeholder - to be updated in dashboard
             experienceYears: 1, // Default - to be updated in dashboard  
             hourlyRate: 100, // Default rate - to be updated in dashboard
-            serviceDistricts: [data.districtId], // Use selected district
+            serviceDistricts: [data.district], // Use selected district
             skills: [(data as FastWorkerData).primaryService || "General"], // Use primary service as default skill
           })
         }),
@@ -341,11 +489,109 @@ export function SuperFastRegisterForm({ role, onComplete, onBack, onStepChange, 
             )}
           />
 
-          {/* District Selection */}
-          <FormField
-            control={form.control}
-            name="districtId"
-            render={({ field }) => (
+          {/* Address Section with Auto-Detect */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <FormLabel className="flex items-center gap-1">
+                <MapPin className="h-3 w-3" />
+                Your Address
+              </FormLabel>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-7 px-3 text-xs bg-gradient-to-r from-blue-50 to-purple-50 hover:from-blue-100 hover:to-purple-100 dark:from-blue-900/20 dark:to-purple-900/20 dark:hover:from-blue-900/30 dark:hover:to-purple-900/30 transition-all duration-200"
+                onClick={() => handleLocationDetection(false)}
+                disabled={isDetectingLocation}
+              >
+                <div className="flex items-center gap-1">
+                  {isDetectingLocation ? (
+                    <>
+                      <div className="relative">
+                        <div className="w-3 h-3 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                        <div className="absolute inset-0 w-3 h-3 border-2 border-purple-600 border-t-transparent rounded-full animate-spin animation-delay-75" />
+                      </div>
+                      <span>Detecting...</span>
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <circle cx="12" cy="12" r="3" strokeWidth="2"/>
+                        <circle cx="12" cy="12" r="8" strokeWidth="1.5" opacity="0.5"/>
+                        <circle cx="12" cy="12" r="11" strokeWidth="1" opacity="0.3"/>
+                      </svg>
+                      <span>{form.watch("houseNumber") || form.watch("streetName") || form.watch("areaName") ? "Re-Detect" : "Auto-Detect"}</span>
+                    </>
+                  )}
+                </div>
+              </Button>
+            </div>
+
+            {/* House Number */}
+            <FormField
+              control={form.control}
+              name="houseNumber"
+              render={({ field }) => (
+                <FormItem className="mb-3">
+                  <FormLabel className="text-xs">House Number</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="House/Flat/Building No."
+                      {...field}
+                      className="text-sm"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Street Name */}
+            <FormField
+              control={form.control}
+              name="streetName"
+              render={({ field }) => (
+                <FormItem className="mb-3">
+                  <FormLabel className="text-xs">Street Name</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Street/Road Name"
+                      {...field}
+                      className="text-sm"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Area Name */}
+            <FormField
+              control={form.control}
+              name="areaName"
+              render={({ field }) => (
+                <FormItem className="mb-3">
+                  <FormLabel className="text-xs">Area Name</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Area/Locality Name"
+                      {...field}
+                      className="text-sm"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          {/* District and PIN Code in grid */}
+          <div className="grid grid-cols-2 gap-3">
+            {/* District Selection */}
+            <FormField
+              control={form.control}
+              name="district"
+              render={({ field }) => (
               <FormItem>
                 <FormLabel>District</FormLabel>
                 <FormControl>
@@ -413,6 +659,53 @@ export function SuperFastRegisterForm({ role, onComplete, onBack, onStepChange, 
               </FormItem>
             )}
           />
+
+          {/* PIN Code */}
+          <FormField
+            control={form.control}
+            name="pincode"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-xs">PIN Code</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder="6-digit PIN"
+                    {...field}
+                    className="text-sm"
+                    maxLength={6}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        {/* State Selection */}
+        <FormField
+          control={form.control}
+          name="state"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>State</FormLabel>
+              <FormControl>
+                <Select value={field.value} onValueChange={field.onChange}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select state" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {INDIAN_STATES_AND_UTS.map((state) => (
+                      <SelectItem key={state} value={state}>
+                        {state}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
           {/* Service Type for Worker */}
           {role === "worker" && (
