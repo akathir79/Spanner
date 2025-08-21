@@ -21,7 +21,7 @@ import { WorkerCard } from "@/components/WorkerCard";
 import { useLanguage } from "@/components/LanguageProvider";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { Search, CheckCircle, Shield, Clock, Users, MapPin, Star, Handshake, ChevronDown, X, MapPinIcon } from "lucide-react";
+import { Search, CheckCircle, Shield, Clock, Users, MapPin, Star, Handshake, ChevronDown, X, MapPinIcon, Plus } from "lucide-react";
 
 
 import { SEOHead } from "@/components/SEOHead";
@@ -201,7 +201,7 @@ export default function Home() {
   const { user, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
-  const [searchForm, setSearchForm] = useState({
+  const [jobPostForm, setJobPostForm] = useState({
     service: "",
     state: "",
     district: "",
@@ -232,7 +232,7 @@ export default function Home() {
 
   // Get districts based on selected state - use API data for all states
   const getAvailableDistricts = () => {
-    if (searchForm.state && apiDistricts.length > 0) {
+    if (jobPostForm.state && apiDistricts.length > 0) {
       // Use API districts for all states (including Tamil Nadu)
       return apiDistricts.map(district => ({
         id: district.name, // Use name as id for API districts
@@ -245,12 +245,12 @@ export default function Home() {
 
   // Fetch districts from API when state changes (for all states)
   useEffect(() => {
-    if (searchForm.state) {
-      fetchDistrictsFromAPI(searchForm.state);
+    if (jobPostForm.state) {
+      fetchDistrictsFromAPI(jobPostForm.state);
     } else {
       setApiDistricts([]);
     }
-  }, [searchForm.state]);
+  }, [jobPostForm.state]);
 
   const fetchDistrictsFromAPI = async (stateName: string) => {
     setIsLoadingDistricts(true);
@@ -326,19 +326,19 @@ export default function Home() {
     }));
   };
 
-  const handleSearch = (e: React.FormEvent) => {
+  const handleJobPost = (e: React.FormEvent) => {
     e.preventDefault();
     
     // Check if user is authenticated
     if (!user) {
       toast({
         title: "Authentication Required",
-        description: "Please login as a client to search for workers and post jobs.",
+        description: "Please login as a client to post jobs.",
         variant: "destructive",
       });
       
-      // Trigger the login modal with client role
-      const event = new CustomEvent('openLoginModal', { detail: { role: 'client' } });
+      // Show Quick Join form for new users, or login for existing users
+      const event = new CustomEvent('openRegisterModal', { detail: { tab: 'client' } });
       window.dispatchEvent(event);
       return;
     }
@@ -347,33 +347,26 @@ export default function Home() {
     if (user.role !== 'client') {
       toast({
         title: "Access Restricted",
-        description: "Only clients can search for workers. Workers can view job posts in their dashboard.",
+        description: "Only clients can post jobs. Workers can view job posts in their dashboard.",
         variant: "destructive",
       });
       return;
     }
     
-    // Validate search form
-    if (!searchForm.service && !searchForm.state && !searchForm.district && !searchForm.description) {
+    // Validate job post form
+    if (!jobPostForm.service && !jobPostForm.state && !jobPostForm.district && !jobPostForm.description) {
       toast({
-        title: "Search Required",
-        description: "Please select at least one search criteria to find workers.",
+        title: "Job Details Required",
+        description: "Please fill in the job details to post your job.",
         variant: "destructive",
       });
       return;
     }
     
-    // Build search parameters
-    const searchParams = new URLSearchParams();
-    if (searchForm.service) searchParams.set('service', searchForm.service);
-    if (searchForm.state) searchParams.set('state', searchForm.state);
-    if (searchForm.district) searchParams.set('district', searchForm.district);
-    if (searchForm.description) searchParams.set('description', searchForm.description);
+    // Navigate to detailed job posting form or process the job post
+    setLocation('/dashboard?tab=post-job');
     
-    // Navigate to professional search results page
-    setLocation(`/search-workers?${searchParams.toString()}`);
-    
-    console.log("Authenticated client search:", searchForm);
+    console.log("Authenticated client job post:", jobPostForm);
   };
 
   const handleLocationFinder = () => {
@@ -604,8 +597,8 @@ export default function Home() {
     );
   };
 
-  const resetForm = () => {
-    setSearchForm({
+  const resetJobPostForm = () => {
+    setJobPostForm({
       service: "",
       state: "",
       district: "",
@@ -757,15 +750,15 @@ export default function Home() {
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-xl font-bold text-foreground flex-1">
-                      Find Services Near You
+                      Post Your Job
                     </h3>
                   </div>
                   
-                  <form onSubmit={handleSearch} className="space-y-4">
+                  <form onSubmit={handleJobPost} className="space-y-4">
                     <div className="space-y-4">
                       <div>
                         <label className="block text-sm font-medium mb-1 text-foreground">
-                          Service Type
+                          What service do you need?
                         </label>
                         <Popover open={serviceOpen} onOpenChange={setServiceOpen}>
                           <PopoverTrigger asChild>
@@ -775,16 +768,16 @@ export default function Home() {
                               aria-expanded={serviceOpen}
                               className="w-full justify-between"
                             >
-                              {searchForm.service
-                                ? services?.find((service: any) => service.id === searchForm.service)?.name
-                                : "Select Service"}
+                              {jobPostForm.service
+                                ? services?.find((service: any) => service.id === jobPostForm.service)?.name
+                                : "Select the service you need"}
                               <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                             </Button>
                           </PopoverTrigger>
                           <PopoverContent className="w-full p-0 animate-dropdown-open">
                             <Command>
                               <CommandInput 
-                                placeholder="Search services..." 
+                                placeholder="Search for the service you need..." 
                                 className="transition-all duration-200"
                               />
                               <CommandList className="dropdown-scrollbar">
@@ -802,7 +795,7 @@ export default function Home() {
                                           item.classList.add('animate-selection-highlight');
                                         }
                                         setTimeout(() => {
-                                          setSearchForm(prev => ({ ...prev, service: service.id }));
+                                          setJobPostForm(prev => ({ ...prev, service: service.id }));
                                           setServiceOpen(false);
                                         }, 100);
                                       }}
@@ -820,7 +813,7 @@ export default function Home() {
                       <div>
                         <div className="flex items-center justify-between mb-1">
                           <label className="block text-sm font-medium text-foreground">
-                            State
+                            Where do you need this service?
                           </label>
                           <Button
                             type="button"
@@ -842,8 +835,8 @@ export default function Home() {
                               aria-expanded={stateOpen}
                               className="w-full justify-between"
                             >
-                              {searchForm.state
-                                ? INDIAN_STATES_AND_UTS.find(state => state.name === searchForm.state)?.name
+                              {jobPostForm.state
+                                ? INDIAN_STATES_AND_UTS.find(state => state.name === jobPostForm.state)?.name
                                 : "Select your state"}
                               <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                             </Button>
@@ -869,7 +862,7 @@ export default function Home() {
                                           item.classList.add('animate-selection-highlight');
                                         }
                                         setTimeout(() => {
-                                          setSearchForm(prev => ({ ...prev, state: state.name }));
+                                          setJobPostForm(prev => ({ ...prev, state: state.name, district: "" })); // Clear district when state changes
                                           setStateOpen(false);
                                         }, 100);
                                       }}
@@ -891,7 +884,7 @@ export default function Home() {
                                           item.classList.add('animate-selection-highlight');
                                         }
                                         setTimeout(() => {
-                                          setSearchForm(prev => ({ ...prev, state: ut.name }));
+                                          setJobPostForm(prev => ({ ...prev, state: ut.name, district: "" })); // Clear district when state changes
                                           setStateOpen(false);
                                         }, 100);
                                       }}
@@ -919,9 +912,9 @@ export default function Home() {
                               aria-expanded={districtOpen}
                               className="w-full justify-between"
                             >
-                              {searchForm.district
+                              {jobPostForm.district
                                 ? (() => {
-                                    const selectedDistrict = getAvailableDistricts().find((district: any) => district.id === searchForm.district);
+                                    const selectedDistrict = getAvailableDistricts().find((district: any) => district.id === jobPostForm.district);
                                     return selectedDistrict ? selectedDistrict.name : "Select District";
                                   })()
                                 : isLoadingDistricts ? "Loading districts..." : "Select District"}
@@ -949,7 +942,7 @@ export default function Home() {
                                           item.classList.add('animate-selection-highlight');
                                         }
                                         setTimeout(() => {
-                                          setSearchForm(prev => ({ ...prev, district: district.id }));
+                                          setJobPostForm(prev => ({ ...prev, district: district.id }));
                                           setDistrictOpen(false);
                                         }, 100);
                                       }}
@@ -970,12 +963,12 @@ export default function Home() {
                     
                       <div>
                         <label className="block text-sm font-medium mb-1 text-foreground">
-                          Description
+                          Job Description
                         </label>
                         <Input
-                          placeholder="Describe your service requirement..."
-                          value={searchForm.description}
-                          onChange={(e) => setSearchForm(prev => ({ ...prev, description: e.target.value }))}
+                          placeholder="Describe what work you need done..."
+                          value={jobPostForm.description}
+                          onChange={(e) => setJobPostForm(prev => ({ ...prev, description: e.target.value }))}
                         />
                       </div>
                     </div>
@@ -986,13 +979,13 @@ export default function Home() {
                         className="flex-1"
                         disabled={authLoading}
                       >
-                        <Search className="h-4 w-4 mr-2" />
-                        {user ? "Search Workers" : "Login & Search Workers"}
+                        <Plus className="h-4 w-4 mr-2" />
+                        {user ? "Post Job" : "Login & Post Job"}
                       </Button>
                       <Button 
                         type="button" 
                         variant="outline" 
-                        onClick={resetForm}
+                        onClick={resetJobPostForm}
                         className="px-4"
                       >
                         <X className="h-4 w-4" />
@@ -1002,7 +995,7 @@ export default function Home() {
                     {!user && (
                       <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
                         <p className="text-xs text-blue-700 text-center">
-                          🔒 Login required to view worker profiles and contact details
+                          🔒 Login required to post jobs and receive worker bids
                         </p>
                       </div>
                     )}
