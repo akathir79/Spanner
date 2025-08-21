@@ -205,7 +205,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { mobile, role } = req.body;
       
-      // For admin mobile, always send OTP
+      // For super admin mobile, always send OTP
       if (mobile === "9000000001") {
         const otp = generateOTP();
         const expiresAt = addMinutes(new Date(), 10);
@@ -217,7 +217,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           expiresAt,
         });
         
-        const smsMessage = `Your SPANNER admin login OTP is: ${otp}. Valid for 10 minutes.`;
+        const smsMessage = `Your SPANNER super admin login OTP is: ${otp}. Valid for 10 minutes.`;
         await sendSMS(mobile, smsMessage);
         console.log(`OTP for ${mobile}: ${otp}`);
         
@@ -225,7 +225,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           success: true,
           message: "OTP sent successfully", 
           otp: otp,
-          userRole: "admin"
+          userRole: "super_admin"
         });
       }
       
@@ -569,19 +569,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Find user based on mobile
       let user = await storage.getUserByMobile(mobile);
       
-      // For admin mobile, ensure user exists or create if needed
+      // For super admin mobile, ensure user exists or create if needed
       if (mobile === "9000000001") {
         if (!user) {
-          // Create admin user if doesn't exist
+          // Create super admin user if doesn't exist
           user = await storage.createUser({
+            id: "TN-CHENNAI-0001-SUPERADMIN",
             mobile: "9000000001",
-            email: "admin@spanner.com",
-            firstName: "Admin",
-            lastName: "User",
-            role: "admin",
+            email: "superadmin@spanner.com",
+            firstName: "Super",
+            lastName: "Administrator",
+            role: "super_admin",
             district: "Chennai",
+            state: "Tamil Nadu",
             isVerified: true,
-            status: "approved"
+            status: "verified",
+            isActive: true
           });
         }
       }
