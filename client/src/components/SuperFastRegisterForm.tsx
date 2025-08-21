@@ -11,20 +11,20 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ChevronLeft, Plus } from "lucide-react";
 import { AddressForm } from "@/components/AddressForm";
 
-// Simplified Quick Join schema - only first name, mobile number, and service for workers
+// Enhanced Quick Join schema - both client and worker now include address fields for location card functionality
 const fastClientSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
   mobile: z.string().length(10, "Mobile number must be exactly 10 digits").regex(/^\d+$/, "Mobile number must contain only digits"),
-});
-
-const fastWorkerSchema = fastClientSchema.extend({
-  primaryService: z.string().min(1, "Primary service is required"),
   houseNumber: z.string().min(1, "House number is required"),
   streetName: z.string().min(1, "Street name is required"),
   areaName: z.string().min(1, "Area name is required"),
   state: z.string().min(1, "State is required"),
   district: z.string().min(1, "District is required"),
   pincode: z.string().length(6, "PIN code must be exactly 6 digits").regex(/^\d+$/, "PIN code must contain only digits"),
+});
+
+const fastWorkerSchema = fastClientSchema.extend({
+  primaryService: z.string().min(1, "Primary service is required"),
 });
 
 type FastClientData = z.infer<typeof fastClientSchema>;
@@ -53,14 +53,14 @@ export function SuperFastRegisterForm({ role, onComplete, onBack, onStepChange, 
     defaultValues: {
       firstName: "",
       mobile: "",
+      houseNumber: "",
+      streetName: "",
+      areaName: "",
+      state: "",
+      district: "",
+      pincode: "",
       ...(role === "worker" && { 
         primaryService: "",
-        houseNumber: "",
-        streetName: "",
-        areaName: "",
-        state: "",
-        district: "",
-        pincode: "",
       }),
     },
   });
@@ -551,23 +551,21 @@ export function SuperFastRegisterForm({ role, onComplete, onBack, onStepChange, 
             />
           )}
 
-          {/* Address Form for Worker */}
-          {role === "worker" && (
-            <AddressForm
-              form={form}
-              isDetecting={isDetectingLocation}
-              onDetect={handleLocationDetection}
-              autoDetectOnMount={true}
-              className="border rounded-lg p-4 bg-gray-50"
-            />
-          )}
+          {/* Address Form for Both Client and Worker */}
+          <AddressForm
+            form={form}
+            isDetecting={isDetectingLocation}
+            onDetect={handleLocationDetection}
+            autoDetectOnMount={true}
+            className="border rounded-lg p-4 bg-gray-50"
+          />
 
           {/* Registration note */}
           <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
             <p className="text-xs text-blue-700 text-center">
               📍 {role === "worker" 
-                ? "Your state and district help clients find you for local service requests."
-                : "Your address will be collected when you post your first job for security and accurate service delivery."
+                ? "Your address helps clients find you for local service requests. Location detected automatically!"
+                : "Your address is collected for security and accurate service delivery. Location detected automatically!"
               }
             </p>
           </div>
