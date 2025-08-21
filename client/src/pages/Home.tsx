@@ -750,15 +750,15 @@ export default function Home() {
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-xl font-bold text-foreground flex-1">
-                      Post Your Job
+                      Find Services Near You
                     </h3>
                   </div>
                   
-                  <form onSubmit={handleJobPost} className="space-y-4">
+                  <form onSubmit={handleSearch} className="space-y-4">
                     <div className="space-y-4">
                       <div>
                         <label className="block text-sm font-medium mb-1 text-foreground">
-                          What service do you need?
+                          Service Type
                         </label>
                         <Popover open={serviceOpen} onOpenChange={setServiceOpen}>
                           <PopoverTrigger asChild>
@@ -768,16 +768,16 @@ export default function Home() {
                               aria-expanded={serviceOpen}
                               className="w-full justify-between"
                             >
-                              {jobPostForm.service
-                                ? services?.find((service: any) => service.id === jobPostForm.service)?.name
-                                : "Select the service you need"}
+                              {searchForm.service
+                                ? services?.find((service: any) => service.id === searchForm.service)?.name
+                                : "Select Service"}
                               <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                             </Button>
                           </PopoverTrigger>
                           <PopoverContent className="w-full p-0 animate-dropdown-open">
                             <Command>
                               <CommandInput 
-                                placeholder="Search for the service you need..." 
+                                placeholder="Search services..." 
                                 className="transition-all duration-200"
                               />
                               <CommandList className="dropdown-scrollbar">
@@ -795,7 +795,7 @@ export default function Home() {
                                           item.classList.add('animate-selection-highlight');
                                         }
                                         setTimeout(() => {
-                                          setJobPostForm(prev => ({ ...prev, service: service.id }));
+                                          setSearchForm(prev => ({ ...prev, service: service.id }));
                                           setServiceOpen(false);
                                         }, 100);
                                       }}
