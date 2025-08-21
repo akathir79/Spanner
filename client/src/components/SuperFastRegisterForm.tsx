@@ -8,20 +8,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ChevronLeft, Plus } from "lucide-react";
+import { ChevronLeft, Plus, ChevronDown } from "lucide-react";
 // Removed AddressForm import - using manual fields to prevent infinite loops
 import { detectStateFromLocation } from "@shared/constants";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
-// Enhanced Quick Join schema - both client and worker now include address fields for location card functionality
+// Quick Join schema - simplified to essentials with district selection
 const fastClientSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
   mobile: z.string().length(10, "Mobile number must be exactly 10 digits").regex(/^\d+$/, "Mobile number must contain only digits"),
-  houseNumber: z.string().min(1, "House number is required"),
-  streetName: z.string().min(1, "Street name is required"),
-  areaName: z.string().min(1, "Area name is required"),
-  state: z.string().min(1, "State is required"),
-  district: z.string().min(1, "District is required"),
-  pincode: z.string().length(6, "PIN code must be exactly 6 digits").regex(/^\d+$/, "PIN code must contain only digits"),
+  districtId: z.string().min(1, "District is required"),
 });
 
 const fastWorkerSchema = fastClientSchema.extend({
@@ -42,15 +39,36 @@ interface SuperFastRegisterFormProps {
 export function SuperFastRegisterForm({ role, onComplete, onBack, onStepChange, onError }: SuperFastRegisterFormProps) {
   const [showNewServiceInput, setShowNewServiceInput] = useState(false);
   const [newServiceName, setNewServiceName] = useState("");
-  const [isDetectingLocation, setIsDetectingLocation] = useState(false);
   const [mobileAvailability, setMobileAvailability] = useState<"checking" | "available" | "not-available" | "">("");
-  const [hasAutoDetectedLocation, setHasAutoDetectedLocation] = useState(false);
   const [apiDistricts, setApiDistricts] = useState<Array<{id: string, name: string, tamilName?: string}>>([]);
   const [isLoadingDistricts, setIsLoadingDistricts] = useState(false);
+  const [districtPopoverOpen, setDistrictPopoverOpen] = useState(false);
+  const [districtSearchInput, setDistrictSearchInput] = useState("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const schema = role === "client" ? fastClientSchema : fastWorkerSchema;
+  
+  // Load Tamil Nadu districts for combobox
+  const { data: districts, isLoading: isLoadingDistrictsQuery } = useQuery({
+    queryKey: ['/api/districts', 'Tamil Nadu'],
+    queryFn: async () => {
+      const response = await fetch(`/api/districts/Tamil%20Nadu`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch districts');
+      }
+      return response.json();
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes (renamed from cacheTime in v5)
+  });
+
+  // Update apiDistricts when districts load
+  useEffect(() => {
+    if (districts && Array.isArray(districts)) {
+      setApiDistricts(districts);
+    }
+  }, [districts]);
   
   const form = useForm({
     resolver: zodResolver(schema),
@@ -177,7 +195,7 @@ export function SuperFastRegisterForm({ role, onComplete, onBack, onStepChange, 
           houseNumber: "COLLECT_DURING_POSTING",
           streetName: "COLLECT_DURING_POSTING", 
           areaName: "COLLECT_DURING_POSTING",
-          district: "COLLECT_DURING_POSTING",
+          district: apiDistricts.find(d => d.id === data.districtId)?.name || "COLLECT_DURING_POSTING",
           state: "Tamil Nadu", // Default state
           pincode: "COLLECT_DURING_POSTING",
           fullAddress: "COLLECT_DURING_POSTING",
@@ -188,7 +206,7 @@ export function SuperFastRegisterForm({ role, onComplete, onBack, onStepChange, 
             aadhaarNumber: "000000000000", // Placeholder - to be updated in dashboard
             experienceYears: 1, // Default - to be updated in dashboard  
             hourlyRate: 100, // Default rate - to be updated in dashboard
-            serviceDistricts: ["Chennai"], // Default district - to be updated in dashboard
+            serviceDistricts: [data.districtId], // Use selected district
             skills: [(data as FastWorkerData).primaryService || "General"], // Use primary service as default skill
           })
         }),
@@ -318,6 +336,79 @@ export function SuperFastRegisterForm({ role, onComplete, onBack, onStepChange, 
                 {mobileAvailability === "not-available" && (
                   <p className="text-xs text-red-600 mt-1">Mobile number not available</p>
                 )}
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* District Selection */}
+          <FormField
+            control={form.control}
+            name="districtId"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>District</FormLabel>
+                <FormControl>
+                  <Popover open={districtPopoverOpen} onOpenChange={setDistrictPopoverOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={districtPopoverOpen}
+                        className="w-full justify-between"
+                        disabled={isLoadingDistrictsQuery}
+                      >
+                        {field.value 
+                          ? apiDistricts.find(district => district.id === field.value)?.name || "Select district"
+                          : isLoadingDistrictsQuery
+                          ? "Loading districts..."
+                          : "Select district"}
+                        <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-full p-0 animate-dropdown-open">
+                      <Command>
+                        <CommandInput 
+                          placeholder="Search districts..." 
+                          value={districtSearchInput}
+                          onValueChange={setDistrictSearchInput}
+                          className="transition-all duration-200"
+                        />
+                        <CommandEmpty>No district found.</CommandEmpty>
+                        <CommandList className="max-h-40 overflow-y-auto dropdown-scrollbar">
+                          <CommandGroup>
+                            {apiDistricts
+                              .filter(district => 
+                                district.name.toLowerCase().includes(districtSearchInput.toLowerCase())
+                              )
+                              .map((district, index) => (
+                                <CommandItem
+                                  key={district.id}
+                                  className="transition-all duration-150 hover:bg-accent/80 data-[selected=true]:bg-accent animate-district-load"
+                                  style={{ animationDelay: `${index * 20}ms` }}
+                                  onSelect={() => {
+                                    const item = document.querySelector(`[data-value="${district.name}"]`);
+                                    if (item) {
+                                      item.classList.add('animate-selection-highlight');
+                                    }
+                                    setTimeout(() => {
+                                      field.onChange(district.id);
+                                      setDistrictPopoverOpen(false);
+                                      setDistrictSearchInput("");
+                                    }, 80);
+                                  }}
+                                >
+                                  <span className="transition-all duration-150">
+                                    {district.name}
+                                  </span>
+                                </CommandItem>
+                              ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
