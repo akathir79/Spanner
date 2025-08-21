@@ -1,34 +1,16 @@
-import { useState, useEffect } from "react";
-
-// Add TypeScript declarations for Speech Recognition API
-declare global {
-  interface Window {
-    SpeechRecognition: any;
-    webkitSpeechRecognition: any;
-  }
-}
-import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ServiceCard } from "@/components/ServiceCard";
 import { WorkerCard } from "@/components/WorkerCard";
 import { useLanguage } from "@/components/LanguageProvider";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { Search, CheckCircle, Shield, Clock, Users, MapPin, Star, Handshake, ChevronDown, X, MapPinIcon, Plus } from "lucide-react";
-
+import { CheckCircle, Shield, Clock, Users, MapPin, Star, Handshake } from "lucide-react";
 
 import { SEOHead } from "@/components/SEOHead";
 import rajeshAvatar from "@assets/Babu_1753861985304.png";
 import arjunAvatar from "@assets/krishnan_1753861985304.png";
 import sureshAvatar from "@assets/veni_1753861985304.png";
-import { INDIAN_STATES_AND_UTS } from "@shared/constants";
 
 // Mock data for demonstration
 const mockServices = [
@@ -64,27 +46,9 @@ const mockServices = [
     name: "Mechanic Services",
     description: "Skilled mechanics for vehicle repairs and maintenance services.",
     icon: "fas fa-tools",
-    price: "₹449/hour", 
+    price: "₹449/hour",
     rating: 4.6,
     reviews: 1560
-  },
-  {
-    id: "septic_cleaner",
-    name: "Septic Cleaning",
-    description: "Professional septic tank cleaning and maintenance services.",
-    icon: "fas fa-recycle",
-    price: "₹199/hour",
-    rating: 4.5,
-    reviews: 890
-  },
-  {
-    id: "general_repairs",
-    name: "General Repairs",
-    description: "Multi-skilled workers for various home and office repair needs.",
-    icon: "fas fa-hammer",
-    price: "₹249/hour",
-    rating: 4.7,
-    reviews: 2100
   }
 ];
 
@@ -92,572 +56,86 @@ const mockWorkers = [
   {
     id: "worker1",
     name: "Rajesh Kumar",
-    service: "Expert Plumber",
+    service: "Plumbing",
     location: "Chennai, Tamil Nadu",
-    rating: 5.0,
-    reviews: 156,
-    hourlyRate: "₹299/hour",
-    experience: "5+ years exp",
+    rating: 4.9,
+    reviews: 127,
+    hourlyRate: 299,
+    experience: "8+ years",
     isAvailable: true,
     avatar: rajeshAvatar
   },
   {
-    id: "worker2",
-    name: "Arjun Patel",
-    service: "Licensed Electrician",
+    id: "worker2", 
+    name: "Arjun Singh",
+    service: "Electrical",
     location: "Coimbatore, Tamil Nadu",
-    rating: 4.9,
-    reviews: 203,
-    hourlyRate: "₹399/hour",
-    experience: "7+ years exp",
+    rating: 4.8,
+    reviews: 94,
+    hourlyRate: 399,
+    experience: "6+ years",
     isAvailable: true,
     avatar: arjunAvatar
   },
   {
     id: "worker3",
-    name: "Suresh Murugan",
-    service: "Professional Painter",
+    name: "Suresh Patel", 
+    service: "Painting",
     location: "Madurai, Tamil Nadu",
-    rating: 4.8,
-    reviews: 89,
-    hourlyRate: "₹349/hour",
-    experience: "4+ years exp",
-    isAvailable: true,
+    rating: 4.7,
+    reviews: 156,
+    hourlyRate: 349,
+    experience: "10+ years",
+    isAvailable: false,
     avatar: sureshAvatar
-  }
-];
-
-// All 38 Tamil Nadu Districts
-const allTamilNaduDistricts = [
-  { id: "ariyalur", name: "Ariyalur", tamilName: "அரியலூர்" },
-  { id: "chengalpattu", name: "Chengalpattu", tamilName: "செங்கல்பட்டு" },
-  { id: "chennai", name: "Chennai", tamilName: "சென்னை" },
-  { id: "coimbatore", name: "Coimbatore", tamilName: "கோயம்புத்தூர்" },
-  { id: "cuddalore", name: "Cuddalore", tamilName: "கடலூர்" },
-  { id: "dharmapuri", name: "Dharmapuri", tamilName: "தர்மபுரி" },
-  { id: "dindigul", name: "Dindigul", tamilName: "திண்டுக்கல்" },
-  { id: "erode", name: "Erode", tamilName: "ஈரோடு" },
-  { id: "kallakurichi", name: "Kallakurichi", tamilName: "கள்ளக்குறிச்சி" },
-  { id: "kanchipuram", name: "Kanchipuram", tamilName: "காஞ்சிபுரம்" },
-  { id: "kanyakumari", name: "Kanyakumari", tamilName: "கன்யாகுமரி" },
-  { id: "karur", name: "Karur", tamilName: "கரூர்" },
-  { id: "krishnagiri", name: "Krishnagiri", tamilName: "கிருஷ்ணகிரி" },
-  { id: "madurai", name: "Madurai", tamilName: "மதுரை" },
-  { id: "mayiladuthurai", name: "Mayiladuthurai", tamilName: "மயிலாடுதுறை" },
-  { id: "nagapattinam", name: "Nagapattinam", tamilName: "நாகப்பட்டினம்" },
-  { id: "namakkal", name: "Namakkal", tamilName: "நாமக்கல்" },
-  { id: "nilgiris", name: "Nilgiris", tamilName: "நீலகிரி" },
-  { id: "perambalur", name: "Perambalur", tamilName: "பெரம்பலூர்" },
-  { id: "pudukkottai", name: "Pudukkottai", tamilName: "புதுக்கோட்டை" },
-  { id: "ramanathapuram", name: "Ramanathapuram", tamilName: "இராமநாதபுரம்" },
-  { id: "ranipet", name: "Ranipet", tamilName: "ராணிப்பேட்டை" },
-  { id: "salem", name: "Salem", tamilName: "சேலம்" },
-  { id: "sivaganga", name: "Sivaganga", tamilName: "சிவகங்கை" },
-  { id: "tenkasi", name: "Tenkasi", tamilName: "தென்காசி" },
-  { id: "thanjavur", name: "Thanjavur", tamilName: "தஞ்சாவூர்" },
-  { id: "theni", name: "Theni", tamilName: "தேனி" },
-  { id: "thoothukudi", name: "Thoothukudi", tamilName: "தூத்துக்குடி" },
-  { id: "tiruchirappalli", name: "Tiruchirappalli", tamilName: "திருச்சிராப்பள்ளி" },
-  { id: "tirunelveli", name: "Tirunelveli", tamilName: "திருநெல்வேலி" },
-  { id: "tirupattur", name: "Tirupattur", tamilName: "திருப்பத்தூர்" },
-  { id: "tiruppur", name: "Tiruppur", tamilName: "திருப்பூர்" },
-  { id: "tiruvallur", name: "Tiruvallur", tamilName: "திருவள்ளூர்" },
-  { id: "tiruvannamalai", name: "Tiruvannamalai", tamilName: "திருவண்ணாமலை" },
-  { id: "tiruvarur", name: "Tiruvarur", tamilName: "திருவாரூர்" },
-  { id: "vellore", name: "Vellore", tamilName: "வேலூர்" },
-  { id: "viluppuram", name: "Viluppuram", tamilName: "விழுப்புரம்" },
-  { id: "virudhunagar", name: "Virudhunagar", tamilName: "விருதுநகர்" }
-];
-
-const testimonials = [
-  {
-    id: 1,
-    name: "Priya Sharma",
-    location: "Chennai",
-    rating: 5,
-    text: "Found an excellent plumber through SPANNER. The booking process was simple, and the worker arrived on time. Very professional service!",
-    avatar: sureshAvatar
-  },
-  {
-    id: 2,
-    name: "Muthu Krishnan",
-    location: "Coimbatore",
-    rating: 5,
-    text: "As a worker, SPANNER has helped me connect with more customers. The platform is easy to use and payments are always secure.",
-    avatar: arjunAvatar
-  },
-  {
-    id: 3,
-    name: "Venkat Raman",
-    location: "Madurai",
-    rating: 5,
-    text: "Excellent platform! Found a skilled electrician quickly. The Tamil language support made it very convenient for me to use.",
-    avatar: rajeshAvatar
   }
 ];
 
 export default function Home() {
   const { t } = useLanguage();
-  const { user, isLoading: authLoading } = useAuth();
+  const { user } = useAuth();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
-  const [jobPostForm, setJobPostForm] = useState({
-    service: "",
-    state: "",
-    district: "",
-    description: ""
-  });
-  const [serviceOpen, setServiceOpen] = useState(false);
-  const [stateOpen, setStateOpen] = useState(false);
-  const [districtOpen, setDistrictOpen] = useState(false);
-  const [isLocationLoading, setIsLocationLoading] = useState(false);
 
-
-  // No longer fetching districts from database - using API approach for all states
-
-  // State for dynamic districts from API
-  const [apiDistricts, setApiDistricts] = useState<Array<{id: string, name: string}>>([]);
-  const [isLoadingDistricts, setIsLoadingDistricts] = useState(false);
-
-  const { data: rawServices } = useQuery({
-    queryKey: ["/api/services"],
-    staleTime: 1000 * 60 * 60, // 1 hour
-  });
-
-  // Remove duplicate services by name
-  const services = rawServices ? 
-    (rawServices as any[]).filter((service, index, arr) => 
-      arr.findIndex(s => s.name === service.name) === index
-    ) : null;
-
-  // Get districts based on selected state - use API data for all states
-  const getAvailableDistricts = () => {
-    if (jobPostForm.state && apiDistricts.length > 0) {
-      // Use API districts for all states (including Tamil Nadu)
-      return apiDistricts.map(district => ({
-        id: district.name, // Use name as id for API districts
-        name: district.name,
-        tamilName: null // No Tamil names for API data
-      }));
-    }
-    return [];
-  };
-
-  // Fetch districts from API when state changes (for all states)
-  useEffect(() => {
-    if (jobPostForm.state) {
-      fetchDistrictsFromAPI(jobPostForm.state);
-    } else {
-      setApiDistricts([]);
-    }
-  }, [jobPostForm.state]);
-
-  const fetchDistrictsFromAPI = async (stateName: string) => {
-    setIsLoadingDistricts(true);
-    try {
-      // Use our backend API endpoint which connects to REST India API
-      const response = await fetch(`/api/districts/${encodeURIComponent(stateName)}`);
-      
-      if (response.ok) {
-        const districtsData = await response.json();
-        if (Array.isArray(districtsData) && districtsData.length > 0) {
-          setApiDistricts(districtsData);
-          console.log(`Loaded ${districtsData.length} districts from API for ${stateName}`);
-          return;
-        }
-      }
-      
-      // Fallback to static data if API fails or returns no data
-      const districts = await getFallbackDistricts(stateName);
-      setApiDistricts(districts);
-      console.log(`Loaded ${districts.length} districts from fallback data for ${stateName}`);
-      
-    } catch (error) {
-      console.error("Error loading districts from API, using fallback:", error);
-      // Use fallback data if API fails
-      try {
-        const districts = await getFallbackDistricts(stateName);
-        setApiDistricts(districts);
-      } catch (fallbackError) {
-        console.error("Even fallback failed:", fallbackError);
-        setApiDistricts([]);
-      }
-    } finally {
-      setIsLoadingDistricts(false);
-    }
-  };
-
-  const getFallbackDistricts = async (stateName: string): Promise<Array<{id: string, name: string}>> => {
-    // Fallback static data for major states
-    const majorDistricts: Record<string, string[]> = {
-      "Tamil Nadu": ["Chennai", "Coimbatore", "Salem", "Madurai", "Tiruchirappalli", "Tirunelveli", "Erode", "Vellore", "Thoothukudi", "Dindigul", "Thanjavur", "Kanchipuram", "Tiruppur", "Cuddalore", "Karur", "Dharmapuri", "Nagapattinam", "Krishnagiri", "Sivaganga", "Namakkal", "Virudhunagar", "Villupuram", "Ramanathapuram", "Theni", "Pudukkottai", "Tiruvannamalai", "Kanyakumari", "Nilgiris", "Perambalur", "Ariyalur", "Kallakurichi", "Chengalpattu", "Tenkasi", "Tirupathur", "Ranipet", "Mayiladuthurai", "Tiruvallur"],
-      "Karnataka": ["Bangalore Urban", "Mysore", "Hubli", "Mangalore", "Belgaum", "Gulbarga", "Shimoga", "Tumkur"],
-      "Maharashtra": ["Mumbai", "Pune", "Nashik", "Nagpur", "Aurangabad", "Solapur", "Kolhapur", "Satara"],
-      "Uttar Pradesh": ["Lucknow", "Kanpur", "Agra", "Varanasi", "Meerut", "Allahabad", "Bareilly", "Ghaziabad"],
-      "West Bengal": ["Kolkata", "Howrah", "Darjeeling", "Asansol", "Siliguri", "Durgapur", "Bardhaman", "Malda"],
-      "Gujarat": ["Ahmedabad", "Surat", "Vadodara", "Rajkot", "Bhavnagar", "Jamnagar", "Gandhinagar", "Anand"],
-      "Rajasthan": ["Jaipur", "Jodhpur", "Udaipur", "Kota", "Bikaner", "Ajmer", "Bharatpur", "Alwar"],
-      "Madhya Pradesh": ["Bhopal", "Indore", "Gwalior", "Jabalpur", "Ujjain", "Sagar", "Ratlam", "Satna"],
-      "Kerala": ["Thiruvananthapuram", "Kochi", "Kozhikode", "Thrissur", "Kollam", "Kottayam", "Palakkad", "Kannur"],
-      "Andhra Pradesh": ["Hyderabad", "Visakhapatnam", "Vijayawada", "Guntur", "Nellore", "Kurnool", "Rajahmundry", "Tirupati"],
-      "Telangana": ["Adilabad", "Bhadradri Kothagudem", "Hyderabad", "Jagtial", "Jangaon", "Jayashankar Bhupalpally", "Jogulamba Gadwal", "Kamareddy", "Karimnagar", "Khammam", "Komaram Bheem Asifabad", "Mahabubabad", "Mahabubnagar", "Mancherial", "Medak", "Medchal-Malkajgiri", "Mulugu", "Nagarkurnool", "Nalgonda", "Narayanpet", "Nirmal", "Nizamabad", "Peddapalli", "Rajanna Sircilla", "Rangareddy", "Sangareddy", "Siddipet", "Suryapet", "Vikarabad", "Wanaparthy", "Warangal Rural", "Warangal Urban", "Yadadri Bhuvanagiri"],
-      "Odisha": ["Bhubaneswar", "Cuttack", "Rourkela", "Berhampur", "Sambalpur", "Puri", "Balasore", "Baripada"],
-      "Punjab": ["Ludhiana", "Amritsar", "Jalandhar", "Patiala", "Bathinda", "Mohali", "Firozpur", "Hoshiarpur"],
-      "Haryana": ["Gurgaon", "Faridabad", "Hisar", "Panipat", "Karnal", "Ambala", "Yamunanagar", "Rohtak"],
-      "Bihar": ["Patna", "Gaya", "Bhagalpur", "Muzaffarpur", "Purnia", "Darbhanga", "Bihar Sharif", "Arrah"],
-      "Jharkhand": ["Ranchi", "Jamshedpur", "Dhanbad", "Bokaro", "Deoghar", "Phusro", "Hazaribagh", "Giridih"],
-      "Assam": ["Guwahati", "Silchar", "Dibrugarh", "Jorhat", "Nagaon", "Tinsukia", "Tezpur", "Bongaigaon"],
-      "Himachal Pradesh": ["Shimla", "Dharamshala", "Solan", "Mandi", "Palampur", "Nahan", "Kullu", "Hamirpur"],
-      "Uttarakhand": ["Dehradun", "Haridwar", "Haldwani", "Roorkee", "Rudrapur", "Kashipur", "Rishikesh", "Pithoragarh"],
-      "Goa": ["North Goa", "South Goa"],
-      "Manipur": ["Imphal East", "Imphal West", "Thoubal", "Bishnupur", "Churachandpur", "Senapati", "Ukhrul", "Chandel"],
-      "Tripura": ["West Tripura", "South Tripura", "North Tripura", "Dhalai"],
-      "Meghalaya": ["East Khasi Hills", "West Khasi Hills", "East Garo Hills", "West Garo Hills", "South Garo Hills"],
-      "Nagaland": ["Kohima", "Dimapur", "Mokokchung", "Tuensang", "Mon", "Wokha", "Zunheboto", "Phek"],
-      "Mizoram": ["Aizawl", "Lunglei", "Champhai", "Kolasib", "Serchhip", "Lawngtlai", "Saiha", "Mamit"],
-      "Arunachal Pradesh": ["Itanagar", "Naharlagun", "Pasighat", "Tezpur", "Bomdila", "Ziro", "Tezu", "Khonsa"],
-      "Sikkim": ["East Sikkim", "West Sikkim", "North Sikkim", "South Sikkim"]
-    };
-
-    const districts = majorDistricts[stateName] || [];
-    return districts.map((district, index) => ({
-      id: `${district}-${index}`,
-      name: district
-    }));
-  };
-
-  const handleJobPost = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // Check if user is authenticated
+  const handleWorkerContact = (workerId: string) => {
     if (!user) {
       toast({
-        title: "Authentication Required",
-        description: "Please login as a client to post jobs.",
-        variant: "destructive",
-      });
-      
-      // Show Quick Join form for new users, or login for existing users
-      const event = new CustomEvent('openRegisterModal', { detail: { tab: 'client' } });
-      window.dispatchEvent(event);
-      return;
-    }
-    
-    // Check if user is a client
-    if (user.role !== 'client') {
-      toast({
-        title: "Access Restricted",
-        description: "Only clients can post jobs. Workers can view job posts in their dashboard.",
+        title: "Login Required",
+        description: "Please login to contact workers",
         variant: "destructive",
       });
       return;
     }
     
-    // Validate job post form
-    if (!jobPostForm.service && !jobPostForm.state && !jobPostForm.district && !jobPostForm.description) {
-      toast({
-        title: "Job Details Required",
-        description: "Please fill in the job details to post your job.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    // Navigate to detailed job posting form or process the job post
-    setLocation('/dashboard?tab=post-job');
-    
-    console.log("Authenticated client job post:", jobPostForm);
-  };
-
-  const handleLocationFinder = () => {
-    if (!navigator.geolocation) {
-      toast({
-        title: "Location not supported",
-        description: "Your browser doesn't support location detection",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsLocationLoading(true);
-
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        try {
-          const { latitude, longitude } = position.coords;
-          
-          // Use a free reverse geocoding service (nominatim)
-          const response = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1&accept-language=en`
-          );
-          
-          if (!response.ok) {
-            throw new Error('Failed to get location data');
-          }
-          
-          const data = await response.json();
-          
-          if (data && data.address) {
-            const locationData = data.address;
-            console.log("Location detection results:", {
-              detectedLocation: locationData.state_district || locationData.county || locationData.city || locationData.town || locationData.village,
-              detectedCounty: locationData.county,
-              detectedStateDistrict: locationData.state_district,
-              detectedPincode: locationData.postcode,
-              matchingDistrict: null,
-              allLocationData: locationData
-            });
-            
-            // Extract state from location data
-            const detectedState = locationData.state;
-            
-            // Try to extract district/state information
-            const detectedLocation = locationData.state_district || 
-                                   locationData.county || 
-                                   locationData.city || 
-                                   locationData.town ||
-                                   locationData.village;
-            
-            // Set the state field if detected
-            let finalDetectedState = detectedState;
-            if (detectedState) {
-              // Find matching state in INDIAN_STATES_AND_UTS
-              const matchingState = INDIAN_STATES_AND_UTS.find(state => 
-                state.name.toLowerCase() === detectedState.toLowerCase() ||
-                detectedState.toLowerCase().includes(state.name.toLowerCase())
-              );
-              
-              if (matchingState) {
-                finalDetectedState = matchingState.name;
-                setSearchForm(prev => ({ ...prev, state: matchingState.name }));
-                
-                // Load districts and then find matching district with proper timing
-                const loadDistrictsAndMatch = async () => {
-                  try {
-                    setIsLoadingDistricts(true);
-                    // Load districts for the detected state
-                    const response = await fetch(`/api/districts/${encodeURIComponent(matchingState.name)}`);
-                    if (response.ok) {
-                      const districtsData = await response.json();
-                      if (Array.isArray(districtsData) && districtsData.length > 0) {
-                        setApiDistricts(districtsData);
-                        
-                        // Small delay to ensure state is updated
-                        setTimeout(() => {
-                          // Now find matching district with improved matching logic
-                          const matchingDistrict = districtsData.find((district: any) => {
-                            const districtName = district.name.toLowerCase();
-                            const detectedStateDistrict = locationData.state_district?.toLowerCase() || '';
-                            const detectedCounty = locationData.county?.toLowerCase() || '';
-                            
-                            // Direct matches
-                            if (districtName === detectedStateDistrict || districtName === detectedCounty) {
-                              return true;
-                            }
-                            
-                            // Check if detected location contains district name
-                            if (detectedStateDistrict.includes(districtName) || detectedCounty.includes(districtName)) {
-                              return true;
-                            }
-                            
-                            // Check if district name contains detected location (handles "Salem West" -> "Salem")
-                            if (districtName.includes(detectedStateDistrict) || districtName.includes(detectedCounty)) {
-                              return true;
-                            }
-                            
-                            // Remove common suffixes for better matching
-                            const cleanDistrict = districtName.replace(/\s+(district|west|east|north|south)$/i, '');
-                            const cleanDetectedState = detectedStateDistrict.replace(/\s+(district|west|east|north|south)$/i, '');
-                            const cleanDetectedCounty = detectedCounty.replace(/\s+(district|west|east|north|south)$/i, '');
-                            
-                            return cleanDistrict === cleanDetectedState || cleanDistrict === cleanDetectedCounty;
-                          });
-                          
-                          if (matchingDistrict) {
-                            setSearchForm(prev => ({ ...prev, district: matchingDistrict.name }));
-                            setDistrictOpen(false);
-                            toast({
-                              title: "Location detected",
-                              description: `Your location has been set to ${matchingDistrict.name}, ${finalDetectedState}`,
-                            });
-                          } else {
-                            toast({
-                              title: "Location detected",
-                              description: `Please select your district from ${finalDetectedState}`,
-                            });
-                          }
-                          setIsLoadingDistricts(false);
-                        }, 300);
-                        return;
-                      }
-                    }
-                    
-                    // If no district match found, show state was detected
-                    setIsLoadingDistricts(false);
-                    toast({
-                      title: "Location detected",
-                      description: `Please select your district from ${finalDetectedState}`,
-                    });
-                    
-                  } catch (error) {
-                    console.error("Error loading districts for location matching:", error);
-                    setIsLoadingDistricts(false);
-                    toast({
-                      title: "Location detected",
-                      description: `Please select your district from ${finalDetectedState}`,
-                    });
-                  }
-                };
-                
-                await loadDistrictsAndMatch();
-                return; // Skip the original district matching logic
-              }
-            }
-            
-            // Find matching district using current API data (fallback)
-            let matchingDistrict = null;
-            const availableDistricts = getAvailableDistricts();
-            matchingDistrict = availableDistricts.find((district: any) => {
-              const districtName = district.name.toLowerCase();
-              const detectedName = detectedLocation?.toLowerCase() || '';
-              return districtName.includes(detectedName) || 
-                     detectedName.includes(districtName);
-            });
-            
-            console.log("Location detection results:", {
-              detectedLocation,
-              detectedCounty: locationData.county,
-              detectedStateDistrict: locationData.state_district,
-              detectedPincode: locationData.postcode,
-              matchingDistrict: matchingDistrict?.name,
-              allLocationData: locationData
-            });
-            
-            if (matchingDistrict) {
-              setSearchForm(prev => ({ ...prev, district: matchingDistrict.id }));
-              toast({
-                title: "Location detected",
-                description: `Your location has been set to ${matchingDistrict.name}${finalDetectedState ? `, ${finalDetectedState}` : ''}`,
-              });
-            } else {
-              // If no district match found, show state was detected
-              if (finalDetectedState) {
-                toast({
-                  title: "Location detected",
-                  description: `Please select your district from ${finalDetectedState}`,
-                });
-              } else {
-                toast({
-                  title: "District not found",
-                  description: "Please select your location manually",
-                  variant: "destructive",
-                });
-              }
-            }
-          }
-        } catch (error) {
-          console.error('Error getting location:', error);
-          toast({
-            title: "Location detection failed",
-            description: "Please select your district manually",
-            variant: "destructive",
-          });
-        } finally {
-          setIsLocationLoading(false);
-        }
-      },
-      (error) => {
-        console.error('Geolocation error:', error);
-        let errorMessage = "Please enable location access and try again";
-        
-        switch (error.code) {
-          case error.PERMISSION_DENIED:
-            errorMessage = "Location access denied. Please enable location permissions.";
-            break;
-          case error.POSITION_UNAVAILABLE:
-            errorMessage = "Location information unavailable.";
-            break;
-          case error.TIMEOUT:
-            errorMessage = "Location request timed out.";
-            break;
-        }
-        
-        toast({
-          title: "Location access required",
-          description: errorMessage,
-          variant: "destructive",
-        });
-        setIsLocationLoading(false);
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 15000,
-        maximumAge: 300000, // 5 minutes
-      }
-    );
-  };
-
-  const resetJobPostForm = () => {
-    setJobPostForm({
-      service: "",
-      state: "",
-      district: "",
-      description: ""
+    toast({
+      title: "Contact Request Sent",
+      description: "The worker will contact you shortly",
     });
   };
 
-  // Voice input handler
-
-
-  const handleServiceClick = (serviceId: string) => {
-    console.log("Service clicked:", serviceId);
-    // Navigate to service page or show service details
-  };
-
-  const handleWorkerContact = (workerId: string) => {
-    console.log("Contact worker:", workerId);
-    // Implement contact functionality
-  };
-
-  const handleDistrictClick = (districtName: string) => {
-    console.log("District clicked:", districtName);
-    // Filter workers by district
-  };
-
-  // Authentication redirect logic in useEffect to avoid render warnings
-  useEffect(() => {
-    if (user && window.location.pathname === '/') {
-      const userRole = user.role;
-      if (userRole === "admin" || userRole === "super_admin") {
-        setLocation("/admin-dashboard");
-      } else if (userRole === "worker") {
-        setLocation("/worker-dashboard");
-      } else if (userRole === "client") {
-        setLocation("/dashboard");
-      }
-    }
-  }, [user, setLocation]);
-
-  // Authentication checks - MUST be after all hooks
-  if (user && window.location.pathname === '/') {
-    return null; // Will redirect via useEffect
-  }
-
-  // SEO schema data for home page
+  // Schema.org structured data for SEO
   const homePageSchema = {
     "@context": "https://schema.org",
-    "@type": "WebPage",
-    "name": "SPANNER - India's #1 Blue Collar Service Marketplace",
-    "description": "Find verified skilled workers across India on SPANNER. Connect with plumbers, electricians, painters, mechanics, carpenters, cleaning services, and more.",
+    "@type": "WebSite",
+    "name": "SPANNER - India's Blue Collar Service Marketplace",
     "url": "https://spanner.replit.app",
-    "isPartOf": {
-      "@type": "WebSite",
-      "name": "SPANNER",
-      "url": "https://spanner.replit.app"
+    "description": "Find verified skilled workers across India on SPANNER. Connect with plumbers, electricians, painters, mechanics, carpenters, cleaning services, and more.",
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": "https://spanner.replit.app/search?q={search_term_string}",
+      "query-input": "required name=search_term_string"
     },
-    "primaryImageOfPage": {
-      "@type": "ImageObject",
-      "url": "https://spanner.replit.app/og-image.jpg"
+    "mainEntity": {
+      "@type": "Organization",
+      "name": "SPANNER",
+      "url": "https://spanner.replit.app",
+      "logo": "https://spanner.replit.app/logo.png",
+      "description": "India's leading blue collar service marketplace connecting clients with verified skilled workers",
+      "areaServed": {
+        "@type": "Country",
+        "name": "India"
+      },
+      "serviceType": ["Plumbing", "Electrical Work", "Painting", "Carpentry", "Cleaning Services", "Mechanical Repairs"]
     },
     "breadcrumb": {
       "@type": "BreadcrumbList",
@@ -687,8 +165,8 @@ export default function Home() {
       {/* Hero Section */}
       <section className="relative bg-gradient-to-br from-primary to-blue-600 text-white py-20 mt-16">
         <div className="container mx-auto px-4">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div>
+          <div className="flex justify-center">
+            <div className="max-w-4xl text-center">
               <h1 className="text-4xl lg:text-5xl font-bold mb-6">
                 India's Most Trusted Urban Services Platform
               </h1>
@@ -699,7 +177,7 @@ export default function Home() {
                 Trusted by thousands, we're redefining home and workplace maintenance with professionalism, accountability, and peace of mind.
               </p>
               
-              <div className="flex flex-wrap gap-6 mb-8">
+              <div className="flex flex-wrap justify-center gap-6 mb-8">
                 <div className="flex items-center space-x-2">
                   <CheckCircle className="h-5 w-5" />
                   <span>Verified Workers</span>
@@ -715,7 +193,7 @@ export default function Home() {
               </div>
               
               {!user && (
-                <div className="flex flex-col sm:flex-row gap-4 mt-8">
+                <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
                   <Button
                     variant="outline"
                     size="lg"
@@ -743,265 +221,6 @@ export default function Home() {
                   </Button>
                 </div>
               )}
-            </div>
-            
-            <div>
-              <Card className="bg-white/95 backdrop-blur text-foreground shadow-2xl">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-xl font-bold text-foreground flex-1">
-                      Find Services Near You
-                    </h3>
-                  </div>
-                  
-                  <form onSubmit={handleSearch} className="space-y-4">
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium mb-1 text-foreground">
-                          Service Type
-                        </label>
-                        <Popover open={serviceOpen} onOpenChange={setServiceOpen}>
-                          <PopoverTrigger asChild>
-                            <Button
-                              variant="outline"
-                              role="combobox"
-                              aria-expanded={serviceOpen}
-                              className="w-full justify-between"
-                            >
-                              {searchForm.service
-                                ? services?.find((service: any) => service.id === searchForm.service)?.name
-                                : "Select Service"}
-                              <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-full p-0 animate-dropdown-open">
-                            <Command>
-                              <CommandInput 
-                                placeholder="Search services..." 
-                                className="transition-all duration-200"
-                              />
-                              <CommandList className="dropdown-scrollbar">
-                                <CommandEmpty>No service found.</CommandEmpty>
-                                <CommandGroup>
-                                  {services?.map((service: any, index) => (
-                                    <CommandItem
-                                      key={service.id}
-                                      value={service.name}
-                                      className="transition-all duration-150 hover:bg-accent/80 data-[selected=true]:bg-accent animate-district-load"
-                                      style={{ animationDelay: `${index * 30}ms` }}
-                                      onSelect={() => {
-                                        const item = document.querySelector(`[data-value="${service.name}"]`);
-                                        if (item) {
-                                          item.classList.add('animate-selection-highlight');
-                                        }
-                                        setTimeout(() => {
-                                          setSearchForm(prev => ({ ...prev, service: service.id }));
-                                          setServiceOpen(false);
-                                        }, 100);
-                                      }}
-                                    >
-                                      <span className="transition-all duration-150">{service.name}</span>
-                                    </CommandItem>
-                                  ))}
-                                </CommandGroup>
-                              </CommandList>
-                            </Command>
-                          </PopoverContent>
-                        </Popover>
-                      </div>
-
-                      <div>
-                        <div className="flex items-center justify-between mb-1">
-                          <label className="block text-sm font-medium text-foreground">
-                            Where do you need this service?
-                          </label>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            className="h-6 px-2 text-xs"
-                            onClick={handleLocationFinder}
-                            disabled={isLocationLoading}
-                          >
-                            <MapPinIcon className="h-3 w-3 mr-1" />
-                            {isLocationLoading ? "Finding..." : "Use Location"}
-                          </Button>
-                        </div>
-                        <Popover open={stateOpen} onOpenChange={setStateOpen}>
-                          <PopoverTrigger asChild>
-                            <Button
-                              variant="outline"
-                              role="combobox"
-                              aria-expanded={stateOpen}
-                              className="w-full justify-between"
-                            >
-                              {jobPostForm.state
-                                ? INDIAN_STATES_AND_UTS.find(state => state.name === jobPostForm.state)?.name
-                                : "Select your state"}
-                              <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-full p-0 animate-dropdown-open">
-                            <Command>
-                              <CommandInput 
-                                placeholder="Search states..." 
-                                className="transition-all duration-200"
-                              />
-                              <CommandList className="dropdown-scrollbar">
-                                <CommandEmpty>No state found.</CommandEmpty>
-                                <CommandGroup heading="States">
-                                  {INDIAN_STATES_AND_UTS.filter(item => item.type === 'state').map((state, index) => (
-                                    <CommandItem
-                                      key={state.name}
-                                      value={state.name}
-                                      className="transition-all duration-150 hover:bg-accent/80 data-[selected=true]:bg-accent animate-district-load"
-                                      style={{ animationDelay: `${index * 20}ms` }}
-                                      onSelect={() => {
-                                        const item = document.querySelector(`[data-value="${state.name}"]`);
-                                        if (item) {
-                                          item.classList.add('animate-selection-highlight');
-                                        }
-                                        setTimeout(() => {
-                                          setJobPostForm(prev => ({ ...prev, state: state.name, district: "" })); // Clear district when state changes
-                                          setStateOpen(false);
-                                        }, 100);
-                                      }}
-                                    >
-                                      <span className="transition-all duration-150">{state.name}</span>
-                                    </CommandItem>
-                                  ))}
-                                </CommandGroup>
-                                <CommandGroup heading="Union Territories">
-                                  {INDIAN_STATES_AND_UTS.filter(item => item.type === 'ut').map((ut, index) => (
-                                    <CommandItem
-                                      key={ut.name}
-                                      value={ut.name}
-                                      className="transition-all duration-150 hover:bg-accent/80 data-[selected=true]:bg-accent animate-district-load"
-                                      style={{ animationDelay: `${(INDIAN_STATES_AND_UTS.filter(item => item.type === 'state').length + index) * 20}ms` }}
-                                      onSelect={() => {
-                                        const item = document.querySelector(`[data-value="${ut.name}"]`);
-                                        if (item) {
-                                          item.classList.add('animate-selection-highlight');
-                                        }
-                                        setTimeout(() => {
-                                          setJobPostForm(prev => ({ ...prev, state: ut.name, district: "" })); // Clear district when state changes
-                                          setStateOpen(false);
-                                        }, 100);
-                                      }}
-                                    >
-                                      <span className="transition-all duration-150">{ut.name}</span>
-                                    </CommandItem>
-                                  ))}
-                                </CommandGroup>
-                              </CommandList>
-                            </Command>
-                          </PopoverContent>
-                        </Popover>
-
-                      </div>
-                      
-                      <div>
-                        <label className="block text-sm font-medium mb-1 text-foreground">
-                          District
-                        </label>
-                        <Popover open={districtOpen} onOpenChange={setDistrictOpen}>
-                          <PopoverTrigger asChild>
-                            <Button
-                              variant="outline"
-                              role="combobox"
-                              aria-expanded={districtOpen}
-                              className="w-full justify-between"
-                            >
-                              {jobPostForm.district
-                                ? (() => {
-                                    const selectedDistrict = getAvailableDistricts().find((district: any) => district.id === jobPostForm.district);
-                                    return selectedDistrict ? selectedDistrict.name : "Select District";
-                                  })()
-                                : isLoadingDistricts ? "Loading districts..." : "Select District"}
-                              <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-full p-0 animate-dropdown-open">
-                            <Command>
-                              <CommandInput 
-                                placeholder="Search districts..." 
-                                className="transition-all duration-200"
-                              />
-                              <CommandList className="dropdown-scrollbar">
-                                <CommandEmpty>No district found.</CommandEmpty>
-                                <CommandGroup>
-                                  {getAvailableDistricts().map((district: any, index) => (
-                                    <CommandItem
-                                      key={district.id}
-                                      value={district.name}
-                                      className="transition-all duration-150 hover:bg-accent/80 data-[selected=true]:bg-accent animate-district-load"
-                                      style={{ animationDelay: `${index * 25}ms` }}
-                                      onSelect={() => {
-                                        const item = document.querySelector(`[data-value="${district.name}"]`);
-                                        if (item) {
-                                          item.classList.add('animate-selection-highlight');
-                                        }
-                                        setTimeout(() => {
-                                          setJobPostForm(prev => ({ ...prev, district: district.id }));
-                                          setDistrictOpen(false);
-                                        }, 100);
-                                      }}
-                                    >
-                                      <span className="transition-all duration-150">
-                                        {district.name}
-                                      </span>
-                                    </CommandItem>
-                                  ))}
-                                </CommandGroup>
-                              </CommandList>
-                            </Command>
-                          </PopoverContent>
-                        </Popover>
-                      </div>
-                      
-
-                    
-                      <div>
-                        <label className="block text-sm font-medium mb-1 text-foreground">
-                          Job Description
-                        </label>
-                        <Input
-                          placeholder="Describe what work you need done..."
-                          value={jobPostForm.description}
-                          onChange={(e) => setJobPostForm(prev => ({ ...prev, description: e.target.value }))}
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="flex gap-2">
-                      <Button 
-                        type="submit" 
-                        className="flex-1"
-                        disabled={authLoading}
-                      >
-                        <Plus className="h-4 w-4 mr-2" />
-                        {user ? "Post Job" : "Login & Post Job"}
-                      </Button>
-                      <Button 
-                        type="button" 
-                        variant="outline" 
-                        onClick={resetJobPostForm}
-                        className="px-4"
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    
-                    {!user && (
-                      <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                        <p className="text-xs text-blue-700 text-center">
-                          🔒 Login required to post jobs and receive worker bids
-                        </p>
-                      </div>
-                    )}
-                  </form>
-                </CardContent>
-              </Card>
             </div>
           </div>
         </div>
@@ -1042,8 +261,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-
-
 
       {/* Featured Workers Section */}
       <section className="py-16 bg-muted/30" id="workers">
@@ -1089,135 +306,74 @@ export default function Home() {
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold mb-4">{t("features.title")}</h2>
             <p className="text-xl text-muted-foreground">
-              Connecting Tamil Nadu with trusted blue-collar professionals
+              Why choose SPANNER for your service needs
             </p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {[
-              {
-                icon: Shield,
-                title: "Verified Workers",
-                description: "All workers undergo background verification including Aadhaar validation and skill assessment."
-              },
-              {
-                icon: CheckCircle,
-                title: "Secure Payments",
-                description: "Multiple payment options including UPI, cards, and digital wallets with secure processing."
-              },
-              {
-                icon: Clock,
-                title: "24/7 Support",
-                description: "Round-the-clock customer support in both English and Tamil languages."
-              },
-              {
-                icon: Star,
-                title: "Quality Assurance",
-                description: "Rating and review system ensures high-quality service delivery across all categories."
-              },
-              {
-                icon: Users,
-                title: "Large Network",
-                description: "Connect with thousands of skilled professionals across all 38 Tamil Nadu districts."
-              },
-              {
-                icon: MapPin,
-                title: "Local Focus",
-                description: "District-wise service matching ensures you find workers in your immediate area."
-              }
-            ].map((feature, index) => (
-              <div key={index} className="text-center">
-                <div className="bg-primary/10 rounded-2xl w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                  <feature.icon className="h-8 w-8 text-primary" />
-                </div>
-                <h5 className="font-semibold text-lg mb-3">{feature.title}</h5>
-                <p className="text-muted-foreground">{feature.description}</p>
-              </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {mockServices.map((service) => (
+              <ServiceCard
+                key={service.id}
+                id={service.id}
+                name={service.name}
+                description={service.description}
+                icon={service.icon}
+                price={service.price}
+                rating={service.rating}
+                reviews={service.reviews}
+              />
             ))}
+          </div>
+          
+          <div className="text-center mt-12">
+            <Button size="lg" variant="secondary">
+              View All Services
+            </Button>
           </div>
         </div>
       </section>
 
-      {/* Testimonials Section */}
-      <section className="py-16">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">{t("testimonials.title")}</h2>
-            <p className="text-xl text-muted-foreground">
-              Real feedback from satisfied customers across Tamil Nadu
-            </p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {testimonials.map((testimonial) => (
-              <Card key={testimonial.id} className="hover:shadow-lg transition-all duration-300">
-                <CardContent className="p-6">
-                  <div className="flex mb-4">
-                    {[...Array(5)].map((_, i) => (
-                      <Star 
-                        key={i} 
-                        className={`h-4 w-4 ${
-                          i < testimonial.rating 
-                            ? "fill-yellow-400 text-yellow-400" 
-                            : "text-gray-300"
-                        }`} 
-                      />
-                    ))}
-                  </div>
-                  <p className="mb-4 text-muted-foreground">"{testimonial.text}"</p>
-                  <div className="flex items-center space-x-3">
-                    <img 
-                      src={testimonial.avatar} 
-                      alt={testimonial.name}
-                      className="w-10 h-10 rounded-full object-cover"
-                    />
-                    <div>
-                      <h6 className="font-semibold">{testimonial.name}</h6>
-                      <small className="text-muted-foreground">{testimonial.location}</small>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-16 bg-gradient-to-br from-primary to-blue-600 text-white">
+      {/* Call to Action Section */}
+      <section className="py-16 bg-primary text-white">
         <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl font-bold mb-4">{t("cta.title")}</h2>
+          <h2 className="text-3xl font-bold mb-4">Ready to Get Started?</h2>
           <p className="text-xl mb-8 text-blue-100">
-            Join thousands of satisfied customers and skilled workers on Tamil Nadu's leading service marketplace
+            Join thousands of satisfied customers who trust SPANNER for their service needs
           </p>
           
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button 
-              size="lg" 
+          {!user ? (
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button
+                variant="outline"
+                size="lg"
+                className="bg-white text-primary border-primary hover:bg-gray-100"
+                onClick={() => {
+                  const event = new CustomEvent('openRegisterModal', { detail: { tab: 'client' } });
+                  window.dispatchEvent(event);
+                }}
+              >
+                Get Started as Client
+              </Button>
+              <Button
+                size="lg"
+                className="bg-yellow-500 hover:bg-yellow-600 text-black"
+                onClick={() => {
+                  const event = new CustomEvent('openRegisterModal', { detail: { tab: 'worker' } });
+                  window.dispatchEvent(event);
+                }}
+              >
+                Join as Worker
+              </Button>
+            </div>
+          ) : (
+            <Button
+              size="lg"
               variant="secondary"
-              onClick={() => {
-                // This will trigger the register modal with client tab
-                const event = new CustomEvent('openRegisterModal', { detail: { tab: 'client' } });
-                window.dispatchEvent(event);
-              }}
+              onClick={() => setLocation('/dashboard')}
             >
-              <Users className="h-5 w-5 mr-2" />
-              Sign Up as Client
+              Go to Dashboard
             </Button>
-            <Button 
-              size="lg" 
-              variant="outline" 
-              className="bg-yellow-500 text-white border-yellow-500 hover:bg-yellow-600"
-              onClick={() => {
-                // This will trigger the register modal with worker tab
-                const event = new CustomEvent('openRegisterModal', { detail: { tab: 'worker' } });
-                window.dispatchEvent(event);
-              }}
-            >
-              <Users className="h-5 w-5 mr-2" />
-              Join as Worker
-            </Button>
-          </div>
+          )}
         </div>
       </section>
     </div>
