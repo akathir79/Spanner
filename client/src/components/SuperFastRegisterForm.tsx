@@ -108,6 +108,37 @@ export function SuperFastRegisterForm({ role, onComplete, onBack, onStepChange, 
     }
   }, [mobileValue, role]);
 
+  // Watch for state changes to load districts (only when manually changed)
+  const selectedState = form.watch("state");
+  
+  useEffect(() => {
+    if (selectedState && selectedState !== "Tamil Nadu") { // Avoid auto-fetch for default state
+      fetchDistrictsFromAPI(selectedState);
+    } else if (selectedState === "Tamil Nadu" && apiDistricts.length === 0) {
+      fetchDistrictsFromAPI(selectedState); // Load TN districts only if not already loaded
+    }
+  }, [selectedState]);
+
+  // API fetching function
+  const fetchDistrictsFromAPI = async (stateName: string) => {
+    if (isLoadingDistricts) return; // Prevent concurrent calls
+    
+    setIsLoadingDistricts(true);
+    try {
+      const response = await fetch(`/api/districts/${encodeURIComponent(stateName)}`);
+      if (response.ok) {
+        const data = await response.json();
+        console.log(`SuperFast: Loaded ${data.length} districts for ${stateName}`);
+        setApiDistricts(data);
+      }
+    } catch (error) {
+      console.error("SuperFast: Error loading districts:", error);
+      setApiDistricts([]);
+    } finally {
+      setIsLoadingDistricts(false);
+    }
+  };
+
   // Auto-detect location when component mounts - exactly like AuthModal
   useEffect(() => {
     if (!hasAutoDetectedLocation) {
@@ -295,17 +326,17 @@ export function SuperFastRegisterForm({ role, onComplete, onBack, onStepChange, 
             form.setValue("state", detectedState);
             console.log("SuperFast: State set to:", detectedState);
             
-            // Load districts and match - using the exact same logic as AuthModal
+            // Load districts and match - ONE-TIME fetch only
             if (detectedState) {
               try {
+                console.log('SuperFast: Loading districts for state:', detectedState);
                 const response = await fetch(`/api/districts/${encodeURIComponent(detectedState)}`);
                 if (response.ok) {
                   const districtsData = await response.json();
                   if (Array.isArray(districtsData) && districtsData.length > 0) {
-                    console.log('SuperFast: Districts loaded for matching...', districtsData.length);
-                    setApiDistricts(districtsData); // Update state
+                    console.log('SuperFast: Districts loaded successfully:', districtsData.length);
                     
-                    // Re-run district matching with the fresh data
+                    // Find matching district with the fresh data (no state update to prevent loops)
                     const finalMatchingDistrict = districtsData.find((district: any) => {
                       const districtName = district.name.toLowerCase();
                       const detectedStateDistrict = locationData.state_district?.toLowerCase() || '';
