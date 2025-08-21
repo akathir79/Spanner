@@ -681,7 +681,7 @@ export function SuperFastRegisterForm({ role, onComplete, onBack, onStepChange, 
           />
         </div>
 
-        {/* State Selection */}
+        {/* State Selection - Temporarily simplified for debugging */}
         <FormField
           control={form.control}
           name="state"
@@ -689,6 +689,17 @@ export function SuperFastRegisterForm({ role, onComplete, onBack, onStepChange, 
             <FormItem>
               <FormLabel>State</FormLabel>
               <FormControl>
+                <Input
+                  placeholder="Enter state (e.g., Tamil Nadu)"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        {/* Temporarily removed state Select for debugging - will restore after fixing React object error
                 <Select value={field.value} onValueChange={field.onChange}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select state" />
@@ -701,11 +712,7 @@ export function SuperFastRegisterForm({ role, onComplete, onBack, onStepChange, 
                     ))}
                   </SelectContent>
                 </Select>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        */}
 
           {/* Service Type for Worker - Temporarily simplified for debugging */}
           {role === "worker" && (
