@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ChevronLeft, Plus } from "lucide-react";
 import { AddressForm } from "@/components/AddressForm";
+import { detectStateFromLocation } from "@shared/constants";
 
 // Enhanced Quick Join schema - both client and worker now include address fields for location card functionality
 const fastClientSchema = z.object({
@@ -44,6 +45,8 @@ export function SuperFastRegisterForm({ role, onComplete, onBack, onStepChange, 
   const [isDetectingLocation, setIsDetectingLocation] = useState(false);
   const [mobileAvailability, setMobileAvailability] = useState<"checking" | "available" | "not-available" | "">("");
   const [hasAutoDetectedLocation, setHasAutoDetectedLocation] = useState(false);
+  const [apiDistricts, setApiDistricts] = useState<Array<{id: string, name: string, tamilName?: string}>>([]);
+  const [isLoadingDistricts, setIsLoadingDistricts] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -167,7 +170,7 @@ export function SuperFastRegisterForm({ role, onComplete, onBack, onStepChange, 
     createServiceMutation.mutate(newServiceName.trim());
   };
 
-  // Custom location detection handler - exactly like AuthModal  
+  // Location detection handler - EXACT copy from AuthModal with adaptations for SuperFast form
   const handleLocationDetection = async (isAutomatic: boolean = false) => {
     if (!navigator.geolocation) {
       if (!isAutomatic) {
@@ -182,7 +185,7 @@ export function SuperFastRegisterForm({ role, onComplete, onBack, onStepChange, 
 
     setIsDetectingLocation(true);
     
-    // Clear district state to ensure fresh data loading - exactly like AuthModal
+    // Clear current state to ensure fresh data loading - EXACT like AuthModal
     form.setValue("district", "");
 
     navigator.geolocation.getCurrentPosition(
@@ -208,12 +211,12 @@ export function SuperFastRegisterForm({ role, onComplete, onBack, onStepChange, 
                                    locationData.town ||
                                    locationData.village;
             
-            // Extract address components - exactly like AuthModal
+            // Extract address components - EXACT like AuthModal
             const houseNumber = locationData.house_number || '';
             const streetName = locationData.road || '';
             const areaName = locationData.village || locationData.suburb || locationData.neighbourhood || '';
             
-            // Build a more accurate address with better locality detection - like AuthModal
+            // Build a more accurate address with better locality detection - EXACT like AuthModal
             const addressParts = [
               houseNumber,
               streetName,
@@ -225,97 +228,154 @@ export function SuperFastRegisterForm({ role, onComplete, onBack, onStepChange, 
             const detectedAddress = addressParts.join(', ');
             const detectedPincode = locationData.postcode || '';
             
-            // Set address fields immediately - like AuthModal
+            // Find matching district with improved logic - including all location components
+            let matchingDistrict = null;
+            
+            // First try to find district from currently loaded districts (if state is already set)
+            if (apiDistricts && apiDistricts.length > 0) {
+              matchingDistrict = apiDistricts.find((district: any) => {
+                const districtName = district.name.toLowerCase();
+                const detectedStateDistrict = locationData.state_district?.toLowerCase() || '';
+                const detectedCounty = locationData.county?.toLowerCase() || '';
+                const detectedCity = locationData.city?.toLowerCase() || '';
+                
+                // Priority 1: Exact match with state_district (most reliable for Indian addresses)
+                if (districtName === detectedStateDistrict) {
+                  return true;
+                }
+                
+                // Priority 2: Exact match with county
+                if (districtName === detectedCounty) {
+                  return true;
+                }
+                
+                // Priority 3: Check if state_district contains district name
+                if (detectedStateDistrict && detectedStateDistrict.includes(districtName)) {
+                  return true;
+                }
+                
+                // Priority 4: Check if county contains district name  
+                if (detectedCounty && detectedCounty.includes(districtName)) {
+                  return true;
+                }
+                
+                // Priority 5: Check city match
+                if (districtName === detectedCity) {
+                  return true;
+                }
+                
+                // Priority 6: Check Tamil name matches
+                if (district.tamilName?.toLowerCase() === detectedStateDistrict ||
+                    district.tamilName?.toLowerCase() === detectedCounty) {
+                  return true;
+                }
+                
+                return false;
+              });
+            } else {
+              // If no districts loaded yet, create a temporary district object using most reliable data
+              const tempDistrictName = locationData.state_district || locationData.county || locationData.city || 'Unknown';
+              matchingDistrict = {
+                id: tempDistrictName.toLowerCase().replace(/\s+/g, '') || 'temp',
+                name: tempDistrictName,
+                isTemporary: true
+              };
+            }
+            
+            // Update form with detected data - EXACT like AuthModal
             if (houseNumber) form.setValue("houseNumber", houseNumber);
-            if (streetName) form.setValue("streetName", streetName);  
+            if (streetName) form.setValue("streetName", streetName);
             if (areaName) form.setValue("areaName", areaName);
             if (detectedPincode) form.setValue("pincode", detectedPincode);
             
-            // Find matching state with improved logic - exactly like AuthModal
-            const findState = (detectedState: string) => {
-              const normalizedDetected = detectedState.toLowerCase().replace(/\s+/g, '');
-              const stateMapping: { [key: string]: string } = {
-                "tamilnadu": "Tamil Nadu",
-                "karnataka": "Karnataka", 
-                "telangana": "Telangana",
-                "andhrapradesh": "Andhra Pradesh",
-                "kerala": "Kerala"
-              };
-              
-              return stateMapping[normalizedDetected] || detectedState;
-            };
-
-            const detectedState = findState(locationData.state || "Tamil Nadu");
+            // Detect state from location data - EXACT like AuthModal
+            const detectedState = detectStateFromLocation(locationData);
+            
+            // Set state first to trigger district loading
             form.setValue("state", detectedState);
             console.log("SuperFast: State set to:", detectedState);
             
-            if (detectedState && detectedLocation) {
+            // Load districts and match - using the exact same logic as AuthModal
+            if (detectedState) {
               try {
-                // Load districts for the detected state - like AuthModal
                 const response = await fetch(`/api/districts/${encodeURIComponent(detectedState)}`);
                 if (response.ok) {
                   const districtsData = await response.json();
                   if (Array.isArray(districtsData) && districtsData.length > 0) {
-                    console.log('SuperFast: Districts loaded, now matching...', districtsData.length);
+                    console.log('SuperFast: Districts loaded for matching...', districtsData.length);
+                    setApiDistricts(districtsData); // Update state
                     
-                    // Find matching district with comprehensive logic - exactly like AuthModal
-                    const matchingDistrict = districtsData.find((district: any) => {
+                    // Re-run district matching with the fresh data
+                    const finalMatchingDistrict = districtsData.find((district: any) => {
                       const districtName = district.name.toLowerCase();
-                      const detectedLocationLower = detectedLocation.toLowerCase();
-                      
-                      // Direct name match
-                      if (districtName === detectedLocationLower) return true;
-                      
-                      // Check if detected location contains district name
-                      if (detectedLocationLower.includes(districtName)) return true;
-                      
-                      // Check if district name contains detected location
-                      if (districtName.includes(detectedLocationLower)) return true;
-                      
-                      // Additional checks for common variations - like AuthModal
                       const detectedStateDistrict = locationData.state_district?.toLowerCase() || '';
                       const detectedCounty = locationData.county?.toLowerCase() || '';
                       const detectedCity = locationData.city?.toLowerCase() || '';
                       
-                      if (districtName === detectedStateDistrict || 
-                          districtName === detectedCounty || 
-                          districtName === detectedCity) return true;
-                          
-                      if (detectedStateDistrict.includes(districtName) || 
-                          detectedCounty.includes(districtName) ||
-                          detectedCity.includes(districtName)) return true;
-                          
-                      if (districtName.includes(detectedStateDistrict) || 
-                          districtName.includes(detectedCounty) ||
-                          districtName.includes(detectedCity)) return true;
+                      // Priority 1: Exact match with state_district (most reliable for Indian addresses)
+                      if (districtName === detectedStateDistrict) {
+                        return true;
+                      }
+                      
+                      // Priority 2: Exact match with county
+                      if (districtName === detectedCounty) {
+                        return true;
+                      }
+                      
+                      // Priority 3: Check if state_district contains district name
+                      if (detectedStateDistrict && detectedStateDistrict.includes(districtName)) {
+                        return true;
+                      }
+                      
+                      // Priority 4: Check if county contains district name  
+                      if (detectedCounty && detectedCounty.includes(districtName)) {
+                        return true;
+                      }
+                      
+                      // Priority 5: Check city match
+                      if (districtName === detectedCity) {
+                        return true;
+                      }
+                      
+                      // Priority 6: Check Tamil name matches
+                      if (district.tamilName?.toLowerCase() === detectedStateDistrict ||
+                          district.tamilName?.toLowerCase() === detectedCounty) {
+                        return true;
+                      }
                       
                       return false;
                     });
                     
-                    if (matchingDistrict) {
-                      form.setValue("district", matchingDistrict.name);
-                      console.log("SuperFast: District set to:", matchingDistrict.name);
+                    if (finalMatchingDistrict) {
+                      form.setValue("district", finalMatchingDistrict.name);
+                      console.log("SuperFast: Final district set to:", finalMatchingDistrict.name);
                       
-                      toast({
-                        title: "Location detected!",
-                        description: `Set to ${detectedState}, ${matchingDistrict.name}`,
-                      });
+                      if (!isAutomatic) {
+                        toast({
+                          title: "Location detected successfully!",
+                          description: `Set to ${detectedState}, ${finalMatchingDistrict.name}`,
+                        });
+                      }
                     } else {
-                      console.log("SuperFast: No matching district found for:", detectedLocation);
-                      toast({
-                        title: "Location detected",
-                        description: "Please verify and adjust the detected location manually.",
-                      });
+                      console.log("SuperFast: No matching district found for location:", detectedLocation);
+                      if (!isAutomatic) {
+                        toast({
+                          title: "Location partially detected",
+                          description: "Please verify and select your district manually.",
+                        });
+                      }
                     }
                   }
                 }
               } catch (error) {
-                console.error("SuperFast: District loading error:", error);
-                toast({
-                  title: "Location partially detected",
-                  description: "Please select your district manually.",
-                  variant: "destructive",
-                });
+                console.error("SuperFast: Error loading districts for state:", detectedState, error);
+                if (!isAutomatic) {
+                  toast({
+                    title: "Location partially detected",
+                    description: "Please select your district manually.",
+                    variant: "destructive",
+                  });
+                }
               }
             }
           }
