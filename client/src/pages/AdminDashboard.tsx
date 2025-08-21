@@ -141,18 +141,15 @@ export default function AdminDashboard() {
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold">
-              {user.role === "super_admin" ? "Super Admin Dashboard" : "Admin Dashboard"}
+              {user.role === "super_admin" ? "Super Admin Dashboard" : "Regular Admin Dashboard"}
             </h1>
             <p className="text-muted-foreground">
-              {user.role === "super_admin" 
-                ? "Manage users, bookings, and platform operations across India"
-                : "Manage users, bookings, and platform operations across Tamil Nadu"
-              }
+              Manage users, bookings, and platform operations across India
             </p>
           </div>
           <div className="flex items-center space-x-2">
             <Badge variant="secondary" className="bg-green-100 text-green-800">
-              {user.role === "super_admin" ? "Super Admin" : "Admin"}
+              {user.role === "super_admin" ? "Super Admin" : "Regular Admin"}
             </Badge>
             <Badge variant="outline">
               {user.district || "All Districts"}
