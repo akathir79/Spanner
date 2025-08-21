@@ -7,6 +7,13 @@ SPANNER is a comprehensive web application designed to connect blue-collar servi
 Preferred communication style: Simple, everyday language.
 Development approach: All changes must be applied to both web app and mobile app simultaneously.
 
+## Recent Changes (August 21, 2025)
+- **Quick Join Form Simplified**: Completely removed address collection from Quick Join modal to prevent district field blinking issues
+- **Address Collection Strategy Updated**: Address details now collected during job posting for both clients and workers, not during registration
+- **Location Detection Removed**: Eliminated all automatic location detection from Quick Join to prevent API flooding and infinite loops
+- **Cross-Platform Sync**: Mobile app already uses simplified phone-only registration, now perfectly aligned with web app approach
+- **Registration Flow**: Quick Join now only collects essential details (name, mobile, service type for workers) with address collected later during actual job posting
+
 ## System Architecture
 
 ### Frontend
