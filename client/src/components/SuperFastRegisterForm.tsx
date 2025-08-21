@@ -13,6 +13,7 @@ import { ChevronLeft, Plus, ChevronDown, MapPin } from "lucide-react";
 import { detectStateFromLocation, INDIAN_STATES_AND_UTS } from "@shared/constants";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import statesDistrictsData from "@shared/states-districts.json";
 
 // Quick Join schema - complete address like normal registration
 const fastClientSchema = z.object({
@@ -49,6 +50,8 @@ export function SuperFastRegisterForm({ role, onComplete, onBack, onStepChange, 
   const [isLoadingDistricts, setIsLoadingDistricts] = useState(false);
   const [districtPopoverOpen, setDistrictPopoverOpen] = useState(false);
   const [districtSearchInput, setDistrictSearchInput] = useState("");
+  const [statePopoverOpen, setStatePopoverOpen] = useState(false);
+  const [stateSearchInput, setStateSearchInput] = useState("");
   const [isDetectingLocation, setIsDetectingLocation] = useState(false);
   const [hasAutoDetectedLocation, setHasAutoDetectedLocation] = useState(false);
   const { toast } = useToast();
@@ -56,26 +59,68 @@ export function SuperFastRegisterForm({ role, onComplete, onBack, onStepChange, 
 
   const schema = role === "client" ? fastClientSchema : fastWorkerSchema;
   
-  // Load Tamil Nadu districts for combobox
-  const { data: districts, isLoading: isLoadingDistrictsQuery } = useQuery({
-    queryKey: ['/api/districts', 'Tamil Nadu'],
-    queryFn: async () => {
-      const response = await fetch(`/api/districts/Tamil%20Nadu`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch districts');
-      }
-      return response.json();
+  const form = useForm({
+    resolver: zodResolver(schema),
+    defaultValues: {
+      firstName: "",
+      mobile: "",
+      houseNumber: "",
+      streetName: "",
+      areaName: "",
+      state: "",
+      district: "",
+      pincode: "",
+      ...(role === "worker" && { 
+        primaryService: "",
+      }),
     },
+  });
+  
+  // Load districts based on selected state
+  const selectedState = form.watch("state");
+  
+  const { data: districts, isLoading: isLoadingDistrictsQuery } = useQuery({
+    queryKey: ['/api/districts', selectedState],
+    queryFn: async () => {
+      if (selectedState === "Tamil Nadu") {
+        const response = await fetch(`/api/districts/Tamil%20Nadu`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch districts');
+        }
+        return response.json();
+      }
+      return [];
+    },
+    enabled: !!selectedState && selectedState === "Tamil Nadu",
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes (renamed from cacheTime in v5)
   });
 
-  // Update apiDistricts when districts load
+  // Update apiDistricts when state changes or districts load
   useEffect(() => {
-    if (districts && Array.isArray(districts)) {
-      setApiDistricts(districts);
+    if (selectedState) {
+      if (selectedState === "Tamil Nadu") {
+        // Use API districts for Tamil Nadu
+        if (districts && Array.isArray(districts)) {
+          setApiDistricts(districts);
+        }
+      } else {
+        // Use states-districts.json for other states
+        const stateData = statesDistrictsData.states[selectedState as keyof typeof statesDistrictsData.states];
+        if (stateData) {
+          const stateDistricts = stateData.districts.map((district: string) => ({
+            id: district.toLowerCase().replace(/\s+/g, '-'),
+            name: district
+          }));
+          setApiDistricts(stateDistricts);
+        } else {
+          setApiDistricts([]);
+        }
+      }
+    } else {
+      setApiDistricts([]);
     }
-  }, [districts]);
+  }, [selectedState, districts]);
 
   // Auto-detect location when form opens (like normal registration) - temporarily disabled for debugging
   // useEffect(() => {
@@ -222,23 +267,6 @@ export function SuperFastRegisterForm({ role, onComplete, onBack, onStepChange, 
       }
     );
   };
-  
-  const form = useForm({
-    resolver: zodResolver(schema),
-    defaultValues: {
-      firstName: "",
-      mobile: "",
-      houseNumber: "",
-      streetName: "",
-      areaName: "",
-      state: "",
-      district: "",
-      pincode: "",
-      ...(role === "worker" && { 
-        primaryService: "",
-      }),
-    },
-  });
 
   // Fetch services for worker registration
   const { data: services } = useQuery({
@@ -681,40 +709,95 @@ export function SuperFastRegisterForm({ role, onComplete, onBack, onStepChange, 
           />
         </div>
 
-        {/* State Selection - Temporarily simplified for debugging */}
+        {/* State Selection - Searchable dropdown like AuthModal */}
         <FormField
           control={form.control}
           name="state"
           render={({ field }) => (
             <FormItem>
               <FormLabel>State</FormLabel>
-              <FormControl>
-                <Input
-                  placeholder="Enter state (e.g., Tamil Nadu)"
-                  {...field}
-                />
-              </FormControl>
+              <Popover open={statePopoverOpen} onOpenChange={setStatePopoverOpen}>
+                <PopoverTrigger asChild>
+                  <FormControl>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={statePopoverOpen}
+                      className="w-full justify-between"
+                    >
+                      {field.value 
+                        ? INDIAN_STATES_AND_UTS.find(state => state.name === field.value)?.name
+                        : "Select your state"}
+                      <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </FormControl>
+                </PopoverTrigger>
+                <PopoverContent className="w-full p-0 animate-dropdown-open">
+                  <Command>
+                    <CommandInput 
+                      placeholder="Search states..." 
+                      value={stateSearchInput}
+                      onValueChange={setStateSearchInput}
+                      className="transition-all duration-200"
+                    />
+                    <CommandEmpty>No state found.</CommandEmpty>
+                    <CommandList className="max-h-40 overflow-y-auto dropdown-scrollbar">
+                      <CommandGroup heading="States">
+                        {INDIAN_STATES_AND_UTS
+                          .filter(state => state.type === "state")
+                          .filter(state => 
+                            state.name.toLowerCase().includes(stateSearchInput.toLowerCase())
+                          )
+                          .map((state, index) => (
+                            <CommandItem
+                              key={state.id}
+                              className="transition-all duration-150 hover:bg-accent/80 data-[selected=true]:bg-accent animate-district-load"
+                              style={{ animationDelay: `${index * 15}ms` }}
+                              onSelect={() => {
+                                field.onChange(state.name);
+                                // Clear district when state changes
+                                form.setValue("district", "");
+                                setStatePopoverOpen(false);
+                                setStateSearchInput("");
+                              }}
+                            >
+                              {state.name}
+                            </CommandItem>
+                          ))}
+                      </CommandGroup>
+                      <CommandGroup heading="Union Territories">
+                        {INDIAN_STATES_AND_UTS
+                          .filter(state => state.type === "ut")
+                          .filter(state => 
+                            state.name.toLowerCase().includes(stateSearchInput.toLowerCase())
+                          )
+                          .map((state, index) => (
+                            <CommandItem
+                              key={state.id}
+                              className="transition-all duration-150 hover:bg-accent/80 data-[selected=true]:bg-accent animate-district-load"
+                              style={{ animationDelay: `${index * 15}ms` }}
+                              onSelect={() => {
+                                field.onChange(state.name);
+                                // Clear district when state changes
+                                form.setValue("district", "");
+                                setStatePopoverOpen(false);
+                                setStateSearchInput("");
+                              }}
+                            >
+                              {state.name}
+                            </CommandItem>
+                          ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
               <FormMessage />
             </FormItem>
           )}
         />
-        
-        {/* Temporarily removed state Select for debugging - will restore after fixing React object error
-                <Select value={field.value} onValueChange={field.onChange}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select state" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {INDIAN_STATES_AND_UTS.map((state) => (
-                      <SelectItem key={state} value={state}>
-                        {state}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-        */}
 
-          {/* Service Type for Worker - Temporarily simplified for debugging */}
+          {/* Service Type for Worker - Restored with proper string rendering */}
           {role === "worker" && (
             <FormField
               control={form.control}
@@ -722,19 +805,7 @@ export function SuperFastRegisterForm({ role, onComplete, onBack, onStepChange, 
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Primary Service</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Enter your primary service (e.g., Plumbing, Electrical)"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          )}
-
-          {/* Temporarily removed Select for debugging - will restore after fixing React object error
+                  {!showNewServiceInput ? (
                     <Select 
                       value={field.value} 
                       onValueChange={handleServiceSelect}
@@ -772,26 +843,24 @@ export function SuperFastRegisterForm({ role, onComplete, onBack, onStepChange, 
                   ) : (
                     <div className="space-y-2">
                       <Input
+                        placeholder="Enter new service name"
                         value={newServiceName}
                         onChange={(e) => setNewServiceName(e.target.value)}
-                        placeholder="Enter new service name (e.g., Home Repair, HVAC Service)"
-                        className="w-full"
-                        onKeyPress={(e) => {
-                          if (e.key === 'Enter') {
-                            e.preventDefault();
-                            handleAddNewService();
-                          }
-                        }}
+                        className="mb-2"
                       />
                       <div className="flex gap-2">
                         <Button
                           type="button"
                           size="sm"
-                          onClick={handleAddNewService}
-                          disabled={createServiceMutation.isPending || !newServiceName.trim()}
-                          className="flex-1"
+                          onClick={() => {
+                            if (newServiceName.trim()) {
+                              form.setValue("primaryService", newServiceName.trim());
+                              setShowNewServiceInput(false);
+                              setNewServiceName("");
+                            }
+                          }}
                         >
-                          {createServiceMutation.isPending ? "Adding..." : "Add Service"}
+                          Add Service
                         </Button>
                         <Button
                           type="button"
@@ -801,14 +870,10 @@ export function SuperFastRegisterForm({ role, onComplete, onBack, onStepChange, 
                             setShowNewServiceInput(false);
                             setNewServiceName("");
                           }}
-                          className="flex-1"
                         >
                           Cancel
                         </Button>
                       </div>
-                      <p className="text-xs text-muted-foreground">
-                        Add a new service that doesn't exist in the current list
-                      </p>
                     </div>
                   )}
                   <FormMessage />
