@@ -9,7 +9,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ChevronLeft, Plus } from "lucide-react";
-import { AddressForm } from "@/components/AddressForm";
+// Removed AddressForm import - using manual fields to prevent infinite loops
 import { detectStateFromLocation } from "@shared/constants";
 
 // Enhanced Quick Join schema - both client and worker now include address fields for location card functionality
@@ -108,50 +108,37 @@ export function SuperFastRegisterForm({ role, onComplete, onBack, onStepChange, 
     }
   }, [mobileValue, role]);
 
-  // Watch for state changes to load districts (only when manually changed)
-  const selectedState = form.watch("state");
-  
+  // Load Tamil Nadu districts once on mount - no watching for state changes
   useEffect(() => {
-    if (selectedState && selectedState !== "Tamil Nadu") { // Avoid auto-fetch for default state
-      fetchDistrictsFromAPI(selectedState);
-    } else if (selectedState === "Tamil Nadu" && apiDistricts.length === 0) {
-      fetchDistrictsFromAPI(selectedState); // Load TN districts only if not already loaded
+    if (apiDistricts.length === 0) {
+      loadTamilNaduDistricts();
     }
-  }, [selectedState]);
+  }, []);
 
-  // API fetching function
-  const fetchDistrictsFromAPI = async (stateName: string) => {
-    if (isLoadingDistricts) return; // Prevent concurrent calls
-    
-    setIsLoadingDistricts(true);
+  const loadTamilNaduDistricts = async () => {
     try {
-      const response = await fetch(`/api/districts/${encodeURIComponent(stateName)}`);
+      const response = await fetch('/api/districts/Tamil Nadu');
       if (response.ok) {
         const data = await response.json();
-        console.log(`SuperFast: Loaded ${data.length} districts for ${stateName}`);
         setApiDistricts(data);
+        console.log('SuperFast: Loaded Tamil Nadu districts successfully');
       }
     } catch (error) {
-      console.error("SuperFast: Error loading districts:", error);
-      setApiDistricts([]);
-    } finally {
-      setIsLoadingDistricts(false);
+      console.error('SuperFast: Error loading districts:', error);
     }
   };
 
-  // Auto-detect location when component mounts - exactly like AuthModal
+  // Auto-detect location once on component mount
   useEffect(() => {
     if (!hasAutoDetectedLocation) {
-      // Start auto-detection after a short delay to allow form to render
       const timer = setTimeout(() => {
-        console.log("SuperFast: Auto-detecting location for", role, "form...");
-        handleLocationDetection(true); // Pass true for automatic detection
+        console.log("SuperFast: Starting auto-location detection...");
+        handleLocationDetection(true);
         setHasAutoDetectedLocation(true);
       }, 1000);
-      
       return () => clearTimeout(timer);
     }
-  }, [hasAutoDetectedLocation, role]);
+  }, [hasAutoDetectedLocation]);
 
   // Service selection handler
   const handleServiceSelect = (value: string) => {
@@ -326,85 +313,64 @@ export function SuperFastRegisterForm({ role, onComplete, onBack, onStepChange, 
             form.setValue("state", detectedState);
             console.log("SuperFast: State set to:", detectedState);
             
-            // Load districts and match - ONE-TIME fetch only
-            if (detectedState) {
-              try {
-                console.log('SuperFast: Loading districts for state:', detectedState);
-                const response = await fetch(`/api/districts/${encodeURIComponent(detectedState)}`);
-                if (response.ok) {
-                  const districtsData = await response.json();
-                  if (Array.isArray(districtsData) && districtsData.length > 0) {
-                    console.log('SuperFast: Districts loaded successfully:', districtsData.length);
-                    
-                    // Find matching district with the fresh data (no state update to prevent loops)
-                    const finalMatchingDistrict = districtsData.find((district: any) => {
-                      const districtName = district.name.toLowerCase();
-                      const detectedStateDistrict = locationData.state_district?.toLowerCase() || '';
-                      const detectedCounty = locationData.county?.toLowerCase() || '';
-                      const detectedCity = locationData.city?.toLowerCase() || '';
-                      
-                      // Priority 1: Exact match with state_district (most reliable for Indian addresses)
-                      if (districtName === detectedStateDistrict) {
-                        return true;
-                      }
-                      
-                      // Priority 2: Exact match with county
-                      if (districtName === detectedCounty) {
-                        return true;
-                      }
-                      
-                      // Priority 3: Check if state_district contains district name
-                      if (detectedStateDistrict && detectedStateDistrict.includes(districtName)) {
-                        return true;
-                      }
-                      
-                      // Priority 4: Check if county contains district name  
-                      if (detectedCounty && detectedCounty.includes(districtName)) {
-                        return true;
-                      }
-                      
-                      // Priority 5: Check city match
-                      if (districtName === detectedCity) {
-                        return true;
-                      }
-                      
-                      // Priority 6: Check Tamil name matches
-                      if (district.tamilName?.toLowerCase() === detectedStateDistrict ||
-                          district.tamilName?.toLowerCase() === detectedCounty) {
-                        return true;
-                      }
-                      
-                      return false;
-                    });
-                    
-                    if (finalMatchingDistrict) {
-                      form.setValue("district", finalMatchingDistrict.name);
-                      console.log("SuperFast: Final district set to:", finalMatchingDistrict.name);
-                      
-                      if (!isAutomatic) {
-                        toast({
-                          title: "Location detected successfully!",
-                          description: `Set to ${detectedState}, ${finalMatchingDistrict.name}`,
-                        });
-                      }
-                    } else {
-                      console.log("SuperFast: No matching district found for location:", detectedLocation);
-                      if (!isAutomatic) {
-                        toast({
-                          title: "Location partially detected",
-                          description: "Please verify and select your district manually.",
-                        });
-                      }
-                    }
-                  }
+            // Use already loaded districts for matching (no additional API calls)
+            if (detectedState && apiDistricts.length > 0) {
+              const finalMatchingDistrict = apiDistricts.find((district: any) => {
+                const districtName = district.name.toLowerCase();
+                const detectedStateDistrict = locationData.state_district?.toLowerCase() || '';
+                const detectedCounty = locationData.county?.toLowerCase() || '';
+                const detectedCity = locationData.city?.toLowerCase() || '';
+                
+                // Priority 1: Exact match with state_district (most reliable for Indian addresses)
+                if (districtName === detectedStateDistrict) {
+                  return true;
                 }
-              } catch (error) {
-                console.error("SuperFast: Error loading districts for state:", detectedState, error);
+                
+                // Priority 2: Exact match with county
+                if (districtName === detectedCounty) {
+                  return true;
+                }
+                
+                // Priority 3: Check if state_district contains district name
+                if (detectedStateDistrict && detectedStateDistrict.includes(districtName)) {
+                  return true;
+                }
+                
+                // Priority 4: Check if county contains district name  
+                if (detectedCounty && detectedCounty.includes(districtName)) {
+                  return true;
+                }
+                
+                // Priority 5: Check city match
+                if (districtName === detectedCity) {
+                  return true;
+                }
+                
+                // Priority 6: Check Tamil name matches
+                if (district.tamilName?.toLowerCase() === detectedStateDistrict ||
+                    district.tamilName?.toLowerCase() === detectedCounty) {
+                  return true;
+                }
+                
+                return false;
+              });
+              
+              if (finalMatchingDistrict) {
+                form.setValue("district", finalMatchingDistrict.name);
+                console.log("SuperFast: District set to:", finalMatchingDistrict.name);
+                
+                if (!isAutomatic) {
+                  toast({
+                    title: "Location detected successfully!",
+                    description: `Set to ${detectedState}, ${finalMatchingDistrict.name}`,
+                  });
+                }
+              } else {
+                console.log("SuperFast: No matching district found for location");
                 if (!isAutomatic) {
                   toast({
                     title: "Location partially detected",
-                    description: "Please select your district manually.",
-                    variant: "destructive",
+                    description: "Please verify and select your district manually.",
                   });
                 }
               }
@@ -692,14 +658,134 @@ export function SuperFastRegisterForm({ role, onComplete, onBack, onStepChange, 
             />
           )}
 
-          {/* Address Form for Both Client and Worker */}
-          <AddressForm
-            form={form}
-            isDetecting={isDetectingLocation}
-            onDetect={handleLocationDetection}
-            autoDetectOnMount={true}
-            className="border rounded-lg p-4 bg-gray-50"
-          />
+          {/* Simple Address Fields - No AddressForm component */}
+          <div className="border rounded-lg p-4 bg-gray-50 space-y-3">
+            <div className="flex items-center justify-between">
+              <h4 className="font-medium text-sm">Address Information</h4>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => handleLocationDetection(false)}
+                disabled={isDetectingLocation}
+                className="text-xs"
+              >
+                {isDetectingLocation ? "Detecting..." : "📍 Detect Location"}
+              </Button>
+            </div>
+            
+            {/* House Number */}
+            <FormField
+              control={form.control}
+              name="houseNumber"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-xs">House Number</FormLabel>
+                  <FormControl>
+                    <Input placeholder="House/Flat number" {...field} className="text-sm" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Street Name */}
+            <FormField
+              control={form.control}
+              name="streetName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-xs">Street Name</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Street name" {...field} className="text-sm" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Area Name */}
+            <FormField
+              control={form.control}
+              name="areaName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-xs">Area Name</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Area/Locality" {...field} className="text-sm" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* State (Read-only for Tamil Nadu) */}
+            <FormField
+              control={form.control}
+              name="state"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-xs">State</FormLabel>
+                  <FormControl>
+                    <Input {...field} readOnly className="text-sm bg-gray-100" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* District */}
+            <FormField
+              control={form.control}
+              name="district"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-xs">District</FormLabel>
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <FormControl>
+                      <SelectTrigger className="text-sm">
+                        <SelectValue placeholder="Select district" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {apiDistricts.length > 0 ? (
+                        apiDistricts.map((district) => (
+                          <SelectItem key={district.id} value={district.name}>
+                            {district.name}
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <SelectItem value="loading" disabled>
+                          {isLoadingDistricts ? "Loading districts..." : "No districts available"}
+                        </SelectItem>
+                      )}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* PIN Code */}
+            <FormField
+              control={form.control}
+              name="pincode"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-xs">PIN Code</FormLabel>
+                  <FormControl>
+                    <Input 
+                      placeholder="6-digit PIN code" 
+                      {...field} 
+                      className="text-sm"
+                      maxLength={6}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
 
           {/* Registration note */}
           <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
