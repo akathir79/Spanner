@@ -707,7 +707,7 @@ export function SuperFastRegisterForm({ role, onComplete, onBack, onStepChange, 
           )}
         />
 
-          {/* Service Type for Worker */}
+          {/* Service Type for Worker - Temporarily simplified for debugging */}
           {role === "worker" && (
             <FormField
               control={form.control}
@@ -715,7 +715,19 @@ export function SuperFastRegisterForm({ role, onComplete, onBack, onStepChange, 
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Primary Service</FormLabel>
-                  {!showNewServiceInput ? (
+                  <FormControl>
+                    <Input
+                      placeholder="Enter your primary service (e.g., Plumbing, Electrical)"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
+
+          {/* Temporarily removed Select for debugging - will restore after fixing React object error
                     <Select 
                       value={field.value} 
                       onValueChange={handleServiceSelect}
