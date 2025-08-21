@@ -726,18 +726,22 @@ export function SuperFastRegisterForm({ role, onComplete, onBack, onStepChange, 
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {Array.isArray(services) ? services.map((service: any) => (
-                          <SelectItem key={service.id} value={service.name}>
-                            {service.name}
-                          </SelectItem>
-                        )) : [
-                          <SelectItem key="plumbing" value="Plumbing">Plumbing</SelectItem>,
-                          <SelectItem key="electrical" value="Electrical">Electrical</SelectItem>,
-                          <SelectItem key="painting" value="Painting">Painting</SelectItem>,
-                          <SelectItem key="cleaning" value="Cleaning">Cleaning</SelectItem>,
-                          <SelectItem key="carpentry" value="Carpentry">Carpentry</SelectItem>,
-                          <SelectItem key="ac-repair" value="AC Repair">AC Repair</SelectItem>
-                        ]}
+                        {Array.isArray(services) && services.length > 0 ? (
+                          services.map((service: any) => (
+                            <SelectItem key={service.id} value={service.name}>
+                              {service.name}
+                            </SelectItem>
+                          ))
+                        ) : (
+                          <>
+                            <SelectItem value="Plumbing">Plumbing</SelectItem>
+                            <SelectItem value="Electrical">Electrical</SelectItem>
+                            <SelectItem value="Painting">Painting</SelectItem>
+                            <SelectItem value="Cleaning">Cleaning</SelectItem>
+                            <SelectItem value="Carpentry">Carpentry</SelectItem>
+                            <SelectItem value="AC Repair">AC Repair</SelectItem>
+                          </>
+                        )}
                         <SelectItem value="ADD_NEW_SERVICE" className="text-blue-600 font-medium">
                           <div className="flex items-center gap-2">
                             <Plus className="h-4 w-4" />
