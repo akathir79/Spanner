@@ -7,7 +7,7 @@ import { AuthModal } from "@/components/AuthModal";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useState, useEffect } from "react";
-import { Menu, Moon, Sun, Wrench, User, LogOut, Settings, History } from "lucide-react";
+import { Menu, Moon, Sun, Wrench, User, LogOut, Settings, History, Wallet, BarChart3, MessageCircle, Briefcase, UserCheck, Star, Calendar, TrendingUp } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { NotificationBell } from "./NotificationBell";
 import { FloatingRegisterButton } from "./FloatingRegisterButton";
@@ -136,22 +136,203 @@ export function Navbar() {
                         </div>
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-48">
-                      <DropdownMenuItem onClick={handleDashboard} className="cursor-pointer">
-                        <Settings className="mr-2 h-4 w-4" />
-                        Dashboard
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => window.location.href = "/service-history"} className="cursor-pointer">
-                        <History className="mr-2 h-4 w-4" />
-                        Service History
-                      </DropdownMenuItem>
-                      <div className="px-1 py-1">
+                    <DropdownMenuContent align="end" className="w-80 p-2">
+                      {/* User Info Section */}
+                      <div className="px-3 py-2 border-b mb-2">
+                        <div className="flex items-center space-x-3">
+                          <Avatar className="h-12 w-12">
+                            <AvatarImage 
+                              src={profilePicture || undefined} 
+                              alt={`${user.firstName} ${user.lastName}`} 
+                            />
+                            <AvatarFallback className="bg-primary text-primary-foreground">
+                              {user.firstName?.[0]?.toUpperCase()}{user.lastName?.[0]?.toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1">
+                            <div className="font-medium text-sm">
+                              {user.firstName} {user.lastName === "UPDATE_REQUIRED" ? (
+                                <span className="text-red-500 text-xs">UPDATE_REQUIRED</span>
+                              ) : (
+                                user.lastName
+                              )}
+                            </div>
+                            <div className="text-xs text-muted-foreground">{user.id}</div>
+                            <div className="text-xs text-green-700 dark:text-green-600 font-medium capitalize">
+                              {user.role === "super_admin" ? "Super Admin" : user.role}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Dashboard Cards */}
+                      <div className="grid grid-cols-2 gap-2 mb-3">
+                        {/* Main Dashboard Card */}
+                        <div 
+                          onClick={handleDashboard}
+                          className="p-3 rounded-lg border hover:bg-accent cursor-pointer transition-colors"
+                        >
+                          <div className="flex items-center space-x-2 mb-1">
+                            <Settings className="h-4 w-4 text-primary" />
+                            <span className="text-xs font-medium">Dashboard</span>
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            {user.role === "worker" ? "Manage jobs & profile" : 
+                             user.role === "admin" || user.role === "super_admin" ? "Platform control" : 
+                             "Book services"}
+                          </p>
+                        </div>
+
+                        {/* Wallet Card (for workers and clients) */}
+                        {(user.role === "worker" || user.role === "client") && (
+                          <div 
+                            onClick={() => window.location.href = "/wallet"}
+                            className="p-3 rounded-lg border hover:bg-accent cursor-pointer transition-colors"
+                          >
+                            <div className="flex items-center space-x-2 mb-1">
+                              <Wallet className="h-4 w-4 text-green-600" />
+                              <span className="text-xs font-medium">Wallet</span>
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                              {user.role === "worker" ? "Earnings & withdrawals" : "Balance & payments"}
+                            </p>
+                          </div>
+                        )}
+
+                        {/* Analytics Card (for admins) */}
+                        {(user.role === "admin" || user.role === "super_admin") && (
+                          <div 
+                            onClick={() => window.location.href = "/admin/analytics"}
+                            className="p-3 rounded-lg border hover:bg-accent cursor-pointer transition-colors"
+                          >
+                            <div className="flex items-center space-x-2 mb-1">
+                              <BarChart3 className="h-4 w-4 text-blue-600" />
+                              <span className="text-xs font-medium">Analytics</span>
+                            </div>
+                            <p className="text-xs text-muted-foreground">Platform insights</p>
+                          </div>
+                        )}
+
+                        {/* Service History Card */}
+                        <div 
+                          onClick={() => window.location.href = "/service-history"}
+                          className="p-3 rounded-lg border hover:bg-accent cursor-pointer transition-colors"
+                        >
+                          <div className="flex items-center space-x-2 mb-1">
+                            <History className="h-4 w-4 text-orange-600" />
+                            <span className="text-xs font-medium">History</span>
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            {user.role === "worker" ? "Job history" : "Service records"}
+                          </p>
+                        </div>
+
+                        {/* Messages Card */}
+                        <div 
+                          onClick={() => window.location.href = "/messages"}
+                          className="p-3 rounded-lg border hover:bg-accent cursor-pointer transition-colors"
+                        >
+                          <div className="flex items-center space-x-2 mb-1">
+                            <MessageCircle className="h-4 w-4 text-purple-600" />
+                            <span className="text-xs font-medium">Messages</span>
+                          </div>
+                          <p className="text-xs text-muted-foreground">Chat & support</p>
+                        </div>
+
+                        {/* Worker-specific cards */}
+                        {user.role === "worker" && (
+                          <>
+                            <div 
+                              onClick={() => window.location.href = "/worker-jobs"}
+                              className="p-3 rounded-lg border hover:bg-accent cursor-pointer transition-colors"
+                            >
+                              <div className="flex items-center space-x-2 mb-1">
+                                <Briefcase className="h-4 w-4 text-blue-600" />
+                                <span className="text-xs font-medium">Active Jobs</span>
+                              </div>
+                              <p className="text-xs text-muted-foreground">Current bookings</p>
+                            </div>
+                            
+                            <div 
+                              onClick={() => window.location.href = "/worker-dashboard#reviews"}
+                              className="p-3 rounded-lg border hover:bg-accent cursor-pointer transition-colors"
+                            >
+                              <div className="flex items-center space-x-2 mb-1">
+                                <Star className="h-4 w-4 text-yellow-600" />
+                                <span className="text-xs font-medium">Reviews</span>
+                              </div>
+                              <p className="text-xs text-muted-foreground">Ratings & feedback</p>
+                            </div>
+                          </>
+                        )}
+
+                        {/* Client-specific cards */}
+                        {user.role === "client" && (
+                          <>
+                            <div 
+                              onClick={() => window.location.href = "/quick-post"}
+                              className="p-3 rounded-lg border hover:bg-accent cursor-pointer transition-colors"
+                            >
+                              <div className="flex items-center space-x-2 mb-1">
+                                <Calendar className="h-4 w-4 text-green-600" />
+                                <span className="text-xs font-medium">Book Service</span>
+                              </div>
+                              <p className="text-xs text-muted-foreground">Quick post job</p>
+                            </div>
+                            
+                            <div 
+                              onClick={() => window.location.href = "/find-workers"}
+                              className="p-3 rounded-lg border hover:bg-accent cursor-pointer transition-colors"
+                            >
+                              <div className="flex items-center space-x-2 mb-1">
+                                <UserCheck className="h-4 w-4 text-indigo-600" />
+                                <span className="text-xs font-medium">Find Workers</span>
+                              </div>
+                              <p className="text-xs text-muted-foreground">Browse professionals</p>
+                            </div>
+                          </>
+                        )}
+
+                        {/* Admin-specific cards */}
+                        {(user.role === "admin" || user.role === "super_admin") && (
+                          <>
+                            <div 
+                              onClick={() => window.location.href = "/admin/workers"}
+                              className="p-3 rounded-lg border hover:bg-accent cursor-pointer transition-colors"
+                            >
+                              <div className="flex items-center space-x-2 mb-1">
+                                <UserCheck className="h-4 w-4 text-indigo-600" />
+                                <span className="text-xs font-medium">Workers</span>
+                              </div>
+                              <p className="text-xs text-muted-foreground">Manage workers</p>
+                            </div>
+                            
+                            <div 
+                              onClick={() => window.location.href = "/admin/bookings"}
+                              className="p-3 rounded-lg border hover:bg-accent cursor-pointer transition-colors"
+                            >
+                              <div className="flex items-center space-x-2 mb-1">
+                                <TrendingUp className="h-4 w-4 text-red-600" />
+                                <span className="text-xs font-medium">Bookings</span>
+                              </div>
+                              <p className="text-xs text-muted-foreground">Platform activity</p>
+                            </div>
+                          </>
+                        )}
+                      </div>
+
+                      {/* Avatar Generator Section */}
+                      <div className="px-1 py-1 border-t pt-2">
                         <AvatarGenerator />
                       </div>
-                      <DropdownMenuItem onClick={logout} className="cursor-pointer">
-                        <LogOut className="mr-2 h-4 w-4" />
-                        Logout
-                      </DropdownMenuItem>
+
+                      {/* Logout Section */}
+                      <div className="border-t pt-2">
+                        <DropdownMenuItem onClick={logout} className="cursor-pointer text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950">
+                          <LogOut className="mr-2 h-4 w-4" />
+                          Logout
+                        </DropdownMenuItem>
+                      </div>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
