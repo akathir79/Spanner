@@ -2863,7 +2863,8 @@ export default function Dashboard() {
 
   return (
     <motion.div 
-      className="min-h-screen bg-muted/30 pt-20 pb-8"
+      className="min-h-screen pt-20 pb-8"
+      style={{ backgroundColor: '#ffffff' }}
       initial="hidden"
       animate={controls}
       variants={pageVariants}
@@ -2886,7 +2887,10 @@ export default function Dashboard() {
             whileHover="hover"
             className="lg:col-span-1"
           >
-            <Card className={`bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border-green-200 dark:border-green-800 overflow-hidden shadow-lg hover:shadow-xl transition-all duration-200 ${isWalletCollapsed ? 'h-[80px]' : ''}`}>
+            <Card 
+              className={`bg-white border-green-200 overflow-hidden shadow-lg hover:shadow-xl transition-all duration-200 ${isWalletCollapsed ? 'h-[80px]' : ''}`}
+              style={{ backgroundColor: '#ffffff' }}
+            >
             <CardHeader className={isWalletCollapsed ? "px-4 py-0 h-[80px] flex items-center justify-center" : "pb-3"}>
               <div className="flex items-center justify-between w-full">
                 <div className="flex items-center gap-1.5">
@@ -2921,7 +2925,7 @@ export default function Dashboard() {
             {!isWalletCollapsed && (
               <CardContent className="space-y-4 p-4">
                 {/* Main Balance Display */}
-                <div className="bg-gradient-to-r from-white to-green-50 dark:from-gray-900 dark:to-green-900/20 rounded-lg p-4 text-center border border-green-200/50 dark:border-green-600/30">
+                <div className="bg-white rounded-lg p-4 text-center border border-green-200/50" style={{ backgroundColor: '#ffffff' }}>
                   <p className="text-sm text-green-700 dark:text-green-300 mb-1 font-medium">Available Balance</p>
                   <div className="flex items-center justify-center gap-1">
                     <IndianRupee className="h-8 w-8 text-green-600 dark:text-green-400" />
@@ -3123,7 +3127,7 @@ export default function Dashboard() {
             {/* Widget Container with Customization Support */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Bookings Widget - Full width by default */}
-              <Card className="lg:col-span-2">
+              <Card className="lg:col-span-2 bg-white" style={{ backgroundColor: '#ffffff' }}>
                 <CardHeader>
                   <CardTitle className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
@@ -4238,7 +4242,7 @@ export default function Dashboard() {
               
               {/* Dashboard Statistics Widget */}
               {bookings && (
-                <Card className="col-span-1">
+                <Card className="col-span-1 bg-white" style={{ backgroundColor: '#ffffff' }}>
                   <CardHeader>
                     <CardTitle className="flex items-center justify-between">
                       <div className="flex items-center space-x-2">
