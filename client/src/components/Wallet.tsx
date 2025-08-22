@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
+import { useLocation } from 'wouter';
 import WalletAnalytics from './WalletAnalytics';
 import WalletNotifications from './WalletNotifications';
 import { 
@@ -25,7 +26,8 @@ import {
   XCircle,
   RefreshCw,
   BarChart3,
-  Bell
+  Bell,
+  ArrowLeft
 } from 'lucide-react';
 
 declare global {
@@ -67,6 +69,7 @@ export default function Wallet() {
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [, setLocation] = useLocation();
 
   // Fetch wallet data
   const { data: walletData, isLoading, error } = useQuery<WalletData>({
@@ -332,6 +335,21 @@ export default function Wallet() {
 
   return (
     <div className="max-w-6xl mx-auto space-y-6" data-testid="wallet-container">
+      {/* Header with Back Button */}
+      <div className="flex items-center justify-between">
+        <Button
+          variant="outline"
+          onClick={() => setLocation('/dashboard')}
+          className="flex items-center gap-2"
+          data-testid="button-back-to-dashboard"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to Dashboard
+        </Button>
+        <h1 className="text-2xl font-bold">Wallet Management</h1>
+        <div className="w-32"></div> {/* Spacer for centering */}
+      </div>
+
       <Tabs defaultValue="overview" className="space-y-6">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="overview">Overview</TabsTrigger>
