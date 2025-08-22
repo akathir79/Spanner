@@ -20,6 +20,20 @@ body {
   border-bottom: 1px solid rgba(0, 0, 0, 0.1);
 }
 
+/* Ensure dialog modals appear above everything including navbar */
+[data-radix-dialog-overlay] {
+  z-index: 9998 !important;
+}
+
+[data-radix-dialog-content] {
+  z-index: 9999 !important;
+}
+
+.dialog-content-high-z {
+  z-index: 10000 !important;
+  position: fixed !important;
+}
+
 /* Main content container spacing */
 .main-content {
   min-height: calc(100vh - 70px);
