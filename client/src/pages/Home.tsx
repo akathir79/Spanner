@@ -414,9 +414,9 @@ export default function Home() {
 
             {/* Login Form */}
             {!user && (
-              <div className="lg:flex justify-start lg:justify-center lg:ml-[-2rem]">
-                <Card className="w-full max-w-md bg-white shadow-2xl min-h-[500px]">
-                  <CardHeader className="text-center pb-4">
+              <div className="lg:flex justify-start lg:justify-center lg:ml-[-3rem]">
+                <Card className="w-full max-w-lg bg-white shadow-2xl min-h-[600px] border-0">
+                  <CardHeader className="text-center pb-6 pt-8">
                     <CardTitle className="text-2xl font-bold text-primary">
                       {loginMode === 'forgot' ? 'Forgot Password' : 
                        loginMode === 'recovery' ? 'Reset Password' :
@@ -429,19 +429,19 @@ export default function Home() {
                     )}
                   </CardHeader>
                   
-                  <CardContent className="space-y-4">
+                  <CardContent className="space-y-6 px-8 pb-8">
                     {/* Mobile Number Input */}
                     <div className="relative">
                       <div className="flex">
-                        <div className="flex items-center px-3 border border-r-0 border-input bg-muted rounded-l-md">
-                          <span className="text-sm text-muted-foreground">+91</span>
+                        <div className="flex items-center px-4 py-3 border border-r-0 border-gray-300 bg-gray-50 rounded-l-lg">
+                          <span className="text-sm font-medium text-gray-600">+91</span>
                         </div>
                         <Input
                           type="tel"
                           placeholder="Mobile Number"
                           value={mobile}
                           onChange={(e) => setMobile(e.target.value.replace(/\D/g, '').slice(0, 10))}
-                          className="rounded-l-none"
+                          className="rounded-l-none border-gray-300 py-3 px-4 text-base focus:border-primary focus:ring-primary"
                           disabled={loginMode === 'recovery'}
                         />
                       </div>
@@ -455,12 +455,13 @@ export default function Home() {
                           placeholder="Password"
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
+                          className="border-gray-300 py-3 px-4 text-base focus:border-primary focus:ring-primary pr-12"
                         />
                         <Button
                           type="button"
                           variant="ghost"
                           size="sm"
-                          className="absolute right-2 top-1/2 -translate-y-1/2 h-auto p-1"
+                          className="absolute right-3 top-1/2 -translate-y-1/2 h-auto p-1 text-gray-500 hover:text-gray-700"
                           onClick={() => setShowPassword(!showPassword)}
                         >
                           {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -477,6 +478,7 @@ export default function Home() {
                           value={otp}
                           onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
                           maxLength={6}
+                          className="border-gray-300 py-3 px-4 text-base focus:border-primary focus:ring-primary text-center tracking-widest font-mono"
                         />
                       </div>
                     ) : null}
@@ -489,12 +491,13 @@ export default function Home() {
                           placeholder="New Password"
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
+                          className="border-gray-300 py-3 px-4 text-base focus:border-primary focus:ring-primary pr-12"
                         />
                         <Button
                           type="button"
                           variant="ghost"
                           size="sm"
-                          className="absolute right-2 top-1/2 -translate-y-1/2 h-auto p-1"
+                          className="absolute right-3 top-1/2 -translate-y-1/2 h-auto p-1 text-gray-500 hover:text-gray-700"
                           onClick={() => setShowPassword(!showPassword)}
                         >
                           {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -504,11 +507,11 @@ export default function Home() {
 
                     {/* Toggle Buttons for OTP/Password */}
                     {loginMode === 'otp' && !otpSent && (
-                      <div className="flex justify-between text-sm">
+                      <div className="flex justify-between text-sm pt-2">
                         <Button
                           type="button"
                           variant="link"
-                          className="p-0 h-auto text-primary"
+                          className="p-0 h-auto text-primary hover:text-primary/80 font-medium"
                           onClick={() => {
                             setLoginMode('password');
                             resetForm();
@@ -519,7 +522,7 @@ export default function Home() {
                         <Button
                           type="button"
                           variant="link"
-                          className="p-0 h-auto text-primary"
+                          className="p-0 h-auto text-primary hover:text-primary/80 font-medium"
                           onClick={() => {
                             setLoginMode('forgot');
                             resetForm();
@@ -531,11 +534,11 @@ export default function Home() {
                     )}
 
                     {loginMode === 'password' && (
-                      <div className="flex justify-between text-sm">
+                      <div className="flex justify-between text-sm pt-2">
                         <Button
                           type="button"
                           variant="link"
-                          className="p-0 h-auto text-primary"
+                          className="p-0 h-auto text-primary hover:text-primary/80 font-medium"
                           onClick={() => {
                             setLoginMode('otp');
                             resetForm();
@@ -546,7 +549,7 @@ export default function Home() {
                         <Button
                           type="button"
                           variant="link"
-                          className="p-0 h-auto text-primary"
+                          className="p-0 h-auto text-primary hover:text-primary/80 font-medium"
                           onClick={() => {
                             setLoginMode('forgot');
                             resetForm();
@@ -559,7 +562,7 @@ export default function Home() {
 
                     {/* Primary Action Button */}
                     <Button
-                      className="w-full bg-primary hover:bg-primary/90"
+                      className="w-full bg-primary hover:bg-primary/90 py-3 text-base font-semibold rounded-lg mt-4"
                       onClick={() => {
                         if (loginMode === 'otp' && !otpSent) {
                           handleSendOTP();
@@ -587,7 +590,7 @@ export default function Home() {
                     {(loginMode === 'forgot' || loginMode === 'recovery') && (
                       <Button
                         variant="outline"
-                        className="w-full"
+                        className="w-full py-3 text-base font-medium rounded-lg border-gray-300 hover:bg-gray-50"
                         onClick={() => {
                           setLoginMode('otp');
                           resetForm();
@@ -610,7 +613,7 @@ export default function Home() {
                         {/* Google Login */}
                         <Button
                           variant="outline"
-                          className="w-full"
+                          className="w-full py-3 text-base font-medium rounded-lg border-gray-300 hover:bg-gray-50"
                           onClick={() => {
                             toast({
                               title: "Coming Soon",
@@ -618,7 +621,7 @@ export default function Home() {
                             });
                           }}
                         >
-                          <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24">
+                          <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24">
                             <path fill="#4285f4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                             <path fill="#34a853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
                             <path fill="#fbbc05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
@@ -628,18 +631,18 @@ export default function Home() {
                         </Button>
 
                         {/* Help Link */}
-                        <div className="text-center text-xs text-muted-foreground">
-                          Need help? <Button variant="link" className="p-0 h-auto text-xs text-primary">Connect with us 💬</Button>
+                        <div className="text-center text-sm text-gray-600 mt-6">
+                          Need help? <Button variant="link" className="p-0 h-auto text-sm text-primary font-medium">Connect with us 💬</Button>
                         </div>
 
                         {/* Terms */}
-                        <div className="text-center text-xs text-muted-foreground">
+                        <div className="text-center text-sm text-gray-600 leading-relaxed px-4">
                           By logging or signing up, you agree to our{' '}
-                          <Button variant="link" className="p-0 h-auto text-xs text-primary underline">
+                          <Button variant="link" className="p-0 h-auto text-sm text-primary underline font-medium">
                             Terms
                           </Button>{' '}
                           &{' '}
-                          <Button variant="link" className="p-0 h-auto text-xs text-primary underline">
+                          <Button variant="link" className="p-0 h-auto text-sm text-primary underline font-medium">
                             Policy
                           </Button>
                         </div>
