@@ -95,10 +95,14 @@ export function NotificationBell() {
       return response;
     },
     onSuccess: async (response, variables) => {
-      console.log("Profile update successful, refreshing user data...");
+      console.log("Profile update successful for field:", variables.field, "with value:", variables.value?.substring(0, 50));
+      console.log("Response from server:", response);
       
       // Update local auth context immediately
       updateUser({ [variables.field]: variables.value });
+      
+      // Wait a moment for the server to process
+      await new Promise(resolve => setTimeout(resolve, 100));
       
       // Refresh complete user data from server to ensure consistency
       await refreshUser();
@@ -118,7 +122,7 @@ export function NotificationBell() {
       setIsProfilePicturePreview("");
       setIsOpen(false); // Close notification dropdown to see updated count
       
-      console.log("Profile update completed, notification count should be updated");
+      console.log("Profile update completed, user context should be refreshed");
     },
     onError: (error) => {
       toast({

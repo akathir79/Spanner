@@ -31,9 +31,9 @@ export function Navbar() {
     enabled: user?.role === "worker",
   });
 
-  // Get the appropriate profile picture
+  // Get the appropriate profile picture with fallback priority
   const profilePicture = user?.role === "worker" 
-    ? workerProfile?.profilePicture || (user as any)?.profilePicture 
+    ? (user as any)?.profilePicture || workerProfile?.profilePicture 
     : (user as any)?.profilePicture;
 
   const handleDashboard = () => {
@@ -115,7 +115,8 @@ export function Navbar() {
                         <Avatar className="h-8 w-8">
                           <AvatarImage 
                             src={profilePicture || undefined} 
-                            alt={`${user.firstName} ${user.lastName}`} 
+                            alt={`${user.firstName} ${user.lastName}`}
+                            key={profilePicture} // Force re-render when profile picture changes
                           />
                           <AvatarFallback className="bg-primary text-primary-foreground text-sm">
                             {user.firstName?.[0]?.toUpperCase()}{user.lastName?.[0]?.toUpperCase()}
@@ -143,7 +144,8 @@ export function Navbar() {
                           <Avatar className="h-12 w-12">
                             <AvatarImage 
                               src={profilePicture || undefined} 
-                              alt={`${user.firstName} ${user.lastName}`} 
+                              alt={`${user.firstName} ${user.lastName}`}
+                              key={profilePicture} // Force re-render when profile picture changes
                             />
                             <AvatarFallback className="bg-primary text-primary-foreground">
                               {user.firstName?.[0]?.toUpperCase()}{user.lastName?.[0]?.toUpperCase()}
