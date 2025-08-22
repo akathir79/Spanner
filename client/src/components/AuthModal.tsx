@@ -684,48 +684,73 @@ export function AuthModal({ isOpen, onClose, mode, initialTab, onSwitchToSignup 
                     
                     // Small delay to ensure state is updated - SAME AS HOME PAGE
                     setTimeout(() => {
-                      // Find matching district with improved matching logic - EXACT SAME AS HOME PAGE
+                      // Enhanced district matching logic with better debugging
                       const matchingDistrict = districtsData.find((district: any) => {
                         const districtName = district.name.toLowerCase();
                         const detectedStateDistrict = locationData.state_district?.toLowerCase() || '';
                         const detectedCounty = locationData.county?.toLowerCase() || '';
+                        const detectedCity = locationData.city?.toLowerCase() || '';
+                        const detectedTown = locationData.town?.toLowerCase() || '';
                         
-                        // Debug logging
-                        if (districtName === 'salem') {
-                          console.log('Checking Salem district:', {
+                        // Enhanced debug logging for Salem specifically
+                        if (districtName.includes('salem') || detectedStateDistrict.includes('salem') || detectedCounty.includes('salem')) {
+                          console.log('Checking Salem district match:', {
                             districtName,
                             detectedStateDistrict,
                             detectedCounty,
-                            directMatch1: districtName === detectedStateDistrict,
-                            directMatch2: districtName === detectedCounty,
-                            includes1: detectedStateDistrict.includes(districtName),
-                            includes2: detectedCounty.includes(districtName),
-                            includes3: districtName.includes(detectedStateDistrict),
-                            includes4: districtName.includes(detectedCounty)
+                            detectedCity,
+                            detectedTown,
+                            allLocationData: locationData
                           });
                         }
                         
-                        // Direct matches
-                        if (districtName === detectedStateDistrict || districtName === detectedCounty) {
+                        // Priority 1: Direct exact matches
+                        if (districtName === detectedStateDistrict || 
+                            districtName === detectedCounty || 
+                            districtName === detectedCity ||
+                            districtName === detectedTown) {
+                          console.log('✅ Direct match found:', districtName);
                           return true;
                         }
                         
-                        // Check if detected location contains district name
-                        if (detectedStateDistrict.includes(districtName) || detectedCounty.includes(districtName)) {
+                        // Priority 2: Check if detected location contains district name
+                        if ((detectedStateDistrict && detectedStateDistrict.includes(districtName)) || 
+                            (detectedCounty && detectedCounty.includes(districtName)) ||
+                            (detectedCity && detectedCity.includes(districtName)) ||
+                            (detectedTown && detectedTown.includes(districtName))) {
+                          console.log('✅ Contains match found:', districtName, 'in detected location');
                           return true;
                         }
                         
-                        // Check if district name contains detected location (handles "Salem West" -> "Salem")
-                        if (districtName.includes(detectedStateDistrict) || districtName.includes(detectedCounty)) {
+                        // Priority 3: Check if district name contains detected location (handles "Salem" district containing "Salem" city)
+                        if ((detectedStateDistrict && districtName.includes(detectedStateDistrict)) || 
+                            (detectedCounty && districtName.includes(detectedCounty)) ||
+                            (detectedCity && districtName.includes(detectedCity)) ||
+                            (detectedTown && districtName.includes(detectedTown))) {
+                          console.log('✅ District contains detected location:', districtName);
                           return true;
                         }
                         
-                        // Remove common suffixes for better matching
-                        const cleanDistrict = districtName.replace(/\s+(district|west|east|north|south)$/i, '');
-                        const cleanDetectedState = detectedStateDistrict.replace(/\s+(district|west|east|north|south)$/i, '');
-                        const cleanDetectedCounty = detectedCounty.replace(/\s+(district|west|east|north|south)$/i, '');
+                        // Priority 4: Remove common suffixes and match again (handles "Salem West" -> "Salem")
+                        const cleanDistrict = districtName.replace(/\s+(district|west|east|north|south|central)$/i, '').trim();
+                        const cleanDetectedState = detectedStateDistrict.replace(/\s+(district|west|east|north|south|central)$/i, '').trim();
+                        const cleanDetectedCounty = detectedCounty.replace(/\s+(district|west|east|north|south|central)$/i, '').trim();
+                        const cleanDetectedCity = detectedCity.replace(/\s+(district|west|east|north|south|central)$/i, '').trim();
                         
-                        return cleanDistrict === cleanDetectedState || cleanDistrict === cleanDetectedCounty;
+                        if (cleanDistrict && (cleanDistrict === cleanDetectedState || 
+                                             cleanDistrict === cleanDetectedCounty ||
+                                             cleanDistrict === cleanDetectedCity)) {
+                          console.log('✅ Clean match found:', cleanDistrict);
+                          return true;
+                        }
+                        
+                        // Priority 5: Fuzzy matching for Tamil Nadu specific districts
+                        if (detectedStateDistrict === 'salem' && districtName === 'salem') {
+                          console.log('✅ Special Tamil Nadu Salem match');
+                          return true;
+                        }
+                        
+                        return false;
                       });
                       
                       if (matchingDistrict) {
