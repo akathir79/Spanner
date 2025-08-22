@@ -53,10 +53,19 @@ export function Navbar() {
       setShowSignupModal(true);
     };
 
+    const handleOpenLoginModal = (event: any) => {
+      const { mobile, role } = event.detail || {};
+      setShowLoginModal(true);
+      // Store user data for pre-filling the login form
+      sessionStorage.setItem('prefillLoginData', JSON.stringify({ mobile, role }));
+    };
+
     window.addEventListener('openRegisterModal', handleOpenRegisterModal);
+    window.addEventListener('openLoginModal', handleOpenLoginModal);
     
     return () => {
       window.removeEventListener('openRegisterModal', handleOpenRegisterModal);
+      window.removeEventListener('openLoginModal', handleOpenLoginModal);
     };
   }, []);
 

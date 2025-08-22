@@ -36,7 +36,7 @@ type FastWorkerData = z.infer<typeof fastWorkerSchema>;
 
 interface SuperFastRegisterFormProps {
   role: "client" | "worker";
-  onComplete: () => void;
+  onComplete: (userData?: {mobile: string, role: string}) => void;
   onBack: () => void;
   onStepChange?: (step: "role-selection" | "personal-info" | "contact-info" | "location" | "completion") => void;
   onError?: () => void;
@@ -401,12 +401,16 @@ export function SuperFastRegisterForm({ role, onComplete, onBack, onStepChange, 
       }
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (response, variables) => {
       toast({
         title: "Registration successful!",
         description: `Welcome to SPANNER! Your address will be collected when you post your first job.`,
       });
-      onComplete();
+      // Pass the registered user data to the parent
+      onComplete({
+        mobile: variables.mobile,
+        role: role
+      });
     },
     onError: (error: any) => {
       onError?.();

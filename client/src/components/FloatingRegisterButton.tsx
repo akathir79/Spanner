@@ -15,6 +15,7 @@ export function FloatingRegisterButton({ onRegister }: FloatingRegisterButtonPro
   const [isOpen, setIsOpen] = useState(false);
   const [selectedRole, setSelectedRole] = useState<"client" | "worker" | null>(null);
   const [showFlyingLogin, setShowFlyingLogin] = useState(false);
+  const [registeredUserData, setRegisteredUserData] = useState<{mobile: string, role: string} | null>(null);
   const { mascotStep, mascotVisible, hasErrors, updateStep, showError, hideMascot } = useRegistrationMascot();
   
   // Debug logging for mascot
@@ -38,8 +39,11 @@ export function FloatingRegisterButton({ onRegister }: FloatingRegisterButtonPro
     }
   }, [isOpen, selectedRole, updateStep]);
 
-  const handleRegisterComplete = () => {
+  const handleRegisterComplete = (userData?: {mobile: string, role: string}) => {
     updateStep("completion");
+    if (userData) {
+      setRegisteredUserData(userData);
+    }
     setTimeout(() => {
       onRegister?.();
       handleClose();
@@ -50,10 +54,22 @@ export function FloatingRegisterButton({ onRegister }: FloatingRegisterButtonPro
 
   const handleFlyingLoginClick = () => {
     setShowFlyingLogin(false);
-    // Open login modal by triggering the navbar login
-    const loginButton = document.querySelector('[data-login-trigger]');
-    if (loginButton instanceof HTMLElement) {
-      loginButton.click();
+    // Open login modal with pre-filled data
+    if (registeredUserData) {
+      // Dispatch a custom event with the user data to pre-populate the login form
+      const event = new CustomEvent('openLoginModal', { 
+        detail: { 
+          mobile: registeredUserData.mobile, 
+          role: registeredUserData.role 
+        } 
+      });
+      window.dispatchEvent(event);
+    } else {
+      // Fallback: Open regular login modal
+      const loginButton = document.querySelector('[data-login-trigger]');
+      if (loginButton instanceof HTMLElement) {
+        loginButton.click();
+      }
     }
   };
 

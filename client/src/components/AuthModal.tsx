@@ -207,6 +207,28 @@ export function AuthModal({ isOpen, onClose, mode, initialTab, onSwitchToSignup 
   const selectedClientState = clientForm.watch("state");
   const selectedWorkerState = workerForm.watch("state");
 
+  // Pre-fill login form with data from sessionStorage when modal opens
+  useEffect(() => {
+    if (isOpen && mode === "login") {
+      const prefillData = sessionStorage.getItem('prefillLoginData');
+      if (prefillData) {
+        try {
+          const { mobile, role } = JSON.parse(prefillData);
+          if (mobile) {
+            loginForm.setValue('mobile', mobile);
+          }
+          if (role) {
+            setLoginRole(role);
+          }
+          // Clear the prefill data after using it
+          sessionStorage.removeItem('prefillLoginData');
+        } catch (error) {
+          console.error('Error parsing prefill data:', error);
+        }
+      }
+    }
+  }, [isOpen, mode, loginForm]);
+
   // Simple useEffect patterns like home page
   useEffect(() => {
     if (selectedClientState) {
