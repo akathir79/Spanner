@@ -165,12 +165,16 @@ export function registerWalletRoutes(app: Express) {
         });
       }
 
+      console.log('Payment verification successful, processing payment...');
+      
       // Process successful payment
       const result = await RazorpayService.processSuccessfulPayment(
         razorpay_order_id,
         razorpay_payment_id,
         verification.payment?.method || 'unknown'
       );
+
+      console.log('Payment processed successfully:', result);
 
       res.json({
         success: true,
@@ -202,6 +206,34 @@ export function registerWalletRoutes(app: Express) {
     } catch (error) {
       console.error('Error handling payment failure:', error);
       res.status(500).json({ error: 'Failed to handle payment failure' });
+    }
+  });
+
+  // Webhook endpoint for Razorpay payment notifications
+  app.post('/api/wallet/webhook', async (req: Request, res: Response) => {
+    try {
+      console.log('Webhook received:', req.body);
+      
+      const { event, payload } = req.body;
+      
+      if (event === 'payment.captured') {
+        const payment = payload.payment.entity;
+        console.log('Payment captured webhook:', payment);
+        
+        // Process the captured payment
+        if (payment.order_id && payment.id) {
+          await RazorpayService.processSuccessfulPayment(
+            payment.order_id,
+            payment.id,
+            payment.method || 'unknown'
+          );
+        }
+      }
+      
+      res.status(200).json({ status: 'ok' });
+    } catch (error) {
+      console.error('Webhook error:', error);
+      res.status(500).json({ error: 'Webhook processing failed' });
     }
   });
 

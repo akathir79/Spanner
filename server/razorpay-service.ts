@@ -111,6 +111,8 @@ export class RazorpayService {
     paymentMethod: string
   ) {
     try {
+      console.log('Processing successful payment for order:', orderId);
+      
       // Update payment order status
       const paymentOrder = await storage.updatePaymentOrderStatus(orderId, {
         status: 'paid',
@@ -123,7 +125,9 @@ export class RazorpayService {
         throw new Error('Payment order not found');
       }
 
-      // Add amount to user wallet
+      console.log('Found payment order:', paymentOrder);
+
+      // Add amount to user wallet using existing method
       const walletTransaction = await storage.addToWallet(
         paymentOrder.userId,
         parseFloat(paymentOrder.amount),
@@ -136,10 +140,12 @@ export class RazorpayService {
         }
       );
 
+      console.log('Wallet transaction created:', walletTransaction);
+
       return {
-        success: true,
-        walletTransaction,
         newBalance: walletTransaction.balanceAfter,
+        walletTransaction,
+        paymentOrder
       };
     } catch (error) {
       console.error('Error processing successful payment:', error);

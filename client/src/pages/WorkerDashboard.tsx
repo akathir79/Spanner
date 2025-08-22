@@ -1743,6 +1743,7 @@ export default function WorkerDashboard() {
           order_id: data.order.orderId,
           handler: async function (response: any) {
             try {
+              console.log('Payment success response:', response);
               // Verify payment on backend
               const verifyResponse = await apiRequest('POST', '/api/wallet/verify-payment', {
                 razorpay_order_id: response.razorpay_order_id,
@@ -1751,12 +1752,15 @@ export default function WorkerDashboard() {
               });
               
               const verifyData = await verifyResponse.json();
+              console.log('Payment verification response:', verifyData);
+              
               if (verifyData.success) {
                 resolve(verifyData);
               } else {
                 reject(new Error(verifyData.error || 'Payment verification failed'));
               }
             } catch (error) {
+              console.error('Payment verification error:', error);
               reject(error);
             }
           },
@@ -1772,7 +1776,9 @@ export default function WorkerDashboard() {
             ondismiss: function() {
               reject(new Error('Payment cancelled by user'));
             }
-          }
+          },
+          callback_url: window.location.origin + '/payment-callback',
+          redirect: true
         };
 
         const rzp = new window.Razorpay(options);
