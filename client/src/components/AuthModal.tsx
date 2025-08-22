@@ -820,12 +820,17 @@ export function AuthModal({ isOpen, onClose, mode, initialTab, onSwitchToSignup 
     
     const result = await verifyOtp(pendingLogin.mobile, data.otp, "login");
     if (result) {
+      // Close modal and reset state
       onClose();
       setStep(1);
       setPendingLogin(null);
       
-      // Redirect to dashboard after successful login
-      setLocation('/dashboard');
+      // Force redirect to dashboard with a slight delay to ensure state is updated
+      setTimeout(() => {
+        setLocation('/dashboard');
+        // Force a reload if needed to ensure clean state
+        window.location.href = '/dashboard';
+      }, 100);
     }
   };
 
@@ -863,6 +868,10 @@ export function AuthModal({ isOpen, onClose, mode, initialTab, onSwitchToSignup 
     });
     if (result?.success) {
       onClose();
+      // Redirect to dashboard after successful client signup
+      setTimeout(() => {
+        setLocation('/dashboard');
+      }, 100);
     } else {
       // Show error message to user
       toast({
