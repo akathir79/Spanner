@@ -24,6 +24,7 @@ import JobCompletionModal from "@/components/JobCompletionModal";
 import ReviewModal from "@/components/ReviewModal";
 import WorkerRatingModal from "@/components/WorkerRatingModal";
 import { useToast } from "@/hooks/use-toast";
+import { motion, AnimatePresence, useAnimation } from "framer-motion";
 import { 
   User, 
   Calendar, 
@@ -73,16 +74,16 @@ import {
   Minimize,
   Move,
   Zap,
-  BarChart,
-  Paperclip,
-  Bell,
-  Copy,
-  UserCheck,
-  Wallet,
   Gift,
-  Percent,
+  Bell,
+  MessageCircle,
+  BarChart,
+  Copy,
   ArrowLeft,
-  MessageCircle
+  Wallet,
+  Paperclip,
+  UserCheck,
+  Percent
 } from "lucide-react";
 import { useLocation } from "wouter";
 import LocationViewer from "@/components/LocationViewer";
@@ -2101,6 +2102,67 @@ export default function Dashboard() {
   const [completionBooking, setCompletionBooking] = useState<any>(null);
   const [reviewBooking, setReviewBooking] = useState<any>(null);
   const [ratingBooking, setRatingBooking] = useState<any>(null);
+
+  // Animation controls
+  const controls = useAnimation();
+  const [isPageLoaded, setIsPageLoaded] = useState(false);
+  
+  // Animation variants
+  const pageVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0 },
+    exit: { opacity: 0, y: -20 }
+  };
+
+  const cardVariants = {
+    hidden: { opacity: 0, scale: 0.95, y: 20 },
+    visible: { opacity: 1, scale: 1, y: 0 },
+    hover: { scale: 1.02, boxShadow: "0 8px 30px rgba(0, 0, 0, 0.12)" }
+  };
+
+  const staggerContainer = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        delayChildren: 0.1,
+        staggerChildren: 0.1
+      }
+    }
+  };
+
+  const slideInLeft = {
+    hidden: { x: -50, opacity: 0 },
+    visible: { x: 0, opacity: 1 }
+  };
+
+  const slideInRight = {
+    hidden: { x: 50, opacity: 0 },
+    visible: { x: 0, opacity: 1 }
+  };
+
+  const bounceIn = {
+    hidden: { scale: 0.3, opacity: 0 },
+    visible: {
+      scale: 1,
+      opacity: 1,
+      transition: {
+        type: "spring",
+        stiffness: 260,
+        damping: 20
+      }
+    }
+  };
+
+  // Page load animation
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsPageLoaded(true);
+      controls.start("visible");
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [controls]);
   
   // Removed dashboard customization state
 
@@ -2800,12 +2862,31 @@ export default function Dashboard() {
   // Removed Layout Settings Panel
 
   return (
-    <div className="min-h-screen bg-muted/30 pt-20 pb-8">{/* Removed customization features */}
-      <div className="container mx-auto px-4">
+    <motion.div 
+      className="min-h-screen bg-muted/30 pt-20 pb-8"
+      initial="hidden"
+      animate={controls}
+      variants={pageVariants}
+      transition={{ duration: 0.5, ease: "easeOut" }}
+    >
+      <motion.div 
+        className="container mx-auto px-4"
+        variants={staggerContainer}
+        initial="hidden"
+        animate="visible"
+      >
         {/* Wallet Card and Promotional Section */}
-        <div className="mb-8 grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <motion.div 
+          className="mb-8 grid grid-cols-1 lg:grid-cols-4 gap-6"
+          variants={staggerContainer}
+        >
           {/* Wallet Card - Left Side */}
-          <Card className={`lg:col-span-1 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border-green-200 dark:border-green-800 overflow-hidden shadow-lg hover:shadow-xl transition-all duration-200 ${isWalletCollapsed ? 'h-[80px]' : ''}`}>
+          <motion.div
+            variants={slideInLeft}
+            whileHover="hover"
+            className="lg:col-span-1"
+          >
+            <Card className={`bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border-green-200 dark:border-green-800 overflow-hidden shadow-lg hover:shadow-xl transition-all duration-200 ${isWalletCollapsed ? 'h-[80px]' : ''}`}>
             <CardHeader className={isWalletCollapsed ? "px-4 py-0 h-[80px] flex items-center justify-center" : "pb-3"}>
               <div className="flex items-center justify-between w-full">
                 <div className="flex items-center gap-1.5">
@@ -2880,10 +2961,14 @@ export default function Dashboard() {
                 </div>
               </CardContent>
             )}
-          </Card>
+            </Card>
+          </motion.div>
 
           {/* Advertisement and Actions - Right Side */}
-          <div className="lg:col-span-3 space-y-4">
+          <motion.div 
+            variants={slideInRight}
+            className="lg:col-span-3 space-y-4"
+          >
             {/* Advertisement Carousel */}
             <AdvertisementCarousel targetAudience="client" />
 
@@ -2907,13 +2992,19 @@ export default function Dashboard() {
                 </DialogContent>
               </Dialog>
             </div>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
 
 
 
         {/* Dashboard Header with Notification Center */}
-        <div className="flex items-center justify-between mb-6">
+        <motion.div 
+          className="flex items-center justify-between mb-6"
+          variants={slideInLeft}
+          initial="hidden"
+          animate="visible"
+          transition={{ duration: 0.4, delay: 0.3 }}
+        >
           <div className="flex items-center gap-2">
             <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
               Dashboard
@@ -2925,9 +3016,14 @@ export default function Dashboard() {
           <div className="flex items-center gap-3">
             <NotificationCenter userId={user?.id || ''} userRole={user?.role || 'client'} />
           </div>
-        </div>
+        </motion.div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <motion.div
+          initial="hidden"
+          animate="visible"
+          variants={staggerContainer}
+        >
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-6 bg-muted">
             <TabsTrigger 
               value="bookings" 
@@ -3014,7 +3110,16 @@ export default function Dashboard() {
           </TabsList>
 
           {/* My Bookings Tab */}
-          <TabsContent value="bookings" className="space-y-6">
+          <AnimatePresence mode="wait">
+            <TabsContent value="bookings" className="space-y-6">
+              <motion.div
+                key="bookings-tab"
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+                variants={pageVariants}
+                transition={{ duration: 0.3 }}
+              >
             {/* Widget Container with Customization Support */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Bookings Widget - Full width by default */}
@@ -3342,12 +3447,23 @@ export default function Dashboard() {
               </CardContent>
             </Card>
             </div>
-          </TabsContent>
+              </motion.div>
+            </TabsContent>
+          </AnimatePresence>
 
 
 
           {/* Profile Tab - Client Specific */}
-          <TabsContent value="profile" className="space-y-6">
+          <AnimatePresence mode="wait">
+            <TabsContent value="profile" className="space-y-6">
+              <motion.div
+                key="profile-tab"
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+                variants={pageVariants}
+                transition={{ duration: 0.3 }}
+              >
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Client Profile Card - Basic Information */}
               <ClientProfileCard user={user} refreshUser={refreshUser} />
@@ -3461,7 +3577,9 @@ export default function Dashboard() {
               {/* User Activity Card */}
               <UserActivityCard user={user} />
             </div>
-          </TabsContent>
+              </motion.div>
+            </TabsContent>
+          </AnimatePresence>
 
           {/* Chat Tab Content */}
           <TabsContent value="chat" className="space-y-6">
@@ -4385,8 +4503,9 @@ export default function Dashboard() {
             </Card>
           </TabsContent>
 
-        </Tabs>
-      </div>
+          </Tabs>
+        </motion.div>
+      </motion.div>
 
       {/* Job Edit Modal */}
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
@@ -4754,6 +4873,6 @@ export default function Dashboard() {
         workerId={ratingBooking?.workerId}
         clientId={user?.id}
       />
-    </div>
+    </motion.div>
   );
 }
