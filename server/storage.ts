@@ -1517,6 +1517,19 @@ export class DatabaseStorage implements IStorage {
       .where(eq(workerBankDetails.id, id));
   }
 
+  // Webhook event tracking to prevent duplicates
+  private processedWebhookEvents: Set<string> = new Set();
+
+  async isWebhookEventProcessed(eventId: string): Promise<boolean> {
+    return this.processedWebhookEvents.has(eventId);
+  }
+
+  async markWebhookEventProcessed(eventId: string): Promise<void> {
+    this.processedWebhookEvents.add(eventId);
+    // In production, store this in database with expiration (e.g., 24 hours)
+    console.log('✅ Webhook event marked as processed:', eventId);
+  }
+
   // Areas method implementation - returning empty array since areas are handled via API
   async getAllAreas(): Promise<any[]> {
     // Areas are now handled via the /api/areas endpoint and shared/states-districts.json

@@ -296,31 +296,124 @@ export function registerWalletRoutes(app: Express) {
     }
   });
 
-  // Webhook endpoint for Razorpay payment notifications
+  // Enhanced webhook endpoint with signature verification  
   app.post('/api/wallet/webhook', async (req: Request, res: Response) => {
     try {
-      console.log('Webhook received:', req.body);
+      const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
+      const signature = req.headers['x-razorpay-signature'] as string;
+      const eventId = req.headers['x-razorpay-event-id'] as string;
       
-      const { event, payload } = req.body;
+      console.log('Webhook received - Event ID:', eventId);
       
-      if (event === 'payment.captured') {
-        const payment = payload.payment.entity;
-        console.log('Payment captured webhook:', payment);
+      // Verify webhook signature for security
+      if (webhookSecret && signature) {
+        const crypto = await import('crypto');
+        const bodyString = Buffer.isBuffer(req.body) ? req.body.toString() : JSON.stringify(req.body);
+        const expectedSignature = crypto.default
+          .createHmac('sha256', webhookSecret)
+          .update(bodyString)
+          .digest('hex');
         
-        // Process the captured payment
-        if (payment.order_id && payment.id) {
-          await RazorpayService.processSuccessfulPayment(
-            payment.order_id,
-            payment.id,
-            payment.method || 'unknown'
-          );
+        if (signature !== expectedSignature) {
+          console.error('❌ Invalid webhook signature');
+          return res.status(400).json({ error: 'Invalid signature' });
         }
+        console.log('✅ Webhook signature verified successfully');
+      } else {
+        console.log('⚠️ Webhook signature verification skipped (no RAZORPAY_WEBHOOK_SECRET configured)');
       }
       
-      res.status(200).json({ status: 'ok' });
+      // Prevent duplicate event processing
+      if (eventId) {
+        // In production, use Redis or database to store processed events
+        const isProcessed = await storage.isWebhookEventProcessed(eventId);
+        if (isProcessed) {
+          console.log('Duplicate webhook event ignored:', eventId);
+          return res.status(200).json({ status: 'duplicate_ignored' });
+        }
+        await storage.markWebhookEventProcessed(eventId);
+      }
+      
+      // Parse webhook body (handle both raw buffer and parsed JSON)
+      let webhookData;
+      if (typeof req.body === 'string') {
+        webhookData = JSON.parse(req.body);
+      } else if (Buffer.isBuffer(req.body)) {
+        webhookData = JSON.parse(req.body.toString());
+      } else {
+        webhookData = req.body; // Already parsed
+      }
+      
+      const { event, payload } = webhookData;
+      
+      console.log('Processing webhook event:', event);
+      
+      switch (event) {
+        case 'payment.captured':
+          const payment = payload.payment.entity;
+          console.log('💰 Payment captured via webhook:', {
+            paymentId: payment.id,
+            orderId: payment.order_id,
+            amount: payment.amount / 100,
+            method: payment.method,
+            status: payment.status
+          });
+          
+          if (payment.order_id && payment.id) {
+            const result = await RazorpayService.processSuccessfulPayment(
+              payment.order_id,
+              payment.id,
+              payment.method || 'unknown'
+            );
+            console.log('✅ Webhook payment processed successfully:', result);
+          }
+          break;
+          
+        case 'payment.failed':
+          const failedPayment = payload.payment.entity;
+          console.log('❌ Payment failed via webhook:', {
+            paymentId: failedPayment.id,
+            orderId: failedPayment.order_id,
+            errorCode: failedPayment.error_code,
+            errorDescription: failedPayment.error_description
+          });
+          
+          if (failedPayment.order_id) {
+            await RazorpayService.handleFailedPayment(
+              failedPayment.order_id,
+              failedPayment.error_description || 'Payment failed'
+            );
+          }
+          break;
+          
+        case 'payment.authorized':
+          const authorizedPayment = payload.payment.entity;
+          console.log('🔓 Payment authorized via webhook:', authorizedPayment.id);
+          break;
+          
+        case 'order.paid':
+          const paidOrder = payload.order.entity;
+          console.log('📋 Order marked as paid via webhook:', paidOrder.id);
+          break;
+          
+        default:
+          console.log('📝 Unhandled webhook event:', event);
+      }
+      
+      // Always respond with 200 to acknowledge receipt
+      res.status(200).json({ 
+        status: 'success',
+        event: event,
+        eventId: eventId,
+        processedAt: new Date().toISOString()
+      });
+      
     } catch (error) {
-      console.error('Webhook error:', error);
-      res.status(500).json({ error: 'Webhook processing failed' });
+      console.error('❌ Webhook processing error:', error);
+      res.status(500).json({ 
+        error: 'Webhook processing failed',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      });
     }
   });
 
