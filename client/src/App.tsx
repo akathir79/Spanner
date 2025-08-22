@@ -44,6 +44,7 @@ import MobileTestApp from "@/pages/MobileTestApp";
 import SearchWorkers from "@/pages/SearchWorkers";
 import WalletPage from "@/pages/WalletPage";
 import PaymentCallback from "@/pages/PaymentCallback";
+import PaymentTest from "@/pages/PaymentTest";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -91,6 +92,7 @@ function Router() {
           <Route path="/search-workers" component={SearchWorkers} />
           <Route path="/wallet" component={WalletPage} />
           <Route path="/payment-callback" component={PaymentCallback} />
+          <Route path="/payment-test" component={PaymentTest} />
           <Route component={NotFound} />
         </Switch>
 

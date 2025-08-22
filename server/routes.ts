@@ -4670,6 +4670,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Register wallet routes
   registerWalletRoutes(app);
+
+  // Simple Razorpay payment routes (following GitHub pattern)
+  app.post("/api/payment/checkout", async (req, res) => {
+    try {
+      const { amount } = req.body;
+      
+      if (!amount || amount <= 0) {
+        return res.status(400).json({ error: "Invalid amount" });
+      }
+
+      const { createSimpleOrder } = await import('./simple-razorpay');
+      
+      const order = await createSimpleOrder(amount, `payment_${Date.now()}`);
+      
+      res.json({ 
+        order,
+        key: process.env.RAZORPAY_KEY_ID 
+      });
+    } catch (error) {
+      console.error("Error creating payment order:", error);
+      res.status(500).json({ error: "Failed to create payment order" });
+    }
+  });
+
+  app.post("/api/payment/verification", async (req, res) => {
+    try {
+      const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+      
+      const { verifyPaymentSignature } = await import('./simple-razorpay');
+      
+      const isValid = verifyPaymentSignature(
+        razorpay_order_id,
+        razorpay_payment_id,
+        razorpay_signature
+      );
+
+      if (isValid) {
+        res.json({ status: 'success', message: 'Payment verified successfully' });
+      } else {
+        res.status(400).json({ status: 'failed', message: 'Payment verification failed' });
+      }
+    } catch (error) {
+      console.error("Error verifying payment:", error);
+      res.status(500).json({ status: 'error', message: 'Payment verification error' });
+    }
+  });
   
   // API Key Management Routes (Super Admin Only)
   
