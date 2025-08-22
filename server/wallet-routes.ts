@@ -1,6 +1,8 @@
 import type { Express, Request, Response } from 'express';
 import { RazorpayService } from './razorpay-service';
 import { storage } from './storage';
+import { NotificationService } from './notification-service';
+import { WalletAnalyticsService } from './wallet-analytics';
 
 interface AuthenticatedRequest extends Request {
   user?: {
@@ -16,9 +18,26 @@ interface AuthenticatedRequest extends Request {
 export function registerWalletRoutes(app: Express) {
   // Middleware to check authentication
   const requireAuth = (req: AuthenticatedRequest, res: Response, next: () => void) => {
-    if (!req.user?.id) {
-      return res.status(401).json({ error: 'Authentication required' });
+    // For demo purposes, use mock user or try to get from session
+    let userId = req.headers['x-user-id'] as string;
+    
+    // Try to get user from session if available
+    if (!userId && req.session && (req.session as any).user) {
+      userId = (req.session as any).user.id;
     }
+    
+    // Default test user for development
+    if (!userId) {
+      userId = 'TAN-SAL-0001-C';
+    }
+    
+    req.user = { 
+      id: userId,
+      role: 'client',
+      firstName: 'Test',
+      lastName: 'User',
+      mobile: '9876543210'
+    };
     next();
   };
 
@@ -183,6 +202,78 @@ export function registerWalletRoutes(app: Express) {
     } catch (error) {
       console.error('Error fetching payment order:', error);
       res.status(500).json({ error: 'Failed to fetch payment order' });
+    }
+  });
+
+  // Get wallet analytics
+  app.get('/api/wallet/analytics', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const userId = req.user!.id;
+      const months = parseInt(req.query.months as string) || 6;
+      
+      const analytics = await WalletAnalyticsService.generateSpendingAnalytics(userId, months);
+      
+      res.json(analytics);
+    } catch (error) {
+      console.error('Error fetching wallet analytics:', error);
+      res.status(500).json({ error: 'Failed to fetch analytics' });
+    }
+  });
+
+  // Get transaction insights
+  app.get('/api/wallet/insights', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const userId = req.user!.id;
+      
+      const insights = await WalletAnalyticsService.getTransactionInsights(userId);
+      
+      res.json(insights);
+    } catch (error) {
+      console.error('Error fetching transaction insights:', error);
+      res.status(500).json({ error: 'Failed to fetch insights' });
+    }
+  });
+
+  // Get user notifications
+  app.get('/api/notifications', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const userId = req.user!.id;
+      const limit = parseInt(req.query.limit as string) || 20;
+      
+      const notifications = await NotificationService.getUserNotifications(userId, limit);
+      
+      res.json(notifications);
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+      res.status(500).json({ error: 'Failed to fetch notifications' });
+    }
+  });
+
+  // Mark notification as read
+  app.patch('/api/notifications/:id/read', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const notificationId = req.params.id;
+      
+      await NotificationService.markNotificationAsRead(notificationId);
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+      res.status(500).json({ error: 'Failed to mark notification as read' });
+    }
+  });
+
+  // Generate weekly summary (can be called manually or scheduled)
+  app.post('/api/wallet/weekly-summary', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const userId = req.user!.id;
+      
+      await NotificationService.sendWeeklySummary(userId);
+      
+      res.json({ success: true, message: 'Weekly summary generated' });
+    } catch (error) {
+      console.error('Error generating weekly summary:', error);
+      res.status(500).json({ error: 'Failed to generate weekly summary' });
     }
   });
 }

@@ -10,6 +10,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
+import WalletAnalytics from './WalletAnalytics';
+import WalletNotifications from './WalletNotifications';
 import { 
   Wallet as WalletIcon, 
   Plus, 
@@ -21,7 +23,9 @@ import {
   Clock,
   CheckCircle,
   XCircle,
-  RefreshCw
+  RefreshCw,
+  BarChart3,
+  Bell
 } from 'lucide-react';
 
 declare global {
@@ -254,7 +258,16 @@ export default function Wallet() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6" data-testid="wallet-container">
+    <div className="max-w-6xl mx-auto space-y-6" data-testid="wallet-container">
+      <Tabs defaultValue="overview" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="analytics">Analytics</TabsTrigger>
+          <TabsTrigger value="notifications">Notifications</TabsTrigger>
+          <TabsTrigger value="settings">Settings</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="overview" className="space-y-6">
       {/* Wallet Balance Card */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -463,6 +476,70 @@ export default function Wallet() {
           </CardContent>
         </Card>
       </motion.div>
+        </TabsContent>
+
+        <TabsContent value="analytics">
+          <WalletAnalytics />
+        </TabsContent>
+
+        <TabsContent value="notifications">
+          <WalletNotifications />
+        </TabsContent>
+
+        <TabsContent value="settings">
+          <Card>
+            <CardHeader>
+              <CardTitle>Wallet Settings</CardTitle>
+              <CardDescription>
+                Manage your wallet preferences and notifications
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="font-medium">Low Balance Alerts</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Get notified when your balance falls below ₹100
+                    </p>
+                  </div>
+                  <Badge variant="secondary">Enabled</Badge>
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="font-medium">Large Transaction Alerts</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Get notified for transactions over ₹5,000
+                    </p>
+                  </div>
+                  <Badge variant="secondary">Enabled</Badge>
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="font-medium">Weekly Summary</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Receive weekly spending analysis
+                    </p>
+                  </div>
+                  <Badge variant="secondary">Enabled</Badge>
+                </div>
+                
+                <Separator />
+                
+                <div className="space-y-4">
+                  <h4 className="font-medium">Auto Top-up (Coming Soon)</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Automatically top up your wallet when balance is low
+                  </p>
+                  <Badge variant="outline">Coming Soon</Badge>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
