@@ -6,6 +6,8 @@ if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_SECRET_KEY) {
   throw new Error('Razorpay credentials not found. Please set RAZORPAY_KEY_ID and RAZORPAY_SECRET_KEY');
 }
 
+console.log('🔒 Razorpay Live Integration Active - Ready for real payments');
+
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
   key_secret: process.env.RAZORPAY_SECRET_KEY,

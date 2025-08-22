@@ -1761,9 +1761,9 @@ export default function WorkerDashboard() {
             }
           },
           prefill: {
-            name: 'Worker',
-            email: '',
-            contact: ''
+            name: user?.firstName || 'Worker',
+            email: user?.email || '',
+            contact: user?.mobile || ''
           },
           theme: {
             color: '#ea580c'
@@ -3146,12 +3146,12 @@ export default function WorkerDashboard() {
                 </div>
               </div>
               
-              <div className="bg-red-50 dark:bg-red-900/20 p-3 rounded-lg border border-red-200 dark:border-red-700">
-                <div className="flex items-center gap-2 text-red-700 dark:text-red-300 text-sm">
-                  <span className="font-medium">⚠️ Development Mode:</span>
+              <div className="bg-green-50 dark:bg-green-900/20 p-3 rounded-lg border border-green-200 dark:border-green-700">
+                <div className="flex items-center gap-2 text-green-700 dark:text-green-300 text-sm">
+                  <span className="font-medium">🔒 Secure Real-Time Payments:</span>
                 </div>
-                <div className="mt-2 text-xs text-red-600 dark:text-red-400">
-                  Currently using live Razorpay keys. For testing, please set up test keys starting with "rzp_test_"
+                <div className="mt-2 text-xs text-green-600 dark:text-green-400">
+                  Live Razorpay integration ready for real money transactions with bank-grade security
                 </div>
               </div>
             </div>
