@@ -22,8 +22,17 @@ export function usePaymentStatus(orderId: string | null, onSuccess: (data: any) 
         } else if (data.status === 'failed') {
           // Payment failed
           setIsPolling(false);
-          onError('Payment failed');
+          onError('Payment failed or cancelled');
           return true;
+        }
+        // Check if payment has been attempted for too long (over 5 minutes)
+        if (data.status === 'attempted') {
+          maxAttemptsRef.current += 1;
+          if (maxAttemptsRef.current >= 60) { // 5 minutes of attempted status
+            setIsPolling(false);
+            onError('Payment timeout - please try again or contact support');
+            return true;
+          }
         }
         // Payment still pending, continue polling
         return false;

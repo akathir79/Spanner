@@ -263,6 +263,14 @@ export function registerWalletRoutes(app: Express) {
               });
             }
           }
+        } else if (razorpayOrder.status === 'failed') {
+          // Handle failed payment
+          await RazorpayService.handleFailedPayment(orderId, 'Payment failed');
+          return res.json({
+            success: true,
+            status: 'failed',
+            message: 'Payment failed'
+          });
         }
 
         // Payment still pending
