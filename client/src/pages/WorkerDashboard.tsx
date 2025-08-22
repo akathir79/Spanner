@@ -2222,11 +2222,26 @@ export default function WorkerDashboard() {
                     {/* Professional Action Buttons */}
                     <div className="space-y-2">
                       <div className="grid grid-cols-2 gap-2">
-                        <Button size="sm" className="bg-amber-600 hover:bg-amber-700 dark:bg-amber-700 dark:hover:bg-amber-800 text-white border-0 font-medium">
+                        <Button 
+                          size="sm" 
+                          className="bg-amber-600 hover:bg-amber-700 dark:bg-amber-700 dark:hover:bg-amber-800 text-white border-0 font-medium"
+                          onClick={() => {
+                            console.log('Dashboard topup clicked - redirecting to wallet');
+                            setLocation('/wallet');
+                          }}
+                        >
                           <Plus className="h-4 w-4 mr-2" />
                           Top Up
                         </Button>
-                        <Button size="sm" variant="outline" className="border-orange-300 dark:border-orange-600 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20 font-medium">
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          className="border-orange-300 dark:border-orange-600 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20 font-medium"
+                          onClick={() => {
+                            console.log('Dashboard withdraw clicked - redirecting to wallet');
+                            setLocation('/wallet');
+                          }}
+                        >
                           <CreditCard className="h-4 w-4 mr-2" />
                           Withdraw
                         </Button>

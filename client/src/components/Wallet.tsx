@@ -173,6 +173,7 @@ export default function Wallet() {
   };
 
   const handleTopup = () => {
+    console.log('Topup button clicked', { topupAmount });
     const amount = parseFloat(topupAmount);
     
     if (!amount || amount <= 0) {
@@ -202,6 +203,7 @@ export default function Wallet() {
       return;
     }
 
+    console.log('Creating topup mutation with amount:', amount);
     createTopupMutation.mutate(amount);
   };
 
@@ -233,6 +235,7 @@ export default function Wallet() {
   });
 
   const handleWithdraw = () => {
+    console.log('Withdraw button clicked', { withdrawAmount });
     const amount = parseFloat(withdrawAmount);
     const balance = parseFloat(walletData?.wallet.balance || '0');
     
@@ -263,6 +266,7 @@ export default function Wallet() {
       return;
     }
 
+    console.log('Creating withdraw mutation with amount:', amount);
     // For demo, use placeholder bank details
     withdrawMutation.mutate({
       amount,
