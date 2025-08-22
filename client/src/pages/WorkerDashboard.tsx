@@ -373,7 +373,16 @@ const WorkerProfileCard = ({ user, refreshUser }: { user: any, refreshUser: () =
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label className="text-sm text-muted-foreground">Aadhaar Number</Label>
+                <div className="flex items-center gap-2 mb-1">
+                  <Label className="text-sm text-muted-foreground">Aadhaar Number</Label>
+                  {user.aadhaarVerified ? (
+                    <Badge className="bg-green-100 text-green-800 border-green-300">Verified</Badge>
+                  ) : user.aadhaarNumber ? (
+                    <Badge className="bg-yellow-100 text-yellow-800 border-yellow-300">Pending</Badge>
+                  ) : (
+                    <Badge className="bg-gray-100 text-gray-800 border-gray-300">Not Added</Badge>
+                  )}
+                </div>
                 <div className="flex items-center gap-2">
                   {isEditing ? (
                     <Input
@@ -398,7 +407,16 @@ const WorkerProfileCard = ({ user, refreshUser }: { user: any, refreshUser: () =
                 </div>
               </div>
               <div>
-                <Label className="text-sm text-muted-foreground">PAN Card</Label>
+                <div className="flex items-center gap-2 mb-1">
+                  <Label className="text-sm text-muted-foreground">PAN Card</Label>
+                  {user.panVerified ? (
+                    <Badge className="bg-green-100 text-green-800 border-green-300">Verified</Badge>
+                  ) : user.panNumber ? (
+                    <Badge className="bg-yellow-100 text-yellow-800 border-yellow-300">Pending</Badge>
+                  ) : (
+                    <Badge className="bg-gray-100 text-gray-800 border-gray-300">Not Added</Badge>
+                  )}
+                </div>
                 {isEditing ? (
                   <Input
                     placeholder="PAN Number"

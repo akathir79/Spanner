@@ -2276,12 +2276,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Update Aadhaar number in worker profile if provided and user is a worker
       if (aadhaarNumber && user.role === 'worker') {
-        // Get worker profile
+        // Get worker profile to verify it exists
         const workerProfile = await storage.getWorkerProfile(userId);
         if (workerProfile) {
-          await storage.updateWorkerProfile(userId, { 
-            aadhaarNumber,
-            aadhaarVerified: false // Reset verification status when updating
+          // Use updateWorker function with workerProfile data
+          await storage.updateWorker(userId, { 
+            workerProfile: {
+              aadhaarNumber,
+              aadhaarVerified: false // Reset verification status when updating
+            }
           });
         } else {
           return res.status(400).json({ error: "Worker profile not found" });
