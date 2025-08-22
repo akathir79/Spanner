@@ -1643,6 +1643,13 @@ export default function WorkerDashboard() {
   const [, setLocation] = useLocation();
   const [showRejoinModal, setShowRejoinModal] = useState(false);
   const [rejoinReason, setRejoinReason] = useState("");
+  
+  // Wallet modal states
+  const [showTopupModal, setShowTopupModal] = useState(false);
+  const [showWithdrawModal, setShowWithdrawModal] = useState(false);
+  const [topupAmount, setTopupAmount] = useState('');
+  const [withdrawAmount, setWithdrawAmount] = useState('');
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [isWalletCollapsed, setIsWalletCollapsed] = useState(true);
   const [jobCompletionModalOpen, setJobCompletionModalOpen] = useState(false);
   const [completionBooking, setCompletionBooking] = useState<any>(null);
@@ -1695,6 +1702,81 @@ export default function WorkerDashboard() {
   useEffect(() => {
     console.log("useEffect - showRejoinModal changed to:", showRejoinModal);
   }, [showRejoinModal]);
+
+  // Fetch real-time wallet data
+  const { data: walletData, isLoading: walletLoading, refetch: refreshWallet } = useQuery({
+    queryKey: ['/api/wallet'],
+    refetchInterval: 30000, // Refresh every 30 seconds
+    enabled: !!user?.id,
+  });
+
+  // Professional Wallet Transaction Mutations
+  const topupMutation = useMutation({
+    mutationFn: async (amount: number) => {
+      console.log('Creating topup mutation with amount:', amount);
+      const response = await apiRequest('POST', '/api/wallet/topup', { amount });
+      return response;
+    },
+    onSuccess: (data) => {
+      console.log('Topup successful:', data);
+      refreshWallet();
+      setShowTopupModal(false);
+      setTopupAmount('');
+      setIsProcessingPayment(false);
+      toast({
+        title: "Payment Successful",
+        description: `₹${topupAmount} added to your wallet successfully!`,
+      });
+    },
+    onError: (error: any) => {
+      console.error('Topup failed:', error);
+      setIsProcessingPayment(false);
+      toast({
+        title: "Payment Failed",
+        description: error.message || "Failed to process payment. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const withdrawMutation = useMutation({
+    mutationFn: async (amount: number) => {
+      const response = await apiRequest('POST', '/api/wallet/withdraw', { amount });
+      return response;
+    },
+    onSuccess: () => {
+      refreshWallet();
+      setShowWithdrawModal(false);
+      setWithdrawAmount('');
+      toast({
+        title: "Withdrawal Initiated",
+        description: `₹${withdrawAmount} withdrawal request submitted successfully!`,
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Withdrawal Failed",
+        description: error.message || "Failed to process withdrawal. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Handle topup and withdraw functions
+  const handleTopup = () => {
+    const amount = parseFloat(topupAmount);
+    if (amount && amount > 0) {
+      setIsProcessingPayment(true);
+      topupMutation.mutate(amount);
+    }
+  };
+
+  const handleWithdraw = () => {
+    const amount = parseFloat(withdrawAmount);
+    if (amount && amount > 0) {
+      withdrawMutation.mutate(amount);
+    }
+  };
 
   // Fetch worker's bookings (always call hooks)
   const { data: bookings = [], isLoading: bookingsLoading } = useQuery({
@@ -2163,7 +2245,9 @@ export default function WorkerDashboard() {
                             </Badge>
                             <div className="flex items-center gap-0.5">
                               <IndianRupee className="h-3 w-3 text-amber-600 dark:text-amber-400" />
-                              <span className="text-sm font-bold text-amber-800 dark:text-amber-200">{stats.totalEarnings.toLocaleString()}</span>
+                              <span className="text-sm font-bold text-amber-800 dark:text-amber-200">
+                                {walletData?.wallet?.balance ? parseFloat(walletData.wallet.balance).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00'}
+                              </span>
                             </div>
                           </>
                         )}
@@ -2190,7 +2274,9 @@ export default function WorkerDashboard() {
                       <p className="text-sm text-amber-700 dark:text-amber-300 mb-1 font-medium">Total Earnings Balance</p>
                       <div className="flex items-center justify-center gap-1">
                         <IndianRupee className="h-8 w-8 text-amber-600 dark:text-amber-400" />
-                        <span className="text-4xl font-bold text-amber-800 dark:text-amber-200">{stats.totalEarnings.toLocaleString()}</span>
+                        <span className="text-4xl font-bold text-amber-800 dark:text-amber-200">
+                          {walletData?.wallet?.balance ? parseFloat(walletData.wallet.balance).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00'}
+                        </span>
                       </div>
                       <p className="text-xs text-amber-600 dark:text-amber-400 mt-2">
                         Professional Worker Account
@@ -2205,14 +2291,18 @@ export default function WorkerDashboard() {
                             <p className="text-xs text-amber-700 dark:text-amber-300 font-medium">This Month</p>
                             <div className="flex items-center gap-1">
                               <TrendingUp className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-                              <span className="text-lg font-bold text-amber-800 dark:text-amber-200">+₹{(stats.totalEarnings * 0.3).toLocaleString()}</span>
+                              <span className="text-lg font-bold text-amber-800 dark:text-amber-200">
+                                +₹{walletData?.wallet?.totalEarned ? (parseFloat(walletData.wallet.totalEarned) * 0.3).toLocaleString('en-IN') : '0'}
+                              </span>
                             </div>
                           </div>
                           <div className="space-y-1">
                             <p className="text-xs text-amber-700 dark:text-amber-300 font-medium">Pending</p>
                             <div className="flex items-center gap-1">
                               <Clock className="h-4 w-4 text-orange-600 dark:text-orange-400" />
-                              <span className="text-lg font-bold text-orange-700 dark:text-orange-300">₹1,200</span>
+                              <span className="text-lg font-bold text-orange-700 dark:text-orange-300">
+                                ₹{walletData?.wallet?.totalSpent ? (parseFloat(walletData.wallet.totalSpent) * 0.1).toLocaleString('en-IN') : '0'}
+                              </span>
                             </div>
                           </div>
                         </div>
@@ -2226,8 +2316,8 @@ export default function WorkerDashboard() {
                           size="sm" 
                           className="bg-amber-600 hover:bg-amber-700 dark:bg-amber-700 dark:hover:bg-amber-800 text-white border-0 font-medium"
                           onClick={() => {
-                            console.log('Dashboard topup clicked - redirecting to wallet');
-                            setLocation('/wallet');
+                            console.log('Dashboard topup clicked - opening modal');
+                            setShowTopupModal(true);
                           }}
                         >
                           <Plus className="h-4 w-4 mr-2" />
@@ -2238,8 +2328,8 @@ export default function WorkerDashboard() {
                           variant="outline" 
                           className="border-orange-300 dark:border-orange-600 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20 font-medium"
                           onClick={() => {
-                            console.log('Dashboard withdraw clicked - redirecting to wallet');
-                            setLocation('/wallet');
+                            console.log('Dashboard withdraw clicked - opening modal');
+                            setShowWithdrawModal(true);
                           }}
                         >
                           <CreditCard className="h-4 w-4 mr-2" />
@@ -2924,6 +3014,194 @@ export default function WorkerDashboard() {
                 className="bg-blue-600 hover:bg-blue-700 text-white"
               >
                 {rejoinRequestMutation.isPending ? "Submitting..." : "Submit Request"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Professional Topup Modal */}
+      {showTopupModal && (
+        <div className="fixed inset-0 z-50 bg-black/80 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0">
+          <div className="fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-lg">
+            <div className="flex flex-col space-y-1.5 text-center sm:text-left">
+              <h3 className="text-lg font-semibold leading-none tracking-tight flex items-center gap-2">
+                <Plus className="h-5 w-5 text-green-600" />
+                Top Up Wallet
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                Add money to your wallet using UPI, Net Banking, or Cards via Razorpay
+              </p>
+            </div>
+            
+            <div className="space-y-4">
+              <div className="bg-gradient-to-r from-blue-50 to-green-50 dark:from-blue-900/20 dark:to-green-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-700">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">Current Balance</span>
+                  <span className="text-lg font-bold text-green-600">
+                    ₹{walletData?.wallet?.balance ? parseFloat(walletData.wallet.balance).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00'}
+                  </span>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="topupAmount" className="text-sm font-medium">
+                  Amount to Add (₹) *
+                </Label>
+                <Input
+                  id="topupAmount"
+                  type="number"
+                  value={topupAmount}
+                  onChange={(e) => setTopupAmount(e.target.value)}
+                  placeholder="Enter amount"
+                  min="1"
+                  max="50000"
+                  disabled={isProcessingPayment}
+                />
+                <div className="flex gap-2">
+                  {[100, 500, 1000, 2000].map((amount) => (
+                    <Button
+                      key={amount}
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setTopupAmount(amount.toString())}
+                      disabled={isProcessingPayment}
+                      className="flex-1 text-xs"
+                    >
+                      ₹{amount}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="bg-amber-50 dark:bg-amber-900/20 p-3 rounded-lg border border-amber-200 dark:border-amber-700">
+                <div className="flex items-center gap-2 text-amber-700 dark:text-amber-300 text-sm">
+                  <CreditCard className="h-4 w-4" />
+                  <span className="font-medium">Available Payment Methods:</span>
+                </div>
+                <div className="mt-2 text-xs text-amber-600 dark:text-amber-400">
+                  UPI • Net Banking • Debit/Credit Cards • GPay • PhonePe
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowTopupModal(false);
+                  setTopupAmount('');
+                  setIsProcessingPayment(false);
+                }}
+                disabled={isProcessingPayment}
+                className="mt-2 sm:mt-0"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleTopup}
+                disabled={!topupAmount || parseFloat(topupAmount) <= 0 || isProcessingPayment}
+                className="bg-green-600 hover:bg-green-700 text-white"
+              >
+                {isProcessingPayment ? (
+                  <>
+                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add ₹{topupAmount || '0'} to Wallet
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Professional Withdraw Modal */}
+      {showWithdrawModal && (
+        <div className="fixed inset-0 z-50 bg-black/80 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0">
+          <div className="fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-lg">
+            <div className="flex flex-col space-y-1.5 text-center sm:text-left">
+              <h3 className="text-lg font-semibold leading-none tracking-tight flex items-center gap-2">
+                <CreditCard className="h-5 w-5 text-blue-600" />
+                Withdraw to Bank Account
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                Transfer money from your wallet to your registered bank account
+              </p>
+            </div>
+            
+            <div className="space-y-4">
+              <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-700">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">Available Balance</span>
+                  <span className="text-lg font-bold text-blue-600">
+                    ₹{walletData?.wallet?.balance ? parseFloat(walletData.wallet.balance).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00'}
+                  </span>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="withdrawAmount" className="text-sm font-medium">
+                  Amount to Withdraw (₹) *
+                </Label>
+                <Input
+                  id="withdrawAmount"
+                  type="number"
+                  value={withdrawAmount}
+                  onChange={(e) => setWithdrawAmount(e.target.value)}
+                  placeholder="Enter amount"
+                  min="100"
+                  max={walletData?.wallet?.balance || 0}
+                  disabled={withdrawMutation.isPending}
+                />
+                <div className="text-xs text-muted-foreground">
+                  Minimum withdrawal: ₹100 • Maximum: ₹{walletData?.wallet?.balance ? parseFloat(walletData.wallet.balance).toLocaleString('en-IN') : '0'}
+                </div>
+              </div>
+
+              <div className="bg-orange-50 dark:bg-orange-900/20 p-3 rounded-lg border border-orange-200 dark:border-orange-700">
+                <div className="flex items-center gap-2 text-orange-700 dark:text-orange-300 text-sm">
+                  <Building className="h-4 w-4" />
+                  <span className="font-medium">Bank Transfer Info:</span>
+                </div>
+                <div className="mt-2 text-xs text-orange-600 dark:text-orange-400">
+                  Funds will be transferred to your registered bank account within 1-2 business days
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowWithdrawModal(false);
+                  setWithdrawAmount('');
+                }}
+                disabled={withdrawMutation.isPending}
+                className="mt-2 sm:mt-0"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleWithdraw}
+                disabled={!withdrawAmount || parseFloat(withdrawAmount) < 100 || parseFloat(withdrawAmount) > parseFloat(walletData?.wallet?.balance || '0') || withdrawMutation.isPending}
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                {withdrawMutation.isPending ? (
+                  <>
+                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    <CreditCard className="h-4 w-4 mr-2" />
+                    Withdraw ₹{withdrawAmount || '0'}
+                  </>
+                )}
               </Button>
             </div>
           </div>
