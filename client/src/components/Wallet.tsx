@@ -205,6 +205,75 @@ export default function Wallet() {
     createTopupMutation.mutate(amount);
   };
 
+  // Add withdraw functionality
+  const [withdrawAmount, setWithdrawAmount] = useState('');
+  const [showWithdrawModal, setShowWithdrawModal] = useState(false);
+
+  const withdrawMutation = useMutation({
+    mutationFn: async (data: { amount: number; bankDetails: any }) => {
+      const response = await apiRequest('POST', '/api/wallet/withdraw', data);
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Withdrawal Initiated",
+        description: `₹${withdrawAmount} withdrawal request submitted successfully!`,
+      });
+      setWithdrawAmount('');
+      setShowWithdrawModal(false);
+      queryClient.invalidateQueries({ queryKey: ['/api/wallet'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Withdrawal Failed",
+        description: error.message || "Failed to process withdrawal",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleWithdraw = () => {
+    const amount = parseFloat(withdrawAmount);
+    const balance = parseFloat(walletData?.wallet.balance || '0');
+    
+    if (!amount || amount <= 0) {
+      toast({
+        title: "Invalid Amount",
+        description: "Please enter a valid amount greater than 0",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (amount < 100) {
+      toast({
+        title: "Minimum Amount",
+        description: "Minimum withdrawal amount is ₹100",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (amount > balance) {
+      toast({
+        title: "Insufficient Balance",
+        description: "Withdrawal amount cannot exceed your wallet balance",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // For demo, use placeholder bank details
+    withdrawMutation.mutate({
+      amount,
+      bankDetails: {
+        accountNumber: "XXXX1234",
+        ifscCode: "HDFC0001234",
+        accountHolderName: "Test User"
+      }
+    });
+  };
+
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'completed':
@@ -402,6 +471,82 @@ export default function Wallet() {
                     </div>
                   ))}
                 </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      {/* Withdraw Section */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
+      >
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <ArrowDownLeft className="h-5 w-5" />
+              Withdraw Funds
+            </CardTitle>
+            <CardDescription>
+              Transfer money from your wallet to your bank account
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="withdraw-amount">Amount (₹)</Label>
+                <Input
+                  id="withdraw-amount"
+                  type="number"
+                  placeholder="Enter amount (min ₹100)"
+                  value={withdrawAmount}
+                  onChange={(e) => setWithdrawAmount(e.target.value)}
+                  min="100"
+                  max={parseFloat(walletData?.wallet.balance || '0')}
+                  data-testid="input-withdraw-amount"
+                />
+              </div>
+
+              <div className="grid grid-cols-3 gap-2">
+                {[500, 1000, 2000].filter(amount => amount <= parseFloat(walletData?.wallet.balance || '0')).map((amount) => (
+                  <Button
+                    key={amount}
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setWithdrawAmount(amount.toString())}
+                    data-testid={`button-quick-withdraw-${amount}`}
+                  >
+                    ₹{amount}
+                  </Button>
+                ))}
+              </div>
+
+              <Button
+                onClick={handleWithdraw}
+                disabled={withdrawMutation.isPending || parseFloat(walletData?.wallet.balance || '0') < 100}
+                className="w-full"
+                variant="outline"
+                data-testid="button-withdraw"
+              >
+                {withdrawMutation.isPending ? (
+                  <>
+                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    <ArrowDownLeft className="h-4 w-4 mr-2" />
+                    Withdraw ₹{withdrawAmount || '0'}
+                  </>
+                )}
+              </Button>
+
+              <div className="text-xs text-muted-foreground space-y-1">
+                <div>• Minimum withdrawal: ₹100</div>
+                <div>• Processing time: 1-3 business days</div>
+                <div>• Available balance: ₹{parseFloat(walletData?.wallet.balance || '0').toLocaleString('en-IN')}</div>
               </div>
             </div>
           </CardContent>

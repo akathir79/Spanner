@@ -26,17 +26,17 @@ export function registerWalletRoutes(app: Express) {
       userId = (req.session as any).user.id;
     }
     
-    // Default test user for development
+    // Use existing worker user for development
     if (!userId) {
-      userId = 'TAN-SAL-0001-C';
+      userId = 'TAN-SAL-0001-W';
     }
     
     req.user = { 
       id: userId,
-      role: 'client',
+      role: 'worker',
       firstName: 'Test',
-      lastName: 'User',
-      mobile: '9876543210'
+      lastName: 'Worker',
+      mobile: '9976587001'
     };
     next();
   };
@@ -274,6 +274,72 @@ export function registerWalletRoutes(app: Express) {
     } catch (error) {
       console.error('Error generating weekly summary:', error);
       res.status(500).json({ error: 'Failed to generate weekly summary' });
+    }
+  });
+
+  // Withdraw funds route
+  app.post('/api/wallet/withdraw', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const userId = req.user!.id;
+      const { amount, bankDetails } = req.body;
+
+      // Validate withdrawal amount
+      if (!amount || amount <= 0) {
+        return res.status(400).json({ error: 'Invalid withdrawal amount' });
+      }
+
+      if (amount < 100) {
+        return res.status(400).json({ error: 'Minimum withdrawal amount is ₹100' });
+      }
+
+      // Check wallet balance
+      const wallet = await storage.getUserWallet(userId);
+      if (!wallet) {
+        return res.status(404).json({ error: 'Wallet not found' });
+      }
+
+      const currentBalance = parseFloat(wallet.balance);
+      if (amount > currentBalance) {
+        return res.status(400).json({ error: 'Insufficient balance' });
+      }
+
+      // Deduct amount from wallet
+      const updatedWallet = await storage.updateWalletBalance(userId, amount, 'debit');
+      
+      // Create withdrawal transaction record
+      await storage.createWalletTransaction({
+        userId,
+        walletId: wallet.id,
+        type: 'debit',
+        category: 'withdrawal',
+        amount: amount.toString(),
+        balanceBefore: wallet.balance,
+        balanceAfter: updatedWallet?.balance || wallet.balance,
+        description: `Withdrawal to bank account ${bankDetails.accountNumber || 'XXXX1234'}`,
+        netAmount: amount.toString(),
+        status: 'pending', // Withdrawal would be pending until bank transfer completes
+        metadata: JSON.stringify({
+          bankDetails,
+          withdrawalMethod: 'bank_transfer'
+        }),
+      });
+
+      // Send withdrawal notification
+      await NotificationService.sendLargeTransactionAlert(
+        userId, 
+        amount.toString(), 
+        'debit'
+      );
+
+      res.json({ 
+        success: true, 
+        message: 'Withdrawal request submitted successfully',
+        wallet: updatedWallet,
+        estimatedProcessingTime: '1-3 business days'
+      });
+    } catch (error) {
+      console.error('Error processing withdrawal:', error);
+      res.status(500).json({ error: 'Failed to process withdrawal' });
     }
   });
 }
