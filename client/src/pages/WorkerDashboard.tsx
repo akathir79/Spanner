@@ -1740,7 +1740,7 @@ export default function WorkerDashboard() {
           currency: data.order.currency || 'INR',
           name: 'SPANNER',
           description: 'Wallet Top Up',
-          order_id: data.order.id,
+          order_id: data.order.orderId,
           handler: async function (response: any) {
             try {
               // Verify payment on backend
@@ -3143,6 +3143,15 @@ export default function WorkerDashboard() {
                 </div>
                 <div className="mt-2 text-xs text-amber-600 dark:text-amber-400">
                   UPI • Net Banking • Debit/Credit Cards • GPay • PhonePe
+                </div>
+              </div>
+              
+              <div className="bg-red-50 dark:bg-red-900/20 p-3 rounded-lg border border-red-200 dark:border-red-700">
+                <div className="flex items-center gap-2 text-red-700 dark:text-red-300 text-sm">
+                  <span className="font-medium">⚠️ Development Mode:</span>
+                </div>
+                <div className="mt-2 text-xs text-red-600 dark:text-red-400">
+                  Currently using live Razorpay keys. For testing, please set up test keys starting with "rzp_test_"
                 </div>
               </div>
             </div>
