@@ -2165,8 +2165,103 @@ export class DatabaseStorage implements IStorage {
 
   // User Wallets implementation
   async createUserWallet(wallet: InsertUserWallet): Promise<UserWallet> {
-    const [newWallet] = await db.insert(userWallets).values(wallet).returning();
+    const [newWallet] = await db.insert(userWallets).values({
+      ...wallet,
+      balance: wallet.balance || '0.00', // New workers start with zero balance
+      totalEarned: wallet.totalEarned || '0.00',
+      totalSpent: wallet.totalSpent || '0.00',
+      totalToppedUp: wallet.totalToppedUp || '0.00'
+    }).returning();
     return newWallet;
+  }
+
+  // Calculate real-time worker earnings from completed jobs  
+  async calculateWorkerEarnings(userId: string) {
+    try {
+      // Get all completed bookings for this worker
+      const completedBookings = await db
+        .select()
+        .from(bookings)
+        .where(and(
+          eq(bookings.workerId, userId),
+          eq(bookings.status, 'completed')
+        ));
+
+      // Get all wallet transactions for this user
+      const transactions = await db
+        .select()
+        .from(walletTransactions)
+        .where(eq(walletTransactions.userId, userId));
+
+      // Calculate totals
+      let totalEarned = 0;
+      let totalSpent = 0;
+      let totalToppedUp = 0;
+      let thisMonthEarnings = 0;
+      let pendingEarnings = 0;
+
+      const currentDate = new Date();
+      const currentMonth = currentDate.getMonth();
+      const currentYear = currentDate.getFullYear();
+
+      // Calculate earnings from completed bookings
+      completedBookings.forEach(booking => {
+        const amount = parseFloat(booking.totalAmount || '0');
+        totalEarned += amount;
+
+        const bookingDate = new Date(booking.updatedAt);
+        if (bookingDate.getMonth() === currentMonth && bookingDate.getFullYear() === currentYear) {
+          thisMonthEarnings += amount;
+        }
+      });
+
+      // Calculate from wallet transactions
+      transactions.forEach(transaction => {
+        const amount = parseFloat(transaction.amount);
+        
+        if (transaction.type === 'topup') {
+          totalToppedUp += amount;
+        } else if (transaction.type === 'withdrawal') {
+          totalSpent += amount;
+        }
+      });
+
+      // Get pending bookings
+      const pendingBookings = await db
+        .select()
+        .from(bookings)
+        .where(and(
+          eq(bookings.workerId, userId),
+          eq(bookings.status, 'in_progress')
+        ));
+
+      pendingBookings.forEach(booking => {
+        pendingEarnings += parseFloat(booking.totalAmount || '0');
+      });
+
+      const currentBalance = totalEarned + totalToppedUp - totalSpent;
+
+      return {
+        currentBalance: Math.max(0, currentBalance).toFixed(2),
+        totalEarned: totalEarned.toFixed(2),
+        totalSpent: totalSpent.toFixed(2),
+        totalToppedUp: totalToppedUp.toFixed(2),
+        thisMonthEarnings: thisMonthEarnings.toFixed(2),
+        pendingEarnings: pendingEarnings.toFixed(2),
+        yearToDateEarnings: totalEarned.toFixed(2)
+      };
+    } catch (error) {
+      console.error('Error calculating worker earnings:', error);
+      return {
+        currentBalance: '0.00',
+        totalEarned: '0.00',
+        totalSpent: '0.00',
+        totalToppedUp: '0.00',
+        thisMonthEarnings: '0.00',
+        pendingEarnings: '0.00',
+        yearToDateEarnings: '0.00'
+      };
+    }
   }
 
   async getUserWallet(userId: string): Promise<UserWallet | undefined> {

@@ -2294,7 +2294,7 @@ export default function WorkerDashboard() {
                             <div className="flex items-center gap-1">
                               <TrendingUp className="h-4 w-4 text-amber-600 dark:text-amber-400" />
                               <span className="text-lg font-bold text-amber-800 dark:text-amber-200">
-                                +₹{walletData?.wallet?.totalEarned ? (parseFloat(walletData.wallet.totalEarned) * 0.3).toLocaleString('en-IN') : '0'}
+                                +₹{walletData?.earnings?.thisMonth ? parseFloat(walletData.earnings.thisMonth).toLocaleString('en-IN') : '0'}
                               </span>
                             </div>
                           </div>
@@ -2303,7 +2303,7 @@ export default function WorkerDashboard() {
                             <div className="flex items-center gap-1">
                               <Clock className="h-4 w-4 text-orange-600 dark:text-orange-400" />
                               <span className="text-lg font-bold text-orange-700 dark:text-orange-300">
-                                ₹{walletData?.wallet?.totalSpent ? (parseFloat(walletData.wallet.totalSpent) * 0.1).toLocaleString('en-IN') : '0'}
+                                ₹{walletData?.earnings?.pending ? parseFloat(walletData.earnings.pending).toLocaleString('en-IN') : '0'}
                               </span>
                             </div>
                           </div>

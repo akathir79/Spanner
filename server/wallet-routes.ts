@@ -41,22 +41,44 @@ export function registerWalletRoutes(app: Express) {
     next();
   };
 
-  // Get user wallet balance and details
+  // Get user wallet balance and details with real-time calculations
   app.get('/api/wallet', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
     try {
       const userId = req.user!.id;
       let wallet = await storage.getUserWallet(userId);
       
       if (!wallet) {
-        // Create wallet if it doesn't exist
-        wallet = await storage.createUserWallet({ userId });
+        // Create wallet with zero balance for new workers
+        wallet = await storage.createUserWallet({ 
+          userId,
+          balance: '0.00',
+          totalEarned: '0.00',
+          totalSpent: '0.00',
+          totalToppedUp: '0.00'
+        });
       }
 
+      // Calculate real-time earnings from completed jobs
+      const realTimeEarnings = await storage.calculateWorkerEarnings(userId);
       const recentTransactions = await storage.getWalletTransactionsByUser(userId, 10);
       
+      // Update wallet with real-time data
+      const updatedWallet = {
+        ...wallet,
+        balance: realTimeEarnings.currentBalance,
+        totalEarned: realTimeEarnings.totalEarned,
+        totalSpent: realTimeEarnings.totalSpent,
+        totalToppedUp: realTimeEarnings.totalToppedUp
+      };
+      
       res.json({
-        wallet,
+        wallet: updatedWallet,
         recentTransactions,
+        earnings: {
+          thisMonth: realTimeEarnings.thisMonthEarnings,
+          pending: realTimeEarnings.pendingEarnings,
+          yearToDate: realTimeEarnings.yearToDateEarnings
+        },
         paymentMethods: await RazorpayService.getPaymentMethods(),
       });
     } catch (error) {
