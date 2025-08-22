@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -97,9 +97,31 @@ const mockWorkers = [
 
 export default function Home() {
   const { t } = useLanguage();
-  const { user, login } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
+  
+  // Redirect authenticated users to appropriate dashboard
+  useEffect(() => {
+    if (!isLoading && isAuthenticated && user) {
+      console.log('User is authenticated, redirecting to dashboard...', user.role);
+      
+      // Redirect based on user role
+      switch (user.role) {
+        case 'worker':
+          setLocation('/worker-dashboard');
+          break;
+        case 'admin':
+        case 'super_admin':
+          setLocation('/admin-dashboard');
+          break;
+        case 'client':
+        default:
+          setLocation('/dashboard');
+          break;
+      }
+    }
+  }, [isLoading, isAuthenticated, user, setLocation]);
 
   // Login form states
   const [loginMode, setLoginMode] = useState<'otp' | 'password' | 'forgot' | 'recovery'>('otp');
@@ -108,7 +130,7 @@ export default function Home() {
   const [showPassword, setShowPassword] = useState(false);
   const [otp, setOtp] = useState('');
   const [email, setEmail] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [isFormLoading, setIsFormLoading] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
   const [selectedRole, setSelectedRole] = useState<'client' | 'worker' | null>(null);
 
@@ -139,7 +161,7 @@ export default function Home() {
       return;
     }
 
-    setIsLoading(true);
+    setIsFormLoading(true);
     try {
       // Simulate OTP sending
       await new Promise(resolve => setTimeout(resolve, 1500));
@@ -155,7 +177,7 @@ export default function Home() {
         variant: "destructive",
       });
     } finally {
-      setIsLoading(false);
+      setIsFormLoading(false);
     }
   };
 
@@ -169,7 +191,7 @@ export default function Home() {
       return;
     }
 
-    setIsLoading(true);
+    setIsFormLoading(true);
     try {
       // Mock successful login for development
       const mockUser = {
@@ -196,7 +218,7 @@ export default function Home() {
         variant: "destructive",
       });
     } finally {
-      setIsLoading(false);
+      setIsFormLoading(false);
     }
   };
 
@@ -210,7 +232,7 @@ export default function Home() {
       return;
     }
 
-    setIsLoading(true);
+    setIsFormLoading(true);
     try {
       // Mock successful login for development
       const mockUser = {
@@ -236,7 +258,7 @@ export default function Home() {
         variant: "destructive",
       });
     } finally {
-      setIsLoading(false);
+      setIsFormLoading(false);
     }
   };
 
@@ -250,7 +272,7 @@ export default function Home() {
       return;
     }
 
-    setIsLoading(true);
+    setIsFormLoading(true);
     try {
       await new Promise(resolve => setTimeout(resolve, 1500));
       toast({
@@ -265,7 +287,7 @@ export default function Home() {
         variant: "destructive",
       });
     } finally {
-      setIsLoading(false);
+      setIsFormLoading(false);
     }
   };
 
@@ -279,7 +301,7 @@ export default function Home() {
       return;
     }
 
-    setIsLoading(true);
+    setIsFormLoading(true);
     try {
       await new Promise(resolve => setTimeout(resolve, 1500));
       toast({
@@ -296,7 +318,7 @@ export default function Home() {
         variant: "destructive",
       });
     } finally {
-      setIsLoading(false);
+      setIsFormLoading(false);
     }
   };
 
