@@ -167,6 +167,28 @@ export class RazorpayService {
     }
   }
 
+  static async getOrderStatus(orderId: string) {
+    try {
+      const order = await razorpay.orders.fetch(orderId);
+      console.log('Fetched order status:', order);
+      return order;
+    } catch (error) {
+      console.error('Error fetching order status:', error);
+      throw error;
+    }
+  }
+
+  static async getPaymentsForOrder(orderId: string) {
+    try {
+      const payments = await razorpay.orders.fetchPayments(orderId);
+      console.log('Fetched payments for order:', payments);
+      return payments;
+    } catch (error) {
+      console.error('Error fetching payments for order:', error);
+      throw error;
+    }
+  }
+
   static async createCustomer(userDetails: {
     name: string;
     email?: string;

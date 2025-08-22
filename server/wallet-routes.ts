@@ -209,6 +209,85 @@ export function registerWalletRoutes(app: Express) {
     }
   });
 
+  // Check payment status endpoint for polling
+  app.get('/api/wallet/payment-status/:orderId', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const { orderId } = req.params;
+      console.log('Checking payment status for order:', orderId);
+
+      // Get payment order from database
+      const paymentOrder = await storage.getPaymentOrderByRazorpayId(orderId);
+      if (!paymentOrder) {
+        return res.status(404).json({ 
+          success: false, 
+          error: 'Payment order not found' 
+        });
+      }
+
+      // If already processed, return success
+      if (paymentOrder.status === 'paid') {
+        return res.json({
+          success: true,
+          status: 'paid',
+          message: 'Payment already processed',
+          paymentOrder
+        });
+      }
+
+      // Check with Razorpay API
+      try {
+        const razorpayOrder = await RazorpayService.getOrderStatus(orderId);
+        console.log('Razorpay order status:', razorpayOrder);
+
+        if (razorpayOrder.status === 'paid') {
+          // Find the payment details
+          const payments = await RazorpayService.getPaymentsForOrder(orderId);
+          console.log('Payments for order:', payments);
+
+          if (payments && payments.items && payments.items.length > 0) {
+            const successfulPayment = payments.items.find(p => p.status === 'captured');
+            if (successfulPayment) {
+              // Process the payment
+              const result = await RazorpayService.processSuccessfulPayment(
+                orderId,
+                successfulPayment.id,
+                successfulPayment.method || 'unknown'
+              );
+
+              return res.json({
+                success: true,
+                status: 'paid',
+                message: 'Payment processed successfully',
+                transaction: result.walletTransaction,
+                newBalance: result.newBalance
+              });
+            }
+          }
+        }
+
+        // Payment still pending
+        res.json({
+          success: true,
+          status: razorpayOrder.status || 'created',
+          message: 'Payment pending'
+        });
+      } catch (razorpayError) {
+        console.error('Razorpay API error:', razorpayError);
+        res.json({
+          success: true,
+          status: 'pending',
+          message: 'Checking payment status...'
+        });
+      }
+    } catch (error) {
+      console.error('Error checking payment status:', error);
+      res.status(500).json({ 
+        success: false, 
+        error: 'Failed to check payment status' 
+      });
+    }
+  });
+
   // Webhook endpoint for Razorpay payment notifications
   app.post('/api/wallet/webhook', async (req: Request, res: Response) => {
     try {

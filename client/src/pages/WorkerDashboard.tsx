@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
+import { usePaymentStatus } from "@/hooks/usePaymentStatus";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 
 import { Badge } from "@/components/ui/badge";
@@ -1712,6 +1713,38 @@ export default function WorkerDashboard() {
     enabled: !!user?.id,
   });
 
+  // Payment Status Polling State
+  const [currentOrderId, setCurrentOrderId] = useState<string | null>(null);
+  const [paymentPolling, setPaymentPolling] = useState(false);
+
+  // Payment status polling hook
+  const { isPolling } = usePaymentStatus(
+    currentOrderId,
+    (data) => {
+      // Payment success
+      console.log('Payment verified via polling:', data);
+      refreshWallet();
+      setCurrentOrderId(null);
+      setPaymentPolling(false);
+      setShowTopupModal(false);
+      toast({
+        title: "Payment Successful!",
+        description: `₹${data.transaction?.amount || '0'} has been added to your wallet.`,
+      });
+    },
+    (error) => {
+      // Payment error
+      console.error('Payment polling error:', error);
+      setCurrentOrderId(null);
+      setPaymentPolling(false);
+      toast({
+        title: "Payment Status Check Failed",
+        description: error,
+        variant: "destructive",
+      });
+    }
+  );
+
   // Professional Wallet Transaction Mutations
   const topupMutation = useMutation({
     mutationFn: async (amount: number) => {
@@ -1722,6 +1755,10 @@ export default function WorkerDashboard() {
       if (!data.success || !data.order) {
         throw new Error(data.error || 'Failed to create payment order');
       }
+
+      // Store order ID for status polling
+      setCurrentOrderId(data.order.orderId);
+      setPaymentPolling(true);
 
       // Load Razorpay script if not already loaded
       if (!window.Razorpay) {
@@ -1755,6 +1792,8 @@ export default function WorkerDashboard() {
               console.log('Payment verification response:', verifyData);
               
               if (verifyData.success) {
+                setCurrentOrderId(null); // Stop polling since we got direct response
+                setPaymentPolling(false);
                 resolve(verifyData);
               } else {
                 reject(new Error(verifyData.error || 'Payment verification failed'));
@@ -1774,7 +1813,8 @@ export default function WorkerDashboard() {
           },
           modal: {
             ondismiss: function() {
-              reject(new Error('Payment cancelled by user'));
+              // Don't stop polling on dismiss - user might complete payment via QR scan
+              console.log('Payment modal dismissed - continuing to poll for payment status');
             }
           },
           callback_url: window.location.origin + '/payment-callback',
@@ -3160,6 +3200,18 @@ export default function WorkerDashboard() {
                   Live Razorpay integration ready for real money transactions with bank-grade security
                 </div>
               </div>
+              
+              {paymentPolling && (
+                <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-200 dark:border-blue-700">
+                  <div className="flex items-center gap-2 text-blue-700 dark:text-blue-300 text-sm">
+                    <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                    <span className="font-medium">Checking Payment Status...</span>
+                  </div>
+                  <div className="mt-2 text-xs text-blue-600 dark:text-blue-400">
+                    Complete your payment via QR scan or UPI. We'll detect it automatically.
+                  </div>
+                </div>
+              )}
             </div>
             
             <div className="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2">
@@ -3177,13 +3229,18 @@ export default function WorkerDashboard() {
               </Button>
               <Button
                 onClick={handleTopup}
-                disabled={!topupAmount || parseFloat(topupAmount) <= 0 || isProcessingPayment}
+                disabled={!topupAmount || parseFloat(topupAmount) <= 0 || isProcessingPayment || paymentPolling}
                 className="bg-green-600 hover:bg-green-700 text-white"
               >
                 {isProcessingPayment ? (
                   <>
                     <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
                     Processing...
+                  </>
+                ) : paymentPolling ? (
+                  <>
+                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                    Waiting for Payment...
                   </>
                 ) : (
                   <>
