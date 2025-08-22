@@ -33,6 +33,8 @@ interface AuthContextType {
   isAuthenticated: boolean;
   login: (userData: User) => void;
   logout: () => void;
+  refreshUser: () => Promise<void>;
+  updateUser: (updatedFields: Partial<User>) => void;
   loginWithOtp: (mobile: string, role: string) => Promise<{ success: boolean; otp?: string; error?: string }>;
   verifyOtp: (mobile: string, otp: string, purpose: string) => Promise<User | null>;
   signupClient: (data: any) => Promise<{ success: boolean; user?: User; error?: string }>;
@@ -71,6 +73,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem("user");
     // Redirect to home page after logout
     setLocation("/");
+  };
+
+  // Update user data locally and sync with localStorage
+  const updateUser = (updatedFields: Partial<User>) => {
+    if (!user) return;
+    
+    const updatedUser = { ...user, ...updatedFields };
+    setUser(updatedUser);
+    localStorage.setItem("user", JSON.stringify(updatedUser));
   };
 
   const loginWithOtp = async (mobile: string, role: string) => {
@@ -156,17 +167,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Refresh user data from server
   const refreshUser = async () => {
     if (!user?.id) return false;
     
     try {
       console.log("🔄 Refreshing user profile...");
-      const response = await fetch(`/api/user/refresh/${user.id}`);
+      const response = await fetch(`/api/users/${user.id}`);
       if (response.ok) {
-        const data = await response.json();
-        console.log("🔄 Fresh user data from server:", data.user);
-        setUser(data.user);
-        localStorage.setItem("user", JSON.stringify(data.user));
+        const updatedUser = await response.json();
+        console.log("🔄 Fresh user data from server:", updatedUser);
+        setUser(updatedUser);
+        localStorage.setItem("user", JSON.stringify(updatedUser));
         console.log("✅ User profile refreshed successfully");
         return true;
       }
@@ -183,11 +195,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isAuthenticated: !!user,
     login,
     logout,
+    refreshUser,
+    updateUser,
     loginWithOtp,
     verifyOtp,
     signupClient,
     signupWorker,
-    refreshUser,
   };
 
   return (

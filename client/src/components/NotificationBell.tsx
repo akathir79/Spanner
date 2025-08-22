@@ -22,7 +22,7 @@ interface ProfileUpdate {
 }
 
 export function NotificationBell() {
-  const { user, login } = useAuth();
+  const { user, refreshUser, updateUser } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isOpen, setIsOpen] = useState(false);
@@ -94,12 +94,16 @@ export function NotificationBell() {
       const response = await apiRequest("PUT", `/api/users/${user?.id}`, updateData);
       return response;
     },
-    onSuccess: (response, variables) => {
-      // Update local auth context
-      const updatedUser = { ...user, [variables.field]: variables.value };
-      login(updatedUser);
+    onSuccess: async (response, variables) => {
+      console.log("Profile update successful, refreshing user data...");
       
-      // Invalidate queries to refresh data
+      // Update local auth context immediately
+      updateUser({ [variables.field]: variables.value });
+      
+      // Refresh complete user data from server to ensure consistency
+      await refreshUser();
+      
+      // Invalidate related queries
       queryClient.invalidateQueries({ queryKey: [`/api/users/${user?.id}`] });
       queryClient.invalidateQueries({ queryKey: ["/api/worker/profile"] });
       
@@ -112,6 +116,9 @@ export function NotificationBell() {
       setEditingField("");
       setEditingValue("");
       setIsProfilePicturePreview("");
+      setIsOpen(false); // Close notification dropdown to see updated count
+      
+      console.log("Profile update completed, notification count should be updated");
     },
     onError: (error) => {
       toast({
@@ -381,11 +388,19 @@ export function NotificationBell() {
       isOpen={isBankModalOpen}
       onClose={() => setIsBankModalOpen(false)}
       userId={user?.id}
-      onSuccess={() => {
+      onSuccess={async () => {
+        console.log("Bank details updated, refreshing user data...");
+        
         // Refresh user data after bank details update
+        await refreshUser();
+        
         queryClient.invalidateQueries({ queryKey: [`/api/users/${user?.id}`] });
         queryClient.invalidateQueries({ queryKey: ["/api/worker/profile"] });
+        
         setIsBankModalOpen(false);
+        setIsOpen(false); // Close notification dropdown to see updated count
+        
+        console.log("Bank details update completed, notification count should be updated");
       }}
     />
     </>
