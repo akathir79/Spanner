@@ -420,7 +420,7 @@ export default function Home() {
             {/* Login Form */}
             {!user && (
               <div className="lg:flex justify-start lg:justify-center lg:ml-[-3rem]">
-                <Card className="w-full max-w-lg bg-white shadow-2xl min-h-[600px] border-0">
+                <Card className={`w-full max-w-lg bg-white shadow-2xl border-0 transition-all duration-300 ${selectedRole ? 'min-h-[600px]' : 'min-h-[320px]'}`}>
                   <CardHeader className="text-center pb-6 pt-8">
                     <CardTitle className="text-2xl font-bold text-primary">
                       {loginMode === 'forgot' ? 'Forgot Password' : 
@@ -435,16 +435,18 @@ export default function Home() {
                   </CardHeader>
                   
                   <CardContent className="space-y-6 px-8 pb-8">
-                    {/* Role Selection */}
-                    {!selectedRole && (
-                      <div className="space-y-4">
-                        <div className="text-center">
-                          <h3 className="text-lg font-semibold text-gray-700 mb-4">I am a</h3>
-                        </div>
+                    {/* Role Selection - Always visible but collapses when role is selected */}
+                    <div className="space-y-4">
+                      <div className="text-center">
+                        <h3 className="text-lg font-semibold text-gray-700 mb-4">I am a</h3>
+                      </div>
+                      
+                      {!selectedRole ? (
+                        /* Expanded role selection */
                         <div className="grid grid-cols-2 gap-4">
                           <Button
                             variant="outline"
-                            className="h-20 flex flex-col items-center justify-center space-y-2 border-2 border-gray-300 hover:border-primary hover:bg-primary/5"
+                            className="h-20 flex flex-col items-center justify-center space-y-2 border-2 border-gray-300 hover:border-primary hover:bg-primary/5 transition-all duration-200"
                             onClick={() => setSelectedRole('client')}
                           >
                             <Users className="h-6 w-6 text-primary" />
@@ -452,20 +454,15 @@ export default function Home() {
                           </Button>
                           <Button
                             variant="outline" 
-                            className="h-20 flex flex-col items-center justify-center space-y-2 border-2 border-gray-300 hover:border-primary hover:bg-primary/5"
+                            className="h-20 flex flex-col items-center justify-center space-y-2 border-2 border-gray-300 hover:border-primary hover:bg-primary/5 transition-all duration-200"
                             onClick={() => setSelectedRole('worker')}
                           >
                             <Wrench className="h-6 w-6 text-primary" />
                             <span className="font-medium">Worker</span>
                           </Button>
                         </div>
-                      </div>
-                    )}
-
-                    {/* Login Form - shown after role selection */}
-                    {selectedRole && (
-                      <div className="space-y-6">
-                        {/* Role indicator */}
+                      ) : (
+                        /* Collapsed role indicator */
                         <div className="flex items-center justify-between bg-primary/5 rounded-lg p-3">
                           <div className="flex items-center space-x-2">
                             {selectedRole === 'client' ? (
@@ -487,7 +484,12 @@ export default function Home() {
                             <X className="h-4 w-4" />
                           </Button>
                         </div>
+                      )}
+                    </div>
 
+                    {/* Login Form - shown after role selection with smooth expansion */}
+                    {selectedRole && (
+                      <div className="space-y-6 animate-in slide-in-from-top-4 duration-300">
                         {/* Mobile Number Input */}
                     <div className="relative">
                       <div className="flex">
