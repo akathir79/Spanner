@@ -13,6 +13,19 @@ export interface User {
   role: 'client' | 'worker' | 'admin' | 'super_admin';
   profilePicture: string | null;
   district: string | null;
+  state: string | null;
+  houseNumber: string | null;
+  streetName: string | null;
+  areaName: string | null;
+  pincode: string | null;
+  fullAddress: string | null;
+  // Worker-specific fields
+  experience: string | null;
+  skills: string | null;
+  serviceAreas: string | null;
+  bankAccountNumber: string | null;
+  bankIFSC: string | null;
+  bankAccountHolderName: string | null;
   isActive: boolean;
   isVerified: boolean;
   createdAt: Date;
@@ -106,13 +119,16 @@ export type RootStackParamList = {
   CreateJob: undefined;
   Profile: undefined;
   WorkerProfile: undefined;
+  Dashboard: undefined;
 };
 
 export type MainTabParamList = {
   Home: undefined;
+  Dashboard: undefined;
   Jobs: undefined;
   Bookings: undefined;
   Profile: undefined;
+  Wallet: undefined;
 };
 
 // API Response types

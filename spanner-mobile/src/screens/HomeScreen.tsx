@@ -17,6 +17,7 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 import { apiClient } from '../services/apiClient';
 import { ServiceCategory, Booking } from '../types';
+import { NotificationBell } from '../../components/NotificationBell';
 
 interface HomeScreenProps {
   navigation: any;
@@ -139,9 +140,15 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           <Text style={styles.userName}>{user?.firstName} {user?.lastName}</Text>
           <Text style={styles.userRole}>{user?.role?.toUpperCase()}</Text>
         </View>
-        <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
-          <Text style={styles.logoutText}>Logout</Text>
-        </TouchableOpacity>
+        <View style={styles.headerActions}>
+          <NotificationBell 
+            onPress={() => navigation.navigate('Profile')}
+            size={28}
+          />
+          <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
+            <Text style={styles.logoutText}>Logout</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Quick Actions */}
@@ -277,6 +284,11 @@ const styles = StyleSheet.create({
     color: '#3b82f6',
     marginTop: 2,
     fontWeight: '600',
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   logoutButton: {
     padding: 8,
