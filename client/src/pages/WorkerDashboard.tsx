@@ -1715,23 +1715,83 @@ export default function WorkerDashboard() {
   // Professional Wallet Transaction Mutations
   const topupMutation = useMutation({
     mutationFn: async (amount: number) => {
-      console.log('Creating topup mutation with amount:', amount);
+      console.log('Creating Razorpay payment for amount:', amount);
       const response = await apiRequest('POST', '/api/wallet/topup', { amount });
-      return response;
+      const data = await response.json();
+      
+      if (!data.success || !data.order) {
+        throw new Error(data.error || 'Failed to create payment order');
+      }
+
+      // Load Razorpay script if not already loaded
+      if (!window.Razorpay) {
+        const script = document.createElement('script');
+        script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+        script.async = true;
+        document.body.appendChild(script);
+        await new Promise((resolve) => { script.onload = resolve; });
+      }
+
+      // Initialize Razorpay payment
+      return new Promise((resolve, reject) => {
+        const options = {
+          key: data.razorpayKeyId,
+          amount: data.order.amount,
+          currency: data.order.currency || 'INR',
+          name: 'SPANNER',
+          description: 'Wallet Top Up',
+          order_id: data.order.id,
+          handler: async function (response: any) {
+            try {
+              // Verify payment on backend
+              const verifyResponse = await apiRequest('POST', '/api/wallet/verify-payment', {
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+              });
+              
+              const verifyData = await verifyResponse.json();
+              if (verifyData.success) {
+                resolve(verifyData);
+              } else {
+                reject(new Error(verifyData.error || 'Payment verification failed'));
+              }
+            } catch (error) {
+              reject(error);
+            }
+          },
+          prefill: {
+            name: 'Worker',
+            email: '',
+            contact: ''
+          },
+          theme: {
+            color: '#ea580c'
+          },
+          modal: {
+            ondismiss: function() {
+              reject(new Error('Payment cancelled by user'));
+            }
+          }
+        };
+
+        const rzp = new window.Razorpay(options);
+        rzp.open();
+      });
     },
     onSuccess: (data) => {
-      console.log('Topup successful:', data);
+      console.log('Payment successful:', data);
       refreshWallet();
       setShowTopupModal(false);
       setTopupAmount('');
       setIsProcessingPayment(false);
       toast({
         title: "Payment Successful",
-        description: `₹${topupAmount} added to your wallet successfully!`,
+        description: `₹${topupAmount} added to your wallet via Razorpay!`,
       });
     },
     onError: (error: any) => {
-      console.error('Topup failed:', error);
+      console.error('Payment error:', error);
       setIsProcessingPayment(false);
       toast({
         title: "Payment Failed",
