@@ -32,33 +32,41 @@ export function NotificationBell() {
   const [isProfilePicturePreview, setIsProfilePicturePreview] = useState<string>("");
   const [isBankModalOpen, setIsBankModalOpen] = useState(false);
 
-  // Calculate required profile updates
+  // Calculate required profile updates - matches WorkerDashboard logic
   const getProfileUpdates = (): ProfileUpdate[] => {
     if (!user) return [];
 
     const updates: ProfileUpdate[] = [];
 
-    // Common updates for all users
-    if (!user.lastName || user.lastName === "UPDATE_REQUIRED") {
-      updates.push({
-        field: "lastName",
-        label: "Last Name",
-        icon: User,
-        required: true,
-        completed: false,
-      });
-    }
+    // Use the same field checking logic as WorkerDashboard
+    const fieldsToCheck = [
+      { field: 'lastName', label: 'Last Name', icon: User, value: user.lastName },
+      { field: 'email', label: 'Email Address', icon: Mail, value: user.email },
+      { field: 'houseNumber', label: 'House Number', icon: FileText, value: user.houseNumber },
+      { field: 'streetName', label: 'Street Name', icon: FileText, value: user.streetName },
+      { field: 'areaName', label: 'Area Name', icon: FileText, value: user.areaName },
+      { field: 'district', label: 'District', icon: FileText, value: user.district },
+      { field: 'state', label: 'State', icon: FileText, value: user.state },
+      { field: 'pincode', label: 'Pincode', icon: FileText, value: user.pincode },
+      { field: 'fullAddress', label: 'Full Address', icon: FileText, value: user.fullAddress },
+      { field: 'aadhaarNumber', label: 'Aadhaar Number', icon: FileText, value: user.aadhaarNumber },
+      { field: 'panNumber', label: 'PAN Number', icon: FileText, value: user.panNumber }
+    ];
 
-    if (!user.email) {
-      updates.push({
-        field: "email",
-        label: "Email Address",
-        icon: Mail,
-        required: true,
-        completed: false,
-      });
-    }
+    // Add fields that need updates (matches WorkerDashboard calculation)
+    fieldsToCheck.forEach(({ field, label, icon, value }) => {
+      if (value === "UPDATE_REQUIRED" || value === "" || value === null || value === undefined) {
+        updates.push({
+          field,
+          label,
+          icon,
+          required: true,
+          completed: false,
+        });
+      }
+    });
 
+    // Profile picture check (special case)
     if (!user.profilePicture) {
       updates.push({
         field: "profilePicture",
@@ -69,7 +77,7 @@ export function NotificationBell() {
       });
     }
 
-    // Bank details for both clients and workers
+    // Bank details check (special case)
     if (!user.bankAccountNumber || !user.bankIFSC || !user.bankAccountHolderName) {
       updates.push({
         field: "bankDetails",
