@@ -248,7 +248,8 @@ const WorkerProfileCard = ({ user, refreshUser }: { user: any, refreshUser: () =
               <Avatar className="h-20 w-20">
                 <AvatarImage 
                   src={isEditing ? editData.profilePicture : user.profilePicture} 
-                  alt={user.firstName} 
+                  alt={user.firstName}
+                  key={user.profilePicture} // Force re-render when profile picture changes
                 />
                 <AvatarFallback className="text-xl bg-green-100 text-green-600">
                   {user.firstName?.[0]}{user.lastName?.[0]}
@@ -1640,7 +1641,7 @@ const MyBidsTab = ({ user }: { user: any }) => {
 
 export default function WorkerDashboard() {
   // ALL HOOKS MUST BE CALLED FIRST - BEFORE ANY CONDITIONAL LOGIC OR RETURNS
-  const { user, isLoading: authLoading } = useAuth();
+  const { user, isLoading: authLoading, refreshUser } = useAuth();
   // Removed useLanguage as it's not needed for this component
   const { toast } = useToast();
   const [, setLocation] = useLocation();
@@ -1982,11 +1983,6 @@ export default function WorkerDashboard() {
       }
     }
   }, [user, authLoading, setLocation]);
-
-  // Helper function to refresh user data
-  const refreshUser = () => {
-    queryClient.invalidateQueries({ queryKey: ["/api/user/refresh"] });
-  };
 
   // Helper functions
   const handleRejoinRequest = () => {
