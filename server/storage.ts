@@ -73,6 +73,7 @@ import {
   referrals,
   financialModelAssignments,
   paymentIntents,
+  paymentOrders,
   type ChatMessage,
   type ChatConversation,
   type InsertChatMessage,
@@ -90,7 +91,9 @@ import {
   type FinancialModelAssignment,
   type InsertFinancialModelAssignment,
   type PaymentIntent,
-  type InsertPaymentIntent
+  type InsertPaymentIntent,
+  type PaymentOrder,
+  type InsertPaymentOrder
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, sql, desc, ilike, inArray, or, isNull, lt } from "drizzle-orm";
@@ -298,6 +301,13 @@ export interface IStorage {
   getApiKey(keyType: string, keyName: string): Promise<ApiKey | undefined>;
   updateApiKey(id: string, updates: Partial<ApiKey>): Promise<ApiKey | undefined>;
   deleteApiKey(id: string): Promise<void>;
+
+  // Payment Orders
+  createPaymentOrder(order: InsertPaymentOrder): Promise<PaymentOrder>;
+  updatePaymentOrderStatus(orderId: string, updates: Partial<PaymentOrder>): Promise<PaymentOrder | undefined>;
+  getPaymentOrder(orderId: string): Promise<PaymentOrder | undefined>;
+  getPaymentOrderByRazorpayId(razorpayOrderId: string): Promise<PaymentOrder | undefined>;
+  addToWallet(userId: string, amount: number, category: string, description: string, metadata?: any): Promise<WalletTransaction>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -2434,6 +2444,97 @@ export class DatabaseStorage implements IStorage {
     await db.update(apiKeys)
       .set({ isActive: false, updatedAt: new Date() })
       .where(eq(apiKeys.id, id));
+  }
+
+  // Payment Orders implementation
+  async createPaymentOrder(order: InsertPaymentOrder): Promise<PaymentOrder> {
+    const [paymentOrder] = await db
+      .insert(paymentOrders)
+      .values(order)
+      .returning();
+    return paymentOrder;
+  }
+
+  async updatePaymentOrderStatus(razorpayOrderId: string, updates: Partial<PaymentOrder>): Promise<PaymentOrder | undefined> {
+    const [paymentOrder] = await db
+      .update(paymentOrders)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(paymentOrders.razorpayOrderId, razorpayOrderId))
+      .returning();
+    return paymentOrder || undefined;
+  }
+
+  async getPaymentOrder(orderId: string): Promise<PaymentOrder | undefined> {
+    const [paymentOrder] = await db
+      .select()
+      .from(paymentOrders)
+      .where(eq(paymentOrders.id, orderId));
+    return paymentOrder || undefined;
+  }
+
+  async getPaymentOrderByRazorpayId(razorpayOrderId: string): Promise<PaymentOrder | undefined> {
+    const [paymentOrder] = await db
+      .select()
+      .from(paymentOrders)
+      .where(eq(paymentOrders.razorpayOrderId, razorpayOrderId));
+    return paymentOrder || undefined;
+  }
+
+  async addToWallet(userId: string, amount: number, category: string, description: string, metadata?: any): Promise<WalletTransaction> {
+    return await db.transaction(async (tx) => {
+      // Get or create user wallet
+      let [wallet] = await tx
+        .select()
+        .from(userWallets)
+        .where(eq(userWallets.userId, userId));
+
+      if (!wallet) {
+        [wallet] = await tx
+          .insert(userWallets)
+          .values({ userId })
+          .returning();
+      }
+
+      const currentBalance = parseFloat(wallet.balance);
+      const newBalance = currentBalance + amount;
+      const balanceBefore = wallet.balance;
+      const balanceAfter = newBalance.toString();
+
+      // Update wallet balance
+      await tx
+        .update(userWallets)
+        .set({
+          balance: balanceAfter,
+          totalTopupAmount: category === 'wallet_topup' 
+            ? (parseFloat(wallet.totalTopupAmount) + amount).toString()
+            : wallet.totalTopupAmount,
+          lastTopupAt: category === 'wallet_topup' ? new Date() : wallet.lastTopupAt,
+          lastTransactionAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .where(eq(userWallets.id, wallet.id));
+
+      // Create transaction record
+      const [transaction] = await tx
+        .insert(walletTransactions)
+        .values({
+          userId,
+          walletId: wallet.id,
+          type: 'credit',
+          category,
+          amount: amount.toString(),
+          balanceBefore,
+          balanceAfter,
+          description,
+          netAmount: amount.toString(),
+          metadata: metadata || {},
+          status: 'completed',
+          processedAt: new Date(),
+        })
+        .returning();
+
+      return transaction;
+    });
   }
 }
 

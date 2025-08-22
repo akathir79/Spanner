@@ -879,7 +879,7 @@ export const financialModels = pgTable('financial_models', {
   createdBy: text('created_by').references(() => users.id),
 });
 
-// User Wallets - Real-time balance management
+// User Wallets - Real-time balance management with Razorpay integration
 export const userWallets = pgTable('user_wallets', {
   id: text('id').primaryKey().$defaultFn(() => generateId()),
   userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }).unique(),
@@ -888,6 +888,11 @@ export const userWallets = pgTable('user_wallets', {
   totalEarned: numeric('total_earned', { precision: 15, scale: 2 }).notNull().default('0.00'),
   totalSpent: numeric('total_spent', { precision: 15, scale: 2 }).notNull().default('0.00'),
   totalReferralEarnings: numeric('total_referral_earnings', { precision: 15, scale: 2 }).notNull().default('0.00'),
+  totalTopupAmount: numeric('total_topup_amount', { precision: 15, scale: 2 }).notNull().default('0.00'), // Total amount topped up
+  razorpayCustomerId: text('razorpay_customer_id'), // Razorpay customer ID for payments
+  razorpayContactId: text('razorpay_contact_id'), // Razorpay contact ID for fund accounts
+  preferredPaymentMethod: text('preferred_payment_method').default('upi'), // upi, netbanking, card, wallet
+  lastTopupAt: timestamp('last_topup_at'), // Last successful topup
   isActive: boolean('is_active').notNull().default(true),
   lastTransactionAt: timestamp('last_transaction_at'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
@@ -908,7 +913,8 @@ export const walletTransactions = pgTable('wallet_transactions', {
   referenceType: text('reference_type'), // "booking", "job_posting", "referral"
   referenceId: text('reference_id'),
   status: text('status').notNull().default('completed'), // "pending", "completed", "failed", "cancelled"
-  stripeTransactionId: text('stripe_transaction_id'),
+  razorpayPaymentId: text('razorpay_payment_id'), // Razorpay payment ID
+  razorpayOrderId: text('razorpay_order_id'), // Razorpay order ID
   gstAmount: numeric('gst_amount', { precision: 15, scale: 2 }).notNull().default('0.00'),
   adminCommission: numeric('admin_commission', { precision: 15, scale: 2 }).notNull().default('0.00'),
   netAmount: numeric('net_amount', { precision: 15, scale: 2 }).notNull(), // Amount after GST and commission
@@ -932,6 +938,25 @@ export const referrals = pgTable('referrals', {
   expiresAt: timestamp('expires_at'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   completedAt: timestamp('completed_at'),
+});
+
+// Payment Orders - Razorpay order tracking for wallet topups
+export const paymentOrders = pgTable('payment_orders', {
+  id: text('id').primaryKey().$defaultFn(() => generateId()),
+  userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  razorpayOrderId: text('razorpay_order_id').notNull().unique(),
+  amount: numeric('amount', { precision: 15, scale: 2 }).notNull(),
+  currency: text('currency').notNull().default('INR'),
+  status: text('status').notNull().default('created'), // created, attempted, paid, failed
+  paymentMethod: text('payment_method'), // upi, netbanking, card, wallet, etc.
+  paymentId: text('payment_id'), // Razorpay payment ID when successful
+  failureReason: text('failure_reason'),
+  receipt: text('receipt'), // Custom receipt ID
+  notes: json('notes').default({}),
+  metadata: json('metadata').default({}),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  paidAt: timestamp('paid_at'),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
 
 // Financial Model Assignments - Which model applies to which booking/job
@@ -1017,6 +1042,16 @@ export const insertPaymentIntentSchema = createInsertSchema(paymentIntents).omit
 });
 export type PaymentIntent = typeof paymentIntents.$inferSelect;
 export type InsertPaymentIntent = z.infer<typeof insertPaymentIntentSchema>;
+
+// Schema exports for payment orders
+export const insertPaymentOrderSchema = createInsertSchema(paymentOrders).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  paidAt: true,
+});
+export type PaymentOrder = typeof paymentOrders.$inferSelect;
+export type InsertPaymentOrder = z.infer<typeof insertPaymentOrderSchema>;
 
 // API Keys table for centralized key management
 export const apiKeys = pgTable("api_keys", {

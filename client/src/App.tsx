@@ -42,6 +42,7 @@ import MobileDemo from "@/pages/MobileDemo";
 import MobileDemoFullscreen from "@/pages/MobileDemoFullscreen";
 import MobileTestApp from "@/pages/MobileTestApp";
 import SearchWorkers from "@/pages/SearchWorkers";
+import WalletPage from "@/pages/WalletPage";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -87,6 +88,7 @@ function Router() {
           <Route path="/mobile-fullscreen" component={MobileDemoFullscreen} />
           <Route path="/mobile-test" component={MobileTestApp} />
           <Route path="/search-workers" component={SearchWorkers} />
+          <Route path="/wallet" component={WalletPage} />
           <Route component={NotFound} />
         </Switch>
 
