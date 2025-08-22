@@ -108,6 +108,7 @@ const t = (key: string) => {
 };
 
 export default function Home() {
+  const { t } = useLanguage();
   const { user, logout } = useAuth();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
@@ -153,27 +154,80 @@ export default function Home() {
       />
       
       {/* Hero Section */}
-      <section className="min-h-screen bg-gradient-to-br from-primary/20 via-primary/10 to-secondary/20 flex items-center">
-        <div className="container mx-auto px-4 py-20">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            {/* Content */}
+      <section className="py-20 bg-gradient-to-br from-primary/5 to-secondary/5 relative overflow-hidden">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center min-h-[80vh]">
             <div className="space-y-8">
               <div className="space-y-6">
                 <h1 className="text-4xl md:text-6xl font-bold text-gray-900 leading-tight">
-                  Find Trusted 
-                  <span className="text-primary block">Blue-Collar Services</span>
+                  {t("hero.title")}
                 </h1>
-                <p className="text-xl text-gray-600 max-w-2xl leading-relaxed">
-                  Connect with verified professionals across Tamil Nadu. 
-                  From plumbing to electrical work, find skilled workers near you.
+                <p className="text-xl text-gray-600 max-w-2xl">
+                  {t("hero.subtitle")}
                 </p>
               </div>
 
-              {/* Action Buttons */}
-              <div className="flex flex-col sm:flex-row gap-4">
+              {/* Quick Stats */}
+              <div className="grid grid-cols-3 gap-6 py-8 border-y border-gray-200">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-primary">30K+</div>
+                  <div className="text-sm text-gray-600">Happy Customers</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-primary">5K+</div>
+                  <div className="text-sm text-gray-600">Verified Workers</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-primary">50K+</div>
+                  <div className="text-sm text-gray-600">Jobs Completed</div>
+                </div>
+              </div>
+
+              {/* Features */}
+              <div className="grid grid-cols-2 gap-6">
+                <div className="flex items-center space-x-3">
+                  <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
+                    <Shield className="h-6 w-6 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900">Verified Workers</h3>
+                    <p className="text-sm text-gray-600">Background checked</p>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
+                    <Clock className="h-6 w-6 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900">Quick Service</h3>
+                    <p className="text-sm text-gray-600">Same-day available</p>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
+                    <Star className="h-6 w-6 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900">Top Rated</h3>
+                    <p className="text-sm text-gray-600">4.8+ rating</p>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
+                    <Handshake className="h-6 w-6 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900">Fair Pricing</h3>
+                    <p className="text-sm text-gray-600">Transparent rates</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Call to Action */}
+              <div className="flex flex-col sm:flex-row gap-4 pt-8">
                 <Button 
                   size="lg" 
-                  className="bg-primary hover:bg-primary/90 text-white px-8 py-4 text-lg font-semibold rounded-lg"
+                  className="bg-primary hover:bg-primary/90"
                   onClick={openSignupModal}
                   data-testid="button-get-started"
                 >
@@ -183,67 +237,65 @@ export default function Home() {
                 <Button 
                   size="lg" 
                   variant="outline"
-                  className="border-2 border-primary text-primary hover:bg-primary hover:text-white px-8 py-4 text-lg font-semibold rounded-lg"
                   onClick={openLoginModal}
                   data-testid="button-login"
                 >
-                  Login
+                  Already a member? Login
                 </Button>
               </div>
+            </div>
 
-              {/* Features */}
-              <div className="grid grid-cols-2 gap-6 pt-8">
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
-                    <Shield className="h-5 w-5 text-primary" />
+            {/* Right side - Login Form restored to match original */}
+            {!user && (
+              <div className="lg:flex justify-center">
+                <div className="w-full max-w-md bg-white shadow-xl rounded-2xl p-8 border border-gray-100">
+                  <div className="text-center mb-8">
+                    <div className="w-16 h-16 bg-primary rounded-full mx-auto mb-4 flex items-center justify-center">
+                      <Users className="w-8 h-8 text-white" />
+                    </div>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-2">Join SPANNER</h2>
+                    <p className="text-gray-600">Get started with our professional services</p>
                   </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900">Verified Workers</h3>
-                    <p className="text-sm text-gray-600">Background checked professionals</p>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
-                    <Clock className="h-5 w-5 text-primary" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900">Quick Service</h3>
-                    <p className="text-sm text-gray-600">Same-day service available</p>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
-                    <Star className="h-5 w-5 text-primary" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900">Top Rated</h3>
-                    <p className="text-sm text-gray-600">4.8+ average rating</p>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
-                    <Handshake className="h-5 w-5 text-primary" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900">Fair Pricing</h3>
-                    <p className="text-sm text-gray-600">Transparent, honest rates</p>
+
+                  <div className="space-y-4">
+                    <Button 
+                      className="w-full bg-primary hover:bg-primary/90"
+                      onClick={openSignupModal}
+                      data-testid="button-signup-form"
+                    >
+                      <Users className="w-4 h-4 mr-2" />
+                      Sign Up Now
+                    </Button>
+                    
+                    <div className="relative">
+                      <div className="absolute inset-0 flex items-center">
+                        <span className="w-full border-t border-gray-200" />
+                      </div>
+                      <div className="relative flex justify-center text-xs uppercase">
+                        <span className="bg-white px-2 text-gray-500">Or</span>
+                      </div>
+                    </div>
+
+                    <Button 
+                      variant="outline" 
+                      className="w-full"
+                      onClick={openLoginModal}
+                      data-testid="button-login-form"
+                    >
+                      Login to Account
+                    </Button>
+
+                    <div className="text-center pt-4">
+                      <p className="text-xs text-gray-500">
+                        By continuing, you agree to our{" "}
+                        <span className="text-primary hover:underline cursor-pointer">Terms</span> and{" "}
+                        <span className="text-primary hover:underline cursor-pointer">Privacy Policy</span>
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-
-            {/* Right side - Visual placeholder */}
-            <div className="hidden lg:flex justify-center items-center">
-              <div className="w-full max-w-md h-96 bg-gradient-to-br from-primary/10 to-secondary/10 rounded-2xl border border-primary/20 flex items-center justify-center">
-                <div className="text-center space-y-4">
-                  <div className="w-20 h-20 bg-primary rounded-full mx-auto flex items-center justify-center">
-                    <Users className="w-10 h-10 text-white" />
-                  </div>
-                  <h3 className="text-xl font-semibold text-gray-800">30,000+ Happy Customers</h3>
-                  <p className="text-gray-600">Join our community of satisfied users across Tamil Nadu</p>
-                </div>
-              </div>
-            </div>
+            )}
           </div>
         </div>
       </section>

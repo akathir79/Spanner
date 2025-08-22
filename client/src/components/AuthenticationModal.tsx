@@ -588,13 +588,13 @@ export default function AuthenticationModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md bg-white border-0 shadow-2xl">
+      <DialogContent className="sm:max-w-md bg-white border-0 shadow-2xl" aria-describedby="auth-modal-description">
         <DialogHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
           <div className="flex items-center space-x-2">
             <div className="w-8 h-8 bg-blue-500 rounded flex items-center justify-center">
               <span className="text-white text-sm font-bold">S</span>
             </div>
-            <h2 className="text-xl font-semibold text-gray-900">
+            <h2 className="text-xl font-semibold text-gray-900" id="auth-modal-title">
               {mode === "login" ? "Login to SPANNER" : 
                mode === "signup" ? "Join SPANNER" : 
                "Reset Password"}
@@ -609,6 +609,10 @@ export default function AuthenticationModal({
             <X className="h-4 w-4" />
           </Button>
         </DialogHeader>
+        
+        <p id="auth-modal-description" className="sr-only">
+          Authentication modal for {mode === "login" ? "logging into" : mode === "signup" ? "signing up for" : "resetting password for"} SPANNER
+        </p>
 
         <div className="space-y-6">
           {/* User Type Selection */}
