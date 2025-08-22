@@ -170,8 +170,8 @@ export default function Home() {
 
     setIsLoading(true);
     try {
-      const success = await login(mobile, otp);
-      if (success) {
+      const user = await login(mobile);
+      if (user) {
         toast({
           title: "Login Successful",
           description: "Welcome to SPANNER!",
@@ -184,6 +184,7 @@ export default function Home() {
           variant: "destructive",
         });
       }
+
     } catch (error) {
       toast({
         title: "Error",
@@ -207,8 +208,8 @@ export default function Home() {
 
     setIsLoading(true);
     try {
-      const success = await login(mobile, password);
-      if (success) {
+      const user = await login(mobile);
+      if (user) {
         toast({
           title: "Login Successful",
           description: "Welcome back to SPANNER!",
@@ -413,8 +414,8 @@ export default function Home() {
 
             {/* Login Form */}
             {!user && (
-              <div className="lg:flex justify-end">
-                <Card className="w-full max-w-md bg-white/95 backdrop-blur shadow-2xl">
+              <div className="lg:flex justify-start lg:justify-center lg:ml-[-2rem]">
+                <Card className="w-full max-w-md bg-white shadow-2xl min-h-[500px]">
                   <CardHeader className="text-center pb-4">
                     <CardTitle className="text-2xl font-bold text-primary">
                       {loginMode === 'forgot' ? 'Forgot Password' : 
@@ -708,7 +709,7 @@ export default function Home() {
                 location={worker.location}
                 rating={worker.rating}
                 reviews={worker.reviews}
-                hourlyRate={worker.hourlyRate}
+                hourlyRate={worker.hourlyRate.toString()}
                 experience={worker.experience}
                 isAvailable={worker.isAvailable}
                 avatar={worker.avatar}
@@ -740,7 +741,6 @@ export default function Home() {
             {mockServices.map((service) => (
               <ServiceCard
                 key={service.id}
-                id={service.id}
                 name={service.name}
                 description={service.description}
                 icon={service.icon}
