@@ -130,6 +130,7 @@ export function registerWalletRoutes(app: Express) {
         },
       });
 
+      console.log('Created Razorpay order:', orderData);
       res.json({
         success: true,
         order: orderData,

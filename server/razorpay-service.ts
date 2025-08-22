@@ -7,6 +7,8 @@ if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_SECRET_KEY) {
 }
 
 console.log('🔒 Razorpay Live Integration Active - Ready for real payments');
+console.log('Key ID:', process.env.RAZORPAY_KEY_ID);
+console.log('Secret Key (masked):', process.env.RAZORPAY_SECRET_KEY?.substring(0, 4) + '****');
 
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
@@ -40,7 +42,9 @@ export class RazorpayService {
         },
       };
 
+      console.log('Creating Razorpay order with params:', orderParams);
       const order = await razorpay.orders.create(orderParams);
+      console.log('Razorpay order created successfully:', order);
       
       // Store order in database
       const paymentOrder = await storage.createPaymentOrder({
@@ -63,7 +67,11 @@ export class RazorpayService {
       };
     } catch (error) {
       console.error('Error creating Razorpay order:', error);
-      throw new Error('Failed to create payment order');
+      console.error('Error details:', JSON.stringify(error, null, 2));
+      if (error.statusCode === 400) {
+        throw new Error(`Razorpay Error: ${error.error?.description || 'Invalid request'}`);
+      }
+      throw new Error(`Payment order creation failed: ${error.message}`);
     }
   }
 
