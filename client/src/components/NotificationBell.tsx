@@ -1,10 +1,17 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel } from "@/components/ui/dropdown-menu";
-import { Bell, User, Mail, CreditCard, Camera, FileText, CheckCircle } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Bell, User, Mail, CreditCard, Camera, FileText, CheckCircle, Upload, X } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
+import BankDetailsModal from "@/components/BankDetailsModal";
 
 interface ProfileUpdate {
   field: string;
@@ -15,8 +22,15 @@ interface ProfileUpdate {
 }
 
 export function NotificationBell() {
-  const { user } = useAuth();
+  const { user, login } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [isOpen, setIsOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editingField, setEditingField] = useState<string>("");
+  const [editingValue, setEditingValue] = useState<string>("");
+  const [isProfilePicturePreview, setIsProfilePicturePreview] = useState<string>("");
+  const [isBankModalOpen, setIsBankModalOpen] = useState(false);
 
   // Calculate required profile updates
   const getProfileUpdates = (): ProfileUpdate[] => {
@@ -73,11 +87,122 @@ export function NotificationBell() {
   const pendingUpdates = profileUpdates.filter(update => !update.completed);
   const requiredUpdates = pendingUpdates.filter(update => update.required);
 
+  // Mutation for updating user profile
+  const updateProfileMutation = useMutation({
+    mutationFn: async (data: { field: string; value: string }) => {
+      const updateData = { [data.field]: data.value };
+      const response = await apiRequest("PUT", `/api/users/${user?.id}`, updateData);
+      return response;
+    },
+    onSuccess: (response, variables) => {
+      // Update local auth context
+      const updatedUser = { ...user, [variables.field]: variables.value };
+      login(updatedUser);
+      
+      // Invalidate queries to refresh data
+      queryClient.invalidateQueries({ queryKey: [`/api/users/${user?.id}`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/worker/profile"] });
+      
+      toast({
+        title: "Profile Updated",
+        description: `${getFieldLabel(variables.field)} has been updated successfully.`,
+      });
+      
+      setIsEditDialogOpen(false);
+      setEditingField("");
+      setEditingValue("");
+      setIsProfilePicturePreview("");
+    },
+    onError: (error) => {
+      toast({
+        title: "Update Failed",
+        description: "Failed to update profile. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Helper function to get field labels
+  const getFieldLabel = (field: string): string => {
+    const labels: Record<string, string> = {
+      lastName: "Last Name",
+      email: "Email Address",
+      profilePicture: "Profile Picture",
+      bankDetails: "Bank Details"
+    };
+    return labels[field] || field;
+  };
+
+  // Handle notification click - open relevant field for editing
+  const handleNotificationClick = (update: ProfileUpdate) => {
+    if (update.field === "bankDetails") {
+      setIsBankModalOpen(true);
+      setIsOpen(false);
+      return;
+    }
+
+    setEditingField(update.field);
+    setEditingValue(user?.[update.field as keyof typeof user] || "");
+    setIsEditDialogOpen(true);
+    setIsOpen(false);
+  };
+
+  // Handle profile picture upload
+  const handleProfilePictureUpload = (file: File | null) => {
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Invalid file type",
+        description: "Please select an image file (JPG, PNG, etc.)",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "Please select an image smaller than 5MB",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const base64String = e.target?.result as string;
+      setIsProfilePicturePreview(base64String);
+      setEditingValue(base64String);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // Handle save updates
+  const handleSaveUpdate = () => {
+    if (!editingField || !editingValue.trim()) {
+      toast({
+        title: "Invalid Input",
+        description: "Please enter a valid value.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    updateProfileMutation.mutate({
+      field: editingField,
+      value: editingValue.trim()
+    });
+  };
+
   if (!user || pendingUpdates.length === 0) {
     return null;
   }
 
   return (
+    <>
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative p-2 hover:bg-gray-100">
@@ -105,13 +230,17 @@ export function NotificationBell() {
             <div className="px-2 py-1">
               <p className="text-xs font-medium text-red-600 mb-2">Required Updates</p>
               {requiredUpdates.map((update) => (
-                <DropdownMenuItem key={update.field} className="flex items-center gap-3 py-3">
+                <DropdownMenuItem 
+                  key={update.field} 
+                  className="flex items-center gap-3 py-3 cursor-pointer hover:bg-red-50"
+                  onClick={() => handleNotificationClick(update)}
+                >
                   <div className="flex items-center justify-center w-8 h-8 bg-red-100 rounded-full">
                     <update.icon className="w-4 h-4 text-red-600" />
                   </div>
                   <div className="flex-1">
                     <p className="font-medium text-sm">{update.label}</p>
-                    <p className="text-xs text-gray-500">Required to complete your profile</p>
+                    <p className="text-xs text-gray-500">Click to update this field</p>
                   </div>
                   <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
                 </DropdownMenuItem>
@@ -127,13 +256,17 @@ export function NotificationBell() {
             {pendingUpdates
               .filter(update => !update.required)
               .map((update) => (
-                <DropdownMenuItem key={update.field} className="flex items-center gap-3 py-3">
+                <DropdownMenuItem 
+                  key={update.field} 
+                  className="flex items-center gap-3 py-3 cursor-pointer hover:bg-orange-50"
+                  onClick={() => handleNotificationClick(update)}
+                >
                   <div className="flex items-center justify-center w-8 h-8 bg-orange-100 rounded-full">
                     <update.icon className="w-4 h-4 text-orange-600" />
                   </div>
                   <div className="flex-1">
                     <p className="font-medium text-sm">{update.label}</p>
-                    <p className="text-xs text-gray-500">Complete for better experience</p>
+                    <p className="text-xs text-gray-500">Click to update this field</p>
                   </div>
                   <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
                 </DropdownMenuItem>
@@ -148,5 +281,113 @@ export function NotificationBell() {
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
+
+    {/* Edit Dialog for field-specific updates */}
+    <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Update {getFieldLabel(editingField)}</DialogTitle>
+        </DialogHeader>
+        
+        <div className="space-y-4">
+          {editingField === "profilePicture" ? (
+            <div className="space-y-4">
+              <Label htmlFor="picture">Upload Profile Picture</Label>
+              <div className="flex flex-col items-center gap-4">
+                {isProfilePicturePreview && (
+                  <div className="relative">
+                    <img 
+                      src={isProfilePicturePreview} 
+                      alt="Profile preview" 
+                      className="w-24 h-24 rounded-full object-cover border-2 border-gray-200"
+                    />
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      className="absolute -top-2 -right-2 h-6 w-6 rounded-full p-0"
+                      onClick={() => {
+                        setIsProfilePicturePreview("");
+                        setEditingValue("");
+                      }}
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </div>
+                )}
+                
+                <div className="flex items-center gap-2">
+                  <Input
+                    id="picture"
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleProfilePictureUpload(e.target.files?.[0] || null)}
+                    className="hidden"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => document.getElementById("picture")?.click()}
+                    className="flex items-center gap-2"
+                  >
+                    <Upload className="h-4 w-4" />
+                    Choose Image
+                  </Button>
+                </div>
+                <p className="text-xs text-gray-500 text-center">
+                  Upload a clear photo for better recognition. Max 5MB.
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <Label htmlFor={editingField}>{getFieldLabel(editingField)}</Label>
+              {editingField === "email" ? (
+                <Input
+                  id={editingField}
+                  type="email"
+                  value={editingValue}
+                  onChange={(e) => setEditingValue(e.target.value)}
+                  placeholder="Enter your email address"
+                />
+              ) : (
+                <Input
+                  id={editingField}
+                  type="text"
+                  value={editingValue}
+                  onChange={(e) => setEditingValue(e.target.value)}
+                  placeholder={`Enter your ${getFieldLabel(editingField).toLowerCase()}`}
+                />
+              )}
+            </div>
+          )}
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleSaveUpdate}
+            disabled={updateProfileMutation.isPending || !editingValue.trim()}
+          >
+            {updateProfileMutation.isPending ? "Saving..." : "Save"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+
+    {/* Bank Details Modal */}
+    <BankDetailsModal
+      isOpen={isBankModalOpen}
+      onClose={() => setIsBankModalOpen(false)}
+      userId={user?.id}
+      onSuccess={() => {
+        // Refresh user data after bank details update
+        queryClient.invalidateQueries({ queryKey: [`/api/users/${user?.id}`] });
+        queryClient.invalidateQueries({ queryKey: ["/api/worker/profile"] });
+        setIsBankModalOpen(false);
+      }}
+    />
+    </>
   );
 }
