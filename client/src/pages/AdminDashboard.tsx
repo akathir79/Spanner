@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/useAuth";
 import { useLocation } from "wouter";
 
@@ -40,6 +41,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { NotificationBell } from "@/components/NotificationBell";
 
 
 export default function AdminDashboard() {
@@ -47,6 +49,7 @@ export default function AdminDashboard() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [adsEnabled, setAdsEnabled] = useState(true);
+  const [activeTab, setActiveTab] = useState("overview");
 
   // Helper function to refresh user data
   const refreshUser = () => {
@@ -148,6 +151,7 @@ export default function AdminDashboard() {
             </p>
           </div>
           <div className="flex items-center space-x-2">
+            <NotificationBell />
             <Badge variant="secondary" className="bg-green-100 text-green-800">
               {user.role === "super_admin" ? "Super Admin" : "Regular Admin"}
             </Badge>
@@ -430,97 +434,260 @@ export default function AdminDashboard() {
           </Card>
         </div>
 
-        {/* Quick Overview */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <BarChart3 className="w-5 h-5" />
-              Quick Overview
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <Users className="h-5 w-5" />
-                    <span>User Distribution</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex justify-between">
-                      <span>Clients:</span>
-                      <span className="font-semibold text-blue-600">{stats.totalClients}</span>
+        {/* Dashboard Tabs */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <TabsList className="grid w-full grid-cols-3 bg-muted">
+            <TabsTrigger 
+              value="overview" 
+              className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            >
+              Overview
+            </TabsTrigger>
+            <TabsTrigger 
+              value="management"
+              className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            >
+              Management
+            </TabsTrigger>
+            <TabsTrigger 
+              value="profile"
+              className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground relative"
+            >
+              Profile
+              {/* Show UPDATE_REQUIRED fields count (matching NotificationBell logic for admins) */}
+              {user && (() => {
+                const fieldsToCheck = [
+                  user.lastName,
+                  user.email,
+                  user.district,
+                  user.state
+                ];
+                
+                let count = 0;
+                fieldsToCheck.forEach(field => {
+                  if (field === "UPDATE_REQUIRED" || field === "" || field === null || field === undefined) {
+                    count++;
+                  }
+                });
+                
+                return count > 0 ? (
+                  <Badge variant="secondary" className="ml-2 bg-red-500 text-white text-xs px-1 py-0 h-5 min-w-[20px] rounded-full flex items-center justify-center">
+                    {count}
+                  </Badge>
+                ) : null;
+              })()}
+            </TabsTrigger>
+          </TabsList>
+
+          {/* Overview Tab */}
+          <TabsContent value="overview" className="space-y-6">
+            {/* Quick Overview */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <BarChart3 className="w-5 h-5" />
+                  Quick Overview
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center space-x-2">
+                        <Users className="h-5 w-5" />
+                        <span>User Distribution</span>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        <div className="flex justify-between">
+                          <span>Clients:</span>
+                          <span className="font-semibold text-blue-600">{stats.totalClients}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Workers:</span>
+                          <span className="font-semibold text-green-600">{stats.totalWorkers}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Client:Worker Ratio:</span>
+                          <span className="font-semibold">
+                            {stats.totalWorkers > 0 ? (stats.totalClients / stats.totalWorkers).toFixed(1) : 0}:1
+                          </span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center space-x-2">
+                        <Calendar className="h-5 w-5" />
+                        <span>Booking Status</span>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        <div className="flex justify-between">
+                          <span>Pending:</span>
+                          <span className="font-semibold text-yellow-600">{stats.pendingBookings}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>In Progress:</span>
+                          <span className="font-semibold text-blue-600">{stats.inProgressBookings}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Completed:</span>
+                          <span className="font-semibold text-green-600">{stats.completedBookings}</span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center space-x-2">
+                        <CheckCircle className="h-5 w-5" />
+                        <span>Platform Health</span>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        <div className="flex justify-between">
+                          <span>System Status:</span>
+                          <Badge className="bg-green-100 text-green-800">Online</Badge>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Success Rate:</span>
+                          <span className="font-semibold text-green-600">
+                            {stats.totalBookings > 0 ? Math.round((stats.completedBookings / stats.totalBookings) * 100) : 0}%
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Active Users:</span>
+                          <span className="font-semibold">{stats.totalUsers}</span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Management Tab */}
+          <TabsContent value="management" className="space-y-6">
+            {/* Main Management Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <Card className="cursor-pointer hover:shadow-lg transition-all duration-300 border-2 hover:border-blue-200" onClick={() => setLocation('/admin/advertisements')}>
+                <CardContent className="p-6">
+                  <div className="flex items-center space-x-4">
+                    <div className="p-3 bg-blue-100 rounded-lg">
+                      <Megaphone className="h-8 w-8 text-blue-600" />
                     </div>
-                    <div className="flex justify-between">
-                      <span>Workers:</span>
-                      <span className="font-semibold text-green-600">{stats.totalWorkers}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Client:Worker Ratio:</span>
-                      <span className="font-semibold">
-                        {stats.totalWorkers > 0 ? (stats.totalClients / stats.totalWorkers).toFixed(1) : 0}:1
-                      </span>
+                    <div>
+                      <h3 className="text-xl font-bold text-gray-800">Advertisement Management</h3>
+                      <p className="text-sm text-gray-600 mt-1">Create, edit and manage platform advertisements</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
-              
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <Calendar className="h-5 w-5" />
-                    <span>Booking Status</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex justify-between">
-                      <span>Pending:</span>
-                      <span className="font-semibold text-yellow-600">{stats.pendingBookings}</span>
+
+              <Card className="cursor-pointer hover:shadow-lg transition-all duration-300 border-2 hover:border-green-200" onClick={() => setLocation('/admin/messages')}>
+                <CardContent className="p-6">
+                  <div className="flex items-center space-x-4">
+                    <div className="p-3 bg-green-100 rounded-lg">
+                      <MessageCircle className="h-8 w-8 text-green-600" />
                     </div>
-                    <div className="flex justify-between">
-                      <span>In Progress:</span>
-                      <span className="font-semibold text-blue-600">{stats.inProgressBookings}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Completed:</span>
-                      <span className="font-semibold text-green-600">{stats.completedBookings}</span>
+                    <div>
+                      <h3 className="text-xl font-bold text-gray-800">Client & Worker Messages</h3>
+                      <p className="text-sm text-gray-600 mt-1">Handle support requests and communications</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
-              
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <CheckCircle className="h-5 w-5" />
-                    <span>Platform Health</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex justify-between">
-                      <span>System Status:</span>
-                      <Badge className="bg-green-100 text-green-800">Online</Badge>
+
+              <Card className="cursor-pointer hover:shadow-lg transition-all duration-300 border-2 hover:border-purple-200" onClick={() => setLocation('/admin/financial')}>
+                <CardContent className="p-6">
+                  <div className="flex items-center space-x-4">
+                    <div className="p-3 bg-purple-100 rounded-lg">
+                      <IndianRupee className="h-8 w-8 text-purple-600" />
                     </div>
-                    <div className="flex justify-between">
-                      <span>Success Rate:</span>
-                      <span className="font-semibold text-green-600">
-                        {stats.totalBookings > 0 ? Math.round((stats.completedBookings / stats.totalBookings) * 100) : 0}%
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Active Users:</span>
-                      <span className="font-semibold">{stats.totalUsers}</span>
+                    <div>
+                      <h3 className="text-xl font-bold text-gray-800">Financial Management</h3>
+                      <p className="text-sm text-gray-600 mt-1">Configure payment models and wallet management</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
             </div>
-          </CardContent>
-        </Card>
+          </TabsContent>
+
+          {/* Profile Tab */}
+          <TabsContent value="profile" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <User className="w-5 h-5" />
+                  Admin Profile
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <div>
+                      <Label>First Name</Label>
+                      <Input value={user?.firstName || 'N/A'} disabled />
+                    </div>
+                    <div>
+                      <Label>Last Name</Label>
+                      <Input 
+                        value={user?.lastName || 'UPDATE_REQUIRED'} 
+                        disabled 
+                        className={(!user?.lastName || user?.lastName === 'UPDATE_REQUIRED') ? 'border-red-500 bg-red-50' : ''}
+                      />
+                    </div>
+                    <div>
+                      <Label>Email</Label>
+                      <Input 
+                        value={user?.email || 'UPDATE_REQUIRED'} 
+                        disabled 
+                        className={!user?.email ? 'border-red-500 bg-red-50' : ''}
+                      />
+                    </div>
+                    <div>
+                      <Label>Role</Label>
+                      <Input value={user?.role || 'N/A'} disabled />
+                    </div>
+                  </div>
+                  <div className="space-y-4">
+                    <div>
+                      <Label>District</Label>
+                      <Input 
+                        value={user?.district || 'UPDATE_REQUIRED'} 
+                        disabled 
+                        className={(!user?.district || user?.district === 'UPDATE_REQUIRED') ? 'border-red-500 bg-red-50' : ''}
+                      />
+                    </div>
+                    <div>
+                      <Label>State</Label>
+                      <Input 
+                        value={user?.state || 'UPDATE_REQUIRED'} 
+                        disabled 
+                        className={(!user?.state || user?.state === 'UPDATE_REQUIRED') ? 'border-red-500 bg-red-50' : ''}
+                      />
+                    </div>
+                    <div>
+                      <Label>Status</Label>
+                      <Badge variant="secondary" className="bg-green-100 text-green-800">
+                        {user?.role === "super_admin" ? "Super Admin" : "Regular Admin"}
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
 
 
 

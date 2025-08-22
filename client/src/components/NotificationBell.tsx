@@ -32,28 +32,57 @@ export function NotificationBell() {
   const [isProfilePicturePreview, setIsProfilePicturePreview] = useState<string>("");
   const [isBankModalOpen, setIsBankModalOpen] = useState(false);
 
-  // Calculate required profile updates - matches WorkerDashboard logic
+  // Calculate required profile updates based on user role
   const getProfileUpdates = (): ProfileUpdate[] => {
     if (!user) return [];
 
     const updates: ProfileUpdate[] = [];
 
-    // Use the same field checking logic as WorkerDashboard
-    const fieldsToCheck = [
+    // Common fields for all user types
+    const commonFields = [
       { field: 'lastName', label: 'Last Name', icon: User, value: user.lastName },
       { field: 'email', label: 'Email Address', icon: Mail, value: user.email },
-      { field: 'houseNumber', label: 'House Number', icon: FileText, value: user.houseNumber },
-      { field: 'streetName', label: 'Street Name', icon: FileText, value: user.streetName },
-      { field: 'areaName', label: 'Area Name', icon: FileText, value: user.areaName },
-      { field: 'district', label: 'District', icon: FileText, value: user.district },
-      { field: 'state', label: 'State', icon: FileText, value: user.state },
-      { field: 'pincode', label: 'Pincode', icon: FileText, value: user.pincode },
-      { field: 'fullAddress', label: 'Full Address', icon: FileText, value: user.fullAddress },
-      { field: 'aadhaarNumber', label: 'Aadhaar Number', icon: FileText, value: user.aadhaarNumber },
-      { field: 'panNumber', label: 'PAN Number', icon: FileText, value: user.panNumber }
     ];
 
-    // Add fields that need updates (matches WorkerDashboard calculation)
+    // Role-specific required fields
+    const roleSpecificFields = {
+      worker: [
+        { field: 'houseNumber', label: 'House Number', icon: FileText, value: user.houseNumber },
+        { field: 'streetName', label: 'Street Name', icon: FileText, value: user.streetName },
+        { field: 'areaName', label: 'Area Name', icon: FileText, value: user.areaName },
+        { field: 'district', label: 'District', icon: FileText, value: user.district },
+        { field: 'state', label: 'State', icon: FileText, value: user.state },
+        { field: 'pincode', label: 'Pincode', icon: FileText, value: user.pincode },
+        { field: 'fullAddress', label: 'Full Address', icon: FileText, value: user.fullAddress },
+        { field: 'aadhaarNumber', label: 'Aadhaar Number', icon: FileText, value: user.aadhaarNumber },
+        { field: 'panNumber', label: 'PAN Number', icon: FileText, value: user.panNumber }
+      ],
+      client: [
+        { field: 'houseNumber', label: 'House Number', icon: FileText, value: user.houseNumber },
+        { field: 'streetName', label: 'Street Name', icon: FileText, value: user.streetName },
+        { field: 'areaName', label: 'Area Name', icon: FileText, value: user.areaName },
+        { field: 'district', label: 'District', icon: FileText, value: user.district },
+        { field: 'state', label: 'State', icon: FileText, value: user.state },
+        { field: 'pincode', label: 'Pincode', icon: FileText, value: user.pincode },
+        { field: 'fullAddress', label: 'Full Address', icon: FileText, value: user.fullAddress }
+      ],
+      admin: [
+        { field: 'district', label: 'District', icon: FileText, value: user.district },
+        { field: 'state', label: 'State', icon: FileText, value: user.state }
+      ],
+      'super admin': [
+        { field: 'district', label: 'District', icon: FileText, value: user.district },
+        { field: 'state', label: 'State', icon: FileText, value: user.state }
+      ]
+    };
+
+    // Combine common and role-specific fields
+    const fieldsToCheck = [
+      ...commonFields,
+      ...(roleSpecificFields[user.role as keyof typeof roleSpecificFields] || [])
+    ];
+
+    // Add fields that need updates
     fieldsToCheck.forEach(({ field, label, icon, value }) => {
       if (value === "UPDATE_REQUIRED" || value === "" || value === null || value === undefined) {
         updates.push({
@@ -66,19 +95,19 @@ export function NotificationBell() {
       }
     });
 
-    // Profile picture check (special case)
-    if (!user.profilePicture) {
+    // Profile picture check (required for workers and clients)
+    if (!user.profilePicture && (user.role === "worker" || user.role === "client")) {
       updates.push({
         field: "profilePicture",
         label: "Profile Picture",
         icon: Camera,
-        required: user.role === "worker", // Mandatory for workers
+        required: true,
         completed: false,
       });
     }
 
-    // Bank details check (special case)
-    if (!user.bankAccountNumber || !user.bankIFSC || !user.bankAccountHolderName) {
+    // Bank details check (required for workers only)
+    if (user.role === "worker" && (!user.bankAccountNumber || !user.bankIFSC || !user.bankAccountHolderName)) {
       updates.push({
         field: "bankDetails",
         label: "Bank Details",

@@ -93,6 +93,7 @@ import { ProfileCompletionAlert } from "@/components/ProfileCompletionAlert";
 import AdvertisementCarousel from "@/components/AdvertisementCarousel";
 import { NotificationCenter } from "@/components/NotificationCenter";
 import { ChatSystem } from "@/components/ChatSystem";
+import { NotificationBell } from "@/components/NotificationBell";
 import statesDistrictsData from "@shared/states-districts.json";
 // Services and districts are now fetched dynamically from database
 
@@ -3019,6 +3020,7 @@ export default function Dashboard() {
             </Badge>
           </div>
           <div className="flex items-center gap-3">
+            <NotificationBell />
             <NotificationCenter userId={user?.id || ''} userRole={user?.role || 'client'} />
           </div>
         </motion.div>
@@ -3089,18 +3091,36 @@ export default function Dashboard() {
               className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground relative"
             >
               Profile
-              {/* Show UPDATE_REQUIRED fields count (matching NotificationBell logic) */}
+              {/* Show UPDATE_REQUIRED fields count (matching NotificationBell logic exactly) */}
               {user && (() => {
-                const updateRequiredFields = [
-                  (!user.lastName || user.lastName === "UPDATE_REQUIRED") ? 1 : 0,
-                  !user.email ? 1 : 0,
-                  !user.profilePicture ? 1 : 0,
-                  (!user.bankAccountNumber || !user.bankIFSC || !user.bankAccountHolderName) ? 1 : 0 // Bank details grouped as one
-                ].reduce((total, field) => total + field, 0);
+                const fieldsToCheck = [
+                  user.lastName,
+                  user.email,
+                  user.houseNumber,
+                  user.streetName,
+                  user.areaName,
+                  user.district,
+                  user.state,
+                  user.pincode,
+                  user.fullAddress
+                ];
                 
-                return updateRequiredFields > 0 ? (
+                let count = 0;
+                // Count individual fields that need updates
+                fieldsToCheck.forEach(field => {
+                  if (field === "UPDATE_REQUIRED" || field === "" || field === null || field === undefined) {
+                    count++;
+                  }
+                });
+                
+                // Add profile picture if missing (for clients)
+                if (!user.profilePicture) {
+                  count++;
+                }
+                
+                return count > 0 ? (
                   <Badge variant="secondary" className="ml-2 bg-red-500 text-white text-xs px-1 py-0 h-5 min-w-[20px] rounded-full flex items-center justify-center">
-                    {updateRequiredFields}
+                    {count}
                   </Badge>
                 ) : null;
               })()}
