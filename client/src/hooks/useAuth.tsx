@@ -169,23 +169,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Refresh user data from server
   const refreshUser = async () => {
-    if (!user?.id) return false;
+    if (!user?.id) return;
     
     try {
       console.log("🔄 Refreshing user profile...");
       const response = await fetch(`/api/users/${user.id}`);
+      console.log("🔄 Server response status:", response.status);
+      
       if (response.ok) {
         const updatedUser = await response.json();
         console.log("🔄 Fresh user data from server:", updatedUser);
+        
+        // Ensure we have the updated profile picture
+        if (updatedUser.profilePicture) {
+          console.log("✅ Profile picture found in refreshed data:", updatedUser.profilePicture.substring(0, 50) + "...");
+        }
+        
         setUser(updatedUser);
         localStorage.setItem("user", JSON.stringify(updatedUser));
         console.log("✅ User profile refreshed successfully");
-        return true;
+      } else {
+        const errorText = await response.text();
+        console.error("❌ Failed to refresh user profile - server responded with:", response.status, errorText);
       }
-      return false;
     } catch (error) {
       console.error("Failed to refresh user profile:", error);
-      return false;
     }
   };
 

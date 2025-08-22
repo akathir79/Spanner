@@ -2187,6 +2187,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get user profile endpoint
+  app.get("/api/users/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      
+      // Get user from storage
+      const user = await storage.getUser(id);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      res.json(user);
+    } catch (error) {
+      console.error("Error fetching user profile:", error);
+      res.status(500).json({ error: "Failed to fetch user profile" });
+    }
+  });
+
   // Update user profile endpoint
   app.put("/api/users/:id", async (req, res) => {
     try {
