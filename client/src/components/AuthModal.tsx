@@ -13,7 +13,8 @@ import { z } from "zod";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/components/LanguageProvider";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { UserPlus, LogIn, Smartphone, Info, MapPin, Upload, User, X, Plus, CheckCircle, AlertTriangle, Clock, ChevronDown, CreditCard } from "lucide-react";
+import { UserPlus, LogIn, Smartphone, Info, MapPin, Upload, User, X, Plus, CheckCircle, AlertTriangle, Clock, ChevronDown, CreditCard, Users, Wrench } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
 import BankDetailsModal from "@/components/BankDetailsModal";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -1230,77 +1231,205 @@ export function AuthModal({ isOpen, onClose, mode, initialTab, onSwitchToSignup 
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center space-x-2">
-            {mode === "login" ? (
-              <>
-                <LogIn className="h-5 w-5" />
-                <span>Login to SPANNER</span>
-              </>
-            ) : (
-              <>
-                <UserPlus className="h-5 w-5" />
-                <span>Join SPANNER</span>
-              </>
-            )}
+      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto bg-white" style={{backgroundColor: '#ffffff'}}>
+        <DialogHeader className="text-center pb-6 pt-4" style={{backgroundColor: '#ffffff'}}>
+          <DialogTitle className="text-2xl font-bold text-primary">
+            {mode === "login" ? "Log in or Sign up" : "Join SPANNER"}
           </DialogTitle>
+          {mode === "login" && (
+            <p className="text-sm text-muted-foreground mt-2">
+              Sign up now and get <span className="font-semibold text-orange-600">500 🪙 SPANNER coins!</span>
+            </p>
+          )}
         </DialogHeader>
 
         {mode === "login" ? (
           <>
             {step === 1 && (
-              <div className="space-y-4">
-                <form onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-4">
-                  <div>
-                    <Label>Login As</Label>
-                    <RadioGroup value={loginRole} onValueChange={(value: "client" | "worker") => {
-                      setLoginRole(value);
-                      setLoginError(""); // Clear login error when role changes
-                    }} className="flex gap-6 mt-2">
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="client" id="login-client" />
-                        <Label htmlFor="login-client" className="cursor-pointer">Client (Need Services)</Label>
+              <div className="space-y-6 px-2 pb-4" style={{backgroundColor: '#ffffff'}}>
+                <form onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-6">
+                  {/* Role Selection - Collapsible like Home page */}
+                  <div className="space-y-4">
+                    <div className="text-center">
+                      <h3 className="text-lg font-semibold text-gray-700 mb-4">I am a</h3>
+                    </div>
+                    
+                    {!loginRole ? (
+                      /* Expanded role selection */
+                      <div className="grid grid-cols-2 gap-4">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="h-20 flex flex-col items-center justify-center space-y-2 border-2 border-gray-300 hover:border-primary hover:bg-primary/5 transition-all duration-200 bg-white"
+                          style={{backgroundColor: '#ffffff'}}
+                          onClick={() => {
+                            setLoginRole('client');
+                            setLoginError("");
+                          }}
+                        >
+                          <Users className="h-6 w-6 text-primary" />
+                          <span className="font-medium">Client</span>
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="h-20 flex flex-col items-center justify-center space-y-2 border-2 border-gray-300 hover:border-primary hover:bg-primary/5 transition-all duration-200 bg-white"
+                          style={{backgroundColor: '#ffffff'}}
+                          onClick={() => {
+                            setLoginRole('worker');
+                            setLoginError("");
+                          }}
+                        >
+                          <Wrench className="h-6 w-6 text-primary" />
+                          <span className="font-medium">Worker</span>
+                        </Button>
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="worker" id="login-worker" />
-                        <Label htmlFor="login-worker" className="cursor-pointer">Worker (Provide Services)</Label>
+                    ) : (
+                      /* Collapsed role indicator */
+                      <div className="flex items-center justify-between bg-primary/5 rounded-lg p-3">
+                        <div className="flex items-center space-x-2">
+                          {loginRole === 'client' ? (
+                            <Users className="h-5 w-5 text-primary" />
+                          ) : (
+                            <Wrench className="h-5 w-5 text-primary" />
+                          )}
+                          <span className="font-medium text-primary capitalize">{loginRole}</span>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="text-gray-500 hover:text-gray-700"
+                          onClick={() => {
+                            setLoginRole(null as any);
+                            setLoginError("");
+                          }}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
                       </div>
-                    </RadioGroup>
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="mobile">Mobile Number / Email</Label>
-                    <Input
-                      id="mobile"
-                      placeholder="Enter mobile number or email"
-                      {...loginForm.register("mobile")}
-                    />
-                    {loginForm.formState.errors.mobile && (
-                      <p className="text-sm text-destructive mt-1">
-                        {loginForm.formState.errors.mobile.message}
-                      </p>
                     )}
                   </div>
 
-                  {loginError && (
-                    <Alert variant="destructive">
-                      <AlertTriangle className="h-4 w-4" />
-                      <AlertDescription>
-                        {loginError}
-                        {loginError.includes("not found") && (
-                          <span className="block mt-2">
-                            Don't have an account? <strong>Sign up</strong> first.
-                          </span>
+                  {/* Login Form - shown after role selection */}
+                  {loginRole && (
+                    <div className="space-y-6 animate-in slide-in-from-top-4 duration-300">
+                      {/* Mobile Number Input */}
+                      <div className="relative">
+                        <div className="flex">
+                          <div className="flex items-center px-4 py-3 border border-r-0 border-gray-300 bg-gray-50 rounded-l-lg">
+                            <span className="text-sm font-medium text-gray-600">+91</span>
+                          </div>
+                          <Input
+                            type="tel"
+                            placeholder="Mobile Number"
+                            className="rounded-l-none border-gray-300 py-3 px-4 text-base focus:border-primary focus:ring-primary"
+                            {...loginForm.register("mobile")}
+                          />
+                        </div>
+                        {loginForm.formState.errors.mobile && (
+                          <p className="text-sm text-destructive mt-1">
+                            {loginForm.formState.errors.mobile.message}
+                          </p>
                         )}
-                      </AlertDescription>
-                    </Alert>
-                  )}
+                      </div>
 
-                  <Button type="submit" className="w-full" disabled={isLoading}>
-                    <Smartphone className="h-4 w-4 mr-2" />
-                    {isLoading ? "Sending..." : "Send OTP"}
-                  </Button>
+                      {loginError && (
+                        <Alert variant="destructive">
+                          <AlertTriangle className="h-4 w-4" />
+                          <AlertDescription>
+                            {loginError}
+                            {loginError.includes("not found") && (
+                              <span className="block mt-2">
+                                Don't have an account? <strong>Sign up</strong> first.
+                              </span>
+                            )}
+                          </AlertDescription>
+                        </Alert>
+                      )}
+
+                      <Button type="submit" className="w-full bg-primary hover:bg-primary/90 py-3 text-base font-semibold rounded-lg" disabled={isLoading}>
+                        {isLoading ? "Processing..." : "Send OTP"}
+                      </Button>
+
+                      {/* Toggle Links */}
+                      <div className="flex justify-between text-sm pt-2">
+                        <Button
+                          type="button"
+                          variant="link"
+                          className="p-0 h-auto text-primary hover:text-primary/80 font-medium"
+                          onClick={() => {
+                            toast({
+                              title: "Coming Soon",
+                              description: "Password login will be available soon",
+                            });
+                          }}
+                        >
+                          Use Password
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="link"
+                          className="p-0 h-auto text-primary hover:text-primary/80 font-medium"
+                          onClick={() => {
+                            toast({
+                              title: "Contact Support",
+                              description: "For account recovery, please contact our support team.",
+                            });
+                          }}
+                        >
+                          Login with Email
+                        </Button>
+                      </div>
+
+                      {/* Divider */}
+                      <div className="space-y-6">
+                        <div className="relative">
+                          <Separator />
+                          <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white px-2 text-xs text-muted-foreground">
+                            Or
+                          </span>
+                        </div>
+
+                        {/* Google Login */}
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="w-full py-3 text-base font-medium rounded-lg border-gray-300 hover:bg-gray-50"
+                          onClick={() => {
+                            toast({
+                              title: "Coming Soon",
+                              description: "Google login will be available soon",
+                            });
+                          }}
+                        >
+                          <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24">
+                            <path fill="#4285f4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                            <path fill="#34a853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                            <path fill="#fbbc5" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                            <path fill="#ea4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                          </svg>
+                          Continue with Google
+                        </Button>
+
+                        {/* Help and Terms */}
+                        <div className="text-center text-sm text-gray-600 mt-6">
+                          Need help? <Button variant="link" className="p-0 h-auto text-sm text-primary font-medium">Connect with us 💬</Button>
+                        </div>
+
+                        <div className="text-center text-sm text-gray-600 leading-relaxed px-4">
+                          By logging or signing up, you agree to our{' '}
+                          <Button variant="link" className="p-0 h-auto text-sm text-primary underline font-medium">
+                            Terms
+                          </Button>{' '}
+                          &{' '}
+                          <Button variant="link" className="p-0 h-auto text-sm text-primary underline font-medium">
+                            Policy
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </form>
                 
                 <div className="flex items-center justify-between pt-4 border-t">
