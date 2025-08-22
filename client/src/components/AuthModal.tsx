@@ -21,6 +21,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { INDIAN_STATES_AND_UTS, detectStateFromLocation } from "@shared/constants";
+import { useLocation } from "wouter";
 
 const loginSchema = z.object({
   mobile: z.string().min(1, "Mobile number or email is required"),
@@ -130,6 +131,7 @@ export function AuthModal({ isOpen, onClose, mode, initialTab, onSwitchToSignup 
   const { t } = useLanguage();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [, setLocation] = useLocation();
 
   const loginForm = useForm({
     resolver: zodResolver(loginSchema),
@@ -822,8 +824,8 @@ export function AuthModal({ isOpen, onClose, mode, initialTab, onSwitchToSignup 
       setStep(1);
       setPendingLogin(null);
       
-      // Force page refresh to trigger proper redirection
-      window.location.reload();
+      // Redirect to dashboard after successful login
+      setLocation('/dashboard');
     }
   };
 
@@ -883,7 +885,7 @@ export function AuthModal({ isOpen, onClose, mode, initialTab, onSwitchToSignup 
     // Close modal and redirect to worker dashboard
     setTimeout(() => {
       onClose();
-      window.location.reload(); // Force page refresh to trigger proper redirection
+      setLocation('/dashboard'); // Direct redirect to dashboard
     }, 2000);
   };
 

@@ -174,7 +174,8 @@ export default function Home() {
       // Mock successful login for development
       const mockUser = {
         id: `TN-CHENNAI-${Date.now()}-${selectedRole?.toUpperCase()}`,
-        name: "Demo User",
+        firstName: "Demo",
+        lastName: "User",
         mobile: mobile,
         role: selectedRole || 'client',
         district: "Chennai",
@@ -214,7 +215,8 @@ export default function Home() {
       // Mock successful login for development
       const mockUser = {
         id: `TN-CHENNAI-${Date.now()}-${selectedRole?.toUpperCase()}`,
-        name: "Demo User",
+        firstName: "Demo",
+        lastName: "User",
         mobile: mobile,
         role: selectedRole || 'client',
         district: "Chennai",
