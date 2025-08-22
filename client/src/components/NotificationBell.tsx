@@ -95,25 +95,7 @@ export function NotificationBell() {
   const pendingUpdates = profileUpdates.filter(update => !update.completed);
   const requiredUpdates = pendingUpdates.filter(update => update.required);
 
-  // Debug logging to match WorkerDashboard calculation
-  console.log("NotificationBell Debug - User data:", {
-    lastName: user?.lastName,
-    email: user?.email,
-    houseNumber: user?.houseNumber,
-    streetName: user?.streetName,
-    areaName: user?.areaName,
-    district: user?.district,
-    state: user?.state,
-    pincode: user?.pincode,
-    fullAddress: user?.fullAddress,
-    aadhaarNumber: user?.aadhaarNumber,
-    panNumber: user?.panNumber,
-    profilePicture: user?.profilePicture ? "present" : "missing",
-    bankDetails: user?.bankAccountNumber ? "present" : "missing"
-  });
-  console.log("NotificationBell Debug - Pending updates:", pendingUpdates.length);
-  console.log("NotificationBell Debug - Required updates:", requiredUpdates.length);
-  console.log("NotificationBell Debug - Update details:", pendingUpdates.map(u => u.field));
+
 
   // Mutation for updating user profile
   const updateProfileMutation = useMutation({
@@ -251,7 +233,7 @@ export function NotificationBell() {
               variant="destructive"
               className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center text-xs animate-pulse"
             >
-              {pendingUpdates.filter(update => update.field !== 'bankDetails').length}
+              {pendingUpdates.length}
             </Badge>
           )}
         </Button>

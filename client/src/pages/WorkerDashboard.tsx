@@ -1672,11 +1672,13 @@ export default function WorkerDashboard() {
     enabled: !!user?.id,
   });
 
-  // Calculate UPDATE_REQUIRED fields count
+  // Calculate UPDATE_REQUIRED fields count - matches NotificationBell exactly
   const getUpdateRequiredCount = () => {
     if (!user) return 0;
     
     let count = 0;
+    
+    // Individual field checks (matches NotificationBell logic)
     const fieldsToCheck = [
       user.lastName,
       user.email,
@@ -1696,27 +1698,23 @@ export default function WorkerDashboard() {
         count++;
       }
     });
+
+    // Add profile picture if missing (for workers)
+    if (!user.profilePicture && user.role === "worker") {
+      count++;
+    }
+
+    // Add bank details if missing (grouped as one item)
+    if (!user.bankAccountNumber || !user.bankIFSC || !user.bankAccountHolderName) {
+      count++;
+    }
     
     return count;
   };
 
   const updateRequiredCount = getUpdateRequiredCount();
   
-  // Debug logging to match NotificationBell calculation
-  console.log("WorkerDashboard Debug - User data:", {
-    lastName: user?.lastName,
-    email: user?.email,
-    houseNumber: user?.houseNumber,
-    streetName: user?.streetName,
-    areaName: user?.areaName,
-    district: user?.district,
-    state: user?.state,
-    pincode: user?.pincode,
-    fullAddress: user?.fullAddress,
-    aadhaarNumber: user?.aadhaarNumber,
-    panNumber: user?.panNumber
-  });
-  console.log("WorkerDashboard Debug - Update required count:", updateRequiredCount);
+
   
   // Force re-render when showRejoinModal changes
   useEffect(() => {
