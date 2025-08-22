@@ -187,8 +187,28 @@ const WorkerProfileCard = ({ user, refreshUser }: { user: any, refreshUser: () =
 
   const handleSave = async () => {
     try {
-      const response = await apiRequest("PUT", `/api/users/${user.id}`, editData);
-      if (response.ok) {
+      // Separate documents data (Aadhaar and PAN) from regular profile data
+      const { aadhaarNumber, panNumber, ...profileData } = editData;
+      
+      // Update regular profile data first
+      const profileResponse = await apiRequest("PUT", `/api/users/${user.id}`, profileData);
+      
+      // Update documents (Aadhaar and PAN) if they have changed
+      if (aadhaarNumber !== user?.aadhaarNumber || panNumber !== user?.panNumber) {
+        const documentsData: any = {};
+        if (aadhaarNumber && aadhaarNumber !== user?.aadhaarNumber) {
+          documentsData.aadhaarNumber = aadhaarNumber;
+        }
+        if (panNumber && panNumber !== user?.panNumber) {
+          documentsData.panNumber = panNumber;
+        }
+        
+        if (Object.keys(documentsData).length > 0) {
+          await apiRequest("PUT", `/api/users/${user.id}/documents`, documentsData);
+        }
+      }
+      
+      if (profileResponse.ok) {
         toast({
           title: "Profile Updated",
           description: "Your professional profile has been updated successfully!"
@@ -197,6 +217,7 @@ const WorkerProfileCard = ({ user, refreshUser }: { user: any, refreshUser: () =
         refreshUser();
       }
     } catch (error) {
+      console.error("Profile update error:", error);
       toast({
         title: "Update Failed",
         description: "Could not update profile. Please try again.",

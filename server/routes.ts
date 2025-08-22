@@ -2221,7 +2221,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const allowedFields = [
         'firstName', 'lastName', 'email', 'mobile', 'address', 'profilePicture', 
         'houseNumber', 'streetName', 'areaName', 'district', 'state', 'pincode', 'fullAddress',
-        'bankAccountNumber', 'bankIFSC', 'bankAccountHolderName', 'bankName', 'bankBranch', 'bankAccountType', 'bankMICR'
+        'bankAccountNumber', 'bankIFSC', 'bankAccountHolderName', 'bankName', 'bankBranch', 'bankAccountType', 'bankMICR',
+        'panNumber', 'panVerified'
       ];
       const cleanData = Object.fromEntries(
         Object.entries(updateData)
@@ -2248,6 +2249,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating user profile:", error);
       res.status(500).json({ error: "Failed to update profile" });
+    }
+  });
+
+  // Update worker documents (Aadhaar and PAN) endpoint
+  app.put("/api/users/:userId/documents", async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const { aadhaarNumber, panNumber } = req.body;
+      
+      console.log(`Updating documents for user ${userId}:`, { aadhaarNumber, panNumber });
+      
+      // Get user to verify existence and role
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      
+      // Update PAN number in users table if provided
+      if (panNumber) {
+        await storage.updateUser(userId, { 
+          panNumber,
+          panVerified: false // Reset verification status when updating
+        });
+      }
+      
+      // Update Aadhaar number in worker profile if provided and user is a worker
+      if (aadhaarNumber && user.role === 'worker') {
+        // Get worker profile
+        const workerProfile = await storage.getWorkerProfile(userId);
+        if (workerProfile) {
+          await storage.updateWorkerProfile(userId, { 
+            aadhaarNumber,
+            aadhaarVerified: false // Reset verification status when updating
+          });
+        } else {
+          return res.status(400).json({ error: "Worker profile not found" });
+        }
+      }
+      
+      // Get updated user data
+      const updatedUser = await storage.getUser(userId);
+      
+      res.json({
+        message: "Documents updated successfully",
+        user: updatedUser
+      });
+    } catch (error) {
+      console.error("Error updating documents:", error);
+      res.status(500).json({ error: "Failed to update documents" });
     }
   });
 

@@ -47,6 +47,9 @@ export const users = pgTable("users", {
   bankAddress: text("bank_address"), // Bank address field
   bankAccountType: text("bank_account_type"), // savings, current
   bankMICR: text("bank_micr"), // MICR code
+  // Identity documents
+  panNumber: text("pan_number"), // PAN card number
+  panVerified: boolean("pan_verified").default(false), // PAN verification status
   isVerified: boolean("is_verified").default(false),
   isActive: boolean("is_active").default(true),
   isSuspended: boolean("is_suspended").default(false), // Track suspension status
