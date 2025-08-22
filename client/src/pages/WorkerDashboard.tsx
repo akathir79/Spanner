@@ -1702,6 +1702,22 @@ export default function WorkerDashboard() {
 
   const updateRequiredCount = getUpdateRequiredCount();
   
+  // Debug logging to match NotificationBell calculation
+  console.log("WorkerDashboard Debug - User data:", {
+    lastName: user?.lastName,
+    email: user?.email,
+    houseNumber: user?.houseNumber,
+    streetName: user?.streetName,
+    areaName: user?.areaName,
+    district: user?.district,
+    state: user?.state,
+    pincode: user?.pincode,
+    fullAddress: user?.fullAddress,
+    aadhaarNumber: user?.aadhaarNumber,
+    panNumber: user?.panNumber
+  });
+  console.log("WorkerDashboard Debug - Update required count:", updateRequiredCount);
+  
   // Force re-render when showRejoinModal changes
   useEffect(() => {
     console.log("useEffect - showRejoinModal changed to:", showRejoinModal);
