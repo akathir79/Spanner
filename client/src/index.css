@@ -2,6 +2,30 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Fix navbar overlap and spacing issues */
+body {
+  padding-top: 70px; /* Add top padding to prevent navbar overlap */
+}
+
+/* Ensure navbar stays on top and doesn't overlap content */
+.navbar-fixed {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  height: 70px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+/* Main content container spacing */
+.main-content {
+  min-height: calc(100vh - 70px);
+  padding-top: 20px;
+}
+
 /* Advertisement carousel progress animation */
 @keyframes progress {
   from {
