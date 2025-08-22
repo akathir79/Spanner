@@ -54,7 +54,9 @@ import {
   Camera,
   Video,
   AlertTriangle,
-  MessageCircle
+  MessageCircle,
+  Building,
+  RefreshCw
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
