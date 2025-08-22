@@ -4698,6 +4698,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
       
+      console.log('Payment verification request:', {
+        razorpay_order_id,
+        razorpay_payment_id,
+        razorpay_signature: razorpay_signature?.substring(0, 10) + '...'
+      });
+      
       const { verifyPaymentSignature } = await import('./simple-razorpay');
       
       const isValid = verifyPaymentSignature(
@@ -4706,9 +4712,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         razorpay_signature
       );
 
+      console.log('Payment verification result:', isValid);
+
       if (isValid) {
-        res.json({ status: 'success', message: 'Payment verified successfully' });
+        console.log('Payment verified successfully');
+        
+        // For now, simulate successful payment processing
+        // In production, you would update wallet balance, create transaction records, etc.
+        
+        res.json({ 
+          status: 'success', 
+          message: 'Payment verified successfully',
+          payment_id: razorpay_payment_id,
+          order_id: razorpay_order_id
+        });
       } else {
+        console.log('Payment verification failed');
         res.status(400).json({ status: 'failed', message: 'Payment verification failed' });
       }
     } catch (error) {

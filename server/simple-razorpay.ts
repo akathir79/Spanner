@@ -31,13 +31,25 @@ export const verifyPaymentSignature = (
   paymentId: string,
   signature: string
 ): boolean => {
-  const body = orderId + '|' + paymentId;
-  const expectedSignature = crypto
-    .createHmac('sha256', process.env.RAZORPAY_SECRET_KEY!)
-    .update(body.toString())
-    .digest('hex');
+  try {
+    const body = orderId + '|' + paymentId;
+    const expectedSignature = crypto
+      .createHmac('sha256', process.env.RAZORPAY_SECRET_KEY!)
+      .update(body.toString())
+      .digest('hex');
 
-  return expectedSignature === signature;
+    console.log('Signature verification:', {
+      body,
+      expectedSignature: expectedSignature.substring(0, 10) + '...',
+      receivedSignature: signature.substring(0, 10) + '...',
+      match: expectedSignature === signature
+    });
+
+    return expectedSignature === signature;
+  } catch (error) {
+    console.error('Error in signature verification:', error);
+    return false;
+  }
 };
 
 export { razorpay };

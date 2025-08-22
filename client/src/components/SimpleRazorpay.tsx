@@ -48,6 +48,9 @@ export default function SimpleRazorpay() {
         description: 'Test Payment',
         order_id: order.id,
         handler: async function (response: any) {
+          console.log('Payment response received:', response);
+          setLoading(false);
+          
           try {
             // Verify payment
             const verifyResponse = await fetch('/api/payment/verification', {
@@ -63,21 +66,23 @@ export default function SimpleRazorpay() {
             });
 
             const verifyResult = await verifyResponse.json();
+            console.log('Verification result:', verifyResult);
 
             if (verifyResult.status === 'success') {
               toast({
                 title: "Payment Successful",
-                description: "Your payment has been processed successfully!",
+                description: `Payment of ₹${amount} completed successfully!`,
               });
               setAmount('');
             } else {
               toast({
                 title: "Payment Failed",
-                description: "Payment verification failed",
+                description: verifyResult.message || "Payment verification failed",
                 variant: "destructive",
               });
             }
           } catch (error) {
+            console.error('Verification error:', error);
             toast({
               title: "Verification Error",
               description: "Error verifying payment",
@@ -132,6 +137,13 @@ export default function SimpleRazorpay() {
             onChange={(e) => setAmount(e.target.value)}
             data-testid="input-amount"
           />
+        </div>
+        <div className="text-sm text-gray-600 bg-blue-50 p-3 rounded">
+          <strong>Live Payment Test:</strong>
+          <br />⚠️ This uses LIVE Razorpay credentials
+          <br />💡 Try UPI payment for instant verification
+          <br />📱 Use your actual UPI ID for testing
+          <br />✅ Payment will be processed immediately
         </div>
         <Button 
           onClick={handlePayment} 
