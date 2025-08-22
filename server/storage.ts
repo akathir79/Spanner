@@ -2287,6 +2287,19 @@ export class DatabaseStorage implements IStorage {
     return wallet || undefined;
   }
 
+  // Direct wallet balance update for real payments
+  async updateWalletBalanceReal(userId: string, newBalance: string): Promise<UserWallet | undefined> {
+    const [updatedWallet] = await db
+      .update(userWallets)
+      .set({ 
+        balance: newBalance,
+        updatedAt: new Date()
+      })
+      .where(eq(userWallets.userId, userId))
+      .returning();
+    return updatedWallet;
+  }
+
   async updateWalletBalance(userId: string, amount: number, type: 'credit' | 'debit', financialModelId?: string): Promise<UserWallet | undefined> {
     const wallet = await this.getUserWallet(userId);
     if (!wallet) return undefined;

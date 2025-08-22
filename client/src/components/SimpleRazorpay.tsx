@@ -34,7 +34,10 @@ export default function SimpleRazorpay() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ amount: parseFloat(amount) }),
+        body: JSON.stringify({ 
+          amount: parseFloat(amount),
+          userId: 'TAN-SAL-0001-W' // Default test user
+        }),
       });
 
       const { order, key } = await response.json();
@@ -71,9 +74,14 @@ export default function SimpleRazorpay() {
             if (verifyResult.status === 'success') {
               toast({
                 title: "Payment Successful",
-                description: `Payment of ₹${amount} completed successfully!`,
+                description: `₹${amount} added to wallet! New balance: ₹${verifyResult.new_balance}`,
               });
               setAmount('');
+              
+              // Refresh page to show updated wallet balance
+              setTimeout(() => {
+                window.location.reload();
+              }, 2000);
             } else {
               toast({
                 title: "Payment Failed",
@@ -138,12 +146,12 @@ export default function SimpleRazorpay() {
             data-testid="input-amount"
           />
         </div>
-        <div className="text-sm text-gray-600 bg-blue-50 p-3 rounded">
-          <strong>Live Payment Test:</strong>
-          <br />⚠️ This uses LIVE Razorpay credentials
-          <br />💡 Try UPI payment for instant verification
-          <br />📱 Use your actual UPI ID for testing
-          <br />✅ Payment will be processed immediately
+        <div className="text-sm text-gray-600 bg-green-50 p-3 rounded border border-green-200">
+          <strong>Real Payment Integration:</strong>
+          <br />✅ Uses your live Razorpay credentials
+          <br />💰 Real money will be processed
+          <br />📱 Complete UPI payment to see verification
+          <br />🔄 Wallet balance updates automatically
         </div>
         <Button 
           onClick={handlePayment} 

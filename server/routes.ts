@@ -4674,19 +4674,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Simple Razorpay payment routes (following GitHub pattern)
   app.post("/api/payment/checkout", async (req, res) => {
     try {
-      const { amount } = req.body;
+      const { amount, userId } = req.body;
       
       if (!amount || amount <= 0) {
         return res.status(400).json({ error: "Invalid amount" });
       }
 
+      // Use default user if not provided
+      const actualUserId = userId || 'TAN-SAL-0001-W';
+
       const { createSimpleOrder } = await import('./simple-razorpay');
       
-      const order = await createSimpleOrder(amount, `payment_${Date.now()}`);
+      const order = await createSimpleOrder(amount, `wallet_topup_${actualUserId}_${Date.now()}`);
+      
+      // Store order in database for tracking
+      await storage.createPaymentOrder({
+        userId: actualUserId,
+        razorpayOrderId: order.id,
+        amount: amount.toString(),
+        currency: order.currency,
+        receipt: order.receipt,
+        notes: { purpose: 'wallet_topup', user_id: actualUserId },
+        metadata: { order_details: JSON.stringify(order) },
+      });
       
       res.json({ 
         order,
-        key: process.env.RAZORPAY_KEY_ID 
+        key: process.env.RAZORPAY_KEY_ID,
+        userId: actualUserId
       });
     } catch (error) {
       console.error("Error creating payment order:", error);
@@ -4717,14 +4732,67 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (isValid) {
         console.log('Payment verified successfully');
         
-        // For now, simulate successful payment processing
-        // In production, you would update wallet balance, create transaction records, etc.
+        // Get payment order from database
+        const paymentOrder = await storage.getPaymentOrderByRazorpayId(razorpay_order_id);
+        
+        if (!paymentOrder) {
+          return res.status(404).json({ status: 'failed', message: 'Payment order not found' });
+        }
+
+        const userId = paymentOrder.userId;
+        const amount = parseFloat(paymentOrder.amount);
+
+        // Get or create user wallet
+        let wallet = await storage.getUserWallet(userId);
+        if (!wallet) {
+          wallet = await storage.createUserWallet({ 
+            userId,
+            balance: '0.00',
+            totalEarned: '0.00',
+            totalSpent: '0.00',
+            totalToppedUp: '0.00'
+          });
+        }
+
+        // Update wallet balance with real payment
+        const balanceBefore = parseFloat(wallet.balance);
+        const newBalance = balanceBefore + amount;
+
+        await storage.updateWalletBalanceReal(userId, newBalance.toString());
+
+        // Create transaction record for real payment
+        await storage.createWalletTransaction({
+          userId,
+          walletId: wallet.id,
+          type: 'credit',
+          category: 'topup',
+          amount: amount.toString(),
+          balanceBefore: balanceBefore.toString(),
+          balanceAfter: newBalance.toString(),
+          description: `Wallet topped up ₹${amount} via Razorpay`,
+          netAmount: amount.toString(),
+          status: 'completed',
+          razorpayPaymentId: razorpay_payment_id,
+          razorpayOrderId: razorpay_order_id
+        });
+
+        // Update payment order status
+        await storage.updatePaymentOrderStatus(razorpay_order_id, {
+          status: 'completed',
+          razorpay_payment_id,
+          razorpay_signature,
+          completed_at: new Date().toISOString()
+        });
+
+        console.log(`Wallet updated: User ${userId}, Amount: ₹${amount}, New Balance: ₹${newBalance}`);
         
         res.json({ 
           status: 'success', 
-          message: 'Payment verified successfully',
+          message: 'Payment verified and wallet updated successfully',
           payment_id: razorpay_payment_id,
-          order_id: razorpay_order_id
+          order_id: razorpay_order_id,
+          amount: amount,
+          new_balance: newBalance
         });
       } else {
         console.log('Payment verification failed');
