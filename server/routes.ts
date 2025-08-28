@@ -742,7 +742,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Client signup
   app.post("/api/auth/signup/client", async (req, res) => {
     try {
-      const userData = clientSignupSchema.parse(req.body);
+      const requestData = req.body;
+      
+      // Handle both full registration and quick registration
+      let userData;
+      
+      if (requestData.firstName && requestData.mobile && requestData.role && 
+          requestData.lastName === "UPDATE_REQUIRED") {
+        // Quick registration from QuickPost - minimal fields
+        userData = {
+          firstName: requestData.firstName,
+          lastName: requestData.lastName,
+          mobile: requestData.mobile,
+          role: requestData.role,
+          email: requestData.email || "",
+          houseNumber: requestData.houseNumber || "",
+          streetName: requestData.streetName || "",
+          areaName: requestData.areaName || "",
+          district: requestData.district || "Salem", // Default district
+          state: requestData.state || "Tamil Nadu", // Default state
+          pincode: requestData.pincode || "",
+          fullAddress: requestData.fullAddress || "",
+          isVerified: false,
+          status: "pending"
+        };
+      } else {
+        // Full registration - use schema validation
+        userData = clientSignupSchema.parse(requestData);
+      }
       
       // Check if user already exists
       const existingUser = await storage.getUserByMobile(userData.mobile);
@@ -751,6 +778,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const user = await storage.createUser(userData);
+      
+      // Create wallet for the new user
+      await storage.createUserWallet({ 
+        userId: user.id,
+        balance: '0.00',
+        totalEarned: '0.00',
+        totalSpent: '0.00',
+        totalToppedUp: '0.00'
+      });
       
       res.json({
         message: "Client registered successfully",
@@ -780,7 +816,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error) {
       console.error("Client signup error:", error);
-      res.status(400).json({ message: "Invalid request data" });
+      console.error("Error details:", error instanceof Error ? error.message : "Unknown error");
+      console.error("Request body:", req.body);
+      res.status(400).json({ 
+        message: "Registration failed", 
+        error: error instanceof Error ? error.message : "Invalid request data" 
+      });
     }
   });
 
