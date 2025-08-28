@@ -789,6 +789,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       res.json({
+        success: true,
         message: "Client registered successfully",
         user: {
           id: user.id,
